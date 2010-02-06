@@ -1,0 +1,19 @@
+Name: # Name for this lab configuration
+Player/Stage (Local)
+
+InitializationHandler:
+handlers.init.stage
+handlers.init.playerclient
+
+PoseHandler:
+handlers.pose.stagePose
+
+SensorHandler:
+handlers.sensor.dummySensor
+
+ActuatorHandler:
+handlers.actuator.dummyActuator
+
+LocomotionCommandHandler:
+handlers.locomotionCommand.playerLocomotionCommand
+

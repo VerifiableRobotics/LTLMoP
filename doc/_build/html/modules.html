@@ -1,0 +1,341 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Shared Modules &mdash; LTLMoP v0.6 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="LTLMoP v0.6 documentation" href="index.html" />
+    <link rel="next" title="Configuration and Data Files" href="config_files.html" />
+    <link rel="prev" title="Applications" href="applications.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="config_files.html" title="Configuration and Data Files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="applications.html" title="Applications"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">LTLMoP v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-fileMethods">
+<h1>Shared Modules<a class="headerlink" href="#module-fileMethods" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="regions-py-regions-module">
+<h2>regions.py - Regions Module<a class="headerlink" href="#regions-py-regions-module" title="Permalink to this headline">¶</a></h2>
+<p>A simple module that defines a class for describing and manipulating
+rectangular and polygonal regions.</p>
+<p>This is completely free software; please feel free to adapt or use this in
+any way you like.</p>
+<p>Some parts extracted from pySketch by Erik Westra (<a class="reference external" href="mailto:ewestra&#37;&#52;&#48;wave&#46;co&#46;nz">ewestra<span>&#64;</span>wave<span>&#46;</span>co<span>&#46;</span>nz</a>)</p>
+<dl class="class">
+<dt id="regions.Region">
+<em class="property">class </em><tt class="descclassname">regions.</tt><tt class="descname">Region</tt><big>(</big><em>type=1</em>, <em>position=wx.Point(0</em>, <em>0)</em>, <em>size=wx.Size(0</em>, <em>0)</em>, <em>color=None</em>, <em>points=</em><span class="optional">[</span><span class="optional">]</span>, <em>name=''</em><big>)</big><a class="headerlink" href="#regions.Region" title="Permalink to this definition">¶</a></dt>
+<dd><p>A rectangular or polygonal region, defined by the following properties:</p>
+<blockquote>
+<p>&#8216;name&#8217;          Region name
+&#8216;type&#8217;          What type of region this is (rect or poly)
+&#8216;position&#8217;      The position of the object within the document</p>
+<blockquote>
+(i.e., the top-left corner of the region&#8217;s bounding-box)</blockquote>
+<p>&#8216;size&#8217;          The size of the object&#8217;s bounding box
+&#8216;color&#8217;         Color to use for drawing the region
+&#8216;pointArray&#8217;    Polygon points, relative to region position (stored in CW order)
+&#8216;alignmentPoints&#8217;  True/False array indicating for each vertex whether or not to use it as an alignment point</p>
+</blockquote>
+<dl class="docutils">
+<dt>NOTE: All coordinates are stored internally with (0,0) at the top left.</dt>
+<dd>X increases to right, and Y increases downwards.</dd>
+</dl>
+<dl class="method">
+<dt id="regions.Region.addPoint">
+<tt class="descname">addPoint</tt><big>(</big><em>point</em>, <em>index</em><big>)</big><a class="headerlink" href="#regions.Region.addPoint" title="Permalink to this definition">¶</a></dt>
+<dd>Insert a new point at a given index, converting object type if necessary</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.getCenter">
+<tt class="descname">getCenter</tt><big>(</big><big>)</big><a class="headerlink" href="#regions.Region.getCenter" title="Permalink to this definition">¶</a></dt>
+<dd>Find the &#8216;center&#8217; of a region</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.getData">
+<tt class="descname">getData</tt><big>(</big><em>withAlignment=True</em><big>)</big><a class="headerlink" href="#regions.Region.getData" title="Permalink to this definition">¶</a></dt>
+<dd>Return a copy of the object&#8217;s internal data.
+This is used for undo and to save this region to disk.</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.getDirection">
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#regions.Region.getDirection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine convexity/concavity and the order of the points stored in the pointArray.
+For details on the algorithm, please refer to:</p>
+<blockquote>
+<a class="reference external" href="http://local.wasp.uwa.edu.au/~pbourke/geometry/clockwise/index.html">http://local.wasp.uwa.edu.au/~pbourke/geometry/clockwise/index.html</a></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.getFaces">
+<tt class="descname">getFaces</tt><big>(</big><big>)</big><a class="headerlink" href="#regions.Region.getFaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper function to allow for iteration over faces of regions.
+A face is a tuple of the two points (in absolute coordinates) that make up the face,
+sorted so that a given face is defined uniquely.</p>
+<p>FIXME: Make sure we take advantage of this uniqueness elsewhere; I think we check
+too many conditions sometimes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.getPoints">
+<tt class="descname">getPoints</tt><big>(</big><em>relative=False</em><big>)</big><a class="headerlink" href="#regions.Region.getPoints" title="Permalink to this definition">¶</a></dt>
+<dd>Wrapper function to allow for iteration over the points of a region without
+worrying about whether it&#8217;s a RECT or POLY.</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.getSelectionHandleContainingPoint">
+<tt class="descname">getSelectionHandleContainingPoint</tt><big>(</big><em>x</em>, <em>y</em>, <em>boundFunc=None</em><big>)</big><a class="headerlink" href="#regions.Region.getSelectionHandleContainingPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the selection handle containing the given point, if any.</p>
+<p>We return one of the predefined selection handle ID codes (defined at top).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.objectContainsPoint">
+<tt class="descname">objectContainsPoint</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="headerlink" href="#regions.Region.objectContainsPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True iff this object contains the given point.</p>
+<p>This is used to determine if the user clicked on the object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.objectWithinRect">
+<tt class="descname">objectWithinRect</tt><big>(</big><em>x</em>, <em>y</em>, <em>width</em>, <em>height</em><big>)</big><a class="headerlink" href="#regions.Region.objectWithinRect" title="Permalink to this definition">¶</a></dt>
+<dd>Return True iff this object falls completely within the given rect.</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.recalcBoundingBox">
+<tt class="descname">recalcBoundingBox</tt><big>(</big><big>)</big><a class="headerlink" href="#regions.Region.recalcBoundingBox" title="Permalink to this definition">¶</a></dt>
+<dd>Recalculate the bounding box for our object</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.removePoint">
+<tt class="descname">removePoint</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#regions.Region.removePoint" title="Permalink to this definition">¶</a></dt>
+<dd>Remove the point at the given index, converting object type if necessary</dd></dl>
+
+<dl class="method">
+<dt id="regions.Region.setData">
+<tt class="descname">setData</tt><big>(</big><em>data</em>, <em>withAlignment=True</em><big>)</big><a class="headerlink" href="#regions.Region.setData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the object&#8217;s internal data.</p>
+<p>&#8216;data&#8217; is a copy of the object&#8217;s saved data, as returned by
+getData() above.  This is used for undo and to restore a 
+previously saved region.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regions.RegionFileInterface">
+<em class="property">class </em><tt class="descclassname">regions.</tt><tt class="descname">RegionFileInterface</tt><big>(</big><em>background='None'</em>, <em>regions=</em><span class="optional">[</span><span class="optional">]</span>, <em>transitions=None</em>, <em>thumb=None</em><big>)</big><a class="headerlink" href="#regions.RegionFileInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper class for handling collections of regions and associated metadata.</p>
+<p>Overview of exposed data structures:</p>
+<blockquote>
+<ul>
+<li><p class="first">background (string): relative path of background image file</p>
+</li>
+<li><p class="first">regions (list): list of Region objects, with properties defined below</p>
+</li>
+<li><dl class="first docutils">
+<dt>transitions (list of lists): key1 = Region object index</dt>
+<dd><p class="first last">key2 = Region object index
+values = Lists of faces connecting the two regions</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>thumb (string): relative path of an image file that shows the regions overlayed </dt>
+<dd><p class="first last">on the background image, made by taking a screenshot</p>
+</dd>
+</dl>
+</li>
+</ul>
+</blockquote>
+<dl class="method">
+<dt id="regions.RegionFileInterface.getNextAvailableRegionNumber">
+<tt class="descname">getNextAvailableRegionNumber</tt><big>(</big><big>)</big><a class="headerlink" href="#regions.RegionFileInterface.getNextAvailableRegionNumber" title="Permalink to this definition">¶</a></dt>
+<dd>Look for the smallest region name of form r1, r2, ... available.</dd></dl>
+
+<dl class="method">
+<dt id="regions.RegionFileInterface.readFile">
+<tt class="descname">readFile</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#regions.RegionFileInterface.readFile" title="Permalink to this definition">¶</a></dt>
+<dd>For file format information, refer to writeFile() above.</dd></dl>
+
+<dl class="method">
+<dt id="regions.RegionFileInterface.writeFile">
+<tt class="descname">writeFile</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#regions.RegionFileInterface.writeFile" title="Permalink to this definition">¶</a></dt>
+<dd>File format is described inside the comments variable.</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="regions.pointLineIntersection">
+<tt class="descclassname">regions.</tt><tt class="descname">pointLineIntersection</tt><big>(</big><em>pt1</em>, <em>pt2</em>, <em>test_pt</em><big>)</big><a class="headerlink" href="#regions.pointLineIntersection" title="Permalink to this definition">¶</a></dt>
+<dd>Given two points (pt1, pt2), find the point on the line formed by those points that is nearest
+to test_pt and give the distance.</dd></dl>
+
+</div>
+<div class="section" id="filemethods-py-file-access-methods">
+<h2>fileMethods.py - File Access Methods<a class="headerlink" href="#filemethods-py-file-access-methods" title="Permalink to this headline">¶</a></h2>
+<p>Some routines for reading and writing plaintext config/data files, shared throughout the toolkit.</p>
+<dl class="function">
+<dt id="fileMethods.properCase">
+<tt class="descclassname">fileMethods.</tt><tt class="descname">properCase</tt><big>(</big><em>str</em><big>)</big><a class="headerlink" href="#fileMethods.properCase" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a copy of a string, with the first letter capitalized and all others lower-case
+(<em>CURRENTLY DOES NOTHING</em>, and I&#8217;m not sure why that change was made)</dd></dl>
+
+<dl class="function">
+<dt id="fileMethods.readFromFile">
+<tt class="descclassname">fileMethods.</tt><tt class="descname">readFromFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#fileMethods.readFromFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple method for reading in data from text files of the following format:</p>
+<div class="highlight-python"><pre>========= SECTION1 ==========
+
+# COMMENT
+
+HEADER1: # COMMENT
+DATA1
+DATA2
+
+HEADER2: # COMMENT
+DATA3
+
+========= SECTION2 ===========
+
+HEADER1:
+DATA1</pre>
+</div>
+<p>Given a file with the above contents, the function will return the following dictionary of dictionaries:</p>
+<div class="highlight-python"><pre>{ 'SECTION1' : { 'HEADER1': ['DATA1', 'DATA2'],
+                 'HEADER2': ['DATA3'] },
+{ 'SECTION2' : { 'HEADER1': ['DATA1'] } }</pre>
+</div>
+<dl class="docutils">
+<dt>NOTE:</dt>
+<dd><ul class="first last simple">
+<li>Headers <em>must</em> be followed by a colon</li>
+<li>Section names must have at least one equals sign on both sides</li>
+<li>Dictionary keys will always be normalized so that only the first letter is capitalized (<em>CURRENTLY DISABLED</em>)</li>
+<li>All items are returned as strings and should be cast to the appropriate type before
+use, if appropriate</li>
+<li>Lines beginning with <tt class="docutils literal"><span class="pre">#</span></tt> are treated as comments</li>
+<li>Blank lines at the end of sections are ignored</li>
+<li>Any data without a section title will be returned under the empty string key: <tt class="docutils literal"><span class="pre">''</span></tt></li>
+<li>If no section titles are present, the outer dictionary will be ommitted</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="fileMethods.writeToFile">
+<tt class="descclassname">fileMethods.</tt><tt class="descname">writeToFile</tt><big>(</big><em>fileName</em>, <em>data</em>, <em>comments={}</em><big>)</big><a class="headerlink" href="#fileMethods.writeToFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple method for writing data to text files of the format described in the <a title="fileMethods.readFromFile" class="reference internal" href="#fileMethods.readFromFile"><tt class="xref docutils literal"><span class="pre">readFromFile()</span></tt></a>
+function above.</p>
+<p>All data will be output in key-sorted order for the sake of consistency.</p>
+<p>Any items in the comments hash whose keys match those of the data hash will be included
+as comments in the appropriate section of the file.</p>
+<p>If it exists, the comment keyed as <tt class="docutils literal"><span class="pre">&quot;FILE_HEADER&quot;</span></tt> will be added to the top of the output file.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Shared Modules</a><ul>
+<li><a class="reference external" href="#regions-py-regions-module">regions.py - Regions Module</a></li>
+<li><a class="reference external" href="#filemethods-py-file-access-methods">fileMethods.py - File Access Methods</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="applications.html"
+                                  title="previous chapter">Applications</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="config_files.html"
+                                  title="next chapter">Configuration and Data Files</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/modules.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="config_files.html" title="Configuration and Data Files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="applications.html" title="Applications"
+             >previous</a> |</li>
+        <li><a href="index.html">LTLMoP v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Cameron Finucane, Gangyuan (Jim) Jing, Hadas Kress-Gazit.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>
