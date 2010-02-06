@@ -165,15 +165,16 @@ class simSetupDialog(wx.Dialog):
         # make a copy of the simSetup for temporarily store the data 
         self.tempSimSetup = copy.deepcopy(parent.simSetup)
         # Load simulation setup for each experiment
-        for name, config in parent.simSetup.iteritems():
+
+        for id, config in enumerate(parent.simSetup):
             try:
-                print 'Loading experiment configuration %s...' %name
-                self.list_box_experiment_name.Insert(name,0)
-                self.list_box_experiment_name.Select(0)
-                self.loadSimSetup(name)               
+                print 'Loading experiment configuration %s...' %config['Name']
+                self.list_box_experiment_name.Insert(config['Name'],id)
+                self.list_box_experiment_name.Select(id)
+                self.loadSimSetup(id)               
             except:
-                print "Cannot load simulation setup for %s. Please check the spec file." % name
-        self.list_box_experiment_name.Select(0)
+                print "Cannot load simulation setup for %s. Please check the spec file." % config['Name']
+
 
     def __set_properties(self):
         # begin wxGlade: simSetupDialog.__set_properties
@@ -294,94 +295,89 @@ class simSetupDialog(wx.Dialog):
         self.Layout()
         # end wxGlade
 
-    def loadSimSetup(self, name):
-        print "0"
-        self.text_ctrl_sim_experiment_name.Clear()
-        time.sleep(1)
-        self.text_ctrl_sim_experiment_name.WriteText(name)
-        
-        print "1"
+    def loadSimSetup(self, id):
+        """ Load the experiment config from the item with index = id in the list"""
+        self.text_ctrl_sim_experiment_name.SetValue(self.tempSimSetup[id]['Name'])        
+
         # Set up the initial actions checklist as appropriate
         self.list_box_init_actions.Set([])
         for i, action in enumerate(self.actions):
             self.list_box_init_actions.Insert(action, i)
-            if action in self.tempSimSetup[name]['InitialTruths']:
+            if action in self.tempSimSetup[id]['InitialTruths']:
                 self.list_box_init_actions.Check(i)
 
-        print "2"
         # Set up the initial customs checklist as appropriate
         self.list_box_init_customs.Set([])
         for i, custom in enumerate(self.customs):
             self.list_box_init_customs.Insert(custom, i)
-            if custom in self.tempSimSetup[name]['InitialTruths']:
+            if custom in self.tempSimSetup[id]['InitialTruths']:
                 self.list_box_init_customs.Check(i)
 
-        print "3"
         # Set up the initial sensors checklist as appropriate Jim (July 1)
         self.list_box_init_sensors.Set([])
         for i, sensor in enumerate(self.sensors):
             self.list_box_init_sensors.Insert(sensor, i)
-            if sensor in self.tempSimSetup[name]['InitialTruths']:
+            if sensor in self.tempSimSetup[id]['InitialTruths']:
                 self.list_box_init_sensors.Check(i)
         
-        print "4"
         # Set up the list of starting regions
+        self.choice_startpos.Clear()
         if self.parent.rfi is not None:
             for region in self.parent.rfi.regions:
                 self.choice_startpos.Append(region.name)
-        self.choice_startpos.Select(self.tempSimSetup[name]["InitialRegion"])
+        self.choice_startpos.Select(self.tempSimSetup[id]["InitialRegion"])
 
-        print "5"
         # Select the simulation type
-        if self.tempSimSetup[name]["LabFile"].split('.')[0].lower() == "gazebo":
+        if self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "gazebo":
             self.choice_simtype.Select(0)
-        elif self.tempSimSetup[name]["LabFile"].split('.')[0].lower() == "playerstage":
+        elif self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "playerstage":
             self.choice_simtype.Select(1)
-        elif self.tempSimSetup[name]["LabFile"].split('.')[0].lower() == "asl":
+        elif self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "asl":
             self.choice_simtype.Select(2)
 
         # Load in the coordinate transformation values
-        self.text_ctrl_xscale.SetValue(str(self.tempSimSetup[name]["XScale"]))
-        self.text_ctrl_xoffset.SetValue(str(self.tempSimSetup[name]["XOffset"]))
-        self.text_ctrl_yscale.SetValue(str(self.tempSimSetup[name]["YScale"]))
-        self.text_ctrl_yoffset.SetValue(str(self.tempSimSetup[name]["YOffset"]))
+        self.text_ctrl_xscale.SetValue(str(self.tempSimSetup[id]["XScale"]))
+        self.text_ctrl_xoffset.SetValue(str(self.tempSimSetup[id]["XOffset"]))
+        self.text_ctrl_yscale.SetValue(str(self.tempSimSetup[id]["YScale"]))
+        self.text_ctrl_yoffset.SetValue(str(self.tempSimSetup[id]["YOffset"]))
 
-    def saveSimSetup(self, name):
-        #Temperarily save the data to the copy of simSetup
+    def saveSimSetup(self, id):
+        """Temperarily save the data to the copy of simSetup"""
 
-        if name not in self.tempSimSetup:
-            self.tempSimSetup[name] = copy.deepcopy(self.tempSimSetup['Default'])
+        # Save the experiment name
+        self.tempSimSetup[id]['Name'] = self.text_ctrl_sim_experiment_name.GetValue()
+
         # Add all checked propositions to InitialTruths
-        self.tempSimSetup[name]['InitialTruths'] = []
+        self.tempSimSetup[id]['InitialTruths'] = []
 
         for i, action in enumerate(self.list_box_init_actions.GetItems()):
             if self.list_box_init_actions.IsChecked(i):
-                self.tempSimSetup[name]['InitialTruths'].append(action)
+                self.tempSimSetup[id]['InitialTruths'].append(action)
 
         for i, custom in enumerate(self.list_box_init_customs.GetItems()):
             if self.list_box_init_customs.IsChecked(i):
-                self.tempSimSetup[name]['InitialTruths'].append(custom)
+                self.tempSimSetup[id]['InitialTruths'].append(custom)
 
         for i, sensor in enumerate(self.list_box_init_sensors.GetItems()):
             if self.list_box_init_sensors.IsChecked(i):
-                self.tempSimSetup[name]['InitialTruths'].append(sensor)
+                self.tempSimSetup[id]['InitialTruths'].append(sensor)
 
         # Update initial region
-        self.tempSimSetup[name]['InitialRegion'] = self.choice_startpos.GetSelection()
+        self.tempSimSetup[id]['InitialRegion'] = self.choice_startpos.GetSelection()
 
         # Update simulation type
         if self.choice_simtype.GetSelection() == 0:
-            self.tempSimSetup[name]["LabFile"] = "Gazebo"
+            self.tempSimSetup[id]["LabFile"] = "Gazebo"
         elif self.choice_simtype.GetSelection() == 1:
-            self.tempSimSetup[name]["LabFile"] = "Stage"
+            self.tempSimSetup[id]["LabFile"] = "Stage"
         elif self.choice_simtype.GetSelection() == 2:
-            self.tempSimSetup[name]["LabFile"] = "None"
+            self.tempSimSetup[id]["LabFile"] = "None"
 
         # Update coordinate transformation values
-        self.tempSimSetup[name]["XScale"] = float(self.text_ctrl_xscale.GetValue())
-        self.tempSimSetup[name]["XOffset"] = float(self.text_ctrl_xoffset.GetValue())
-        self.tempSimSetup[name]["YScale"] = float(self.text_ctrl_yscale.GetValue())
-        self.tempSimSetup[name]["YOffset"] = float(self.text_ctrl_yoffset.GetValue())
+        self.tempSimSetup[id]["XScale"] = float(self.text_ctrl_xscale.GetValue())
+        self.tempSimSetup[id]["XOffset"] = float(self.text_ctrl_xoffset.GetValue())
+        self.tempSimSetup[id]["YScale"] = float(self.text_ctrl_yscale.GetValue())
+        self.tempSimSetup[id]["YOffset"] = float(self.text_ctrl_yoffset.GetValue())
         
         
     def onClickCalibrate(self, event): # wxGlade: simSetupDialog.<event_handler>
@@ -465,22 +461,29 @@ class simSetupDialog(wx.Dialog):
   
 
     def onSimLoad(self, event): # wxGlade: simSetupDialog.<event_handler>
-        name = self.list_box_experiment_name.GetStringSelection()
+        """ Load the experiment config data into the configuration dialog when choose an experiment from the list. """
 
-        if 'Default' in name:
+        # Save the current experiment config before load the new one
+        name = self.text_ctrl_sim_experiment_name.GetValue()
+
+        for id, config in enumerate(self.tempSimSetup):
+            if name == config['Name']:
+                self.saveSimSetup(id)
+            
+        selection = self.list_box_experiment_name.GetSelection()
+        
+        if selection == 0:
             self.button_sim_delete.Enable(False)
-            wx.Yield()
         else:
             self.button_sim_delete.Enable(True)
-        if len(name) > 0:
-            try:
-                self.loadSimSetup(name)
-            except:
-                print "Cannot load simulation setup for %s. Please check the spec file." % name
+        try:
+            self.loadSimSetup(selection)
+        except:
+            print "Cannot load simulation setup for %s. Please check the spec file." % self.list_box_experiment_name.GetStringSelection()
         event.Skip()
 
     def onSimAdd(self, event): # wxGlade: simSetupDialog.<event_handler>
-
+        """ Add configuration for new experiment"""
         nums = []
         p = re.compile(r"^New\sExperiment(?P<num>\d+)$")
         for name in self.list_box_experiment_name.GetItems():
@@ -502,20 +505,19 @@ class simSetupDialog(wx.Dialog):
 
         default_name = "New Experiment" + str(last + 1)
 
-
-
-        self.list_box_experiment_name.Insert(default_name,0)
-        self.list_box_experiment_name.Select(0)
+        self.list_box_experiment_name.Append(default_name)
+        self.tempSimSetup.append(copy.deepcopy(self.tempSimSetup[0]))
+        self.tempSimSetup[-1]['Name'] = default_name
+        self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
+        self.loadSimSetup(self.list_box_experiment_name.GetSelection())
         self.button_sim_delete.Enable(True)
-        self.tempSimSetup[default_name] = copy.deepcopy(self.tempSimSetup['Default'])
-        self.loadSimSetup(default_name)
         event.Skip()
 
     def onSimDelete(self, event): # wxGlade: simSetupDialog.<event_handler>
-
+        """ Delete selected configuration"""
         selection = self.list_box_experiment_name.GetSelection()
         # Remove the data from temperary copy of simSetup
-        del self.tempSimSetup[self.list_box_experiment_name.GetStringSelection()]
+        self.tempSimSetup.pop(selection)
         self.list_box_experiment_name.Delete(selection)
 
 
@@ -529,41 +531,44 @@ class simSetupDialog(wx.Dialog):
 
 
         # Load the simulation setup for the new expriment selected
-        name = self.list_box_experiment_name.GetStringSelection()
+        selection = self.list_box_experiment_name.GetSelection()
         try:
-            self.loadSimSetup(name)
+            self.loadSimSetup(selection)
         except:
-            print "Cannot load simulation setup for %s. Please check the spec file." % name
+            print "Cannot load simulation setup for %s. Please check the spec file." % self.list_box_experiment_name.GetStringSelection()
 
-        # Disable the Delete button if there's nothing to delete
-        if self.list_box_experiment_name.GetCount() == 0:
-            self.button_sim_delete.Enable(False)
         event.Skip()
 
     def onSimCopy(self, event): # wxGlade: simSetupDialog.<event_handler>
+        """ Copy an exist experiment configuration """
+        selection = self.list_box_experiment_name.GetSelection()
         name = self.list_box_experiment_name.GetStringSelection()
-        self.saveSimSetup(name)
-        self.list_box_experiment_name.Insert(name+"_copy",0)
-        self.list_box_experiment_name.Select(0)
-        self.tempSimSetup[name+"_copy"] = copy.deepcopy(self.tempSimSetup[name])
-        self.loadSimSetup(name+"_copy")
+        self.saveSimSetup(selection)
+
+        self.tempSimSetup.append(copy.deepcopy(self.tempSimSetup[selection]))
+
+        self.list_box_experiment_name.Append(name+"_copy")
+        self.tempSimSetup[-1]['Name'] = name+"_copy"
+        self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
+        self.loadSimSetup(self.list_box_experiment_name.GetSelection())
         event.Skip()
 
     def onClickApply(self, event): # wxGlade: simSetupDialog.<event_handler>
-        print "Event handler `onClickApply' not implemented"
+        """
+        Adjusts the simSetup data structure to reflect the new configuration
+        values.
+        """
+        self.parent.simSetup = copy.deepcopy(self.tempSimSetup)  
         event.Skip()
 
     def onSimNameEdit(self, event): # wxGlade: simSetupDialog.<event_handler>
-        print >>sys.stderr, "haha"
+        """ Update the experiment name in the list when user edits  it. """
         newName = self.text_ctrl_sim_experiment_name.GetValue()
         selection = self.list_box_experiment_name.GetSelection()
         oldName = self.list_box_experiment_name.GetStringSelection()
-        self.saveSimSetup(oldName)
-        # Need to change the key of the dic when rename the experiment
-        #TODO: not sure if this is the best way
-        if newName is not oldName:
-            self.tempSimSetup[newName] = self.tempSimSetup[oldName]
-            del self.tempSimSetup[oldName]
+
+        if newName != oldName:
+            self.tempSimSetup[selection]['Name'] = newName
             self.list_box_experiment_name.SetString(selection, newName)
         event.Skip()
 
@@ -748,12 +753,12 @@ class SpecEditorFrame(wx.Frame):
         self.projectPath = ""
         self.projectFiles = {}
         self.rfi = None
-        self.subprocess = {}
+        self.subprocess = [None] * 4
         self.simSetup = {}
-        global PROCESS_REGED; PROCESS_REGED = wx.NewId()
-        global PROCESS_PLAYER; PROCESS_PLAYER = wx.NewId()
-        global PROCESS_GAZEBO; PROCESS_GAZEBO = wx.NewId()
-        global PROCESS_DOTTY; PROCESS_DOTTY = wx.NewId()
+        global PROCESS_REGED; PROCESS_REGED = 0
+        global PROCESS_PLAYER; PROCESS_PLAYER = 1
+        global PROCESS_GAZEBO; PROCESS_GAZEBO = 2
+        global PROCESS_DOTTY; PROCESS_DOTTY = 3
 
         # Set default values
         self.setDefaults()
@@ -1074,27 +1079,27 @@ class SpecEditorFrame(wx.Frame):
                 sensorList.append(sensor)
                 
 
+        data = {'SPECIFICATION':{}, 'SETTINGS':{}}
+        data['SPECIFICATION'] = {'Spec': str(self.text_ctrl_spec.GetValue())}
+        data['SETTINGS'] = {"RegionFile": self.projectFiles["RegionFile"],
+                            "Sensors": self.dumpListBox(self.list_box_sensors),
+                            "Actions": self.dumpListBox(self.list_box_actions),
+                            "Customs": self.dumpListBox(self.list_box_customs),
+                            "CurrentExperimentConfig": ''
+                            }
+        if len(self.simSetup)>1:
+            for id, config in enumerate(self.simSetup):
+                if config['Name'] != 'Default':
+                    expConfig = {   "Name": config['Name'],
+                                    "RobotFile": config['RobotFile'],
+                                    "Lab": config['LabFile'],
+                                    "Calibration": ",".join(map(str,[config["XScale"], config["XOffset"],
+                                                        config["YScale"], config["YOffset"]])),
+                                    "InitialTruths": config['InitialTruths'],
+                                    "InitialRegion": config['InitialRegion']
+                                }
+                    data['EXPERIMENT CONFIG '+str(id)] = expConfig
 
-        data = {"RegionFile": self.projectFiles["RegionFile"],
-                "RobotFile": self.projectFiles["RobotFile"],
-                "Sensors": self.dumpListBox(self.list_box_sensors),
-                "Actions": self.dumpListBox(self.list_box_actions),
-                "Customs": self.dumpListBox(self.list_box_customs),
-                "InitialTruths": self.simSetup["InitialTruths"],
-        "InitialSensors": self.simSetup["InitialSensors"], # Jim (July 1)
-                "InitialRegion": str(self.simSetup["InitialRegion"]),
-                "XYTransform": "\t".join(map(str,[self.simSetup["XScale"], self.simSetup["XOffset"],
-                                                  self.simSetup["YScale"], self.simSetup["YOffset"]])),
-        "UDP_parameter": "\t".join([self.simSetup["ClientIP"], self.simSetup["VelocityPort"], self.simSetup["PositionPort"]]),
-                "SimType": self.simSetup["SimType"],
-                "BackgroundOverlay": ["0","1"][self.simSetup["BackgroundOverlay"]],
-                "VertexMarkers": ["0","1"][self.simSetup["VertexMarkers"]],
-        "logCurrentRegion": ["0","1"][self.simSetup["logCurrentRegion"]],
-                "logNextRegion": ["0","1"][self.simSetup["logNextRegion"]],
-        "logProposition": ["0","1"][self.simSetup["logProposition"]],
-                "logBorder": ["0","1"][self.simSetup["logBorder"]],
-
-                "Spec": str(self.text_ctrl_spec.GetValue())}
 
         comments = {"FILE_HEADER": "This is a specification definition file for the LTLMoP toolkit.\n" +
                                    "Format details are described at the beginning of each section below.\n" +
@@ -1103,20 +1108,13 @@ class SpecEditorFrame(wx.Frame):
                     "RobotFile": "Relative path of robot description file",
                     "Sensors": "List of sensors and their state (enabled = 1, disabled = 0)",
                     "Actions": "List of actions and their state (enabled = 1, disabled = 0)",
-                    "Customs": "List of custom propositions and their state (enabled = 1, disabled = 0)",
+                    "Customs": "List of custom propositions",
                     "InitialTruths": "List of initially true propositions",
-                    "InitialSensors": "List of initially ON sensors",  # Jim (July 1)
                     "InitialRegion": "Initial region number",
-                    "XYTransform": "Coordinate transformation variables: XScale, XOffset, YScale, YOffset",
-            "UDP_parameter": "Parameters for UDP_Communicator: Client IP address, Velocity port, Position port",
-                    "SimType": "Type of simulation (Stage, Gazebo, None)",
-                    "BackgroundOverlay": "If 1, show regions overlayed on background during simulation.  If 0, do not.",
-                    "VertexMarkers": "If 1, show markers at region vertices during simulation.  If 0, do not.",
-                    "logCurrentRegion": "If 1, show current region status in status log when simulate.  If 0, do not.",
-                    "logNextRegion": "If 1, show next region status in status log when simulate.  If 0, do not.",
-                    "logProposition": "If 1, show proposition status in status log when simulate.  If 0, do not.",
-                    "logBorder": "If 1, show cross border status in status log when simulate.  If 0, do not.",                
-                    "Spec": "Specification in simple English"}
+                    "Calibration": "Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset",
+                    "Lab": 'Lab configuration file',
+                    "Spec": "Specification in simple English",
+                    "Name": 'Name of the experiment'}
 
         fileMethods.writeToFile(fileName, data, comments)
             
@@ -1154,14 +1152,15 @@ class SpecEditorFrame(wx.Frame):
         """
         self.projectFiles["RegionFile"] = ""
         self.projectFiles["RobotFile"] = ""
-        self.simSetup["Default"]={  "RobotFile": "",
-                                    "LabFile": "",
-                                    "XScale": 1.0,
-                                    "XOffset": 0.0,
-                                    "YScale": 1.0,
-                                    "YOffset": 0.0,
-                                    "InitialTruths": [],
-                                    "InitialRegion": 0 }
+        self.simSetup = [{  "Name": "Default",
+                            "RobotFile": "",
+                            "LabFile": "",
+                            "XScale": 1.0,
+                            "XOffset": 0.0,
+                            "YScale": 1.0,
+                            "YOffset": 0.0,
+                            "InitialTruths": [],
+                            "InitialRegion": 0 }]
         self.text_ctrl_spec.SetValue("")
 
         # Null the subprocess values
@@ -1183,45 +1182,42 @@ class SpecEditorFrame(wx.Frame):
         self.setDefaults()
 
         filePath = os.path.dirname(os.path.abspath(fileName))
-        if 'SPECIFICATION' in data and 'Spec' in data['SPECIFICATION'] and len(data['SPECIFICATION']['Spec']) > 0: 
-            self.text_ctrl_spec.SetValue("\n".join(data['SPECIFICATION']['Spec']))
-            # remove the spec from the dictionary
-            del data['SPECIFICATION']
+        for name, content in data.iteritems():
+            if name == 'SPECIFICATION' and 'Spec' in content and len(content['Spec']) > 0: 
+                self.text_ctrl_spec.SetValue("\n".join(content['Spec']))
 
-        if 'SETTINGS' in data:
-            if 'RegionFile' in data['SETTINGS'] and len(data['SETTINGS']['RegionFile']) > 0:
-                self.loadRegionFile(os.path.join(filePath, data['SETTINGS']['RegionFile'][0]))
-            if 'Actions' in data['SETTINGS']:
-                self.loadList(data['SETTINGS']['Actions'], self.list_box_actions)
-            if 'Customs' in data['SETTINGS']:
-                self.loadList(data['SETTINGS']['Customs'], self.list_box_customs)
-                if len(data['SETTINGS']['Customs']) > 0:
-                    self.button_custom_delete.Enable(True)
-                    self.list_box_customs.Select(0)
-            if 'Sensors' in data['SETTINGS']:
-                self.loadList(data['SETTINGS']['Sensors'], self.list_box_sensors)
-            # remove the SETTINGS config from the dictionary
-            del data['SETTINGS']
+            elif name =='SETTINGS':
+                if 'RegionFile' in content and len(content['RegionFile']) > 0:
+                    self.loadRegionFile(os.path.join(filePath, content['RegionFile'][0]))
+                if 'Actions' in content:
+                    self.loadList(content['Actions'], self.list_box_actions)
+                if 'Customs' in content:
+                    self.loadList(content['Customs'], self.list_box_customs)
+                    if len(content['Customs']) > 0:
+                        self.button_custom_delete.Enable(True)
+                        self.list_box_customs.Select(0)
+                if 'Sensors' in content:
+                    self.loadList(content['Sensors'], self.list_box_sensors)
 
-        if len(data) > 0:
-            for id, config in data.iteritems():
-                name = id.replace('EXPERIMENT CONFIG:','').strip()
-                self.simSetup[name] = {}
-                if 'RobotFile' in config and len(config['RobotFile']) > 0:
-                    self.simSetup[name]["RobotFile"] = config['RobotFile'][0]
-                if 'InitialTruths' in config:
-                    self.simSetup[name]['InitialTruths'] = config['InitialTruths']
-                if 'InitialRegion' in config and len(config['InitialRegion']) > 0:
-                    self.simSetup[name]['InitialRegion'] = int(config['InitialRegion'][0])
-                if 'Calibration' in config and len(config['Calibration'][0].split(","))==4:
-                    [xScale, xOffset, yScale, yOffset] = config['Calibration'][0].split(",")
-                    self.simSetup[name]['XScale'] = float(xScale)
-                    self.simSetup[name]['XOffset'] = float(xOffset)
-                    self.simSetup[name]['YScale'] = float(yScale)
-                    self.simSetup[name]['YOffset'] = float(yOffset)
+            elif 'EXPERIMENT CONFIG' in name:
+                self.simSetup.append({})
+                if 'Name' in content and len(content['Name']) > 0:
+                    self.simSetup[-1]["Name"] = content['Name'][0]
+                if 'RobotFile' in content and len(content['RobotFile']) > 0:
+                    self.simSetup[-1]["RobotFile"] = content['RobotFile'][0]
+                if 'InitialTruths' in content:
+                    self.simSetup[-1]['InitialTruths'] = content['InitialTruths']
+                if 'InitialRegion' in content and len(content['InitialRegion']) > 0:
+                    self.simSetup[-1]['InitialRegion'] = int(content['InitialRegion'][0])
+                if 'Calibration' in content and len(content['Calibration'][0].split(","))==4:
+                    [xScale, xOffset, yScale, yOffset] = content['Calibration'][0].split(",")
+                    self.simSetup[-1]['XScale'] = float(xScale)
+                    self.simSetup[-1]['XOffset'] = float(xOffset)
+                    self.simSetup[-1]['YScale'] = float(yScale)
+                    self.simSetup[-1]['YOffset'] = float(yOffset)
                       
-                if 'Lab' in config and len(config['Lab']) > 0:
-                    self.simSetup[name]['LabFile'] = config['Lab'][0]
+                if 'Lab' in content and len(content['Lab']) > 0:
+                    self.simSetup[-1]['LabFile'] = content['Lab'][0]
 
         # Update the window title
         title = os.path.basename(fileName)
@@ -1241,7 +1237,7 @@ class SpecEditorFrame(wx.Frame):
         if not self.askIfUserWantsToSave("closing"): return
         
         # Detach from any running subprocesses
-        for process in self.subprocess.values(): 
+        for process in self.subprocess: 
             if process is not None:
                 process.Detach()
 
