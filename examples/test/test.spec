@@ -54,7 +54,10 @@ If you are not activating CarryingFly then visit beans
 If you are not activating CarryingFly then visit tomato
 If you are activating CarryingFly then visit mystery
 
-====== EXPERIMENT CONFIG: Stage (Point Robot) ========
+====== EXPERIMENT CONFIG 1 ========
+
+Name:
+Stage (Point Robot)
 
 RobotFile: # Robot description file
 partario.robot
@@ -71,7 +74,10 @@ Bird
 InitialRegion: # Initial region number
 1
 
-====== EXPERIMENT CONFIG: Orca (Pioneer) ========
+====== EXPERIMENT CONFIG 2 ========
+
+Name:
+Pioneer @ ASL
 
 RobotFile: # Robot description file
 pioneer.robot

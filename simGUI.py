@@ -21,7 +21,7 @@ class SimGUI_Frame(wx.Frame):
         # begin wxGlade: SimGUI_Frame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER)
+        self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER|wx.SP_LIVE_UPDATE)
         self.window_1_pane_2 = wx.Panel(self.window_1, -1)
         self.sizer_2_copy_staticbox = wx.StaticBox(self.window_1_pane_2, -1, "Status Log")
         self.window_1_pane_1 = wx.Panel(self.window_1, -1)
@@ -42,6 +42,7 @@ class SimGUI_Frame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onSimStartPause, self.button_sim_startPause)
         self.Bind(wx.EVT_BUTTON, self.onSimClear, self.button_sim_log_clear)
         self.Bind(wx.EVT_BUTTON, self.onSimExport, self.button_sim_log_export)
+        self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onResize, self.window_1)
         # end wxGlade
 
         # Make status bar at bottom.
@@ -66,18 +67,8 @@ class SimGUI_Frame(wx.Frame):
     def setMapImage(self, filename):
         # Load and display the Map
         self.originalMap = wx.Image(filename, wx.BITMAP_TYPE_PNG)
-
-        # Figure out scaling
-        maximumWidth = 650
-        W = self.originalMap.GetWidth()
-        H = self.originalMap.GetHeight()
-        NewW = maximumWidth
-        self.mapScale = 1.0*NewW/W
-        NewH = H * self.mapScale
-        self.originalMap = self.originalMap.Scale(NewW, NewH)
-
-        # Set background
-        self.bitmap_map.SetBitmap(wx.BitmapFromImage(self.originalMap))
+        self.onResize()
+        self.Bind(wx.EVT_SIZE, self.onResize, self)
 
     def controllerListen(self):
         """
@@ -143,7 +134,7 @@ class SimGUI_Frame(wx.Frame):
         sizer_2_copy = wx.StaticBoxSizer(self.sizer_2_copy_staticbox, wx.HORIZONTAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_4.Add((20, 30), 0, 0, 0)
-        sizer_4.Add(self.bitmap_map, 0, 0, 0)
+        sizer_4.Add(self.bitmap_map, 1, wx.EXPAND, 0)
         self.window_1_pane_1.SetSizer(sizer_4)
         sizer_5.Add((20, 30), 0, 0, 0)
         sizer_43_copy_copy.Add((20, 20), 0, 0, 0)
@@ -177,19 +168,48 @@ class SimGUI_Frame(wx.Frame):
         self.Layout()
         # end wxGlade
 
+    def onResize(self, event=None): # wxGlade: SimGUI_Frame.<event_handler>
+        # Figure out scaling
+        maximumWidth = self.bitmap_map.GetSize().x
+        maximumHeight = self.bitmap_map.GetSize().y
+        windowAspect = 1.0*maximumHeight/maximumWidth
+
+        W = self.originalMap.GetWidth()
+        H = self.originalMap.GetHeight()
+        imgAspect = 1.0*H/W
+
+        if imgAspect >= windowAspect:
+            NewH = maximumHeight
+            self.mapScale = 1.0*NewH/H
+            NewW = W * self.mapScale
+        else:
+            NewW = maximumWidth
+            self.mapScale = 1.0*NewW/W
+            NewH = H * self.mapScale
+
+        self.scaledMap = wx.BitmapFromImage(self.originalMap.Scale(NewW, NewH))
+
+        # Set background
+        self.bitmap_map.SetBitmap(self.scaledMap)
+
+        if event is not None:
+            event.Skip()
+
     def drawRobot(self, x, y):
         memory = wx.MemoryDC()
-        newMap = wx.BitmapFromImage(self.originalMap)
+        size = self.scaledMap.GetSize()
+        newMap = wx.EmptyBitmap(size.x, size.y)
         memory.SelectObject(newMap)
 
         memory.BeginDrawing()
+        memory.DrawBitmap(self.scaledMap, 0, 0)
         memory.DrawCircle(x, y, 5)
         memory.EndDrawing()
         memory.SelectObject(wx.NullBitmap)
         self.bitmap_map.SetBitmap(newMap)
 
     def appendLog(self, text, color="BLACK"):
-        # for printing everything on th log
+        # for printing everything on the log
         self.text_ctrl_sim_log.BeginTextColour(color)
         self.text_ctrl_sim_log.AppendText("["+time.strftime("%H:%M:%S", time.gmtime())+"] "+text)
         self.text_ctrl_sim_log.EndTextColour()
@@ -254,6 +274,7 @@ class SimGUI_Frame(wx.Frame):
     def onSimClear(self, event): # wxGlade: SimGUI_Frame.<event_handler>
         self.text_ctrl_sim_log.Clear()
         event.Skip()
+
 
 # end of class SimGUI_Frame
 

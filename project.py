@@ -24,16 +24,14 @@ class Project:
         Returns a dictionary corresponding to the specified experiment config
         """
 
-        # Find the details for this configuration
-        key = "EXPERIMENT CONFIG: " + exp_cfg_name
-        if key in self.spec_data:
-            exp_cfg_data = self.spec_data[key]
-            print "  -> Using experiment configuration \"%s\"" % exp_cfg_name
-        else:
-            print "ERROR: Could not find section \"%s\" in spec file!" % key
-            sys.exit(0)
-        
-        return exp_cfg_data
+        # Find the section that corresponds to this configuration
+        for key, val in self.spec_data.iteritems():
+            if key.startswith("EXPERIMENT CONFIG") and val['Name'][0] == exp_cfg_name:
+                print "  -> Using experiment configuration \"%s\"" % exp_cfg_name
+                return val
+
+        print "ERROR: Could not find experiment config with name \"%s\" in spec file!" % exp_cfg_name
+        sys.exit(0)
 
     def loadLabData(self, exp_cfg_data):
         """

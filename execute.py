@@ -143,6 +143,8 @@ def main(argv):
     # Load automaton file #
     #######################
     
+    print "Loading automaton..."
+
     FSA = fsa.Automaton(proj.rfi.regions, proj.sensor_handler, proj.actuator_handler, proj.motion_handler)
 
     FSA.loadFile(aut_file, proj.all_sensors, proj.all_actuators, proj.spec_data['SETTINGS']['Customs'])
