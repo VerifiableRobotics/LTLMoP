@@ -177,7 +177,6 @@ class SimGUI_Frame(wx.Frame):
         self.Layout()
         # end wxGlade
 
-
     def drawRobot(self, x, y):
         memory = wx.MemoryDC()
         newMap = wx.BitmapFromImage(self.originalMap)

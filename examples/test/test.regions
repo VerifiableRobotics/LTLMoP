@@ -1,0 +1,37 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+tomato	poly	582	279	157	174	255	0	0	0	174	6	0	135	50	157	166
+hash_brown	poly	448	251	140	206	255	165	0	134	202	94	206	0	153	14	26	35	0	109	3	140	28
+bacon	poly	155	265	307	269	255	0	208	185	206	81	269	27	252	0	214	19	150	51	89	242	0	307	12	293	139
+beans	poly	628	445	177	199	111	139	208	0	197	111	0	155	3	177	32	130	145	0	199
+toast	poly	547	445	192	212	223	174	80	35	8	192	0	81	197	31	212	0	82
+mushrooms	poly	409	527	169	171	151	40	11	7	23	138	0	169	130	77	171	0	140
+mystery	poly	340	404	207	146	0	255	0	0	67	108	0	202	53	207	123	76	146
+eggy	poly	236	471	180	196	243	255	14	104	0	180	79	173	196	73	190	0	63
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+bacon	0
+toast	4
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+tomato	hash_brown	582	453	588	279
+tomato	toast	582	453	739	445
+hash_brown	bacon	448	404	462	277
+hash_brown	mystery	448	404	542	457
+bacon	mystery	340	471	448	404
+bacon	eggy	236	534	340	471
+beans	toast	628	642	739	445
+toast	mushrooms	547	527	578	657
+mushrooms	mystery	416	550	547	527
+mushrooms	eggy	409	667	416	550
+mystery	eggy	340	471	416	550
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+newbreakfast_simbg.png
+
+Background: # Relative path of background image file
+breakfast_background.jpg
+
