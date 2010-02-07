@@ -1,14 +1,14 @@
-=======================
-TODO/XXX Comment report
-=======================
+=========================
+TODO/FIXME Comment report
+=========================
 
 
-Generated on Sun, 07 Feb 2010 15:26:17 EST
+Generated on Sun, 07 Feb 2010 15:31:04 EST
 
 Summary
 =======
 
-There are currently 42 TODO/XXX comments.
+There are currently 47 TODO/FIXME comments.
 
 Listing
 =======
@@ -55,6 +55,13 @@ File : /execute.py:244
 
             last_gui_update_time = time.time()
 
+File : /fileMethods.py:50
+
+    # FIXME: This file reading function is very fragile; we should catch exceptions
+    f = open(fileName, "r")
+
+    # A regex to search for sections
+
 File : /fsa.py:386
 
         # TODO: Use the "last" controllers?
@@ -89,6 +96,13 @@ File : /regionEditor.py:277
         # but we don't want to shrink it too much when the image is small.
         self.drawPanel.SetVirtualSize((PAGE_WIDTH, PAGE_HEIGHT))
         self.drawPanel.SetScrollRate(20, 20)
+
+File : /regionEditor.py:331
+
+    # FIXME: These are really messy; refactor me
+
+    def onToolIconClick(self, event):
+        """ Respond to the user clicking on one of our tool icons.
 
 File : /regionEditor.py:699
 
@@ -138,6 +152,27 @@ File : /regionEditor.py:2149
         
         return True
 
+
+File : /simGUI.py:99
+
+                # FIXME: Sometimes we'll still get rate updates AFTER a pause
+                wx.CallAfter(self.sb.SetStatusText, input, 0)
+            elif input.startswith("Output proposition"):
+                if self.checkbox_statusLog_propChange.GetValue():
+
+File : /specEditor.py:61
+
+            # FIXME: Autosize doesn't work?
+            #self.AutoSizeColLabelSize(i)
+
+        self.AppendRows(len(rowValues))
+
+File : /specEditor.py:67
+
+            # FIXME: Autosize doesn't work?
+            #self.AutoSizeRowLabelSize(i)
+
+    def onMouse(self, evt):
 
 File : /specEditor.py:406
 
@@ -237,19 +272,19 @@ File : /specEditor.py:1751
             sys.stderr = sys.__stderr__
 
 
+File : /specEditor.py:1764
+
+        # FIXME: Doesn't change size on Windows??
+        self.Layout()
+
+        # Spawn asynchronous subprocess
+
 File : /specEditor.py:1836
 
             # TODO: Check exists & mtime to make sure it didn't die
             self.appendLog("Export complete!\n", "GREEN")
         else:
             print "Unknown PID"
-
-File : /doc/_build/html/_static/doctools.js:1
-
-/// XXX: make it cross browser
-
-/**
- * make the code below compatible with browsers without
 
 File : /handlers/init/stage.py:49
 
