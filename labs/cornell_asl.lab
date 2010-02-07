@@ -1,0 +1,18 @@
+Name: # Name for this lab configuration
+Cornell ASL Lab
+
+InitializationHandler:
+handlers.init.orca
+
+PoseHandler:
+handlers.pose.orcaPose
+
+SensorHandler:
+handlers.sensor.dummySensor
+
+ActuatorHandler:
+handlers.actuator.dummyActuator
+
+LocomotionCommandHandler:
+handlers.locomotionCommand.orcaLocomotionCommand
+
