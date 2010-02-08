@@ -134,7 +134,7 @@ class SimGUI_Frame(wx.Frame):
         sizer_2_copy = wx.StaticBoxSizer(self.sizer_2_copy_staticbox, wx.HORIZONTAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_4.Add((20, 30), 0, 0, 0)
-        sizer_4.Add(self.bitmap_map, 1, wx.EXPAND, 0)
+        sizer_4.Add(self.bitmap_map, 0, wx.EXPAND, 0)
         self.window_1_pane_1.SetSizer(sizer_4)
         sizer_5.Add((20, 30), 0, 0, 0)
         sizer_43_copy_copy.Add((20, 20), 0, 0, 0)
@@ -172,6 +172,7 @@ class SimGUI_Frame(wx.Frame):
         # Figure out scaling
         maximumWidth = self.bitmap_map.GetSize().x
         maximumHeight = self.bitmap_map.GetSize().y
+        print maximumWidth, maximumHeight
         windowAspect = 1.0*maximumHeight/maximumWidth
 
         W = self.originalMap.GetWidth()

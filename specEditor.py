@@ -18,12 +18,13 @@ import re, sys, os, subprocess, time, copy
 import wxversion
 wxversion.select('2.8')
 import wx, wx.richtext, wx.grid
-import fsa
 from regions import *
 from createTLVinput import createPFfile, createSMVfile
 from parseEnglishToLTL import writeSpec
 import fileMethods
 import fcntl
+import execute
+import project
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
@@ -173,7 +174,7 @@ class simSetupDialog(wx.Dialog):
                 self.loadSimSetup(id)
             except:
                 print "Cannot load simulation setup for %s. Please check the spec file." % config['Name']
-        self.list_box_experiment_name.Select(self.list_box_experiment_name.GetItems().index(parent.currentExperimentConfig))
+        self.list_box_experiment_name.Select(self.list_box_experiment_name.GetItems().index(parent.currentExperimentName))
 
 
     def __set_properties(self):
@@ -344,7 +345,7 @@ class simSetupDialog(wx.Dialog):
             self.choice_simtype.Select(0)
         elif self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "playerstage":
             self.choice_simtype.Select(1)
-        elif self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "asl":
+        elif self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "cornell_asl":
             self.choice_simtype.Select(2)
 
         # Load in the coordinate transformation values
@@ -386,7 +387,7 @@ class simSetupDialog(wx.Dialog):
         elif self.choice_simtype.GetSelection() == 1:
             self.tempSimSetup[id]["LabFile"] = "playerstage"
         elif self.choice_simtype.GetSelection() == 2:
-            self.tempSimSetup[id]["LabFile"] = "asl"
+            self.tempSimSetup[id]["LabFile"] = "cornell_asl"
 
         # Update coordinate transformation values
         self.tempSimSetup[id]["XScale"] = float(self.text_ctrl_xscale.GetValue())
@@ -426,7 +427,7 @@ class simSetupDialog(wx.Dialog):
         
         # Get the name of the experiment currently working with
         expName = self.list_box_experiment_name.GetStringValue()
-        if self.parent.simSetup[expName]['LabFile'].split('.')[0].lower() != 'asl':
+        if self.parent.simSetup[expName]['LabFile'].split('.')[0].lower() != 'cornell_asl':
             # JJLLceline (keep working from here)
 
             # Run the simulation in calibration mode and read its results on STDERR
@@ -471,7 +472,7 @@ class simSetupDialog(wx.Dialog):
         ###########################################
         # Simulation configuration dialog cleanup #
         ###########################################
-        self.parent.currentExperimentConfig = self.list_box_experiment_name.GetStringSelection()
+        self.parent.currentExperimentName = self.list_box_experiment_name.GetStringSelection()
         self.parent.simSetup = copy.deepcopy(self.tempSimSetup)  
         event.Skip()
   
@@ -574,7 +575,7 @@ class simSetupDialog(wx.Dialog):
         values.
         """
 
-        self.parent.currentExperimentConfig = self.list_box_experiment_name.GetStringSelection()
+        self.parent.currentExperimentName = self.list_box_experiment_name.GetStringSelection()
         self.parent.simSetup = copy.deepcopy(self.tempSimSetup)  
         event.Skip()
 
@@ -772,7 +773,8 @@ class SpecEditorFrame(wx.Frame):
         self.rfi = None
         self.subprocess = [None] * 4
         self.simSetup = []
-        self.currentExperimentConfig = ""
+        self.currentExperimentName = ""
+        self.currentExperimentConfig = {}
 
         global PROCESS_REGED; PROCESS_REGED = 0
         global PROCESS_PLAYER; PROCESS_PLAYER = 1
@@ -1033,7 +1035,6 @@ class SpecEditorFrame(wx.Frame):
                                   wildcard="Specification files (*.spec)|*.spec",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if fileName == "": return
-        self.openFile(fileName) 
 
         #event.Skip()
 
@@ -1104,7 +1105,7 @@ class SpecEditorFrame(wx.Frame):
                             "Sensors": self.dumpListBox(self.list_box_sensors),
                             "Actions": self.dumpListBox(self.list_box_actions),
                             "Customs": self.dumpListBox(self.list_box_customs),
-                            "CurrentExperimentConfig": self.currentExperimentConfig,
+                            "currentExperimentName": self.currentExperimentName,
                             }
         if len(self.simSetup)>1:
             for id, config in enumerate(self.simSetup):
@@ -1171,7 +1172,7 @@ class SpecEditorFrame(wx.Frame):
         """
         self.projectFiles["RegionFile"] = ""
         self.projectFiles["RobotFile"] = ""
-        self.currentExperimentConfig = 'Default'
+        self.currentExperimentName = 'Default'
         self.simSetup = [{  "Name": "Default",
                             "RobotFile": "",
                             "LabFile": "",
@@ -1190,18 +1191,25 @@ class SpecEditorFrame(wx.Frame):
         self.subprocess[PROCESS_DOTTY] = None
 
     def openFile(self, fileName):
+
         if fileName is None:
             return
 
-        data = fileMethods.readFromFile(fileName)
+        proj = project.Project()
+        proj.loadProject(fileName)
+ 
+        #data = fileMethods.readFromFile(fileName )
+        data = proj.spec_data
         if data is None:
             wx.MessageBox("Cannot open specification file %s" % (fileName), "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
 
+
         self.setDefaults()
 
         filePath = os.path.dirname(os.path.abspath(fileName))
+
         for name, content in data.iteritems():
             if name == 'SPECIFICATION' and 'Spec' in content and len(content['Spec']) > 0: 
                 self.text_ctrl_spec.SetValue("\n".join(content['Spec']))
@@ -1218,8 +1226,9 @@ class SpecEditorFrame(wx.Frame):
                         self.list_box_customs.Select(0)
                 if 'Sensors' in content:
                     self.loadList(content['Sensors'], self.list_box_sensors)
-                if 'CurrentExperimentConfig' in content and len(content['CurrentExperimentConfig']) > 0:
-                    self.currentExperimentConfig = content['CurrentExperimentConfig'][0]
+                if 'currentExperimentName' in content and len(content['currentExperimentName']) > 0:
+                    self.currentExperimentName = content['currentExperimentName'][0]
+                    
 
             elif 'EXPERIMENT CONFIG' in name:
                 self.simSetup.append({})
@@ -1710,6 +1719,8 @@ driver
         """
         Start Gazebo/Player/Stage as necessary.
         """
+
+
         fileNamePrefix = os.path.join(self.projectPath, self.projectName)
 
         if self.simSetup['SimType'].lower() == 'gazebo':
@@ -1729,10 +1740,7 @@ driver
             time.sleep(1)
 
     def onMenuSimulate(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-
-    #sim_Dialog = simDialog(self, self)
-        #sim_Dialog.ShowModal()
-
+        """ Run the simulation with current experiment configration. """
 
         # TODO: Maybe we shouldn't be recalculating fileNamePrefix so much...
         fileNamePrefix = os.path.join(self.projectPath, self.projectName)
@@ -1748,6 +1756,10 @@ driver
         sys.stdout = redir
         sys.stderr = redir
 
+        subprocess.Popen(["python", "execute.py", "-a", fileNamePrefix + ".aut", "-s", fileNamePrefix + ".spec"])
+
+
+        """
         if self.simSetup['SimType'].lower() != 'none':
             # only need this if running a simulation - Stage/Gazebo
             self.writeSimConfig()
@@ -1773,7 +1785,7 @@ driver
             # TODO: Detect quit, make interface
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
-
+        """
 
 
     def onClickEditRegions(self, event): # wxGlade: SpecEditorFrame.<event_handler>

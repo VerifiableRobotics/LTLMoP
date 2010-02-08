@@ -40,8 +40,11 @@ class Project:
 
         #### Load in the lab setup file
 
+        
         lab_name = exp_cfg_data['Lab'][0]
-     
+        # Add extension to the name if there isn't one. 
+        if not lab_name.endswith('.lab'):
+            lab_name = lab_name+'.lab'     
         print "Loading lab setup file %s..." % lab_name
         try:
             # First try path relative to project path
@@ -65,6 +68,9 @@ class Project:
         #### Load in the robot file
         
         rdf_name = exp_cfg_data['RobotFile'][0]
+        # Add extension to the name if there isn't one. 
+        if not rdf_name.endswith('.robot'):
+            rdf_name = rdf_name+'.robot'  
      
         print "Loading robot description file %s..." % rdf_name
         try:
@@ -147,7 +153,7 @@ class Project:
         self.spec_data = self.loadSpecFile(spec_file)
 
         # Figure out the name of the current experiment config
-        exp_cfg_name = self.spec_data['SETTINGS']['CurrentExperimentConfig'][0]
+        exp_cfg_name = self.spec_data['SETTINGS']['currentExperimentName'][0]
 
         self.exp_cfg_data = self.getExperimentConfig(exp_cfg_name)
         self.lab_data = self.loadLabData(self.exp_cfg_data)

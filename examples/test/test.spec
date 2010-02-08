@@ -1,9 +1,52 @@
-====== SETTINGS =======
+# This is a specification definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
 
-RegionFile: # Relative path of region description file
-test.regions
 
-Actions: # List of actions and their state in the spec editor (enabled = 1, disabled = 0)
+======== EXPERIMENT CONFIG 1 ========
+
+Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
+0.0150144932351,-7.6529277972,-0.0145000006471,5.45750032578
+
+InitialRegion: # Initial region number
+1
+
+InitialTruths: # List of initially true propositions
+Bird
+
+Lab: # Lab configuration file
+playerstage
+
+Name: # Name of the experiment
+Stage (Point Robot)
+
+RobotFile: # Relative path of robot description file
+partario.robot
+
+
+======== EXPERIMENT CONFIG 2 ========
+
+Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
+0.0150144932351,-7.6529277972,-0.0145000006471,5.45750032578
+
+InitialRegion: # Initial region number
+1
+
+InitialTruths: # List of initially true propositions
+
+Lab: # Lab configuration file
+cornell_asl
+
+Name: # Name of the experiment
+Pioneer @ ASL
+
+RobotFile: # Relative path of robot description file
+pioneer.robot
+
+
+======== SETTINGS ========
+
+Actions: # List of actions and their state (enabled = 1, disabled = 0)
 PickUp,1
 Drop,1
 Jump,0
@@ -12,16 +55,20 @@ Ponder,0
 Customs: # List of custom propositions
 CarryingFly
 
-Sensors: # List of sensors and their state in the spec editor (enabled = 1, disabled = 0)
+RegionFile: # Relative path of region description file
+test.regions
+
+Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
 Fly,1
 Bird,1
 Snake,1
 Human,0
 
-CurrentExperimentConfig: # The name of the currently-enabled experiment configuration
+currentExperimentName:
 Stage (Point Robot)
 
-====== SPECIFICATION =======
+
+======== SPECIFICATION ========
 
 Spec: # Specification in simple English
 
@@ -54,41 +101,3 @@ If you are not activating CarryingFly then visit beans
 If you are not activating CarryingFly then visit tomato
 If you are activating CarryingFly then visit mystery
 
-====== EXPERIMENT CONFIG 1 ========
-
-Name:
-Stage (Point Robot)
-
-RobotFile: # Robot description file
-partario.robot
-
-Lab: # Lab configuration file
-playerstage.lab
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset)
-0.0150144932351, -7.6529277972, -0.0145000006471, 5.45750032578  
-
-InitialTruths: # List of initially true system propositions
-Bird
-
-InitialRegion: # Initial region number
-1
-
-====== EXPERIMENT CONFIG 2 ========
-
-Name:
-Pioneer @ ASL
-
-RobotFile: # Robot description file
-pioneer.robot
-
-Lab: # Lab configuration file
-cornell_asl.lab
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset)
-0.0150144932351, -7.6529277972,   -0.0145000006471,    5.45750032578  
-
-InitialTruths: # List of initially true system propositions
-
-InitialRegion: # Initial region number
-1

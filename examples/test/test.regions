@@ -30,8 +30,8 @@ mushrooms	eggy	409	667	416	550
 mystery	eggy	340	471	416	550
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
-newbreakfast_simbg.png
+test_simbg.png
 
 Background: # Relative path of background image file
-breakfast_background.jpg
+test_background.jpg
 
