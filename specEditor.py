@@ -170,10 +170,10 @@ class simSetupDialog(wx.Dialog):
             try:
                 print 'Loading experiment configuration %s...' %config['Name']
                 self.list_box_experiment_name.Insert(config['Name'],id)
-                self.list_box_experiment_name.Select(id)
-                self.loadSimSetup(id)               
+                self.loadSimSetup(id)
             except:
                 print "Cannot load simulation setup for %s. Please check the spec file." % config['Name']
+        self.list_box_experiment_name.Select(self.list_box_experiment_name.GetItems().index(parent.currentExperimentConfig))
 
 
     def __set_properties(self):
@@ -297,6 +297,7 @@ class simSetupDialog(wx.Dialog):
 
     def loadSimSetup(self, id):
         """ Load the experiment config from the item with index = id in the list"""
+
         self.text_ctrl_sim_experiment_name.SetValue(self.tempSimSetup[id]['Name'])        
 
         # Set up the initial actions checklist as appropriate
@@ -327,6 +328,17 @@ class simSetupDialog(wx.Dialog):
                 self.choice_startpos.Append(region.name)
         self.choice_startpos.Select(self.tempSimSetup[id]["InitialRegion"])
 
+        # Set up the list of robots
+        self.choice_sim_robot.Clear()
+        fileList = os.listdir(os.path.join(os.getcwd(),'robots'))
+
+        for robotFile in fileList:
+            if 'robot' == robotFile.split('.')[1] :
+                self.choice_sim_robot.Append(robotFile.split('.')[0])
+                if robotFile == self.tempSimSetup[id]['RobotFile']:
+                    self.choice_sim_robot.Select(self.choice_sim_robot.GetItems().index(robotFile.split('.')[0]))
+
+        
         # Select the simulation type
         if self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "gazebo":
             self.choice_simtype.Select(0)
@@ -365,13 +377,16 @@ class simSetupDialog(wx.Dialog):
         # Update initial region
         self.tempSimSetup[id]['InitialRegion'] = self.choice_startpos.GetSelection()
 
+        # Update robot file name
+        self.tempSimSetup[id]['RobotFile'] = self.choice_sim_robot.GetStringSelection()+".robot"
+
         # Update simulation type
         if self.choice_simtype.GetSelection() == 0:
             self.tempSimSetup[id]["LabFile"] = "Gazebo"
         elif self.choice_simtype.GetSelection() == 1:
-            self.tempSimSetup[id]["LabFile"] = "Stage"
+            self.tempSimSetup[id]["LabFile"] = "playerstage"
         elif self.choice_simtype.GetSelection() == 2:
-            self.tempSimSetup[id]["LabFile"] = "None"
+            self.tempSimSetup[id]["LabFile"] = "asl"
 
         # Update coordinate transformation values
         self.tempSimSetup[id]["XScale"] = float(self.text_ctrl_xscale.GetValue())
@@ -456,6 +471,7 @@ class simSetupDialog(wx.Dialog):
         ###########################################
         # Simulation configuration dialog cleanup #
         ###########################################
+        self.parent.currentExperimentConfig = self.list_box_experiment_name.GetStringSelection()
         self.parent.simSetup = copy.deepcopy(self.tempSimSetup)  
         event.Skip()
   
@@ -469,7 +485,6 @@ class simSetupDialog(wx.Dialog):
         for id, config in enumerate(self.tempSimSetup):
             if name == config['Name']:
                 self.saveSimSetup(id)
-            
         selection = self.list_box_experiment_name.GetSelection()
         
         if selection == 0:
@@ -558,6 +573,8 @@ class simSetupDialog(wx.Dialog):
         Adjusts the simSetup data structure to reflect the new configuration
         values.
         """
+
+        self.parent.currentExperimentConfig = self.list_box_experiment_name.GetStringSelection()
         self.parent.simSetup = copy.deepcopy(self.tempSimSetup)  
         event.Skip()
 
@@ -567,7 +584,7 @@ class simSetupDialog(wx.Dialog):
         selection = self.list_box_experiment_name.GetSelection()
         oldName = self.list_box_experiment_name.GetStringSelection()
 
-        if newName != oldName:
+        if self.text_ctrl_sim_experiment_name.IsModified() and newName != oldName:
             self.tempSimSetup[selection]['Name'] = newName
             self.list_box_experiment_name.SetString(selection, newName)
         event.Skip()
@@ -754,7 +771,9 @@ class SpecEditorFrame(wx.Frame):
         self.projectFiles = {}
         self.rfi = None
         self.subprocess = [None] * 4
-        self.simSetup = {}
+        self.simSetup = []
+        self.currentExperimentConfig = ""
+
         global PROCESS_REGED; PROCESS_REGED = 0
         global PROCESS_PLAYER; PROCESS_PLAYER = 1
         global PROCESS_GAZEBO; PROCESS_GAZEBO = 2
@@ -1085,7 +1104,7 @@ class SpecEditorFrame(wx.Frame):
                             "Sensors": self.dumpListBox(self.list_box_sensors),
                             "Actions": self.dumpListBox(self.list_box_actions),
                             "Customs": self.dumpListBox(self.list_box_customs),
-                            "CurrentExperimentConfig": ''
+                            "CurrentExperimentConfig": self.currentExperimentConfig,
                             }
         if len(self.simSetup)>1:
             for id, config in enumerate(self.simSetup):
@@ -1152,6 +1171,7 @@ class SpecEditorFrame(wx.Frame):
         """
         self.projectFiles["RegionFile"] = ""
         self.projectFiles["RobotFile"] = ""
+        self.currentExperimentConfig = 'Default'
         self.simSetup = [{  "Name": "Default",
                             "RobotFile": "",
                             "LabFile": "",
@@ -1198,6 +1218,8 @@ class SpecEditorFrame(wx.Frame):
                         self.list_box_customs.Select(0)
                 if 'Sensors' in content:
                     self.loadList(content['Sensors'], self.list_box_sensors)
+                if 'CurrentExperimentConfig' in content and len(content['CurrentExperimentConfig']) > 0:
+                    self.currentExperimentConfig = content['CurrentExperimentConfig'][0]
 
             elif 'EXPERIMENT CONFIG' in name:
                 self.simSetup.append({})
