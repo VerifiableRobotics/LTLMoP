@@ -56,7 +56,7 @@ window
 # load an environment bitmap
 map
 (
-    bitmap "/Users/cameron/Projects/ltlmop/examples/test/test_simbg.png"
+    bitmap "/Users/cameron/Projects/ltlmop/examples/icra10/icra10_simbg.png"
     size [16 12]
     name "example1"
     boundary 0
@@ -68,7 +68,7 @@ pointbot
 (
     name "robot1"
     color "red"
-    pose [0.199652 0.542000 0]
+    pose [-4.724902 0.638158 0]
 
     localization "gps"
     localization_origin [0 0 0]

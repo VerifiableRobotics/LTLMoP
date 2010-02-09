@@ -403,52 +403,22 @@ class simSetupDialog(wx.Dialog):
         """
         
         # Make sure not simulating already
+        # TODO: Update this part
         if self.parent.subprocess[PROCESS_PLAYER] is not None \
         or self.parent.subprocess[PROCESS_GAZEBO] is not None:
             wx.MessageBox("Please close the running simulation before calibrating.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
 
-        self.parent.writeSimConfig(calib=True)
-
         fileNamePrefix = os.path.join(self.parent.projectPath, self.parent.projectName)
 
-        self.parent.runSimEnvironment()
-
-        # show the mini map for demostrating the points
-        self.parent.mapDialog.Show()
-        wx.Yield()
-
-        # TODO: Maybe we don't need to use subprocess.Popen?
-        #self.parent.subprocess[PROCESS_CALIB] = wx.Process(self, PROCESS_CALIB)
-        #wx.Execute("./playerclient.py -calibrate %s.spec" % (os.path.join(wd,self.projectName)), wx.EXEC_ASYNC, self.subprocess[PROCESS_CALIB])
-    
-        # TODO: It would be nice to have a real GUI instead of just the terminal for this part
+        proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec"],stderr=subprocess.PIPE)
         
-        # Get the name of the experiment currently working with
-        expName = self.list_box_experiment_name.GetStringValue()
-        if self.parent.simSetup[expName]['LabFile'].split('.')[0].lower() != 'cornell_asl':
-            # JJLLceline (keep working from here)
+        output = proc.stderr.readline().strip()
+        while not output.startswith("CALIB"):
+            output = proc.stderr.readline().strip()
 
-            # Run the simulation in calibration mode and read its results on STDERR
-            self.parent.appendLog("Starting client...\n")
-            output = subprocess.Popen(["python", "playerClient.py", "-calibrate", fileNamePrefix + ".spec", "localhost"],stderr=subprocess.PIPE).communicate()[1].strip()
-        else:
-            # Run the simulation in calibration mode on a real robot - don't need to run player, just the client
-            # need to pass the host name
-            self.parent.appendLog("Starting client...\n")
-            #output = subprocess.Popen(["python", "orcaClient.py", "-calibrate", fileNamePrefix + ".spec", "scarab-6"], stderr=subprocess.PIPE).communicate()[1].strip()
-            orcaClientProcess = subprocess.Popen(["python", "orcaClient.py", "-calibrate", fileNamePrefix + ".spec", "scarab-6"], stderr=subprocess.PIPE)
-
-            fd = orcaClientProcess.stderr.fileno()
-            fl = fcntl.fcntl(fd, fcntl.F_GETFL)
-            fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK) 
-
-            while 1:
-                wx.Yield()
-                try: output = orcaClientProcess.stderr.readline().strip()
-                except: continue
-                break
+        output = output.split(":")[1]
 
         # Sanity check to make sure we got good data back
         if len(output.split("\t")) == 4:
@@ -472,8 +442,17 @@ class simSetupDialog(wx.Dialog):
         ###########################################
         # Simulation configuration dialog cleanup #
         ###########################################
+
+        # Save the current experiment config before load the new one
+        name = self.text_ctrl_sim_experiment_name.GetValue()
+
+        for id, config in enumerate(self.tempSimSetup):
+            if name == config['Name']:
+                self.saveSimSetup(id)
+
         self.parent.currentExperimentName = self.list_box_experiment_name.GetStringSelection()
         self.parent.simSetup = copy.deepcopy(self.tempSimSetup)  
+
         event.Skip()
   
 
@@ -574,6 +553,13 @@ class simSetupDialog(wx.Dialog):
         Adjusts the simSetup data structure to reflect the new configuration
         values.
         """
+
+        # Save the current experiment config before load the new one
+        name = self.text_ctrl_sim_experiment_name.GetValue()
+
+        for id, config in enumerate(self.tempSimSetup):
+            if name == config['Name']:
+                self.saveSimSetup(id)
 
         self.parent.currentExperimentName = self.list_box_experiment_name.GetStringSelection()
         self.parent.simSetup = copy.deepcopy(self.tempSimSetup)  

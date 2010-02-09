@@ -1,0 +1,15 @@
+ -- Skeleton SMV file: /Users/cameron/Projects/ltlmop/examples/icra10/icra10.smv
+
+
+MODULE main 
+ 	VAR 
+	 	 fire :  boolean;
+	 	 person :  boolean;
+	 	 hazardous_item :  boolean;
+	 	 bit0 :  boolean;
+	 	 bit1 :  boolean;
+	 	 bit2 :  boolean;
+	 	 pick_up :  boolean;
+	 	 radio :  boolean;
+	 	 extinguish :  boolean;
+	 	 carrying_item :  boolean;

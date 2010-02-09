@@ -125,7 +125,7 @@ class CalibrateFrame(wx.Frame):
         self.setStepInfo("Calibration complete. (xReal = %f*xPixel + %f, yReal = %f*yPixel + %f)" % (xscale, xoffset, yscale, yoffset), "Quit")
 
         # Sends the data back to SpecEditor via STDERR
-        print >> sys.stderr, "\t".join(map(str,[xscale, xoffset, yscale, yoffset]))
+        print >> sys.stderr, "CALIB:"+"\t".join(map(str,[xscale, xoffset, yscale, yoffset]))
         yield
 
     def drawRobot(self, event, state=[False]):

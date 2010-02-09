@@ -43,7 +43,7 @@ class initHandler:
             if "Stage driver creating 1 device" in input:
                 # NOTE: I'd prefer to wait for "Listening on ports" but it's buffered so we never get it until Stage quits
                 # We'll just have to wait for a moment after this to be sure
-                time.sleep(1)
+                time.sleep(3)
                 print "=============================================="
                 print "OK! Looks like Stage is at least mostly alive."
                 # TODO: Better handling of error cases

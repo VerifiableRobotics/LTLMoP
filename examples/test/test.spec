@@ -12,16 +12,15 @@ InitialRegion: # Initial region number
 1
 
 InitialTruths: # List of initially true propositions
-Bird
 
 Lab: # Lab configuration file
-playerstage
+cornell_asl
 
 Name: # Name of the experiment
-Stage (Point Robot)
+Pioneer @ ASL
 
 RobotFile: # Relative path of robot description file
-partario.robot
+pioneer.robot
 
 
 ======== EXPERIMENT CONFIG 2 ========
@@ -33,15 +32,16 @@ InitialRegion: # Initial region number
 1
 
 InitialTruths: # List of initially true propositions
+Bird
 
 Lab: # Lab configuration file
-cornell_asl
+playerstage
 
 Name: # Name of the experiment
-Pioneer @ ASL
+Stage (Point Robot)
 
 RobotFile: # Relative path of robot description file
-pioneer.robot
+partario.robot
 
 
 ======== SETTINGS ========

@@ -1,16 +1,16 @@
 Name: # Full name of the robot
-Partario the Conqueror
+Pioneer upon Avon
 
 Sensors: # Available binary sensor propositions
-lightOn
-senseBook
-senseClothes
-senseTrash
+fire
+person
+hazardous_item
 
 Actions: # Available binary actuator propositions
-pickUp
+pick_up
+radio
+extinguish
 drop
-destroy
 
 MotionControlHandler: # Module with continuous controller for moving between regions
 handlers.motionControl.heatController

@@ -1,0 +1,76 @@
+ -- PF file : /Users/cameron/Projects/ltlmop/examples/icra10/icra10.pf
+
+ Load "new_synthesis.tlv";
+
+ Let ts := compile_spec(
+ 	 ltl( 
+		(
+			 !fire & 
+			 !person & 
+			 !hazardous_item & 
+((( carrying_item ) & ( (!bit0 & !bit1 & bit2) ) ) <-> ) & 
+			 []((( (!bit0 & !bit1 & bit2) ) ) -> ( ! next(hazardous_item)) ) & 
+			 []((( (!bit0 & !bit1 & bit2) ) ) -> ( ! next(person)) ) & 
+			 []((( (!bit0 & !bit1 & bit2) ) ) -> ( ! next(fire)) ) & 
+			[]<>(TRUE) 		)
+		->
+		(			( (!bit0 & !bit1 & !bit2) 
+				 | (!bit0 & !bit1 & bit2)
+				 | (!bit0 & bit1 & !bit2)
+				 | (!bit0 & bit1 & bit2)
+				 | (bit0 & !bit1 & !bit2)
+				 | (bit0 & !bit1 & bit2)
+			) & 
+			 !pick_up & 
+			 !radio & 
+			 !extinguish & 
+			 !carrying_item & 
+			 []( ((!bit0 & !bit1 & !bit2)) -> ( ((!next(bit0) & !next(bit1) & !next(bit2)))
+									| ((!next(bit0) & next(bit1) & !next(bit2))) 
+									| ((next(bit0) & !next(bit1) & next(bit2)))  ) ) & 
+ 			 []( ((!bit0 & !bit1 & bit2)) -> ( ((!next(bit0) & !next(bit1) & next(bit2)))
+									| ((next(bit0) & !next(bit1) & !next(bit2))) 
+									| ((next(bit0) & !next(bit1) & next(bit2)))  ) ) & 
+ 			 []( ((!bit0 & bit1 & !bit2)) -> ( ((!next(bit0) & next(bit1) & !next(bit2)))
+									| ((!next(bit0) & !next(bit1) & !next(bit2))) 
+									| ((next(bit0) & !next(bit1) & !next(bit2)))  ) ) & 
+ 			 []( ((!bit0 & bit1 & bit2)) -> ( ((!next(bit0) & next(bit1) & next(bit2)))
+									| ((next(bit0) & !next(bit1) & !next(bit2))) 
+									| ((next(bit0) & !next(bit1) & next(bit2)))  ) ) & 
+ 			 []( ((bit0 & !bit1 & !bit2)) -> ( ((next(bit0) & !next(bit1) & !next(bit2)))
+									| ((!next(bit0) & !next(bit1) & next(bit2))) 
+									| ((!next(bit0) & next(bit1) & !next(bit2))) 
+									| ((!next(bit0) & next(bit1) & next(bit2)))  ) ) & 
+ 			 []( ((bit0 & !bit1 & bit2)) -> ( ((next(bit0) & !next(bit1) & next(bit2)))
+									| ((!next(bit0) & !next(bit1) & !next(bit2))) 
+									| ((!next(bit0) & !next(bit1) & next(bit2))) 
+									| ((!next(bit0) & next(bit1) & next(bit2)))  ) ) & 
+ 			 []((( next(hazardous_item) ) & !( next(carrying_item) ) ) <-> ( next(pick_up)) ) & 
+			 []((( next(pick_up) ) | ( pick_up ) ) -> ( (next(bit0) <-> bit0) & (next(bit1) <-> bit1) & (next(bit2) <-> bit2) )) & 
+			 []((( pick_up ) ) -> ( next(carrying_item)) ) & 
+			 []((!( carrying_item ) & !( pick_up ) ) -> ( ! next(carrying_item)) ) & 
+			 []((!( carrying_item ) ) -> (  ! (!next(bit0) & !next(bit1) & next(bit2))) ) & 
+			 []((( next(person) ) ) <-> ( next(radio)) ) & 
+			 []((( next(radio) ) | ( radio ) ) -> ( (next(bit0) <-> bit0) & (next(bit1) <-> bit1) & (next(bit2) <-> bit2) )) & 
+			 []((( next(fire) ) ) <-> ( next(extinguish)) ) & 
+			 []((( next(extinguish) ) | ( extinguish ) ) -> ( (next(bit0) <-> bit0) & (next(bit1) <-> bit1) & (next(bit2) <-> bit2) )) & 
+			 []<>((!( carrying_item ) & !( radio ) & !( extinguish ) ) -> ( (!bit0 & !bit1 & !bit2)) ) & 
+			 []<>((!( carrying_item ) & !( radio ) & !( extinguish ) ) -> ( (bit0 & !bit1 & !bit2)) ) & 
+			 []<>((!( carrying_item ) & !( radio ) & !( extinguish ) ) -> ( (!bit0 & bit1 & !bit2)) ) & 
+			 []<>((!( carrying_item ) & !( radio ) & !( extinguish ) ) -> ( (!bit0 & bit1 & bit2)) ) & 
+			 []<>((!( carrying_item ) & !( radio ) & !( extinguish ) ) -> ( (bit0 & !bit1 & bit2)) ) & 
+			 []<>((( carrying_item ) & !( radio ) & !( extinguish ) ) -> ( (!bit0 & !bit1 & bit2)) ) 
+ 		)
+	),
+  	fire & person & hazardous_item , bit0 & bit1 & bit2 & pick_up & radio & extinguish & carrying_item );
+
+ Settime;
+ check_realizability ts, (ts + 1);
+ find_strategy some_aut_name, ts, (ts + 1);
+ optimize_aut some_aut_name;
+ optimize_aut some_aut_name;
+ optimize_aut some_aut_name;
+ Chktime;
+ log "/Users/cameron/Projects/ltlmop/examples/icra10/icra10.aut";
+ print_aut some_aut_name;
+ log;

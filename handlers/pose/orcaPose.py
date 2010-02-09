@@ -26,7 +26,9 @@ class poseHandler:
         #TODO: pos2d_sock.fflush()    
 
         while (time.time()-time_stamp)>0.01:
+            print "."
             data, sender = self.sock.recvfrom(1500)
+            print ","
             #print "Packet size: " + str(len(data))
             packet_doubles = array.array('d')
             packet_doubles.fromstring(data)
@@ -35,9 +37,9 @@ class poseHandler:
         pos_x = packet_doubles[2]
         pos_y = packet_doubles[3]
         pos_o = packet_doubles[4]
-        #print "X: " + str(pos_x)
-        #print "Y: " + str(pos_y)
-        #print "Orientation: " + str(pos_o)
+        print "X: " + str(pos_x)
+        print "Y: " + str(pos_y)
+        print "Orientation: " + str(pos_o)
 
         sys.stderr = olderr
 

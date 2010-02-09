@@ -1,26 +1,34 @@
 Name: # Full name of the robot
-Partario the Conqueror
+Pioneer01 the Firefighter
 
 Sensors: # Available binary sensor propositions
-lightOn
-senseBook
-senseClothes
-senseTrash
+fire
+person
+hazardous_item
 
 Actions: # Available binary actuator propositions
-pickUp
+pick_up
+radio
+extinguish
 drop
-destroy
 
 MotionControlHandler: # Module with continuous controller for moving between regions
 handlers.motionControl.heatController
 
 DriveHandler: # Module for converting a desired velocity vector to realistic motor commands
-handlers.drive.holonomicDrive
+handlers.drive.diffDrive
 
-PlayerHost:
-localhost
+### Below are settings for Scorpion08
 
-PlayerPort:
-6665
+OrcaVelocityHost:
+10.0.0.189
+
+OrcaVelocityPort:
+13339
+
+OrcaPositionGroup:
+239.255.255.0
+
+OrcaPositionPort:
+40976
 

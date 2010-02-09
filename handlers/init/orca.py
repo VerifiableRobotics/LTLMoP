@@ -4,7 +4,7 @@ Sets up network connections to communicate with Orca
 """
 
 from socket import *
-import sys
+import sys, struct
 
 class initHandler:
     def __init__(self, project_root, project_basename, exp_cfg_data, rdf_data, fwd_coordmap, rfi, calib=False):
@@ -23,10 +23,10 @@ class initHandler:
         print '(INIT) Connecting to Orca server...'
         self.vel2d_sock = socket(AF_INET, SOCK_DGRAM)
         self.pos2d_sock = socket(AF_INET, SOCK_DGRAM)
-        self.pos2d_sock.bind(('', POS2D_PORT))
+        self.pos2d_sock.bind(('', self.POS2D_PORT))
 
         # Join group
-        group_bin = inet_pton(AF_INET, POS2D_GROUP)
+        group_bin = inet_pton(AF_INET, self.POS2D_GROUP)
         mreq = group_bin + struct.pack('=I', INADDR_ANY)
         self.pos2d_sock.setsockopt(IPPROTO_IP, IP_ADD_MEMBERSHIP, mreq)
 
