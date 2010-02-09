@@ -38,13 +38,17 @@ class CalibrateFrame(wx.Frame):
 
         if len(sys.argv) < 2:
             print "You must specify a specification file."
-            print "Usage: %s [spec_file]" % sys.argv[0]
+            print "Usage: %s [spec_file] [exp_config_name]" % sys.argv[0]
             sys.exit(2)
 
         # Load configuration files
 
         self.proj = project.Project()
-        self.proj.loadProject(sys.argv[1])
+
+        if len(sys.argv) == 2:
+            self.proj.loadProject(sys.argv[1])
+        else:
+            self.proj = project.Project(sys.argv[1], exp_cfg_name=sys.argv[2])
 
         # Initialize the init and pose handlers
 

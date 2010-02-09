@@ -144,7 +144,7 @@ class Project:
         
         return spec_data
     
-    def loadProject(self, spec_file):
+    def loadProject(self, spec_file, exp_cfg_name=None):
         """
         Because the spec_file contains references to all other project files, this is all we
         need to know in order to load everything in.
@@ -152,8 +152,9 @@ class Project:
 
         self.spec_data = self.loadSpecFile(spec_file)
 
-        # Figure out the name of the current experiment config
-        exp_cfg_name = self.spec_data['SETTINGS']['currentExperimentName'][0]
+        # Figure out the name of the current experiment config if not specified
+        if exp_cfg_name is None:
+            exp_cfg_name = self.spec_data['SETTINGS']['currentExperimentName'][0]
 
         self.exp_cfg_data = self.getExperimentConfig(exp_cfg_name)
         self.lab_data = self.loadLabData(self.exp_cfg_data)
