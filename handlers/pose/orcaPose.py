@@ -3,7 +3,9 @@
 Reads from Vicon via Orca
 """
 
-import sys, time
+import sys, time, struct
+import array as pyarray
+from socket import *
 from numpy import *
 
 class poseHandler:
@@ -26,11 +28,9 @@ class poseHandler:
         #TODO: pos2d_sock.fflush()    
 
         while (time.time()-time_stamp)>0.01:
-            print "."
             data, sender = self.sock.recvfrom(1500)
-            print ","
             #print "Packet size: " + str(len(data))
-            packet_doubles = array.array('d')
+            packet_doubles = pyarray.array('d')
             packet_doubles.fromstring(data)
             time_stamp = packet_doubles[0] + (1e-6)*packet_doubles[1]
 
@@ -40,8 +40,6 @@ class poseHandler:
         print "X: " + str(pos_x)
         print "Y: " + str(pos_y)
         print "Orientation: " + str(pos_o)
-
-        sys.stderr = olderr
 
         self.lastPose = array([pos_x, pos_y, pos_o])
 

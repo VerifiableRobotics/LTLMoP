@@ -416,6 +416,8 @@ class simSetupDialog(wx.Dialog):
         
         output = proc.stderr.readline().strip()
         while not output.startswith("CALIB"):
+            if output != '':
+                print output
             output = proc.stderr.readline().strip()
 
         output = output.split(":")[1]
