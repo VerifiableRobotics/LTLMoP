@@ -413,7 +413,7 @@ class simSetupDialog(wx.Dialog):
 
         fileNamePrefix = os.path.join(self.parent.projectPath, self.parent.projectName)
 
-        proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec", "\""+self.list_box_experiment_name.GetStringSelection()+"\""],stderr=subprocess.PIPE)
+        proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec", self.list_box_experiment_name.GetStringSelection()],stderr=subprocess.PIPE)
         
         output = proc.stderr.readline().strip()
         while not output.startswith("CALIB"):

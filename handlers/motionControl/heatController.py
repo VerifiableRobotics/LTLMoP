@@ -29,7 +29,7 @@ class motionControlHandler:
 
         [X, DqX, F, inside, J] = controller(mat(pose[0:2]).T)
 
-        self.drive_handler.setVelocity(X[0,0], X[1,0])
+        self.drive_handler.setVelocity(X[0,0], X[1,0], pose[2])
         
         return inside
 

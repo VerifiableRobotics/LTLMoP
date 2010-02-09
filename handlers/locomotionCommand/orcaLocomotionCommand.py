@@ -2,6 +2,7 @@
 """
 Sends X,Y velocity commands to Orca
 """
+import array as pyarray
 
 class locomotionCommandHandler:
     def __init__(self, shared_data):
@@ -15,7 +16,7 @@ class locomotionCommandHandler:
 
     def sendCommand(self, cmd):
         # We are expecting a [vt, vw] command
-        cmd_data = array.array('d')
+        cmd_data = pyarray.array('d')
         cmd_data.fromlist([cmd[0], 0, cmd[1]])
         self.sock.sendto(cmd_data, (self.VEL2D_HOST, self.VEL2D_PORT))
 

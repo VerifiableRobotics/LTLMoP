@@ -16,7 +16,7 @@ MotionControlHandler: # Module with continuous controller for moving between reg
 handlers.motionControl.heatController
 
 DriveHandler: # Module for converting a desired velocity vector to realistic motor commands
-handlers.drive.diffDrive
+handlers.drive.differentialDrive
 
 ### Below are settings for Scorpion08
 
