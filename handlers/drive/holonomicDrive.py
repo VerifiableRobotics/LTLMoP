@@ -8,6 +8,6 @@ class driveHandler:
     def __init__(self, shared_data, loco_handler):
         self.loco = loco_handler
 
-    def setVelocity(self, x, y):
+    def setVelocity(self, x, y, theta=0):
         self.loco.sendCommand([x,y])
 

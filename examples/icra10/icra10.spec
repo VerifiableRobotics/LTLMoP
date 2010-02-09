@@ -6,26 +6,6 @@
 ======== EXPERIMENT CONFIG 1 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0145090906457,-7.97493804517,-0.0163607845119,5.97177404282
-
-InitialRegion: # Initial region number
-1
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-playerstage
-
-Name: # Name of the experiment
-PlayerStage
-
-RobotFile: # Relative path of robot description file
-pioneer_stage.robot
-
-
-======== EXPERIMENT CONFIG 2 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
 0.0062981362043,0.693098166454,-0.00578751867985,2.42807666431
 
 InitialRegion: # Initial region number
@@ -41,6 +21,26 @@ ASL
 
 RobotFile: # Relative path of robot description file
 pioneer_real.robot
+
+
+======== EXPERIMENT CONFIG 2 ========
+
+Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
+0.0145090906457,-7.97493804517,-0.0163607845119,5.97177404282
+
+InitialRegion: # Initial region number
+1
+
+InitialTruths: # List of initially true propositions
+
+Lab: # Lab configuration file
+playerstage
+
+Name: # Name of the experiment
+PlayerStage
+
+RobotFile: # Relative path of robot description file
+pioneer_stage.robot
 
 
 ======== SETTINGS ========
@@ -63,7 +63,7 @@ person,1
 hazardous_item,1
 
 currentExperimentName:
-ASL
+PlayerStage
 
 
 ======== SPECIFICATION ========
