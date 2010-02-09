@@ -175,6 +175,7 @@ class simSetupDialog(wx.Dialog):
             except:
                 print "Cannot load simulation setup for %s. Please check the spec file." % config['Name']
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetItems().index(parent.currentExperimentName))
+        self.loadSimSetup(self.list_box_experiment_name.GetSelection())
 
 
     def __set_properties(self):
@@ -412,7 +413,7 @@ class simSetupDialog(wx.Dialog):
 
         fileNamePrefix = os.path.join(self.parent.projectPath, self.parent.projectName)
 
-        proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec"],stderr=subprocess.PIPE)
+        proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec", "\""+self.list_box_experiment_name.GetStringSelection()+"\""],stderr=subprocess.PIPE)
         
         output = proc.stderr.readline().strip()
         while not output.startswith("CALIB"):

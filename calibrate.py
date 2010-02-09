@@ -36,7 +36,7 @@ class CalibrateFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onButtonGo, self.button_go)
         # end wxGlade
 
-        if len(sys.argv) < 2:
+        if len(sys.argv) < 3:
             print "You must specify a specification file."
             print "Usage: %s [spec_file] [exp_config_name]" % sys.argv[0]
             sys.exit(2)
