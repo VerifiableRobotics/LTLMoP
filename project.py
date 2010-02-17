@@ -136,7 +136,7 @@ class Project:
         # Figure out where we should be looking for files, based on the spec file name & location
         self.project_root = os.path.dirname(spec_file)
         self.project_basename, ext = os.path.splitext(os.path.basename(spec_file)) 
-        self.ltlmop_root = os.path.dirname(sys.argv[0])
+        self.ltlmop_root = os.path.abspath(os.path.dirname(sys.argv[0]))
 
         ### Load in the specification file
         print "Loading specification file %s..." % spec_file
@@ -178,7 +178,7 @@ class Project:
         self.h_name['motionControl'] = self.robot_data["MotionControlHandler"][0]
         self.h_name['drive'] = self.robot_data["DriveHandler"][0]
     
-    def runInitialization(self):
+    def runInitialization(self, calib=False):
         # We treat initialization handlers separately, because there may be multiple ones
         # NOTE: These will be loaded in the same order as they are listed in the config file
 
@@ -189,7 +189,7 @@ class Project:
             print "  -> %s" % handler
             # TODO: Is there a more elegant way to do this? This is pretty ugly...
             exec("from %s import initHandler as initHandler%d" % (handler, init_num)) in locals() # WARNING: This assumes our input data is not malicious...
-            exec("self.init_handlers.append(initHandler%d(self.project_root, self.project_basename, self.exp_cfg_data, self.robot_data, self.fwd_coordmap, self.rfi, calib=False))" % (init_num)) in locals()
+            exec("self.init_handlers.append(initHandler%d(self.project_root, self.project_basename, self.exp_cfg_data, self.robot_data, self.fwd_coordmap, self.rfi, calib=calib))" % (init_num)) in locals()
             self.shared_data.update(self.init_handlers[-1].getSharedData())
             init_num += 1  # So they don't clobber each other
 

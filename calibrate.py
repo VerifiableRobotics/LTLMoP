@@ -54,7 +54,7 @@ class CalibrateFrame(wx.Frame):
 
         self.proj.lookupHandlers()
         print "Importing handler functions..."
-        self.proj.runInitialization()
+        self.proj.runInitialization(calib=True)
         self.proj.importHandlers(['pose'])
 
         map_filename = self.proj.getBackgroundImagePath()
