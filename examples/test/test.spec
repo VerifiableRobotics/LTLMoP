@@ -6,28 +6,7 @@
 ======== EXPERIMENT CONFIG 1 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0150144932351,-7.6529277972,-0.0145000006471,5.45750032578
-
-InitialRegion: # Initial region number
-1
-
-InitialTruths: # List of initially true propositions
-Bird
-
-Lab: # Lab configuration file
-playerstage
-
-Name: # Name of the experiment
-Stage (Point Robot)
-
-RobotFile: # Relative path of robot description file
-partario.robot
-
-
-======== EXPERIMENT CONFIG 2 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0150144932351,-7.6529277972,-0.0145000006471,5.45750032578
+1.0,3.0,2.0,4.0
 
 InitialRegion: # Initial region number
 1
@@ -35,13 +14,33 @@ InitialRegion: # Initial region number
 InitialTruths: # List of initially true propositions
 
 Lab: # Lab configuration file
-cornell_asl
+cornell_asl.lab
 
 Name: # Name of the experiment
 Pioneer @ ASL
 
 RobotFile: # Relative path of robot description file
-pioneer.robot
+pioneer_real.robot
+
+
+======== EXPERIMENT CONFIG 2 ========
+
+Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
+0.0154202902951,-7.90289878615,-0.0135000007493,4.93050037963
+
+InitialRegion: # Initial region number
+1
+
+InitialTruths: # List of initially true propositions
+
+Lab: # Lab configuration file
+playerstage.lab
+
+Name: # Name of the experiment
+Stage (Point Robot)
+
+RobotFile: # Relative path of robot description file
+pioneer_stage.robot
 
 
 ======== SETTINGS ========
@@ -61,7 +60,7 @@ test.regions
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
 Fly,1
 Bird,1
-Snake,1
+Snake,0
 Human,0
 
 currentExperimentName:

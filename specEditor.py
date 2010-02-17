@@ -112,7 +112,7 @@ class simSetupDialog(wx.Dialog):
         self.label_8 = wx.StaticText(self, -1, "Sensor Activation")
         self.list_box_init_sensors = wx.CheckListBox(self, -1, choices=["5", "6"])
         self.label_7 = wx.StaticText(self, -1, "Simulation Environment: ")
-        self.choice_simtype = wx.Choice(self, -1, choices=["Gazebo", "Stage", "None (Just connect to Player)"])
+        self.choice_sim_lab = wx.Choice(self, -1, choices=[])
         self.label_7_copy = wx.StaticText(self, -1, "Robot Type:")
         self.choice_sim_robot = wx.Choice(self, -1, choices=[])
         self.label_4 = wx.StaticText(self, -1, "X Scale: ")
@@ -187,8 +187,7 @@ class simSetupDialog(wx.Dialog):
         self.list_box_init_customs.SetSelection(0)
         self.list_box_init_actions.SetSelection(0)
         self.list_box_init_sensors.SetSelection(0)
-        self.choice_simtype.SetMinSize((150, 29))
-        self.choice_simtype.SetSelection(1)
+        self.choice_sim_lab.SetMinSize((150, 29))
         self.choice_sim_robot.SetMinSize((150, 29))
         self.text_ctrl_xscale.SetMinSize((160, 27))
         self.text_ctrl_xoffset.SetMinSize((160, 27))
@@ -259,7 +258,7 @@ class simSetupDialog(wx.Dialog):
         sizer_22.Add(sizer_23, 5, wx.EXPAND, 0)
         sizer_27.Add(sizer_22, 1, wx.ALL|wx.EXPAND, 10)
         grid_sizer_1.Add(self.label_7, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
-        grid_sizer_1.Add(self.choice_simtype, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        grid_sizer_1.Add(self.choice_sim_lab, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         grid_sizer_1.Add(self.label_7_copy, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 0)
         grid_sizer_1.Add(self.choice_sim_robot, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         sizer_18_copy.Add(grid_sizer_1, 1, wx.EXPAND, 0)
@@ -340,14 +339,15 @@ class simSetupDialog(wx.Dialog):
                 if robotFile == self.tempSimSetup[id]['RobotFile']:
                     self.choice_sim_robot.Select(self.choice_sim_robot.GetItems().index(robotFile.split('.')[0]))
 
-        
-        # Select the simulation type
-        if self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "gazebo":
-            self.choice_simtype.Select(0)
-        elif self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "playerstage":
-            self.choice_simtype.Select(1)
-        elif self.tempSimSetup[id]["LabFile"].split('.')[0].lower() == "cornell_asl":
-            self.choice_simtype.Select(2)
+        # Set up the list of labs
+        self.choice_sim_lab.Clear()
+        fileList = os.listdir(os.path.join(os.getcwd(),'labs'))
+
+        for labFile in fileList:
+            if labFile.endswith('.lab'):
+                self.choice_sim_lab.Append(labFile.split('.')[0])
+                if labFile == self.tempSimSetup[id]['LabFile']:
+                    self.choice_sim_lab.Select(self.choice_sim_lab.GetItems().index(labFile.split('.')[0]))
 
         # Load in the coordinate transformation values
         self.text_ctrl_xscale.SetValue(str(self.tempSimSetup[id]["XScale"]))
@@ -382,13 +382,8 @@ class simSetupDialog(wx.Dialog):
         # Update robot file name
         self.tempSimSetup[id]['RobotFile'] = self.choice_sim_robot.GetStringSelection()+".robot"
 
-        # Update simulation type
-        if self.choice_simtype.GetSelection() == 0:
-            self.tempSimSetup[id]["LabFile"] = "Gazebo"
-        elif self.choice_simtype.GetSelection() == 1:
-            self.tempSimSetup[id]["LabFile"] = "playerstage"
-        elif self.choice_simtype.GetSelection() == 2:
-            self.tempSimSetup[id]["LabFile"] = "cornell_asl"
+        # Update lab file name
+        self.tempSimSetup[id]['LabFile'] = self.choice_sim_lab.GetStringSelection()+".lab"
 
         # Update coordinate transformation values
         self.tempSimSetup[id]["XScale"] = float(self.text_ctrl_xscale.GetValue())
@@ -446,12 +441,20 @@ class simSetupDialog(wx.Dialog):
         # Simulation configuration dialog cleanup #
         ###########################################
 
-        # Save the current experiment config before load the new one
+        # Save the current experiment config
         name = self.text_ctrl_sim_experiment_name.GetValue()
 
         for id, config in enumerate(self.tempSimSetup):
             if name == config['Name']:
                 self.saveSimSetup(id)
+
+
+        name = self.text_ctrl_sim_experiment_name.GetValue()
+
+        for id, config in enumerate(self.tempSimSetup):
+            if name == config['Name']:
+                self.saveSimSetup(id)
+
 
         self.parent.currentExperimentName = self.list_box_experiment_name.GetStringSelection()
         self.parent.simSetup = copy.deepcopy(self.tempSimSetup)  
