@@ -19,10 +19,9 @@ import wxversion
 wxversion.select('2.8')
 import wx, wx.richtext, wx.grid
 from regions import *
-from createTLVinput import createPFfile, createSMVfile
+from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import writeSpec
 import fileMethods
-import fcntl
 import execute
 import project
 
@@ -1187,11 +1186,11 @@ class SpecEditorFrame(wx.Frame):
         if fileName is None:
             return
 
-        proj = project.Project()
-        proj.loadProject(fileName)
+        self.proj = project.Project()
+        self.proj.loadProject(fileName)
  
         #data = fileMethods.readFromFile(fileName )
-        data = proj.spec_data
+        data = self.proj.spec_data
         if data is None:
             wx.MessageBox("Cannot open specification file %s" % (fileName), "Error",
                         style = wx.OK | wx.ICON_ERROR)
@@ -1359,11 +1358,11 @@ class SpecEditorFrame(wx.Frame):
 
         createSMVfile(fileNamePrefix, numRegions, sensorList, robotPropList)
 
-        ##################
-        # Create PF File #
-        ##################
+        ###################
+        # Create LTL File #
+        ###################
 
-        self.appendLog("Creating PF file...\n", "BLUE")
+        self.appendLog("Creating LTL file...\n", "BLUE")
         wx.Yield()
         text = self.text_ctrl_spec.GetValue()
         regionList = [x.name for x in self.rfi.regions]
@@ -1372,7 +1371,7 @@ class SpecEditorFrame(wx.Frame):
         # TODO: Catch errors here
         adjData = self.rfi.transitions
 
-        createPFfile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
+        createLTLfile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
         if os.path.exists(fileNamePrefix+".pf"):
             f = open(fileNamePrefix+".pf","r")
             ltl = "".join(f.readlines())
@@ -1386,29 +1385,19 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Creating automaton...\n", "BLUE")
         wx.Yield()
 
-        wd = os.getcwd()
-        os.chdir(os.path.normpath(os.path.join(".","TLV")))
 
-        # Oh how many hours I've wasted trying to get this to output to the log live.
-        # I give up.
-
-
-        cmd = subprocess.Popen([os.path.join(".","tlv"), fileNamePrefix + ".pf",
-              fileNamePrefix + ".smv"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-        cmd.stdin.write("1\n")
-        cmd.stdin.close()
+        classpath = os.path.join(self.proj.ltlmop_root, "JTLV", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "JTLV", "GROne")
+        cmd = subprocess.Popen(["java", "-Xmx128m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     
+        # TODO: Make this output live
         while cmd.poll():
             wx.Yield()
 
         realizable = False
 
-        # For some reason TLV outputs a huge number of ^M characters, which we need to
-        # filter out.  I hope this doesn't cause problems on Windows.
         for line in cmd.stdout:
-            if "\015" not in line:
-                self.appendLog("\t"+line)
-            if "Specification is realizable." in line:
+            self.appendLog("\t"+line)
+            if "Specification is realizable" in line:
                realizable = True
 
         cmd.stdout.close()
@@ -1418,8 +1407,6 @@ class SpecEditorFrame(wx.Frame):
             self.appendLog("Automaton successfully synthesized.\n", "GREEN")
         else:
             self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
-
-        os.chdir(wd)
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__

@@ -56,7 +56,7 @@ window
 # load an environment bitmap
 map
 (
-    bitmap "/home/cornell/Desktop/svn-ltlmop/examples/test/test_simbg.png"
+    bitmap "/Users/cameron/Projects/ltlmop/examples/test/test_simbg.png"
     size [16 12]
     name "example1"
     boundary 0
@@ -68,7 +68,7 @@ pointbot
 (
     name "robot1"
     color "red"
-    pose [0.161913 0.354000 0]
+    pose [0.221565 0.552000 0]
 
     localization "gps"
     localization_origin [0 0 0]

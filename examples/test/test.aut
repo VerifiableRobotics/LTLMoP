@@ -1,376 +1,179 @@
 
- Automaton States
 
-State 1 rank 1
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 2 rank 1
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 3 rank 1
-Fly = 1            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 4 rank 1
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 5 rank 1
-Fly = 1            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 6 rank 2
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 7 rank 2
-Fly = 1            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 8 rank 3
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 9 rank 3
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 10 rank 4
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 11 rank 4
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 12 rank 8
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 13 rank 8
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 14 rank 8
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 15 rank 8
-Fly = 1            bit0 = 1           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 16 rank 1
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 1           CarryingFly = 1
-
-State 17 rank 2
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 18 rank 2
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 19 rank 3
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 20 rank 3
-Fly = 1            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 21 rank 3
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 22 rank 3
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 23 rank 3
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 24 rank 4
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 25 rank 4
-Fly = 1            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 26 rank 4
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 27 rank 4
-Fly = 1            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 28 rank 4
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 29 rank 4
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 30 rank 5
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 31 rank 5
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 32 rank 5
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 33 rank 5
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 34 rank 6
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 35 rank 6
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 36 rank 6
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 37 rank 6
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 38 rank 6
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 39 rank 6
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 40 rank 6
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 41 rank 7
-Fly = 1            bit0 = 0           bit1 = 1           bit2 = 1
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 42 rank 7
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 43 rank 7
-Fly = 1            bit0 = 0           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 44 rank 8
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 45 rank 8
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 46 rank 8
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 47 rank 8
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 48 rank 7
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 49 rank 7
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 50 rank 8
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 51 rank 1
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 52 rank 1
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 53 rank 1
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 54 rank 2
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 55 rank 2
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 56 rank 2
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 57 rank 2
-Fly = 1            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 58 rank 2
-Fly = 0            bit0 = 0           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 59 rank 1
-Fly = 1            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 60 rank 1
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 61 rank 1
-Fly = 1            bit0 = 0           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 62 rank 1
-Fly = 0            bit0 = 1           bit1 = 1           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 63 rank 1
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 64 rank 1
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 65 rank 1
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 66 rank 1
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 67 rank 1
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 68 rank 2
-Fly = 0            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 69 rank 2
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 70 rank 1
-Fly = 1            bit0 = 1           bit1 = 0           bit2 = 0
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 71 rank 1
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 0
-
-State 72 rank 1
-Fly = 1            bit0 = 0           bit1 = 1           bit2 = 1
-PickUp = 1         Drop = 0           CarryingFly = 0
-
-State 73 rank 1
-Fly = 0            bit0 = 0           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-State 74 rank 1
-Fly = 1            bit0 = 0           bit1 = 1           bit2 = 1
-PickUp = 0         Drop = 0           CarryingFly = 1
-
-
- Automaton Transitions
-
-From 1 to  3 2
-From 2 to  59 53
-From 3 to  5 4
-From 4 to  7 6
-From 5 to  7 6
-From 6 to  8 9
-From 7 to  8 9
-From 8 to  11 10
-From 9 to  11 10
-From 10 to  12 13 11
-From 11 to  12 13 10
-From 12 to  15 14
-From 13 to  15 14
-From 14 to  16
-From 15 to  16
-From 16 to  17
-From 17 to  18
-From 18 to  20 19
-From 19 to  22 21
-From 20 to  6 7
-From 21 to  20 23
-From 22 to  9 8
-From 23 to  25 24
-From 24 to  20 28
-From 25 to  27 26
-From 26 to  7 6
-From 27 to  7 6
-From 28 to  25 29
-From 29 to  31 30
-From 30 to  37 36
-From 31 to  33 32
-From 32 to  35 34
-From 33 to  35 34
-From 34 to  10 11
-From 35 to  10 11
-From 36 to  39 38
-From 37 to  34 35
-From 38 to  37 40
-From 39 to  11 10
-From 40 to  48 41
-From 41 to  43 42
-From 42 to  44 45 43
-From 43 to  44 45 42
-From 44 to  47 46
-From 45 to  47 46
-From 46 to  15 14
-From 47 to  15 14
-From 48 to  37 49
-From 49 to  53 50
-From 50 to  51 52
-From 51 to  10 11 52
-From 52 to  10 11 51
-From 53 to  55 54
-From 54 to  50 58
-From 55 to  57 56
-From 56 to  52 51
-From 57 to  52 51
-From 58 to  55 18
-From 59 to  61 60
-From 60 to  57 56
-From 61 to  57 56
-From 62 to  53
-From 63 to  65 64
-From 64 to  70 49
-From 65 to  67 66
-From 66 to  69 68
-From 67 to  69 68
-From 68 to  51 52
-From 69 to  51 52
-From 70 to  69 68
-From 71 to  72 64
-From 72 to  74 73
-From 73 to  42 43 74
-From 74 to  42 43 73
+State 0 with rank 0 -> <Fly:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 1, 2
+State 1 with rank 1 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 86, 2
+State 2 with rank 1 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 3, 4
+State 3 with rank 1 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 5, 6
+State 4 with rank 1 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 5, 6
+State 5 with rank 2 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 7, 8
+State 6 with rank 2 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 7, 8
+State 7 with rank 3 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 9, 10
+State 8 with rank 3 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 9, 10
+State 9 with rank 4 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 11, 12
+State 10 with rank 4 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 11, 12
+State 11 with rank 5 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 13, 14
+State 12 with rank 5 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 13, 14
+State 13 with rank 6 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 15, 16
+State 14 with rank 6 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 15, 16
+State 15 with rank 7 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 17, 18
+State 16 with rank 7 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 17, 18
+State 17 with rank 7 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 19, 20
+State 18 with rank 7 -> <Fly:1, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 19, 20
+State 19 with rank 7 -> <Fly:0, bit0:1, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 21
+State 20 with rank 7 -> <Fly:1, bit0:1, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 21
+State 21 with rank 0 -> <Fly:0, bit0:1, bit1:1, bit2:0, PickUp:0, Drop:1, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 22
+State 22 with rank 1 -> <Fly:0, bit0:1, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 23
+State 23 with rank 1 -> <Fly:0, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 24, 25
+State 24 with rank 2 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 30, 31
+State 25 with rank 2 -> <Fly:1, bit0:0, bit1:1, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 26, 27
+State 26 with rank 2 -> <Fly:0, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 28, 29
+State 27 with rank 2 -> <Fly:1, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 28, 29
+State 28 with rank 3 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 9, 10
+State 29 with rank 3 -> <Fly:1, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 9, 10
+State 30 with rank 2 -> <Fly:0, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 34, 25
+State 31 with rank 2 -> <Fly:1, bit0:0, bit1:0, bit2:1, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 32, 33
+State 32 with rank 2 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 7, 8
+State 33 with rank 2 -> <Fly:1, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 7, 8
+State 34 with rank 2 -> <Fly:0, bit0:1, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 35, 36
+State 35 with rank 3 -> <Fly:0, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 43, 44
+State 36 with rank 3 -> <Fly:1, bit0:1, bit1:1, bit2:1, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 37, 38
+State 37 with rank 3 -> <Fly:0, bit0:1, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 39, 40
+State 38 with rank 3 -> <Fly:1, bit0:1, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 39, 40
+State 39 with rank 4 -> <Fly:0, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 41, 42
+State 40 with rank 4 -> <Fly:1, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 41, 42
+State 41 with rank 5 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 13, 14
+State 42 with rank 5 -> <Fly:1, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 13, 14
+State 43 with rank 3 -> <Fly:0, bit0:1, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 49, 36
+State 44 with rank 3 -> <Fly:1, bit0:0, bit1:1, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 45, 46
+State 45 with rank 3 -> <Fly:0, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 47, 48
+State 46 with rank 3 -> <Fly:1, bit0:0, bit1:1, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 47, 48
+State 47 with rank 4 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 11, 12
+State 48 with rank 4 -> <Fly:1, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 11, 12
+State 49 with rank 3 -> <Fly:0, bit0:1, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 50, 51
+State 50 with rank 4 -> <Fly:0, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 56, 57
+State 51 with rank 4 -> <Fly:1, bit0:1, bit1:0, bit2:1, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 52, 53
+State 52 with rank 4 -> <Fly:0, bit0:1, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 54, 55
+State 53 with rank 4 -> <Fly:1, bit0:1, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 54, 55
+State 54 with rank 5 -> <Fly:0, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 13, 14
+State 55 with rank 5 -> <Fly:1, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 13, 14
+State 56 with rank 5 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 58, 59
+State 57 with rank 5 -> <Fly:1, bit0:1, bit1:0, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 54, 55
+State 58 with rank 5 -> <Fly:0, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 60, 57
+State 59 with rank 5 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 11, 12
+State 60 with rank 5 -> <Fly:0, bit0:0, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 61, 62
+State 61 with rank 6 -> <Fly:0, bit0:0, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 71, 62
+State 62 with rank 6 -> <Fly:1, bit0:0, bit1:1, bit2:1, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 63, 64
+State 63 with rank 6 -> <Fly:0, bit0:0, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 65, 66
+State 64 with rank 6 -> <Fly:1, bit0:0, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 65, 66
+State 65 with rank 7 -> <Fly:0, bit0:0, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 67, 68
+State 66 with rank 7 -> <Fly:1, bit0:0, bit1:1, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 67, 68
+State 67 with rank 7 -> <Fly:0, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 69, 70
+State 68 with rank 7 -> <Fly:1, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 69, 70
+State 69 with rank 7 -> <Fly:0, bit0:1, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 19, 20
+State 70 with rank 7 -> <Fly:1, bit0:1, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 19, 20
+State 71 with rank 6 -> <Fly:0, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 72, 73
+State 72 with rank 6 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 76, 77
+State 73 with rank 6 -> <Fly:1, bit0:1, bit1:0, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 74, 75
+State 74 with rank 6 -> <Fly:0, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 15, 16
+State 75 with rank 6 -> <Fly:1, bit0:1, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 15, 16
+State 76 with rank 7 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 80, 81
+State 77 with rank 7 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 78, 79
+State 78 with rank 0 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 3, 4
+State 79 with rank 0 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 3, 4
+State 80 with rank 0 -> <Fly:0, bit0:0, bit1:0, bit2:0, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 82, 81
+State 81 with rank 0 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 78, 79
+State 82 with rank 0 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 1, 83
+State 83 with rank 1 -> <Fly:1, bit0:0, bit1:0, bit2:1, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 84, 85
+State 84 with rank 1 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 5, 6
+State 85 with rank 1 -> <Fly:1, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:1, s_wasI:1, s_conS:1>
+	With successors : 5, 6
+State 86 with rank 1 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
+	With successors : 23, 83
+-----------------------------------------
+Strategy time: 393
+===== Done ==============================
