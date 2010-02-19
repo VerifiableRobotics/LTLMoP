@@ -20,6 +20,15 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         the region names and the list of robot propositions (other than regions). 
     '''
 
+    # Prepend "e." or "s." to propositions for JTLV
+    for i, sensor in enumerate(sensorList):
+        text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
+        sensorList[i] = "e." + sensorList[i]
+
+    for i, prop in enumerate(robotPropList):
+        text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
+        robotPropList[i] = "s." + robotPropList[i]
+
     # initializing the dictionary
     spec = {}
     spec['EnvInit']= ''
@@ -59,7 +68,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     LivenessRE = re.compile('(go to|visit|infinitely often do|infinitely often)',re.IGNORECASE)
     SafetyRE = re.compile('(always|always do |do )',re.IGNORECASE)
     StayRE = re.compile('(stay there|stay)',re.IGNORECASE)
-    EventRE = re.compile('(?P<prop>\w+) is set on (?P<setEvent>.+) and reset on (?P<resetEvent>.+)',re.IGNORECASE)
+    EventRE = re.compile('(?P<prop>[\w\.]+) is set on (?P<setEvent>.+) and reset on (?P<resetEvent>.+)',re.IGNORECASE)
 
 
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
@@ -84,7 +93,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         if re.search('\n$',line):
             line = re.sub('\n$','',line)
         # If there are ',' or '.', remove then
-        line = line.replace('.',' ')
+        line = line.replace('\B.\B',' ') # Leave periods that are in the middle of words.
         line = line.replace(',',' ')
 
 
@@ -168,7 +177,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 ReqFormulaInfo['type'] = 'SysTrans'
                 
             else:
-                print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' :'
+                print 'ERROR(13): Could not parse the sentence in line '+ str(lineInd)+' :'
                 print line
                 print 'because could not resolve the requirement:'
                 print Requirement
@@ -218,14 +227,14 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             # If could not parse the liveness
             if formulaInfo['formula']=='':
-                print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' :'
+                print 'ERROR(14): Could not parse the sentence in line '+ str(lineInd)+' :'
                 print line
                 print 'because could not parse liveness requirement'
                 continue
                 
             # If not SysGoals, then it is an error
             if not formulaInfo['type']=='SysGoals':
-                print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' :'
+                print 'ERROR(15): Could not parse the sentence in line '+ str(lineInd)+' :'
                 print line
                 print 'because the requirement is not system liveness'
                 continue
@@ -253,7 +262,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
         # Cannot parse
         else:
-            print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' :'
+            print 'ERROR(16): Could not parse the sentence in line '+ str(lineInd)+' :'
             print line
             print 'because it is not in a know format'
             print ''
@@ -349,9 +358,9 @@ def parseInit(sentence,PropList,lineInd):
     tempFormula = replaceLogicOp(tempFormula)
 
     # checking that all propositions are 'legal' (in the list of propositions)
-    for prop in re.findall('(\w+)',tempFormula):
+    for prop in re.findall('([\w\.]+)',tempFormula):
         if not prop in PropList:
-            print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
+            print 'ERROR(1): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
             return ''
     
     
@@ -381,15 +390,15 @@ def parseSafety(sentence,sensorList,allRobotProp,lineInd):
     tempFormula = replaceLogicOp(tempFormula)
 
     # checking that all propositions are 'legal' (in the list of propositions)
-    for prop in re.findall('(\w+)',tempFormula):
+    for prop in re.findall('([\w\.]+)',tempFormula):
         if not prop in PropList:
-            print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
+            print 'ERROR(2): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
             formulaInfo['type'] = 'EnvTrans' # arbitrary
             return formulaInfo
 
         if (prop in sensorList and formulaInfo['type'] == 'SysTrans') or \
            (prop in allRobotProp and formulaInfo['type'] == 'EnvTrans'):
-            print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' containing:'
+            print 'ERROR(3): Could not parse the sentence in line '+ str(lineInd)+' containing:'
             print sentence
             print 'because both environment and robot propositions are used \n'
             formulaInfo['type'] = 'EnvTrans' # arbitrary
@@ -439,15 +448,15 @@ def parseLiveness(sentence,sensorList,allRobotProp,lineInd):
     tempFormula = replaceLogicOp(tempFormula)
 
     # checking that all propositions are 'legal' (in the list of propositions)
-    for prop in re.findall('(\w+)',tempFormula):
+    for prop in re.findall('([\w\.]+)',tempFormula):
         if not prop in PropList:
-            print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
+            print 'ERROR(4): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
             formulaInfo['type'] = 'EnvGoals' # arbitrary
             return formulaInfo
 
         if (prop in sensorList and formulaInfo['type'] == 'SysGoals') or \
            (prop in allRobotProp and formulaInfo['type'] == 'EnvGoals'):
-            print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' containing:'
+            print 'ERROR(5): Could not parse the sentence in line '+ str(lineInd)+' containing:'
             print sentence
             print 'because both environment and robot propositions are used \n'
             formulaInfo['type'] = 'EnvGoals' # arbitrary
@@ -484,7 +493,7 @@ def parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,l
     condFormula = parseCond(Condition,sensorList,allRobotProp,formulaInfo['type'],lineInd)
     if condFormula == '':
         # If could not parse the condition, return
-        print 'ERROR: Could not parse the condition in line '+ str(lineInd)+'\n'
+        print 'ERROR(6): Could not parse the condition in line '+ str(lineInd)+'\n'
         return formulaInfo
     
     # Getting the subformula encoding the requirement:
@@ -503,7 +512,7 @@ def parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,l
     elif CondType == 'IFF':
         tempFormula = condFormula + ' <-> ' + reqFormula
     else:
-        print 'ERROR: Could not parse the condition in line '+ str(lineInd)+' because of unknown condition type\n'
+        print 'ERROR(7): Could not parse the condition in line '+ str(lineInd)+' because of unknown condition type\n'
         return formulaInfo
     
     
@@ -613,9 +622,9 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
          
             # checking that all propositions are 'legal' (in the list of propositions)
             # and adding 'next' if needed
-            for prop in re.findall('(\w+)',subTempFormula):
+            for prop in re.findall('([\w\.]+)',subTempFormula):
                 if not prop in PropList:
-                    print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
+                    print 'ERROR(8): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
                     return ''
 
                 if NextFlag and (prop in allRobotProp) and (ReqType == 'EnvTrans') :
@@ -654,9 +663,9 @@ def parseEvent(EventProp,SetEvent,ResetEvent,sensorProp,RobotProp,lineInd):
     ResetEvent = replaceLogicOp(ResetEvent)
 
     # checking that all propositions are 'legal' in the set and reset events, and adding the 'next' operator
-    for prop in re.findall('(\w+)',SetEvent):
+    for prop in re.findall('([\w\.]+)',SetEvent):
         if not prop in PropList:
-            print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' in the set event is not recognized\n'
+            print 'ERROR(9): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' in the set event is not recognized\n'
             return ''
         else:
             # replace every occurrence of the proposition with next(proposition)
@@ -666,9 +675,9 @@ def parseEvent(EventProp,SetEvent,ResetEvent,sensorProp,RobotProp,lineInd):
     if ResetEvent.upper()=='FALSE':
         ResetEvent = 'FALSE'
     else:
-        for prop in re.findall('(\w+)',ResetEvent):
+        for prop in re.findall('([\w\.]+)',ResetEvent):
             if not prop in PropList:
-                print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' in the reset event is not recognized\n'
+                print 'ERROR(10): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' in the reset event is not recognized\n'
                 return ''
             else:
                 # replace every occurrence of the proposition with next(proposition)
@@ -677,13 +686,13 @@ def parseEvent(EventProp,SetEvent,ResetEvent,sensorProp,RobotProp,lineInd):
 
     # Checking the event proposition
     if EventProp in sensorProp:
-        print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' because ' + EventProp + ' is a sensor proposition instead of a robot proposition'
+        print 'ERROR(11): Could not parse the sentence in line '+ str(lineInd)+' because ' + EventProp + ' is a sensor proposition instead of a robot proposition'
         return ''
     elif EventProp in RobotProp:
         pass
     else:
         # Not a single valid robot proposition
-        print 'ERROR: Could not parse the sentence in line '+ str(lineInd)+' because ' + EventProp + ' is not a valid robot proposition'
+        print 'ERROR(12): Could not parse the sentence in line '+ str(lineInd)+' because ' + EventProp + ' is not a valid robot proposition'
         return ''
 
     # Everything seems to be OK, lets write the formulas
@@ -748,12 +757,12 @@ def replaceRegionName(formula,bitEncode,regionList):
 def createStayFormula(numBits):
     ''' This function replaces the region names with the appropriate bit encoding.
     '''
-    tempFormula = '( (next(bit0) <-> bit0) '
+    tempFormula = '( (next(s.bit0) <-> s.bit0) '
     
     for bitNum in range(1,numBits):
 
         # Encoding the string
-        tempFormula = tempFormula + '& (next(bit'+ str(bitNum) +') <-> bit'+ str(bitNum) +') ' 
+        tempFormula = tempFormula + '& (next(s.bit'+ str(bitNum) +') <-> s.bit'+ str(bitNum) +') ' 
     
     StayFormula = tempFormula + ')'
 
@@ -785,11 +794,11 @@ def bitEncoding(numRegions,numBits):
                 currTempString = currTempString + ' & '
                 nextTempString = nextTempString + ' & '
             if bitString[bitNum]=='1':
-                currTempString = currTempString + 'bit' + str(bitNum)
-                nextTempString = nextTempString + 'next(bit' + str(bitNum) + ')'
+                currTempString = currTempString + 's.bit' + str(bitNum)
+                nextTempString = nextTempString + 'next(s.bit' + str(bitNum) + ')'
             if bitString[bitNum]=='0':
-                currTempString = currTempString + '!bit' + str(bitNum)
-                nextTempString = nextTempString + '!next(bit' + str(bitNum) + ')'
+                currTempString = currTempString + '!s.bit' + str(bitNum)
+                nextTempString = nextTempString + '!next(s.bit' + str(bitNum) + ')'
 
         currTempString = currTempString + ')'
         nextTempString = nextTempString + ')'
