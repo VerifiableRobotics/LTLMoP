@@ -1,0 +1,15 @@
+MODULE main
+	VAR
+		e : env();
+		s : sys();
+
+MODULE env -- inputs
+	VAR
+		r1 : boolean;
+		r2 : boolean;
+
+MODULE sys -- outputs
+	VAR
+		g1 : boolean;
+		g2 : boolean;
+ 

@@ -1,0 +1,58 @@
+==== Constructing and playing the game ======
+Games time: 28
+Specification is realizable...
+==== Building an implementation =========
+-----------------------------------------
+
+
+State 0 with rank 0 -> <r1:0, r2:0, g1:0, g2:0, s_wasI:1, s_conS:1>
+	With successors : 1, 2, 3, 4
+State 1 with rank 1 -> <r1:0, r2:0, g1:0, g2:0, s_wasI:1, s_conS:1>
+	With successors : 0, 16, 22, 23
+State 2 with rank 1 -> <r1:0, r2:1, g1:0, g2:0, s_wasI:1, s_conS:1>
+	With successors : 17, 5
+State 3 with rank 1 -> <r1:1, r2:0, g1:0, g2:0, s_wasI:1, s_conS:1>
+	With successors : 22, 23
+State 4 with rank 1 -> <r1:1, r2:1, g1:0, g2:0, s_wasI:1, s_conS:1>
+	With successors : 5
+State 5 with rank 1 -> <r1:1, r2:1, g1:0, g2:1, s_wasI:1, s_conS:1>
+	With successors : 6, 7
+State 6 with rank 0 -> <r1:1, r2:0, g1:0, g2:1, s_wasI:1, s_conS:1>
+	With successors : 8
+State 7 with rank 0 -> <r1:1, r2:1, g1:0, g2:1, s_wasI:1, s_conS:1>
+	With successors : 6, 7
+State 8 with rank 0 -> <r1:1, r2:0, g1:1, g2:0, s_wasI:1, s_conS:1>
+	With successors : 9, 10, 11, 12
+State 9 with rank 1 -> <r1:0, r2:0, g1:1, g2:0, s_wasI:1, s_conS:1>
+	With successors : 0, 16
+State 10 with rank 1 -> <r1:0, r2:1, g1:1, g2:0, s_wasI:1, s_conS:1>
+	With successors : 17
+State 11 with rank 1 -> <r1:1, r2:0, g1:1, g2:0, s_wasI:1, s_conS:1>
+	With successors : 13, 14, 8, 15
+State 12 with rank 1 -> <r1:1, r2:1, g1:1, g2:0, s_wasI:1, s_conS:1>
+	With successors : 10, 12
+State 13 with rank 0 -> <r1:0, r2:0, g1:1, g2:0, s_wasI:1, s_conS:1>
+	With successors : 0, 16
+State 14 with rank 0 -> <r1:0, r2:1, g1:1, g2:0, s_wasI:1, s_conS:1>
+	With successors : 16
+State 15 with rank 0 -> <r1:1, r2:1, g1:1, g2:0, s_wasI:1, s_conS:1>
+	With successors : 10, 12
+State 16 with rank 0 -> <r1:0, r2:1, g1:0, g2:0, s_wasI:1, s_conS:1>
+	With successors : 2, 4
+State 17 with rank 1 -> <r1:0, r2:1, g1:0, g2:1, s_wasI:1, s_conS:1>
+	With successors : 18, 19, 6, 7
+State 18 with rank 0 -> <r1:0, r2:0, g1:0, g2:1, s_wasI:1, s_conS:1>
+	With successors : 1, 3
+State 19 with rank 0 -> <r1:0, r2:1, g1:0, g2:1, s_wasI:1, s_conS:1>
+	With successors : 20, 17, 21, 5
+State 20 with rank 1 -> <r1:0, r2:0, g1:0, g2:1, s_wasI:1, s_conS:1>
+	With successors : 1, 3
+State 21 with rank 1 -> <r1:1, r2:0, g1:0, g2:1, s_wasI:1, s_conS:1>
+	With successors : 3
+State 22 with rank 0 -> <r1:1, r2:0, g1:0, g2:0, s_wasI:1, s_conS:1>
+	With successors : 8, 15
+State 23 with rank 0 -> <r1:1, r2:1, g1:0, g2:0, s_wasI:1, s_conS:1>
+	With successors : 15
+-----------------------------------------
+Strategy time: 63
+===== Done ==============================
