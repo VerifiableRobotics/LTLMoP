@@ -1372,8 +1372,8 @@ class SpecEditorFrame(wx.Frame):
         adjData = self.rfi.transitions
 
         createLTLfile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
-        if os.path.exists(fileNamePrefix+".pf"):
-            f = open(fileNamePrefix+".pf","r")
+        if os.path.exists(fileNamePrefix+".ltl"):
+            f = open(fileNamePrefix+".ltl","r")
             ltl = "".join(f.readlines())
             f.close()
             self.text_ctrl_LTL.SetValue(ltl)

@@ -117,7 +117,8 @@ public class GROneMain {
 		System.out.println("-----------------------------------------");
 		System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
 		g.printWinningStrategy(g.getEnvPlayer().initial().and(
-				g.getSysPlayer().initial()).satOne());
+				g.getSysPlayer().initial()).satOne(env.moduleUnprimeVars().union(
+						sys.moduleUnprimeVars()), false));  // Added BDDVarSet argument so that initial condition is fully specified -Cameron
 		System.setOut(System.out); // restore STDOUT
 		System.out.print("-----------------------------------------\n");
 		long t2 = (System.currentTimeMillis() - time);

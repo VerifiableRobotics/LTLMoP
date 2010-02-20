@@ -21,7 +21,7 @@ import edu.wis.jtlv.old_lib.games.GameException;
  * </p>
  * 
  * @version {@value edu.wis.jtlv.env.Env#version}
- * @author yaniv sa'ar.
+ * @author yaniv sa'ar. (parts modified by Cameron Finucane)
  * 
  */
 public class GROneGame {
@@ -216,6 +216,9 @@ public class GROneGame {
 			// making a new entry.
 			BDD p_st = st_stack.pop();
 			int p_j = j_stack.pop().intValue();
+
+            /* Create a new automaton state for our current state 
+              (or use a matching one if it already exists) */
 			RawState new_state = new RawState(aut.size(), p_st, p_j);
 			int nidx = aut.indexOf(new_state);
 			if (nidx == -1) {
@@ -224,6 +227,7 @@ public class GROneGame {
 				new_state = aut.elementAt(nidx);
 			}
 
+            /* Find Y index of current state */
 			// find minimal cy and an i
 			int p_cy = -1;
 			for (int i = 0; i < y_mem[p_j].length; i++) {
@@ -233,6 +237,7 @@ public class GROneGame {
 				}
 			}
 			assert p_cy >= 0 : "Couldn't find p_cy";
+            /* Find  X index of current state */
 			int p_i = -1;
 			for (int i = 0; i < env.justiceNum(); i++) {
 				if (!p_st.and(x_mem[p_j][i][p_cy]).isZero()) {
@@ -266,6 +271,7 @@ public class GROneGame {
 				int local_kind = strategy_kind;
 				while (candidate.isZero() & (local_kind >= 0)) {
 					// a - first successor option in the strategy.
+                    // (rho_1 in Piterman; satisfy current goal and move to next goal)
 					if ((local_kind == 3) | (local_kind == 7)
 							| (local_kind == 10) | (local_kind == 13)
 							| (local_kind == 18) | (local_kind == 21)) {
@@ -279,6 +285,7 @@ public class GROneGame {
 						}
 					}
 					// b - second successor option in the strategy.
+                    // (rho_2 in Piterman; move closer to current goal)
 					if ((local_kind == 2) | (local_kind == 5)
 							| (local_kind == 11) | (local_kind == 15)
 							| (local_kind == 17) | (local_kind == 22)) {
@@ -298,6 +305,7 @@ public class GROneGame {
 					}
 
 					// c - third successor option in the strategy.
+                    // (rho_3 in Piterman; falsify environment :()
 					if ((local_kind == 1) | (local_kind == 6)
 							| (local_kind == 9) | (local_kind == 14)
 							| (local_kind == 19) | (local_kind == 23)) {
@@ -326,7 +334,7 @@ public class GROneGame {
 
 				RawState gsucc = new RawState(aut.size(), one_cand, jcand);
 				int idx = aut.indexOf(gsucc); // the equals doesn't consider
-				// the id number.
+                                              // the id number.
 				if (idx == -1) {
 					st_stack.push(one_cand);
 					j_stack.push(jcand);
@@ -337,11 +345,42 @@ public class GROneGame {
 			}
 		}
 
+        /* Remove stuttering */
+        // TODO: Make this more efficient (and less ugly) if possible
+        int num_removed = 0;
+
+        for (RawState state1 : aut) {
+            int j1 = state1.get_rank();
+            for (RawState state2 : state1.get_succ()) {
+                int j2 = state2.get_rank();
+                if ((j2 == (j1 + 1) % sys.justiceNum()) &&
+                     state1.equals(state2, false)) {
+                    /* Find any states pointing to state1  */
+                    for (RawState state3 : aut) {
+                        if (state3.get_succ().indexOf(state1) != -1) {
+                            /* Redirect transitions to state2 */
+                            state3.del_succ(state1); 
+                            state3.add_succ(state2); 
+                            /* Mark the extra state for deletion */
+                            state1.set_rank(-1);
+                        }
+                    }
+                }
+            }
+
+            if (state1.get_rank() == -1) {
+                num_removed++;
+            }
+        }
+        System.out.println("Removed " + num_removed + " stutter states.  P-p-p-poor guys :(");
+
+        /* Print output */
+
 		String res = "";
-		RawState[] all_st = new RawState[aut.size()];
-		aut.toArray(all_st);
-		for (int i = 0; i < all_st.length; i++) {
-			res += all_st[i] + "\n";
+		for (RawState state : aut) {
+            if (state.get_rank() != -1) {
+                res += state + "\n";
+            }
 		}
 
 		System.out.print("\n\n");
@@ -367,6 +406,10 @@ public class GROneGame {
 			succ.add(to_add);
 		}
 
+		public void del_succ(RawState to_del) {
+			succ.remove(to_del);
+		}
+
 		public BDD get_state() {
 			return this.state;
 		}
@@ -375,21 +418,33 @@ public class GROneGame {
 			return this.rank;
 		}
 
-		public BDD[] get_succ() {
-			BDD[] res = new BDD[this.succ.size()];
-			this.succ.toArray(res);
-			return res;
+		public void set_rank(int rank) {
+			this.rank = rank;
+		}
+
+		public Vector<RawState> get_succ() {
+			//RawState[] res = new RawState[this.succ.size()];
+			//this.succ.toArray(res);
+			return this.succ;
 		}
 
 		public boolean equals(Object other) {
+            return this.equals(other, true);
+        }
+
+		public boolean equals(Object other, boolean use_rank) {
 			if (!(other instanceof RawState))
 				return false;
 			RawState other_raw = (RawState) other;
 			if (other_raw == null)
 				return false;
 
-			return ((this.rank == other_raw.rank) & (this.state
-					.equals(other_raw.state)));
+            if (use_rank) {
+                return ((this.rank == other_raw.rank) & (this.state
+                        .equals(other_raw.state)));
+            } else {
+                return (this.state.equals(other_raw.state));
+            }
 		}
 
 		public String toString() {
