@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-============================================
-handlers/pose/orcaPose.py - Orca Pose Client
-============================================
+==============================
+orcaPose.py - Orca Pose Client
+==============================
 
 Reads Vicon pose data via Orca
 """

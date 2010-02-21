@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-""" regions.py - Regions Module
+""" ===========================
+    regions.py - Regions Module
     ===========================
-    
+
     A simple module that defines a class for describing and manipulating
     rectangular and polygonal regions.
 
     This is completely free software; please feel free to adapt or use this in
     any way you like.
- 
+
     Some parts extracted from pySketch by Erik Westra (ewestra@wave.co.nz)
 """
 
@@ -41,9 +42,10 @@ class RegionFileInterface:
 
         - background (string): relative path of background image file
         - regions (list): list of Region objects, with properties defined below
-        - transitions (list of lists): key1 = Region object index
-                                       key2 = Region object index
-                                       values = Lists of faces connecting the two regions
+        - transitions (list of lists):
+            * key1 = Region object index
+            * key2 = Region object index
+            * values = Lists of faces connecting the two regions
         - thumb (string): relative path of an image file that shows the regions overlayed 
                           on the background image, made by taking a screenshot
     """
@@ -103,14 +105,6 @@ class RegionFileInterface:
         # Everything was full, so let's just append to the end
         return last + 1
 
-    comments = {"FILE_HEADER":"This is a region definition file for the LTLMoP toolkit.\n" +
-                              "Format details are described at the beginning of each section below.\n" +
-                              "Note that all values are separated by *tabs*.",
-                "Background": "Relative path of background image file",
-                "Regions": "Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)",
-                "Transitions": "Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)",
-                "Thumbnail": "Relative path of image file that has region shapes overlayed on background image",
-                "CalibrationPoints": "Vertices to use for map calibration: (vertex_region_name, vertex_index)"}    
     def writeFile(self, filename):
         """
         File format is described inside the comments variable. 
@@ -211,14 +205,14 @@ class RegionFileInterface:
 class Region:
     """ A rectangular or polygonal region, defined by the following properties:
 
-            'name'          Region name
-            'type'          What type of region this is (rect or poly)
-            'position'      The position of the object within the document 
-                            (i.e., the top-left corner of the region's bounding-box)
-            'size'          The size of the object's bounding box
-            'color'         Color to use for drawing the region
-            'pointArray'    Polygon points, relative to region position (stored in CW order)
-            'alignmentPoints'  True/False array indicating for each vertex whether or not to use it as an alignment point
+            - 'name'          Region name
+            - 'type'          What type of region this is (rect or poly)
+            - 'position'      The position of the object within the document 
+                              (i.e., the top-left corner of the region's bounding-box)
+            - 'size'          The size of the object's bounding box
+            - 'color'         Color to use for drawing the region
+            - 'pointArray'    Polygon points, relative to region position (stored in CW order)
+            - 'alignmentPoints'  True/False array indicating for each vertex whether or not to use it as an alignment point
 
         NOTE: All coordinates are stored internally with (0,0) at the top left.
               X increases to right, and Y increases downwards.

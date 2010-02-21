@@ -1,0 +1,358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Handlers &mdash; LTLMoP v0.6 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="LTLMoP v0.6 documentation" href="index.html" />
+    <link rel="next" title="Configuration and Data Files" href="config_files.html" />
+    <link rel="prev" title="Shared Modules" href="modules.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="config_files.html" title="Configuration and Data Files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="Shared Modules"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">LTLMoP v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="handlers">
+<h1>Handlers<a class="headerlink" href="#handlers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-handlers.init.playerclient">
+<h2>Initialization<a class="headerlink" href="#module-handlers.init.playerclient" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="stage-py-stage-simulation-initialization-handler">
+<h3>stage.py - Stage Simulation Initialization Handler<a class="headerlink" href="#stage-py-stage-simulation-initialization-handler" title="Permalink to this headline">¶</a></h3>
+<p>Create config files for Stage and start it up (as part of a player server) in a subprocess</p>
+<dl class="class">
+<dt id="handlers.init.stage.initHandler">
+<em class="property">class </em><tt class="descclassname">handlers.init.stage.</tt><tt class="descname">initHandler</tt><big>(</big><em>proj</em>, <em>calib=False</em><big>)</big><a class="headerlink" href="#handlers.init.stage.initHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.init.stage.initHandler.getSharedData">
+<tt class="descname">getSharedData</tt><big>(</big><big>)</big><a class="headerlink" href="#handlers.init.stage.initHandler.getSharedData" title="Permalink to this definition">¶</a></dt>
+<dd>Returns nothing</dd></dl>
+
+<dl class="method">
+<dt id="handlers.init.stage.initHandler.writeSimConfig">
+<tt class="descname">writeSimConfig</tt><big>(</big><em>proj</em>, <em>calib</em><big>)</big><a class="headerlink" href="#handlers.init.stage.initHandler.writeSimConfig" title="Permalink to this definition">¶</a></dt>
+<dd>Generates .world and .cfg files for Stage.</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="playerclient-py-player-client-initialization-handler">
+<h3>playerclient.py - Player Client Initialization Handler<a class="headerlink" href="#playerclient-py-player-client-initialization-handler" title="Permalink to this headline">¶</a></h3>
+<p>Creates a player client, connects to a specified player server, and instantiates a Position2D proxy object</p>
+<p>Returns the player client object and Position2D proxy object</p>
+<dl class="class">
+<dt id="handlers.init.playerclient.initHandler">
+<em class="property">class </em><tt class="descclassname">handlers.init.playerclient.</tt><tt class="descname">initHandler</tt><big>(</big><em>proj</em>, <em>calib=False</em><big>)</big><a class="headerlink" href="#handlers.init.playerclient.initHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.init.playerclient.initHandler.getSharedData">
+<tt class="descname">getSharedData</tt><big>(</big><big>)</big><a class="headerlink" href="#handlers.init.playerclient.initHandler.getSharedData" title="Permalink to this definition">¶</a></dt>
+<dd>Return the Player Client object to be used by handlers further down the line</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-handlers.sensor.dummySensor">
+<h2>Sensor<a class="headerlink" href="#module-handlers.sensor.dummySensor" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dummysensor-py-dummy-sensor-handler">
+<h3>dummySensor.py - Dummy Sensor Handler<a class="headerlink" href="#dummysensor-py-dummy-sensor-handler" title="Permalink to this headline">¶</a></h3>
+<p>Displays a silly little window for faking sensor values by clicking on buttons.</p>
+<dl class="class">
+<dt id="handlers.sensor.dummySensor.sensorHandler">
+<em class="property">class </em><tt class="descclassname">handlers.sensor.dummySensor.</tt><tt class="descname">sensorHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.sensor.dummySensor.sensorHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.sensor.dummySensor.sensorHandler.getSensorValue">
+<tt class="descname">getSensorValue</tt><big>(</big><em>sensor_name</em><big>)</big><a class="headerlink" href="#handlers.sensor.dummySensor.sensorHandler.getSensorValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a boolean value corresponding to the state of the sensor with name <tt class="docutils literal"><span class="pre">sensor_name</span></tt></p>
+<p>If such a sensor does not exist, returns <tt class="xref docutils literal"><span class="pre">None</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="handlers.sensor.dummySensor.sensorHandler.sensorListen">
+<tt class="descname">sensorListen</tt><big>(</big><big>)</big><a class="headerlink" href="#handlers.sensor.dummySensor.sensorHandler.sensorListen" title="Permalink to this definition">¶</a></dt>
+<dd>Processes messages from the sensor handler subwindow, and updates our cache appropriately</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-handlers.actuator.dummyActuator">
+<h2>Actuator<a class="headerlink" href="#module-handlers.actuator.dummyActuator" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dummyactuator-py-dummy-actuator-handler">
+<h3>dummyActuator.py - Dummy Actuator Handler<a class="headerlink" href="#dummyactuator-py-dummy-actuator-handler" title="Permalink to this headline">¶</a></h3>
+<p>Does nothing more than print the actuator name and state; for testing purposes.</p>
+<dl class="class">
+<dt id="handlers.actuator.dummyActuator.actuatorHandler">
+<em class="property">class </em><tt class="descclassname">handlers.actuator.dummyActuator.</tt><tt class="descname">actuatorHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.actuator.dummyActuator.actuatorHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.actuator.dummyActuator.actuatorHandler.setActuator">
+<tt class="descname">setActuator</tt><big>(</big><em>name</em>, <em>val</em><big>)</big><a class="headerlink" href="#handlers.actuator.dummyActuator.actuatorHandler.setActuator" title="Permalink to this definition">¶</a></dt>
+<dd>Pretends to set actuator of name <tt class="docutils literal"><span class="pre">name</span></tt> to be in state <tt class="docutils literal"><span class="pre">val</span></tt> (binary).</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-handlers.locomotionCommand.orcaLocomotionCommand">
+<h2>Locomotion Command<a class="headerlink" href="#module-handlers.locomotionCommand.orcaLocomotionCommand" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="playerlocomotioncommand-py-player-pos2d-client">
+<h3>playerLocomotionCommand.py - Player Pos2D Client<a class="headerlink" href="#playerlocomotioncommand-py-player-pos2d-client" title="Permalink to this headline">¶</a></h3>
+<p>Sends velocity commands to player</p>
+<dl class="class">
+<dt id="handlers.locomotionCommand.playerLocomotionCommand.locomotionCommandHandler">
+<em class="property">class </em><tt class="descclassname">handlers.locomotionCommand.playerLocomotionCommand.</tt><tt class="descname">locomotionCommandHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.locomotionCommand.playerLocomotionCommand.locomotionCommandHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.locomotionCommand.playerLocomotionCommand.locomotionCommandHandler.sendCommand">
+<tt class="descname">sendCommand</tt><big>(</big><em>cmd</em><big>)</big><a class="headerlink" href="#handlers.locomotionCommand.playerLocomotionCommand.locomotionCommandHandler.sendCommand" title="Permalink to this definition">¶</a></dt>
+<dd>Send command to player.  Arguments depend on robot model.</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="orcalocomotioncommand-py-orca-velocity-handler">
+<h3>orcaLocomotionCommand.py - Orca Velocity Handler<a class="headerlink" href="#orcalocomotioncommand-py-orca-velocity-handler" title="Permalink to this headline">¶</a></h3>
+<p>Sends Vt, Vw velocity commands to Orca</p>
+<dl class="class">
+<dt id="handlers.locomotionCommand.orcaLocomotionCommand.locomotionCommandHandler">
+<em class="property">class </em><tt class="descclassname">handlers.locomotionCommand.orcaLocomotionCommand.</tt><tt class="descname">locomotionCommandHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.locomotionCommand.orcaLocomotionCommand.locomotionCommandHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.locomotionCommand.orcaLocomotionCommand.locomotionCommandHandler.sendCommand">
+<tt class="descname">sendCommand</tt><big>(</big><em>cmd</em><big>)</big><a class="headerlink" href="#handlers.locomotionCommand.orcaLocomotionCommand.locomotionCommandHandler.sendCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a command to the Orca Velocy server.</p>
+<p>Expects [Vt, Vw].</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-handlers.pose.orcaPose">
+<h2>Pose<a class="headerlink" href="#module-handlers.pose.orcaPose" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="stagepose-py-2d-pose-client-for-stage">
+<h3>stagePose.py - 2D Pose Client for Stage<a class="headerlink" href="#stagepose-py-2d-pose-client-for-stage" title="Permalink to this headline">¶</a></h3>
+<p>Reads from Stage&#8217;s simulated GPS</p>
+<dl class="docutils">
+<dt>Prerequisites:</dt>
+<dd><ul class="first last simple">
+<li>Player Client Initialization Handler</li>
+<li>Stage Initialization Handler</li>
+</ul>
+</dd>
+</dl>
+<dl class="class">
+<dt id="handlers.pose.stagePose.poseHandler">
+<em class="property">class </em><tt class="descclassname">handlers.pose.stagePose.</tt><tt class="descname">poseHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.pose.stagePose.poseHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.pose.stagePose.poseHandler.getPose">
+<tt class="descname">getPose</tt><big>(</big><big>)</big><a class="headerlink" href="#handlers.pose.stagePose.poseHandler.getPose" title="Permalink to this definition">¶</a></dt>
+<dd>Returns the most recent (x,y,theta) reading from Stage&#8217;s GPS</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="orcapose-py-orca-pose-client">
+<h3>orcaPose.py - Orca Pose Client<a class="headerlink" href="#orcapose-py-orca-pose-client" title="Permalink to this headline">¶</a></h3>
+<p>Reads Vicon pose data via Orca</p>
+<dl class="class">
+<dt id="handlers.pose.orcaPose.poseHandler">
+<em class="property">class </em><tt class="descclassname">handlers.pose.orcaPose.</tt><tt class="descname">poseHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.pose.orcaPose.poseHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.pose.orcaPose.poseHandler.getPose">
+<tt class="descname">getPose</tt><big>(</big><big>)</big><a class="headerlink" href="#handlers.pose.orcaPose.poseHandler.getPose" title="Permalink to this definition">¶</a></dt>
+<dd>Gets the most recent pose reading from the multicast stream.</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-handlers.drive.holonomicDrive">
+<h2>Drive<a class="headerlink" href="#module-handlers.drive.holonomicDrive" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="differentialdrive-py-differential-drive-handler">
+<h3>differentialDrive.py - Differential Drive Handler<a class="headerlink" href="#differentialdrive-py-differential-drive-handler" title="Permalink to this headline">¶</a></h3>
+<p>Converts a desired global velocity vector into translational and rotational rates for a differential-drive robot,
+using feedback linearization.</p>
+<dl class="class">
+<dt id="handlers.drive.differentialDrive.driveHandler">
+<em class="property">class </em><tt class="descclassname">handlers.drive.differentialDrive.</tt><tt class="descname">driveHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.drive.differentialDrive.driveHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.drive.differentialDrive.driveHandler.setVelocity">
+<tt class="descname">setVelocity</tt><big>(</big><em>x</em>, <em>y</em>, <em>w=0</em><big>)</big><a class="headerlink" href="#handlers.drive.differentialDrive.driveHandler.setVelocity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="holonomicdrive-py-ideal-holonomic-point-drive-handler">
+<h3>holonomicDrive.py - Ideal Holonomic Point Drive Handler<a class="headerlink" href="#holonomicdrive-py-ideal-holonomic-point-drive-handler" title="Permalink to this headline">¶</a></h3>
+<p>Passes velocity requests directly through.
+Used for ideal holonomic point robots.</p>
+<dl class="class">
+<dt id="handlers.drive.holonomicDrive.driveHandler">
+<em class="property">class </em><tt class="descclassname">handlers.drive.holonomicDrive.</tt><tt class="descname">driveHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.drive.holonomicDrive.driveHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.drive.holonomicDrive.driveHandler.setVelocity">
+<tt class="descname">setVelocity</tt><big>(</big><em>x</em>, <em>y</em>, <em>w=0</em><big>)</big><a class="headerlink" href="#handlers.drive.holonomicDrive.driveHandler.setVelocity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-handlers.motionControl.heatController">
+<h2>Motion Control<a class="headerlink" href="#module-handlers.motionControl.heatController" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="heatcontroller-py-potential-field-region-to-region-motion-control">
+<h3>heatController.py - Potential Field Region-to-Region Motion Control<a class="headerlink" href="#heatcontroller-py-potential-field-region-to-region-motion-control" title="Permalink to this headline">¶</a></h3>
+<p>Uses the heat-controller to take a current position, current region, and destination region and return a global velocity vector that will help us get there</p>
+<dl class="class">
+<dt id="handlers.motionControl.heatController.motionControlHandler">
+<em class="property">class </em><tt class="descclassname">handlers.motionControl.heatController.</tt><tt class="descname">motionControlHandler</tt><big>(</big><em>proj</em>, <em>shared_data</em><big>)</big><a class="headerlink" href="#handlers.motionControl.heatController.motionControlHandler" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="handlers.motionControl.heatController.motionControlHandler.get_controller">
+<tt class="descname">get_controller</tt><big>(</big><em>current</em>, <em>next</em>, <em>last</em>, <em>cache={}</em><big>)</big><a class="headerlink" href="#handlers.motionControl.heatController.motionControlHandler.get_controller" title="Permalink to this definition">¶</a></dt>
+<dd>Wrapper for the controller factory, with caching.</dd></dl>
+
+<dl class="method">
+<dt id="handlers.motionControl.heatController.motionControlHandler.gotoRegion">
+<tt class="descname">gotoRegion</tt><big>(</big><em>current_reg</em>, <em>next_reg</em>, <em>last=False</em><big>)</big><a class="headerlink" href="#handlers.motionControl.heatController.motionControlHandler.gotoRegion" title="Permalink to this definition">¶</a></dt>
+<dd><p>If <tt class="docutils literal"><span class="pre">last</span></tt> is true, we will move to the center of the region.</p>
+<p>Returns <tt class="docutils literal"><span class="pre">true</span></tt> if we are outside the supposed <tt class="docutils literal"><span class="pre">current_reg</span></tt></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Handlers</a><ul>
+<li><a class="reference external" href="#module-handlers.init.playerclient">Initialization</a><ul>
+<li><a class="reference external" href="#stage-py-stage-simulation-initialization-handler">stage.py - Stage Simulation Initialization Handler</a></li>
+<li><a class="reference external" href="#playerclient-py-player-client-initialization-handler">playerclient.py - Player Client Initialization Handler</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#module-handlers.sensor.dummySensor">Sensor</a><ul>
+<li><a class="reference external" href="#dummysensor-py-dummy-sensor-handler">dummySensor.py - Dummy Sensor Handler</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#module-handlers.actuator.dummyActuator">Actuator</a><ul>
+<li><a class="reference external" href="#dummyactuator-py-dummy-actuator-handler">dummyActuator.py - Dummy Actuator Handler</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#module-handlers.locomotionCommand.orcaLocomotionCommand">Locomotion Command</a><ul>
+<li><a class="reference external" href="#playerlocomotioncommand-py-player-pos2d-client">playerLocomotionCommand.py - Player Pos2D Client</a></li>
+<li><a class="reference external" href="#orcalocomotioncommand-py-orca-velocity-handler">orcaLocomotionCommand.py - Orca Velocity Handler</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#module-handlers.pose.orcaPose">Pose</a><ul>
+<li><a class="reference external" href="#stagepose-py-2d-pose-client-for-stage">stagePose.py - 2D Pose Client for Stage</a></li>
+<li><a class="reference external" href="#orcapose-py-orca-pose-client">orcaPose.py - Orca Pose Client</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#module-handlers.drive.holonomicDrive">Drive</a><ul>
+<li><a class="reference external" href="#differentialdrive-py-differential-drive-handler">differentialDrive.py - Differential Drive Handler</a></li>
+<li><a class="reference external" href="#holonomicdrive-py-ideal-holonomic-point-drive-handler">holonomicDrive.py - Ideal Holonomic Point Drive Handler</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#module-handlers.motionControl.heatController">Motion Control</a><ul>
+<li><a class="reference external" href="#heatcontroller-py-potential-field-region-to-region-motion-control">heatController.py - Potential Field Region-to-Region Motion Control</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="modules.html"
+                                  title="previous chapter">Shared Modules</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="config_files.html"
+                                  title="next chapter">Configuration and Data Files</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/handlers.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="config_files.html" title="Configuration and Data Files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="Shared Modules"
+             >previous</a> |</li>
+        <li><a href="index.html">LTLMoP v0.6 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Cameron Finucane, Gangyuan (Jim) Jing, Hadas Kress-Gazit.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>

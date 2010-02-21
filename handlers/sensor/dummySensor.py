@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-=====================================================
-handlers/sensor/dummySensor.py - Dummy Sensor Handler
-=====================================================
+=====================================
+dummySensor.py - Dummy Sensor Handler
+=====================================
 
 Displays a silly little window for faking sensor values by clicking on buttons.
 """

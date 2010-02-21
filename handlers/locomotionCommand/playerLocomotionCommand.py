@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-===========================================================================
-handlers/locomotionCommand/playerLocomotionCommand.py - Player Pos2D Client
-===========================================================================
+================================================
+playerLocomotionCommand.py - Player Pos2D Client
+================================================
 
 Sends velocity commands to player
 """

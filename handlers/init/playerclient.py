@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-====================================================================
-handlers/init/playerclient.py - Player Client Initialization Handler
-====================================================================
+======================================================
+playerclient.py - Player Client Initialization Handler
+======================================================
 
 Creates a player client, connects to a specified player server, and instantiates a Position2D proxy object
 

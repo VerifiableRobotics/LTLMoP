@@ -5,7 +5,7 @@
     ======================================
     
     Defines a specific model for finite state automata, including a method to read in files
-    produced by TLV and a method to execute the automaton.
+    produced by JTLV and a method to execute the automaton.
 """
 
 import math, re, sys, random, os, subprocess, time
@@ -229,7 +229,7 @@ class Automaton:
 
     def writeDot(self, filename):
         """
-        Hadas' function to write a dot file so we can look at the automaton visually.
+        Write a dot file so we can look at the automaton visually.
         """
         
         FILE = open(filename,"w")
@@ -237,12 +237,14 @@ class Automaton:
         # Write the header
         FILE.write('digraph A { \n')
         FILE.write('\trankdir=TB;\n')
-#        FILE.write('\tratio = 0.75;\n')
+        #FILE.write('\tratio = 0.75;\n')
         FILE.write('\tsize = "8.5,11";\n')
+        FILE.write('\toverlap = false;\n')
+        FILE.write('\tlayout = hierarchical;\n')
 
         # Write the states with region and outputs that are true
-        for i, state in enumerate(self.states):
-            FILE.write('\ts'+ str(i)+ ' [style=\"bold\",width=0,height=0, fontsize = 50, label=\"')
+        for state in self.states:
+            FILE.write('\ts'+ state.name + ' [style=\"bold\",width=0,height=0, fontsize = 20, label=\"')
             stateRegion = self.regionFromState(state)
             FILE.write( self.regions[stateRegion].name + ' \\n ')
             for key in state.outputs.keys():
@@ -252,15 +254,14 @@ class Automaton:
             FILE.write('\" ];\n')
 
         # Write the transitions with the input labels (only inputs that are true)
-        for i, state in enumerate(self.states):
-            if state.transitions:
-                for nextState in state.transitions:
-                    FILE.write('\ts'+ str(i)+' -> s'+ str(nextState) +'[style=\"bold\", arrowsize = 3, fontsize = 50, label=\"')
-                    # Check the next state to figure out which inputs have to be on
-                    for key in nextState.inputs.keys():
-                        if nextState.inputs[key] == '1':
-                            FILE.write( key + ' \\n ')
-                    FILE.write('\" ];\n')    
+        for state in self.states:
+            for nextState in state.transitions:
+                FILE.write('\ts'+ state.name +' -> s'+ nextState.name +'[style=\"bold\", arrowsize = 1, fontsize = 20, label=\"')
+                # Check the next state to figure out which inputs have to be on
+                for key in nextState.inputs.keys():
+                    if nextState.inputs[key] == '1':
+                        FILE.write( key + ' \\n ')
+                FILE.write('\" ];\n')    
         
         FILE.write('} \n')
         FILE.close()

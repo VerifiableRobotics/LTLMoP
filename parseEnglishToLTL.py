@@ -1,14 +1,10 @@
-""" LTLMoP Toolkit - parseEnglishToLTL 
+""" 
+    ===========================================================
+    parseEnglishToLTL.py - Structured English to LTL Translator 
+    ===========================================================
     
     Module that parses a set of structured English sentences into the
     corresponding LTL subformulas.
-
-    This is completely free software; please feel free to adapt or use this in
-    any way you like.
-
-    Written by Hadas Kress-Gazit (hadaskg@seas.upenn.edu)
-
-    Last updated September 2007
 """
 import re
 import numpy

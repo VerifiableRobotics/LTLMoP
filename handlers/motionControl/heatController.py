@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-==========================================================================================
-handlers/motionControl/heatController.py - Potential Field Region-to-Region Motion Control
-==========================================================================================
+===================================================================
+heatController.py - Potential Field Region-to-Region Motion Control
+===================================================================
 
 Uses the heat-controller to take a current position, current region, and destination region and return a global velocity vector that will help us get there
 """

@@ -1,85 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" LTLMoP Toolkit - Specification Editor
+""" ====================================
+    specEditor.py - Specification Editor
+    ====================================
     
-    A development environment for specifications written in simple English,
-    allowing for simulation in Stage, Gazebo, or with any Player-enabled robot
-
-    This is completely free software; please feel free to adapt or use this in
-    any way you like.
-
-    Written by Cameron Finucane (cameronp@seas.upenn.edu)
-
-    Last updated October 2008
+    A development environment for specifications written in structure English,
+    allowing for editing, compilation, and execution/simulation
 """
 
 import re, sys, os, subprocess, time, copy
 import wxversion
 wxversion.select('2.8')
-import wx, wx.richtext, wx.grid
+import wx, wx.richtext
 from regions import *
 from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import writeSpec
 import fileMethods
-import execute
 import project
+import fsa
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
 #   The .wxg file is located in the dev/ directory.   #
 #######################################################
-
-
-class CheckGrid(wx.grid.Grid):
-    """
-    A Grid subclass to allow one-click-toggle checkboxes in the grid.
-    
-    (See http://wiki.wxpython.org/Change_wxGrid_CheckBox_with_one_click)
-    """
-
-    def __init__(self, *args, **kwds):
-        wx.grid.Grid.__init__(self, *args, **kwds)
-
-        # We'll add rows and columns later in setLabels
-        self.CreateGrid(0,0)
-
-        self.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.onMouse)
-        self.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.onCellSelected)
-        self.Bind(wx.grid.EVT_GRID_EDITOR_CREATED, self.onEditorCreated)
-
-    def setLabels(self, rowValues, colValues):
-        attr = wx.grid.GridCellAttr()
-        attr.SetEditor(wx.grid.GridCellBoolEditor())
-        attr.SetRenderer(wx.grid.GridCellBoolRenderer())
-
-        self.AppendCols(len(colValues))
-        for i, value in enumerate(colValues):
-            self.SetColLabelValue(i, value)
-            self.SetColAttr(i, attr)
-            # FIXME: Autosize doesn't work?
-            #self.AutoSizeColLabelSize(i)
-
-        self.AppendRows(len(rowValues))
-        for i, value in enumerate(rowValues):
-            self.SetRowLabelValue(i, value)
-            # FIXME: Autosize doesn't work?
-            #self.AutoSizeRowLabelSize(i)
-
-    def onMouse(self, evt):
-        wx.CallLater(100, self.toggleCheckBox)
-        evt.Skip()
-
-    def toggleCheckBox(self):
-        self.cb.Value = not self.cb.Value
-
-    def onCellSelected(self, evt):
-        wx.CallAfter(self.EnableCellEditControl)
-        evt.Skip()
-
-    def onEditorCreated(self,evt):
-        self.cb = evt.Control
-        evt.Skip()
 
 class simSetupDialog(wx.Dialog):
     """
@@ -355,7 +299,7 @@ class simSetupDialog(wx.Dialog):
         self.text_ctrl_yoffset.SetValue(str(self.tempSimSetup[id]["YOffset"]))
 
     def saveSimSetup(self, id):
-        """Temperarily save the data to the copy of simSetup"""
+        """Temporarily save the data to the copy of simSetup"""
 
         # Save the experiment name
         self.tempSimSetup[id]['Name'] = self.text_ctrl_sim_experiment_name.GetValue()
@@ -396,18 +340,18 @@ class simSetupDialog(wx.Dialog):
         Lets you manually find the correct scale and offset values for the coordinate
         transformation.
         """
-        
 
         # Make sure not simulating already
         # TODO: Update this part
-        if self.parent.subprocess[PROCESS_PLAYER] is not None \
-        or self.parent.subprocess[PROCESS_GAZEBO] is not None:
-            wx.MessageBox("Please close the running simulation before calibrating.", "Error",
-                        style = wx.OK | wx.ICON_ERROR)
-            return
+        #if self.parent.subprocess[PROCESS_PLAYER] is not None \
+        #or self.parent.subprocess[PROCESS_GAZEBO] is not None:
+        #    wx.MessageBox("Please close the running simulation before calibrating.", "Error",
+        #                style = wx.OK | wx.ICON_ERROR)
+        #    return
 
         fileNamePrefix = os.path.join(self.parent.projectPath, self.parent.projectName)
 
+        # TODO: save the config first
         proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec", self.list_box_experiment_name.GetStringSelection()],stderr=subprocess.PIPE)
         
         output = proc.stderr.readline().strip()
@@ -597,7 +541,7 @@ class simSetupDialog(wx.Dialog):
         # Check sensors 
         for sensor in self.list_box_init_sensors.GetItems():
             if sensor not in rdf_data['Sensors']:
-                selection = wx.MessageBox('Sorry. Robot does not have all required sensors.\n Do you want to continue?', 'Sensor Unavailable!', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_EXCLAMATION)
+                selection = wx.MessageBox('Sorry.  The selected robot does not have all required sensors.\n Do you want to continue?', 'Sensor Unavailable!', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_EXCLAMATION)
                 if selection == wx.NO:
                     self.choice_sim_robot.Select(self.choice_sim_robot.GetItems().index(self.tempSimSetup[self.list_box_experiment_name.GetSelection()]['RobotFile'].split('.')[0]))
                     warning = True
@@ -609,7 +553,7 @@ class simSetupDialog(wx.Dialog):
             # Check actions 
             for action in self.list_box_init_actions.GetItems():
                 if action not in rdf_data['Actions']:
-                    selection = wx.MessageBox('Sorry. Robot does not have all required actions.\n Do you want to continue?', 'Action Unavailable!', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_EXCLAMATION)
+                    selection = wx.MessageBox('Sorry. The selected robot does not have all required actions.\n Do you want to continue?', 'Action Unavailable!', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_EXCLAMATION)
                     if selection == wx.NO:
                         self.choice_sim_robot.Select(self.choice_sim_robot.GetItems().index(self.tempSimSetup[self.list_box_experiment_name.GetSelection()]['RobotFile'].split('.')[0]))
                         break
@@ -628,7 +572,6 @@ class MapDialog(wx.Dialog):
     select a region visually instead of just choosing the name.
     """
     
-    # TODO: Make the map actually clickable!
     # FIXME: Doesn't scroll on Windows???
 
     def __init__(self, parent, bitmap, *args, **kwds):
@@ -674,7 +617,7 @@ class MapDialog(wx.Dialog):
                 self.parent.text_ctrl_spec.WriteText(region.name)
                 #self.EndModal(1)
                 self.Close()
-            break 
+                break 
         event.Skip()
 
 # end of class MapDialog
@@ -685,7 +628,6 @@ class SpecEditorFrame(wx.Frame):
     The main application window!
     """
 
-    # TODO: Are we gonna allow MDI?  What's the point?
     # TODO: Use the scintilla-style text editor. Select-all, search-replace, syntax highlighting, etc.
 
     def __init__(self, *args, **kwds):
@@ -804,9 +746,7 @@ class SpecEditorFrame(wx.Frame):
         self.currentExperimentConfig = {}
 
         global PROCESS_REGED; PROCESS_REGED = 0
-        global PROCESS_PLAYER; PROCESS_PLAYER = 1
-        global PROCESS_GAZEBO; PROCESS_GAZEBO = 2
-        global PROCESS_DOTTY; PROCESS_DOTTY = 3
+        global PROCESS_DOTTY; PROCESS_DOTTY = 1
 
         # Set default values
         self.setDefaults()
@@ -1215,8 +1155,6 @@ class SpecEditorFrame(wx.Frame):
 
         # Null the subprocess values
         self.subprocess[PROCESS_REGED] = None
-        self.subprocess[PROCESS_PLAYER] = None
-        self.subprocess[PROCESS_GAZEBO] = None
         self.subprocess[PROCESS_DOTTY] = None
 
     def openFile(self, fileName):
@@ -1228,8 +1166,6 @@ class SpecEditorFrame(wx.Frame):
         self.proj.loadProject(fileName)
  
         data = self.proj.spec_data
-
-
 
         self.setDefaults()
 
@@ -1475,6 +1411,9 @@ class SpecEditorFrame(wx.Frame):
 
         subprocess.Popen(["python", "execute.py", "-a", fileNamePrefix + ".aut", "-s", fileNamePrefix + ".spec"])
 
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
 
     def onClickEditRegions(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Provide visual feedback and ake sure multiple copies of the Region Editor
@@ -1536,20 +1475,6 @@ class SpecEditorFrame(wx.Frame):
                 # Check to see if its modification time has changed; no point in reloading otherwise
                 if os.path.getmtime(fileName) != self.lastRegionModTime:
                     self.loadRegionFile(fileName)
-        elif id == PROCESS_PLAYER:
-            ########################
-            # After Player returns #
-            ########################
-            self.appendLog("Player/Stage closed.\n")
-            pass
-        elif id == PROCESS_GAZEBO:
-            ########################
-            # After Gazebo returns #
-            ########################
-            self.appendLog("Gazebo closed.\n")
-            if self.subprocess[PROCESS_PLAYER] is not None:
-                # HACK! Player doesn't seem to want to close by itself... :(
-                self.subprocess[PROCESS_PLAYER].Kill(self.playerPID)
         elif id == PROCESS_DOTTY:
             ########################
             # After Dotty returns #
@@ -1583,7 +1508,8 @@ class SpecEditorFrame(wx.Frame):
             return
 
         self.appendLog("Generating PostScript file from automaton...\n", "BLUE")
-        aut = fsa.Automaton(fileNamePrefix+".aut", self.rfi.regions, self.list_box_sensors.GetItems())
+        aut = fsa.Automaton(self.rfi.regions, None, None, None) 
+        aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
         aut.writeDot(fileNamePrefix+".dot")
         self.subprocess[PROCESS_DOTTY] = wx.Process(self, PROCESS_DOTTY)
         wx.Execute("dot -Tps2 -o%s.ps2 %s.dot" % (fileNamePrefix, fileNamePrefix),
@@ -1601,6 +1527,8 @@ class SpecEditorFrame(wx.Frame):
 
 class RedirectText:
     """
+    A class that lets the output of a stream be directed into a text box.
+
     http://mail.python.org/pipermail/python-list/2007-June/445795.html
     """
 

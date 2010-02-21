@@ -48,8 +48,644 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-execute">
-<h1>Applications<a class="headerlink" href="#module-execute" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-simGUI">
+<h1>Applications<a class="headerlink" href="#module-simGUI" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="speceditor-py-specification-editor">
+<h2>specEditor.py - Specification Editor<a class="headerlink" href="#speceditor-py-specification-editor" title="Permalink to this headline">¶</a></h2>
+<p>A development environment for specifications written in structure English,
+allowing for editing, compilation, and execution/simulation</p>
+<dl class="class">
+<dt id="specEditor.MapDialog">
+<em class="property">class </em><tt class="descclassname">specEditor.</tt><tt class="descname">MapDialog</tt><big>(</big><em>parent</em>, <em>bitmap</em>, <em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#specEditor.MapDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>A silly little dialog that displays the regions on top of the map so that you can
+select a region visually instead of just choosing the name.</p>
+<dl class="method">
+<dt id="specEditor.MapDialog.onMapClick">
+<tt class="descname">onMapClick</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.MapDialog.onMapClick" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="specEditor.RedirectText">
+<em class="property">class </em><tt class="descclassname">specEditor.</tt><tt class="descname">RedirectText</tt><big>(</big><em>aWxTextCtrl</em><big>)</big><a class="headerlink" href="#specEditor.RedirectText" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class that lets the output of a stream be directed into a text box.</p>
+<p><a class="reference external" href="http://mail.python.org/pipermail/python-list/2007-June/445795.html">http://mail.python.org/pipermail/python-list/2007-June/445795.html</a></p>
+<dl class="method">
+<dt id="specEditor.RedirectText.write">
+<tt class="descname">write</tt><big>(</big><em>string</em><big>)</big><a class="headerlink" href="#specEditor.RedirectText.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="specEditor.SpecEditorFrame">
+<em class="property">class </em><tt class="descclassname">specEditor.</tt><tt class="descname">SpecEditorFrame</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main application window!</p>
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.appendLog">
+<tt class="descname">appendLog</tt><big>(</big><em>text</em>, <em>color='BLACK'</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.appendLog" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.askIfUserWantsToSave">
+<tt class="descname">askIfUserWantsToSave</tt><big>(</big><em>action</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.askIfUserWantsToSave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the user the opportunity to save the current document.</p>
+<p>&#8216;action&#8217; is a string describing the action about to be taken.  If
+the user wants to save the document, it is saved immediately.  If
+the user cancels, we return False.</p>
+<p>From pySketch example</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.doClose">
+<tt class="descname">doClose</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.doClose" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Close&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.dumpListBox">
+<tt class="descname">dumpListBox</tt><big>(</big><em>list</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.dumpListBox" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.loadList">
+<tt class="descname">loadList</tt><big>(</big><em>data</em>, <em>list</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.loadList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.loadRegionFile">
+<tt class="descname">loadRegionFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.loadRegionFile" title="Permalink to this definition">¶</a></dt>
+<dd>Parse in a region file!</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onClickEditRegions">
+<tt class="descname">onClickEditRegions</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onClickEditRegions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onCustomDelete">
+<tt class="descname">onCustomDelete</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onCustomDelete" title="Permalink to this definition">¶</a></dt>
+<dd>Remove the selected custom proposition.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onCustomNew">
+<tt class="descname">onCustomNew</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onCustomNew" title="Permalink to this definition">¶</a></dt>
+<dd>Display a dialog asking for a proposition name and then add it to the custom proposition list.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onImportRegion">
+<tt class="descname">onImportRegion</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onImportRegion" title="Permalink to this definition">¶</a></dt>
+<dd>Ask the user for a region file and then import it.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onImportRobot">
+<tt class="descname">onImportRobot</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onImportRobot" title="Permalink to this definition">¶</a></dt>
+<dd>Ask the user for a robot description file and then import it.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMapSelect">
+<tt class="descname">onMapSelect</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMapSelect" title="Permalink to this definition">¶</a></dt>
+<dd>Show the map with overlayed regions so that the user can select a region name visually.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuAbout">
+<tt class="descname">onMenuAbout</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuAbout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuCompile">
+<tt class="descname">onMenuCompile</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuCompile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuConfigSim">
+<tt class="descname">onMenuConfigSim</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuConfigSim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuCopy">
+<tt class="descname">onMenuCopy</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuCopy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuCut">
+<tt class="descname">onMenuCut</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuCut" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuNew">
+<tt class="descname">onMenuNew</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuNew" title="Permalink to this definition">¶</a></dt>
+<dd>Create a new specification.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuOpen">
+<tt class="descname">onMenuOpen</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuOpen" title="Permalink to this definition">¶</a></dt>
+<dd>Ask the user for a specification file to open, and then open it.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuPaste">
+<tt class="descname">onMenuPaste</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuPaste" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuQuit">
+<tt class="descname">onMenuQuit</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuQuit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuRedo">
+<tt class="descname">onMenuRedo</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuRedo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuSave">
+<tt class="descname">onMenuSave</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuSave" title="Permalink to this definition">¶</a></dt>
+<dd>If the file has been saved already, save it quietly.
+Else, ask for a filename and then save it.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuSaveAs">
+<tt class="descname">onMenuSaveAs</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuSaveAs" title="Permalink to this definition">¶</a></dt>
+<dd>Ask the user for a filename to save the specification as, and then save it.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuSimulate">
+<tt class="descname">onMenuSimulate</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuSimulate" title="Permalink to this definition">¶</a></dt>
+<dd>Run the simulation with current experiment configration.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuUndo">
+<tt class="descname">onMenuUndo</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuUndo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onMenuViewAut">
+<tt class="descname">onMenuViewAut</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onMenuViewAut" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onProcessTerminate">
+<tt class="descname">onProcessTerminate</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onProcessTerminate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.onPropositionDblClick">
+<tt class="descname">onPropositionDblClick</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.onPropositionDblClick" title="Permalink to this definition">¶</a></dt>
+<dd>Add the proposition name to the spec when you double click the name</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.openFile">
+<tt class="descname">openFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.openFile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.readRobotFile">
+<tt class="descname">readRobotFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.readRobotFile" title="Permalink to this definition">¶</a></dt>
+<dd>Parse in a robot description file!</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.saveFile">
+<tt class="descname">saveFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.saveFile" title="Permalink to this definition">¶</a></dt>
+<dd>Write all data out to a file.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.SpecEditorFrame.setDefaults">
+<tt class="descname">setDefaults</tt><big>(</big><big>)</big><a class="headerlink" href="#specEditor.SpecEditorFrame.setDefaults" title="Permalink to this definition">¶</a></dt>
+<dd>Set some pretty reasonable default values.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="specEditor.simSetupDialog">
+<em class="property">class </em><tt class="descclassname">specEditor.</tt><tt class="descname">simSetupDialog</tt><big>(</big><em>parent</em>, <em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>The simulation configuration dialog.
+Essentially just an interface to the simSetup data structure.</p>
+<dl class="method">
+<dt id="specEditor.simSetupDialog.loadSimSetup">
+<tt class="descname">loadSimSetup</tt><big>(</big><em>id</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.loadSimSetup" title="Permalink to this definition">¶</a></dt>
+<dd>Load the experiment config from the item with index = id in the list</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onClickApply">
+<tt class="descname">onClickApply</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onClickApply" title="Permalink to this definition">¶</a></dt>
+<dd>Adjusts the simSetup data structure to reflect the new configuration
+values.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onClickCalibrate">
+<tt class="descname">onClickCalibrate</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onClickCalibrate" title="Permalink to this definition">¶</a></dt>
+<dd>Lets you manually find the correct scale and offset values for the coordinate
+transformation.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onClickOK">
+<tt class="descname">onClickOK</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onClickOK" title="Permalink to this definition">¶</a></dt>
+<dd>Adjusts the simSetup data structure to reflect the new configuration
+values.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onSimAdd">
+<tt class="descname">onSimAdd</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onSimAdd" title="Permalink to this definition">¶</a></dt>
+<dd>Add configuration for new experiment</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onSimCopy">
+<tt class="descname">onSimCopy</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onSimCopy" title="Permalink to this definition">¶</a></dt>
+<dd>Copy an exist experiment configuration</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onSimDelete">
+<tt class="descname">onSimDelete</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onSimDelete" title="Permalink to this definition">¶</a></dt>
+<dd>Delete selected configuration</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onSimLoad">
+<tt class="descname">onSimLoad</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onSimLoad" title="Permalink to this definition">¶</a></dt>
+<dd>Load the experiment config data into the configuration dialog when choose an experiment from the list.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onSimNameEdit">
+<tt class="descname">onSimNameEdit</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onSimNameEdit" title="Permalink to this definition">¶</a></dt>
+<dd>Update the experiment name in the list when user edits  it.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.onSimRobot">
+<tt class="descname">onSimRobot</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.onSimRobot" title="Permalink to this definition">¶</a></dt>
+<dd>Warn user when the selected robot does not have all sensor and actions needed.</dd></dl>
+
+<dl class="method">
+<dt id="specEditor.simSetupDialog.saveSimSetup">
+<tt class="descname">saveSimSetup</tt><big>(</big><em>id</em><big>)</big><a class="headerlink" href="#specEditor.simSetupDialog.saveSimSetup" title="Permalink to this definition">¶</a></dt>
+<dd>Temporarily save the data to the copy of simSetup</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="regioneditor-py-region-editor">
+<h2>regionEditor.py - Region Editor<a class="headerlink" href="#regioneditor-py-region-editor" title="Permalink to this headline">¶</a></h2>
+<p>A simple polygonal region editor.  The code is kind of a mess, but it does what it needs to do.</p>
+<p>Based on pySketch by Erik Westra (<a class="reference external" href="mailto:ewestra&#37;&#52;&#48;wave&#46;co&#46;nz">ewestra<span>&#64;</span>wave<span>&#46;</span>co<span>&#46;</span>nz</a>) and Bill Baxter (<a class="reference external" href="mailto:wbaxter&#37;&#52;&#48;gmail&#46;com">wbaxter<span>&#64;</span>gmail<span>&#46;</span>com</a>)</p>
+<dl class="class">
+<dt id="regionEditor.DrawableRegion">
+<em class="property">class </em><tt class="descclassname">regionEditor.</tt><tt class="descname">DrawableRegion</tt><big>(</big><em>type=1</em>, <em>position=wx.Point(0</em>, <em>0)</em>, <em>size=wx.Size(0</em>, <em>0)</em>, <em>color=None</em>, <em>points=</em><span class="optional">[</span><span class="optional">]</span>, <em>name=''</em><big>)</big><a class="headerlink" href="#regionEditor.DrawableRegion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends the Region class to allow drawing.</p>
+<dl class="method">
+<dt id="regionEditor.DrawableRegion.draw">
+<tt class="descname">draw</tt><big>(</big><em>dc</em>, <em>pdc</em>, <em>selected</em><big>)</big><a class="headerlink" href="#regionEditor.DrawableRegion.draw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw this Region into our window.</p>
+<p>&#8216;dc&#8217; is the device context to use for drawing.  If &#8216;selected&#8217; is
+True, the object is currently selected and should be drawn as such.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regionEditor.DrawingFrame">
+<em class="property">class </em><tt class="descclassname">regionEditor.</tt><tt class="descname">DrawingFrame</tt><big>(</big><em>parent</em>, <em>id</em>, <em>title</em>, <em>fileName=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>A frame showing the contents of a single document.</p>
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.askIfUserWantsToSave">
+<tt class="descname">askIfUserWantsToSave</tt><big>(</big><em>action</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.askIfUserWantsToSave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give the user the opportunity to save the current document.</p>
+<p>&#8216;action&#8217; is a string describing the action about to be taken.  If
+the user wants to save the document, it is saved immediately.  If
+the user cancels, we return False.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.checkSubfaces">
+<tt class="descname">checkSubfaces</tt><big>(</big><em>obj1</em>, <em>obj2</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.checkSubfaces" title="Permalink to this definition">¶</a></dt>
+<dd>If we have a face of one region that is a subset of a face of another region,
+we want to split the larger face into two parts appropriately. 
+For now, this only works when the two faces share one point.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.createPoly">
+<tt class="descname">createPoly</tt><big>(</big><em>points</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.createPoly" title="Permalink to this definition">¶</a></dt>
+<dd>Create poly object.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.createRect">
+<tt class="descname">createRect</tt><big>(</big><em>x</em>, <em>y</em>, <em>width</em>, <em>height</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.createRect" title="Permalink to this definition">¶</a></dt>
+<dd>Create a new rectangle object at the given position and size.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.deselectAll">
+<tt class="descname">deselectAll</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.deselectAll" title="Permalink to this definition">¶</a></dt>
+<dd>Deselect every Region in our document.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doChooseAddPtTool">
+<tt class="descname">doChooseAddPtTool</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doChooseAddPtTool" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Poly Tool&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doChooseCalibPtTool">
+<tt class="descname">doChooseCalibPtTool</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doChooseCalibPtTool" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Toggle Calibration Point Tool&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doChooseDelPtTool">
+<tt class="descname">doChooseDelPtTool</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doChooseDelPtTool" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Poly Tool&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doChoosePolyTool">
+<tt class="descname">doChoosePolyTool</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doChoosePolyTool" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Poly Tool&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doChooseRectTool">
+<tt class="descname">doChooseRectTool</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doChooseRectTool" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Rect Tool&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doChooseSelectTool">
+<tt class="descname">doChooseSelectTool</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doChooseSelectTool" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Select Tool&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doClose">
+<tt class="descname">doClose</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doClose" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Close&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doDelete">
+<tt class="descname">doDelete</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doDelete" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Delete&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doDuplicate">
+<tt class="descname">doDuplicate</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doDuplicate" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Duplicate&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doEditRegion">
+<tt class="descname">doEditRegion</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doEditRegion" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Edit Region&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doExit">
+<tt class="descname">doExit</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doExit" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Quit&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doNew">
+<tt class="descname">doNew</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doNew" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;New&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doOpen">
+<tt class="descname">doOpen</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doOpen" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Open&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doRevert">
+<tt class="descname">doRevert</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doRevert" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Revert&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doSave">
+<tt class="descname">doSave</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doSave" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Save&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doSaveAs">
+<tt class="descname">doSaveAs</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doSaveAs" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Save As&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doSelectAll">
+<tt class="descname">doSelectAll</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doSelectAll" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Select All&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doSetBackground">
+<tt class="descname">doSetBackground</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doSetBackground" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doShowAbout">
+<tt class="descname">doShowAbout</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doShowAbout" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;About Region Editor&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.doUndo">
+<tt class="descname">doUndo</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.doUndo" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the &#8220;Undo&#8221; menu command.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.drawRegions">
+<tt class="descname">drawRegions</tt><big>(</big><em>dc</em>, <em>pdc</em>, <em>drawLabels=True</em>, <em>drawAdjacencies=True</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.drawRegions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.getProjectDir">
+<tt class="descname">getProjectDir</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.getProjectDir" title="Permalink to this definition">¶</a></dt>
+<dd>Make sure we&#8217;ve saved our region file somewhere so that our project directory
+and project name are defined.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.loadContents">
+<tt class="descname">loadContents</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.loadContents" title="Permalink to this definition">¶</a></dt>
+<dd>Load the contents of our document into memory.
+Note that the drawing order of regions is last to first.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.makeScreenshot">
+<tt class="descname">makeScreenshot</tt><big>(</big><em>minimal=False</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.makeScreenshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write out a png file with the regions overlayed on the background image.</p>
+<p>If minimal is True, only region borders will be drawn (as dotted lines).
+If minimal is False, the output will look like the editor window.</p>
+<p>Returns the output filename.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.onDoubleClickEvent">
+<tt class="descname">onDoubleClickEvent</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.onDoubleClickEvent" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to a double-click within our drawing panel.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.onKeyEvent">
+<tt class="descname">onKeyEvent</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.onKeyEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Respond to a keypress event.</p>
+<p>We make the arrow keys move the selected object(s) by one pixel in
+the given direction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.onMouseEvent">
+<tt class="descname">onMouseEvent</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.onMouseEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Respond to the user clicking on our main drawing panel.</p>
+<p>How we respond depends on the currently selected tool.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.onPaintEvent">
+<tt class="descname">onPaintEvent</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.onPaintEvent" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to a request to redraw the contents of our drawing panel.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.onRightClick">
+<tt class="descname">onRightClick</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.onRightClick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Respond to the user right-clicking within our drawing panel.</p>
+<p>We select the clicked-on item, if necessary, and display a pop-up
+menu of available options which can be applied to the selected
+item(s).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.onTimerEvent">
+<tt class="descname">onTimerEvent</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.onTimerEvent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.onToolIconClick">
+<tt class="descname">onToolIconClick</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.onToolIconClick" title="Permalink to this definition">¶</a></dt>
+<dd>Respond to the user clicking on one of our tool icons.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.recalcAdjacency">
+<tt class="descname">recalcAdjacency</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.recalcAdjacency" title="Permalink to this definition">¶</a></dt>
+<dd>Calculate the region adjacency matrix and a list of shared faces</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.saveContents">
+<tt class="descname">saveContents</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.saveContents" title="Permalink to this definition">¶</a></dt>
+<dd>Save the contents of our document to disk.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.select">
+<tt class="descname">select</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.select" title="Permalink to this definition">¶</a></dt>
+<dd>Select the given Region within our document.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.selectAll">
+<tt class="descname">selectAll</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.selectAll" title="Permalink to this definition">¶</a></dt>
+<dd>Select every Region in our document.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.selectByRectangle">
+<tt class="descname">selectByRectangle</tt><big>(</big><em>x</em>, <em>y</em>, <em>width</em>, <em>height</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.selectByRectangle" title="Permalink to this definition">¶</a></dt>
+<dd>Select every Region in the given rectangular region.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.DrawingFrame.selectMany">
+<tt class="descname">selectMany</tt><big>(</big><em>objs</em><big>)</big><a class="headerlink" href="#regionEditor.DrawingFrame.selectMany" title="Permalink to this definition">¶</a></dt>
+<dd>Select the given list of Regions.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regionEditor.EditRegionDialog">
+<em class="property">class </em><tt class="descclassname">regionEditor.</tt><tt class="descname">EditRegionDialog</tt><big>(</big><em>parent</em>, <em>title</em><big>)</big><a class="headerlink" href="#regionEditor.EditRegionDialog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dialog box used to edit the properties of a region.</p>
+<p>The user can edit the region&#8217;s name and color.</p>
+<dl class="method">
+<dt id="regionEditor.EditRegionDialog.dialogToObject">
+<tt class="descname">dialogToObject</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#regionEditor.EditRegionDialog.dialogToObject" title="Permalink to this definition">¶</a></dt>
+<dd>Copy the properties from the dialog box into the given text object.</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.EditRegionDialog.objectToDialog">
+<tt class="descname">objectToDialog</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#regionEditor.EditRegionDialog.objectToDialog" title="Permalink to this definition">¶</a></dt>
+<dd>Copy the properties of the given text object into the dialog box.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regionEditor.ExceptionHandler">
+<em class="property">class </em><tt class="descclassname">regionEditor.</tt><tt class="descname">ExceptionHandler</tt><a class="headerlink" href="#regionEditor.ExceptionHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple error-handling class to write exceptions to a text file.</p>
+<p>Under MS Windows, the standard DOS console window doesn&#8217;t scroll and
+closes as soon as the application exits, making it hard to find and
+view Python exceptions.  This utility class allows you to handle Python
+exceptions in a more friendly manner.</p>
+<dl class="method">
+<dt id="regionEditor.ExceptionHandler.write">
+<tt class="descname">write</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#regionEditor.ExceptionHandler.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the given error message to a text file.</p>
+<p>Note that if the error message doesn&#8217;t end in a carriage return, we
+have to buffer up the inputs until a carriage return is received.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regionEditor.SketchApp">
+<em class="property">class </em><tt class="descclassname">regionEditor.</tt><tt class="descname">SketchApp</tt><big>(</big><em>redirect=True</em>, <em>filename=None</em>, <em>useBestVisual=False</em>, <em>clearSigInt=True</em><big>)</big><a class="headerlink" href="#regionEditor.SketchApp" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main pySketch application object.</p>
+<dl class="method">
+<dt id="regionEditor.SketchApp.OnInit">
+<tt class="descname">OnInit</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.SketchApp.OnInit" title="Permalink to this definition">¶</a></dt>
+<dd>Initialise the application.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regionEditor.TextObjectValidator">
+<em class="property">class </em><tt class="descclassname">regionEditor.</tt><tt class="descname">TextObjectValidator</tt><a class="headerlink" href="#regionEditor.TextObjectValidator" title="Permalink to this definition">¶</a></dt>
+<dd><p>This validator is used to ensure that the user has entered something
+into the text object editor dialog&#8217;s text field.</p>
+<dl class="method">
+<dt id="regionEditor.TextObjectValidator.Clone">
+<tt class="descname">Clone</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.TextObjectValidator.Clone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard cloner.</p>
+<p>Note that every validator must implement the Clone() method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.TextObjectValidator.TransferFromWindow">
+<tt class="descname">TransferFromWindow</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.TextObjectValidator.TransferFromWindow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfer data from window to validator.</p>
+<p>The default implementation returns False, indicating that an error
+occurred.  We simply return True, as we don&#8217;t do any data transfer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.TextObjectValidator.TransferToWindow">
+<tt class="descname">TransferToWindow</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.TextObjectValidator.TransferToWindow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfer data from validator to window.</p>
+<p>The default implementation returns False, indicating that an error
+occurred.  We simply return True, as we don&#8217;t do any data transfer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.TextObjectValidator.Validate">
+<tt class="descname">Validate</tt><big>(</big><em>win</em><big>)</big><a class="headerlink" href="#regionEditor.TextObjectValidator.Validate" title="Permalink to this definition">¶</a></dt>
+<dd>Validate the contents of the given text control.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regionEditor.ToolPaletteIcon">
+<em class="property">class </em><tt class="descclassname">regionEditor.</tt><tt class="descname">ToolPaletteIcon</tt><big>(</big><em>parent</em>, <em>iconID</em>, <em>iconName</em>, <em>toolTip</em><big>)</big><a class="headerlink" href="#regionEditor.ToolPaletteIcon" title="Permalink to this definition">¶</a></dt>
+<dd><p>An icon appearing in the tool palette area of our sketching window.</p>
+<p>Note that this is actually implemented as a wx.Bitmap rather
+than as a wx.Icon.  wx.Icon has a very specific meaning, and isn&#8217;t
+appropriate for this more general use.</p>
+<dl class="method">
+<dt id="regionEditor.ToolPaletteIcon.deselect">
+<tt class="descname">deselect</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.ToolPaletteIcon.deselect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deselect the icon.</p>
+<p>The icon&#8217;s visual representation is updated appropriately.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regionEditor.ToolPaletteIcon.select">
+<tt class="descname">select</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.ToolPaletteIcon.select" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select the icon.</p>
+<p>The icon&#8217;s visual representation is updated appropriately.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="regionEditor.main">
+<tt class="descclassname">regionEditor.</tt><tt class="descname">main</tt><big>(</big><big>)</big><a class="headerlink" href="#regionEditor.main" title="Permalink to this definition">¶</a></dt>
+<dd>Start up the pySketch application.</dd></dl>
+
+</div>
 <div class="section" id="execute-py-top-level-hybrid-controller-executor">
 <h2>execute.py - Top-level hybrid controller executor<a class="headerlink" href="#execute-py-top-level-hybrid-controller-executor" title="Permalink to this headline">¶</a></h2>
 <p>This module executes a hybrid controller for a robot in a simulated or real environment.</p>
@@ -84,6 +720,120 @@ will also be opened for informational purposes.</li>
 <dd>Print command-line usage information.</dd></dl>
 
 </div>
+<div class="section" id="calibrate-py-a-tool-for-finding-the-transformation-between-map-and-real-coordinates">
+<h2>calibrate.py - A tool for finding the transformation between map and real coordinates<a class="headerlink" href="#calibrate-py-a-tool-for-finding-the-transformation-between-map-and-real-coordinates" title="Permalink to this headline">¶</a></h2>
+<p>This script helps you experimentally determine the coordinate transformation
+between points on your region map and points in your localization system.</p>
+<p>The specific points used for calibration are chosen in the Region Editor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Usage:</th><td class="field-body"><tt class="docutils literal"><span class="pre">calibrate.py</span> <span class="pre">[spec_file]</span></tt></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="calibrate.CalibrateApp">
+<em class="property">class </em><tt class="descclassname">calibrate.</tt><tt class="descname">CalibrateApp</tt><big>(</big><em>redirect=True</em>, <em>filename=None</em>, <em>useBestVisual=False</em>, <em>clearSigInt=True</em><big>)</big><a class="headerlink" href="#calibrate.CalibrateApp" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="calibrate.CalibrateApp.OnInit">
+<tt class="descname">OnInit</tt><big>(</big><big>)</big><a class="headerlink" href="#calibrate.CalibrateApp.OnInit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="calibrate.CalibrateFrame">
+<em class="property">class </em><tt class="descclassname">calibrate.</tt><tt class="descname">CalibrateFrame</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#calibrate.CalibrateFrame" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="calibrate.CalibrateFrame.doCalibration">
+<tt class="descname">doCalibration</tt><big>(</big><big>)</big><a class="headerlink" href="#calibrate.CalibrateFrame.doCalibration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="calibrate.CalibrateFrame.drawRobot">
+<tt class="descname">drawRobot</tt><big>(</big><em>event</em>, <em>state=</em><span class="optional">[</span>, <em>False</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#calibrate.CalibrateFrame.drawRobot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="calibrate.CalibrateFrame.onButtonGo">
+<tt class="descname">onButtonGo</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#calibrate.CalibrateFrame.onButtonGo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="calibrate.CalibrateFrame.onResize">
+<tt class="descname">onResize</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#calibrate.CalibrateFrame.onResize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="calibrate.CalibrateFrame.setMapImage">
+<tt class="descname">setMapImage</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#calibrate.CalibrateFrame.setMapImage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="calibrate.CalibrateFrame.setStepInfo">
+<tt class="descname">setStepInfo</tt><big>(</big><em>label</em>, <em>button</em><big>)</big><a class="headerlink" href="#calibrate.CalibrateFrame.setStepInfo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="simgui-py-experiment-monitor-gui">
+<h2>simGUI.py - Experiment Monitor GUI<a class="headerlink" href="#simgui-py-experiment-monitor-gui" title="Permalink to this headline">¶</a></h2>
+<p>A basic user interface for watching the state of the robot during simulation/experiment,
+and pausing/resuming execution.</p>
+<dl class="class">
+<dt id="simGUI.SimGUI_Frame">
+<em class="property">class </em><tt class="descclassname">simGUI.</tt><tt class="descname">SimGUI_Frame</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="simGUI.SimGUI_Frame.appendLog">
+<tt class="descname">appendLog</tt><big>(</big><em>text</em>, <em>color='BLACK'</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.appendLog" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="simGUI.SimGUI_Frame.controllerListen">
+<tt class="descname">controllerListen</tt><big>(</big><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.controllerListen" title="Permalink to this definition">¶</a></dt>
+<dd>Processes messages from the controller, and updates the GUI accordingly</dd></dl>
+
+<dl class="method">
+<dt id="simGUI.SimGUI_Frame.drawRobot">
+<tt class="descname">drawRobot</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.drawRobot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="simGUI.SimGUI_Frame.onResize">
+<tt class="descname">onResize</tt><big>(</big><em>event=None</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.onResize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="simGUI.SimGUI_Frame.onSimClear">
+<tt class="descname">onSimClear</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.onSimClear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="simGUI.SimGUI_Frame.onSimExport">
+<tt class="descname">onSimExport</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.onSimExport" title="Permalink to this definition">¶</a></dt>
+<dd>Ask the user for a filename to save the Log as, and then save it.</dd></dl>
+
+<dl class="method">
+<dt id="simGUI.SimGUI_Frame.onSimStartPause">
+<tt class="descname">onSimStartPause</tt><big>(</big><em>event</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.onSimStartPause" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="simGUI.SimGUI_Frame.saveFile">
+<tt class="descname">saveFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.saveFile" title="Permalink to this definition">¶</a></dt>
+<dd>Write all data out to a file.</dd></dl>
+
+<dl class="method">
+<dt id="simGUI.SimGUI_Frame.setMapImage">
+<tt class="descname">setMapImage</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#simGUI.SimGUI_Frame.setMapImage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -95,7 +845,11 @@ will also be opened for informational purposes.</li>
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="#">Applications</a><ul>
+<li><a class="reference external" href="#speceditor-py-specification-editor">specEditor.py - Specification Editor</a></li>
+<li><a class="reference external" href="#regioneditor-py-region-editor">regionEditor.py - Region Editor</a></li>
 <li><a class="reference external" href="#execute-py-top-level-hybrid-controller-executor">execute.py - Top-level hybrid controller executor</a></li>
+<li><a class="reference external" href="#calibrate-py-a-tool-for-finding-the-transformation-between-map-and-real-coordinates">calibrate.py - A tool for finding the transformation between map and real coordinates</a></li>
+<li><a class="reference external" href="#simgui-py-experiment-monitor-gui">simGUI.py - Experiment Monitor GUI</a></li>
 </ul>
 </li>
 </ul>

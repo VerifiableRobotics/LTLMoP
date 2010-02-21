@@ -1,15 +1,11 @@
-""" LTLMoP Toolkit - createJTLVinput 
+""" 
+    ===============================================
+    createJTLVinput.py - LTL Pre-Processor Routines
+    ===============================================
     
-    Module that create the input files for the JTLV based synthesis algorithm.
+    Module that creates the input files for the JTLV based synthesis algorithm.
     Its functions create the skeleton .smv file and the .ltl file which
-    includes the topological relation and the given spec.
-
-    This is completely free software; please feel free to adapt or use this in
-    any way you like.
-
-    Written by Hadas Kress-Gazit (hadaskg@seas.upenn.edu)
-
-    Last updated September 2007
+    includes the topological relations and the given spec.
 """
 import numpy
 import parseEnglishToLTL

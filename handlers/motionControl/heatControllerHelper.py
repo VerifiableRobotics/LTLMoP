@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """ 
-    ================================================================================
-    handlers/motionControl/heatControllerHelper.py - Convex Polygon Point Controller
-    ================================================================================
+    =========================================================
+    heatControllerHelper.py - Convex Polygon Point Controller
+    =========================================================
     
     A Python translation and trimming of David C. Conner's MATLAB implementation.
 """

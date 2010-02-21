@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-=====================================================
-handlers/pose/stagePose.py - 2D Pose Client for Stage
-=====================================================
+=======================================
+stagePose.py - 2D Pose Client for Stage
+=======================================
 
 Reads from Stage's simulated GPS
 

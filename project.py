@@ -16,6 +16,10 @@ import fileMethods, regions
 from numpy import *
 
 class Project:
+    """
+    A project object.
+    """
+
     def __init__(self):
         pass
 

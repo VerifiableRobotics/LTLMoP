@@ -68,46 +68,8 @@ pointbot
 (
     name "robot1"
     color "red"
-<<<<<<< .mine
-    pose [0.000000 0.000000 0]
-=======
-    pose [0.221565 0.552000 0]
->>>>>>> .r33
+    pose [0.161913 0.354000 0]
 
     localization "gps"
     localization_origin [0 0 0]
 )
-
-define puck model(
-size [ 0.08 0.08 ]
-gripper_return 1
-gui_movemask 3
-gui_nose 0
-)
-puck( pose [1.071710 -1.185000 0.0 ] color "red" )
-puck( pose [1.164232 1.164000 0.0 ] color "red" )
-puck( pose [3.153449 0.489000 0.0 ] color "red" )
-puck( pose [3.492696 -1.077000 0.0 ] color "red" )
-puck( pose [0.454899 -1.239000 0.0 ] color "red" )
-puck( pose [-0.994609 -0.523500 0.0 ] color "red" )
-puck( pose [-0.778725 1.191000 0.0 ] color "red" )
-puck( pose [-0.454899 1.542000 0.0 ] color "red" )
-puck( pose [0.686203 1.501500 0.0 ] color "red" )
-puck( pose [-2.660000 -1.428000 0.0 ] color "red" )
-puck( pose [-4.263710 -2.278500 0.0 ] color "red" )
-puck( pose [-5.096406 -2.049000 0.0 ] color "red" )
-puck( pose [-5.512754 -1.536000 0.0 ] color "red" )
-puck( pose [-5.219768 -0.672000 0.0 ] color "red" )
-puck( pose [-4.726319 0.151500 0.0 ] color "red" )
-puck( pose [-1.781044 1.353000 0.0 ] color "red" )
-puck( pose [1.781044 -3.736500 0.0 ] color "red" )
-puck( pose [4.171189 -1.117500 0.0 ] color "red" )
-puck( pose [4.510435 -1.509000 0.0 ] color "red" )
-puck( pose [3.785681 -3.034500 0.0 ] color "red" )
-puck( pose [1.781044 -3.763500 0.0 ] color "red" )
-puck( pose [1.010029 -3.939000 0.0 ] color "red" )
-puck( pose [0.532000 -2.184000 0.0 ] color "red" )
-puck( pose [-1.488058 -2.494500 0.0 ] color "red" )
-puck( pose [-0.408638 -4.492500 0.0 ] color "red" )
-puck( pose [-1.596000 -4.074000 0.0 ] color "red" )
-puck( pose [-3.138029 -3.993000 0.0 ] color "red" )

@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 """
-================================================================
-handlers/init/stage.py - Stage Simulation Initialization Handler
-================================================================
+==================================================
+stage.py - Stage Simulation Initialization Handler
+==================================================
 
 Create config files for Stage and start it up (as part of a player server) in a subprocess
 """
 
 import textwrap, os, subprocess, time
+from numpy import *
 
 class initHandler:
     def __init__(self, proj, calib=False):

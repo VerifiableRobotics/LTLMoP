@@ -3,17 +3,17 @@ TODO/FIXME Comment report
 =========================
 
 
-Generated on Sun, 07 Feb 2010 15:31:04 EST
+Generated on Sun, 21 Feb 2010 07:31:00 EST
 
 Summary
 =======
 
-There are currently 47 TODO/FIXME comments.
+There are currently 40 TODO/FIXME comments.
 
 Listing
 =======
 
-File : /calibrate.py:117
+File : /calibrate.py:121
 
         # TODO: Allow for full affine transforms
         scale = (real_pts[:,0]-real_pts[:,1])/(file_pts[:,0]-file_pts[:,1])
@@ -27,14 +27,7 @@ File : /execute.py:156
     global runFSA, fd_gui_output, fd_gui_input, guiListenInitialized  # For sharing with thread
 
 
-File : /execute.py:165
-
-    p_gui = subprocess.Popen(os.path.join(".","simGUI.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE) # TODO: this will only work if we're in the root working directory
-    fd_gui_output = p_gui.stderr
-    fd_gui_input = p_gui.stdin
-
-
-File : /execute.py:199
+File : /execute.py:200
 
         print "WARNING: Initial region auto-detection not yet implemented" # TODO: determine initial region
         init_region = 0
@@ -50,8 +43,8 @@ File : /execute.py:235
 
 File : /execute.py:244
 
-            pose = proj.pose_handler.getLastPose()[0:2]  # TODO: Maybe we should just get the pose here and pass it on to the FSA each time
-            print "POSE:%d,%d" % tuple(map(int, proj.rev_coordmap(pose[0:2])))
+            pose = proj.pose_handler.getPose()[0:2]  # TODO: cache?
+            print "POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose)))
 
             last_gui_update_time = time.time()
 
@@ -76,257 +69,215 @@ File : /fsa.py:392
             #    pt = rev_coordmap(wx.Point(px,py))
             #    for i, region in enumerate(rfi.regions):
 
-File : /project.py:164
+File : /project.py:212
 
         # TODO: Complain nicely instead of just dying when this breaks?
         self.h_name = {}
         self.h_name['init'] = self.lab_data["InitializationHandler"]
         self.h_name['pose'] = self.lab_data["PoseHandler"][0]
 
-File : /project.py:183
+File : /project.py:235
 
             # TODO: Is there a more elegant way to do this? This is pretty ugly...
             exec("from %s import initHandler as initHandler%d" % (handler, init_num)) in locals() # WARNING: This assumes our input data is not malicious...
-            exec("self.init_handlers.append(initHandler%d(self.project_root, self.project_basename, self.exp_cfg_data, self.robot_data, self.fwd_coordmap, self.rfi, calib=False))" % (init_num)) in locals()
+            exec("self.init_handlers.append(initHandler%d(self, calib=calib))" % (init_num)) in locals()
             self.shared_data.update(self.init_handlers[-1].getSharedData())
 
-File : /regionEditor.py:277
+File : /regionEditor.py:273
 
         # TODO: I guess the virtual size should scale according to background image,
         # but we don't want to shrink it too much when the image is small.
         self.drawPanel.SetVirtualSize((PAGE_WIDTH, PAGE_HEIGHT))
         self.drawPanel.SetScrollRate(20, 20)
 
-File : /regionEditor.py:331
+File : /regionEditor.py:327
 
     # FIXME: These are really messy; refactor me
 
     def onToolIconClick(self, event):
         """ Respond to the user clicking on one of our tool icons.
 
-File : /regionEditor.py:699
+File : /regionEditor.py:695
 
                             # TODO: because of the getObjectAt call,
                             # clicks outside the object will not be recognized
                             for i, face in enumerate(obj.getFaces()):
                                 [d, pint] = pointLineIntersection(wx.Point(*face[0]), wx.Point(*face[1]), mousePt)
 
-File : /regionEditor.py:756
+File : /regionEditor.py:752
 
             # TODO: Get rid of action variable in above
             self.createPoly(self.newPoints)
             self.mouseMode = mouse_NONE
             self.sb.SetStatusText("", 1)
 
-File : /regionEditor.py:861
+File : /regionEditor.py:857
 
         # TODO: Make minimal/full an option settable via the GUI
 
         name, ext = os.path.splitext(os.path.basename(self.fileName))
 
 
-File : /regionEditor.py:935
+File : /regionEditor.py:931
 
         # TODO: Alpha BG so you can make it lighter
         if self.backgroundImage != None:
             dc.DrawBitmap(self.backgroundImage, 0, 0, False)
         
 
-File : /regionEditor.py:960
+File : /regionEditor.py:956
 
                 # TODO: Better text placement algorithm for concave polygons?
                 dc.SetBrush(wx.Brush(obj.color, wx.SOLID))
                 dc.SetPen(wx.Pen(obj.color, 1, wx.SOLID))
                 center = obj.getCenter()
 
-File : /regionEditor.py:1820
+File : /regionEditor.py:1816
 
             # TODO: Do preliminary, less-expensive checking first
             if obj.objectContainsPoint(pt.x, pt.y):
                 return obj
         return None
 
-File : /regionEditor.py:2149
+File : /regionEditor.py:2145
 
         # TODO: Check to see if name already exists?
         
         return True
 
 
-File : /simGUI.py:99
+File : /simGUI.py:105
 
                 # FIXME: Sometimes we'll still get rate updates AFTER a pause
                 wx.CallAfter(self.sb.SetStatusText, input, 0)
             elif input.startswith("Output proposition"):
                 if self.checkbox_statusLog_propChange.GetValue():
 
-File : /specEditor.py:61
+File : /specEditor.py:345
 
-            # FIXME: Autosize doesn't work?
-            #self.AutoSizeColLabelSize(i)
+        # TODO: Update this part
+        #if self.parent.subprocess[PROCESS_PLAYER] is not None \
+        #or self.parent.subprocess[PROCESS_GAZEBO] is not None:
+        #    wx.MessageBox("Please close the running simulation before calibrating.", "Error",
 
-        self.AppendRows(len(rowValues))
+File : /specEditor.py:354
 
-File : /specEditor.py:67
-
-            # FIXME: Autosize doesn't work?
-            #self.AutoSizeRowLabelSize(i)
-
-    def onMouse(self, evt):
-
-File : /specEditor.py:406
-
-        # TODO: Maybe we don't need to use subprocess.Popen?
-        #self.parent.subprocess[PROCESS_CALIB] = wx.Process(self, PROCESS_CALIB)
-        #wx.Execute("./playerclient.py -calibrate %s.spec" % (os.path.join(wd,self.projectName)), wx.EXEC_ASYNC, self.subprocess[PROCESS_CALIB])
-    
-
-File : /specEditor.py:410
-
-        # TODO: It would be nice to have a real GUI instead of just the terminal for this part
+        # TODO: save the config first
+        proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec", self.list_box_experiment_name.GetStringSelection()],stderr=subprocess.PIPE)
         
-        # Get the name of the experiment currently working with
-        expName = self.list_box_experiment_name.GetStringValue()
+        output = proc.stderr.readline().strip()
 
-File : /specEditor.py:586
+File : /specEditor.py:575
 
-    # TODO: Make the map actually clickable!
     # FIXME: Doesn't scroll on Windows???
 
     def __init__(self, parent, bitmap, *args, **kwds):
+        self.parent = parent
 
-File : /specEditor.py:643
+File : /specEditor.py:631
 
-    # TODO: Are we gonna allow MDI?  What's the point?
     # TODO: Use the scintilla-style text editor. Select-all, search-replace, syntax highlighting, etc.
 
     def __init__(self, *args, **kwds):
+        # begin wxGlade: SpecEditorFrame.__init__
 
-File : /specEditor.py:908
+File : /specEditor.py:896
 
         # TODO: Finish me
 
         event.Skip()
 
 
-File : /specEditor.py:1003
+File : /specEditor.py:992
 
         # TODO: Make new window here?
         pass
 
         event.Skip()
 
-File : /specEditor.py:1236
+File : /specEditor.py:1228
 
         # TODO: if self.dirty:
         if not self.askIfUserWantsToSave("closing"): return
         
         # Detach from any running subprocesses
 
-File : /specEditor.py:1349
+File : /specEditor.py:1341
 
         # TODO: Catch errors here
         adjData = self.rfi.transitions
 
-        createPFfile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
+        createLTLfile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
 
-File : /specEditor.py:1532
+File : /specEditor.py:1362
 
-                # TODO: Draw me some sensors!?
-
-        elif self.simSetup['SimType'].lower() == 'gazebo':
-
-
-File : /specEditor.py:1590
-
-            # TODO: Account for aspect ratio of background image!
-
-            if self.simSetup["VertexMarkers"]:
-                pts = []
-
-File : /specEditor.py:1608
-
-                # TODO: Draw me some sensors!?
-
-        f_world.close()
+        # TODO: Make this output live
+        while cmd.poll():
+            wx.Yield()
 
 
-File : /specEditor.py:1715
+File : /specEditor.py:1398
 
         # TODO: Maybe we shouldn't be recalculating fileNamePrefix so much...
         fileNamePrefix = os.path.join(self.projectPath, self.projectName)
 
         if self.projectName is None or not os.path.isfile(fileNamePrefix+".aut"):
 
-File : /specEditor.py:1719
+File : /specEditor.py:1402
 
             # TODO: Deal with case where aut file exists but is lame
             wx.MessageBox("Cannot find automaton for simulation.  Please make sure compilation completed successfully.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
 
-File : /specEditor.py:1751
-
-            # TODO: Detect quit, make interface
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-
-
-File : /specEditor.py:1764
+File : /specEditor.py:1425
 
         # FIXME: Doesn't change size on Windows??
         self.Layout()
 
         # Spawn asynchronous subprocess
 
-File : /specEditor.py:1836
+File : /specEditor.py:1483
 
             # TODO: Check exists & mtime to make sure it didn't die
             self.appendLog("Export complete!\n", "GREEN")
         else:
             print "Unknown PID"
 
-File : /handlers/init/stage.py:49
+File : /handlers/init/stage.py:48
 
                 # TODO: Better handling of error cases
                 break
 
     def getSharedData(self):
 
-File : /handlers/motionControl/heatController.py:43
+File : /handlers/motionControl/heatController.py:49
 
         # TODO: Account for last in cache
 
         if current in cache and next in cache[current]:
             return cache[current][next]
 
-File : /handlers/motionControl/heatController.py:58
+File : /handlers/motionControl/heatController.py:64
 
             # TODO: Account for non-determinacy?
             pt1, pt2 = self.rfi.transitions[current][next][0]
             
             # Find the index of this face
 
-File : /handlers/motionControl/heatController.py:62
+File : /handlers/motionControl/heatController.py:68
 
             # TODO: Why don't we just store this as the index?
             for i, face in enumerate([x for x in self.rfi.regions[current].getFaces()]):
                 # Account for both face orientations...
                 if (pt1 == face[0] and pt2 == face[1]) or (pt1 == face[1] and pt2 == face[0]):
 
-File : /handlers/motionControl/heatControllerHelper.py:909
+File : /handlers/motionControl/heatControllerHelper.py:908
 
             # TODO: This is a silly if-else...
             if Bi[0,i] > 0:
                 # The distance product in this zone 
                 # should be negative, but it won't 
-
-File : /handlers/sensor/dummySensor.py:22
-
-        self.p_sensorHandler = subprocess.Popen(os.path.join("handlers","sensor","SensorHandler.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE) # TODO: this will only work if we're in the root working directory
-
-        self.fd_sensorHandler = self.p_sensorHandler.stderr
-
 
 File : /handlers/sensor/SensorHandler.py:59
 

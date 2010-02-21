@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
-""" LTLMoP Toolkit - Region Editor
+""" ===============================
+    regionEditor.py - Region Editor
+    ===============================
     
-    A simple polygonal region editor.
-
-    This is completely free software; please feel free to adapt or use this in
-    any way you like.
+    A simple polygonal region editor.  The code is kind of a mess, but it does what it needs to do.
 
     Based on pySketch by Erik Westra (ewestra@wave.co.nz) and Bill Baxter (wbaxter@gmail.com)
-    Adapted and expanded by Cameron Finucane (cameronp@seas.upenn.edu)
-
-    Last updated October 2008
 """
 
 import sys, copy, re, shutil

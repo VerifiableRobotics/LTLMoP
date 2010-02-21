@@ -20,7 +20,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="LTLMoP v0.6 documentation" href="index.html" />
-    <link rel="next" title="Configuration and Data Files" href="config_files.html" />
+    <link rel="next" title="Handlers" href="handlers.html" />
     <link rel="prev" title="Applications" href="applications.html" /> 
   </head>
   <body>
@@ -34,7 +34,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="config_files.html" title="Configuration and Data Files"
+          <a href="handlers.html" title="Handlers"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="applications.html" title="Applications"
@@ -48,8 +48,96 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-fileMethods">
-<h1>Shared Modules<a class="headerlink" href="#module-fileMethods" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-createJTLVinput">
+<h1>Shared Modules<a class="headerlink" href="#module-createJTLVinput" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="project-py-abstraction-layer-for-project-files">
+<h2>project.py - Abstraction layer for project files<a class="headerlink" href="#project-py-abstraction-layer-for-project-files" title="Permalink to this headline">¶</a></h2>
+<p>This module exposes an object that allows for simplified loading of the
+various files included in a single project.</p>
+<dl class="class">
+<dt id="project.Project">
+<em class="property">class </em><tt class="descclassname">project.</tt><tt class="descname">Project</tt><a class="headerlink" href="#project.Project" title="Permalink to this definition">¶</a></dt>
+<dd><p>A project object.</p>
+<dl class="method">
+<dt id="project.Project.determineEnabledPropositions">
+<tt class="descname">determineEnabledPropositions</tt><big>(</big><big>)</big><a class="headerlink" href="#project.Project.determineEnabledPropositions" title="Permalink to this definition">¶</a></dt>
+<dd>Populate <tt class="docutils literal"><span class="pre">all_sensors</span></tt>, <tt class="docutils literal"><span class="pre">initial_sensors</span></tt>, and <tt class="docutils literal"><span class="pre">all_actuators</span></tt> lists based on
+configuration information.</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.getBackgroundImagePath">
+<tt class="descname">getBackgroundImagePath</tt><big>(</big><big>)</big><a class="headerlink" href="#project.Project.getBackgroundImagePath" title="Permalink to this definition">¶</a></dt>
+<dd>Returns the path of the background image with regions drawn on top, created by RegionEditor</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.getCoordMaps">
+<tt class="descname">getCoordMaps</tt><big>(</big><em>exp_cfg_data</em><big>)</big><a class="headerlink" href="#project.Project.getCoordMaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns forward (map-&gt;lab) and reverse (lab-&gt;map) coordinate mapping functions, in that order</p>
+<p>We are currently assuming the transformation is only linear, not affine (TODO).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.getExperimentConfig">
+<tt class="descname">getExperimentConfig</tt><big>(</big><em>exp_cfg_name</em><big>)</big><a class="headerlink" href="#project.Project.getExperimentConfig" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a dictionary corresponding to the specified experiment config</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.getFilenamePrefix">
+<tt class="descname">getFilenamePrefix</tt><big>(</big><big>)</big><a class="headerlink" href="#project.Project.getFilenamePrefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the full path of most project files, minus the extension.</p>
+<p>For example, if the spec file of this project is <tt class="docutils literal"><span class="pre">/home/ltlmop/examples/test/test.spec</span></tt>
+then this function will return <tt class="docutils literal"><span class="pre">/home/ltlmop/examples/test/test</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.importHandlers">
+<tt class="descname">importHandlers</tt><big>(</big><em>list=None</em><big>)</big><a class="headerlink" href="#project.Project.importHandlers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load in specified handlers.  If no list is given, <em>all</em> handlers will be loaded.</p>
+<p>Note that the order of loading is important, due to inter-handler dependencies.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.loadLabData">
+<tt class="descname">loadLabData</tt><big>(</big><em>exp_cfg_data</em><big>)</big><a class="headerlink" href="#project.Project.loadLabData" title="Permalink to this definition">¶</a></dt>
+<dd>Takes an experiment config dictionary and returns a lab config dictionary.</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.loadProject">
+<tt class="descname">loadProject</tt><big>(</big><em>spec_file</em>, <em>exp_cfg_name=None</em><big>)</big><a class="headerlink" href="#project.Project.loadProject" title="Permalink to this definition">¶</a></dt>
+<dd>Because the spec_file contains references to all other project files, this is all we
+need to know in order to load everything in.</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.loadRegionFile">
+<tt class="descname">loadRegionFile</tt><big>(</big><big>)</big><a class="headerlink" href="#project.Project.loadRegionFile" title="Permalink to this definition">¶</a></dt>
+<dd>Returns a Region File Interface object corresponding to the regions file referenced in the spec file</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.loadRobotFile">
+<tt class="descname">loadRobotFile</tt><big>(</big><em>exp_cfg_data</em><big>)</big><a class="headerlink" href="#project.Project.loadRobotFile" title="Permalink to this definition">¶</a></dt>
+<dd>Takes an experiment config dictionary and returns a robot description dictionary.</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.loadSpecFile">
+<tt class="descname">loadSpecFile</tt><big>(</big><em>spec_file</em><big>)</big><a class="headerlink" href="#project.Project.loadSpecFile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="project.Project.lookupHandlers">
+<tt class="descname">lookupHandlers</tt><big>(</big><big>)</big><a class="headerlink" href="#project.Project.lookupHandlers" title="Permalink to this definition">¶</a></dt>
+<dd>Figure out which handlers we are going to use, based on the different configurations file settings</dd></dl>
+
+<dl class="method">
+<dt id="project.Project.runInitialization">
+<tt class="descname">runInitialization</tt><big>(</big><em>calib=False</em><big>)</big><a class="headerlink" href="#project.Project.runInitialization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the necessary initialization handlers.</p>
+<p>We treat initialization handlers separately, because there may be more than one.
+NOTE: These will be loaded in the same order as they are listed in the lab config file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="regions-py-regions-module">
 <h2>regions.py - Regions Module<a class="headerlink" href="#regions-py-regions-module" title="Permalink to this headline">¶</a></h2>
 <p>A simple module that defines a class for describing and manipulating
@@ -62,15 +150,26 @@ any way you like.</p>
 <em class="property">class </em><tt class="descclassname">regions.</tt><tt class="descname">Region</tt><big>(</big><em>type=1</em>, <em>position=wx.Point(0</em>, <em>0)</em>, <em>size=wx.Size(0</em>, <em>0)</em>, <em>color=None</em>, <em>points=</em><span class="optional">[</span><span class="optional">]</span>, <em>name=''</em><big>)</big><a class="headerlink" href="#regions.Region" title="Permalink to this definition">¶</a></dt>
 <dd><p>A rectangular or polygonal region, defined by the following properties:</p>
 <blockquote>
-<p>&#8216;name&#8217;          Region name
-&#8216;type&#8217;          What type of region this is (rect or poly)
-&#8216;position&#8217;      The position of the object within the document</p>
-<blockquote>
-(i.e., the top-left corner of the region&#8217;s bounding-box)</blockquote>
-<p>&#8216;size&#8217;          The size of the object&#8217;s bounding box
-&#8216;color&#8217;         Color to use for drawing the region
-&#8216;pointArray&#8217;    Polygon points, relative to region position (stored in CW order)
-&#8216;alignmentPoints&#8217;  True/False array indicating for each vertex whether or not to use it as an alignment point</p>
+<ul>
+<li><p class="first">&#8216;name&#8217;          Region name</p>
+</li>
+<li><p class="first">&#8216;type&#8217;          What type of region this is (rect or poly)</p>
+</li>
+<li><dl class="first docutils">
+<dt>&#8216;position&#8217;      The position of the object within the document </dt>
+<dd><p class="first last">(i.e., the top-left corner of the region&#8217;s bounding-box)</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">&#8216;size&#8217;          The size of the object&#8217;s bounding box</p>
+</li>
+<li><p class="first">&#8216;color&#8217;         Color to use for drawing the region</p>
+</li>
+<li><p class="first">&#8216;pointArray&#8217;    Polygon points, relative to region position (stored in CW order)</p>
+</li>
+<li><p class="first">&#8216;alignmentPoints&#8217;  True/False array indicating for each vertex whether or not to use it as an alignment point</p>
+</li>
+</ul>
 </blockquote>
 <dl class="docutils">
 <dt>NOTE: All coordinates are stored internally with (0,0) at the top left.</dt>
@@ -169,9 +268,12 @@ previously saved region.</p>
 <li><p class="first">regions (list): list of Region objects, with properties defined below</p>
 </li>
 <li><dl class="first docutils">
-<dt>transitions (list of lists): key1 = Region object index</dt>
-<dd><p class="first last">key2 = Region object index
-values = Lists of faces connecting the two regions</p>
+<dt>transitions (list of lists):</dt>
+<dd><ul class="first last simple">
+<li>key1 = Region object index</li>
+<li>key2 = Region object index</li>
+<li>values = Lists of faces connecting the two regions</li>
+</ul>
 </dd>
 </dl>
 </li>
@@ -184,14 +286,29 @@ values = Lists of faces connecting the two regions</p>
 </ul>
 </blockquote>
 <dl class="method">
+<dt id="regions.RegionFileInterface.getCalibrationPoints">
+<tt class="descname">getCalibrationPoints</tt><big>(</big><big>)</big><a class="headerlink" href="#regions.RegionFileInterface.getCalibrationPoints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="regions.RegionFileInterface.getNextAvailableRegionNumber">
 <tt class="descname">getNextAvailableRegionNumber</tt><big>(</big><big>)</big><a class="headerlink" href="#regions.RegionFileInterface.getNextAvailableRegionNumber" title="Permalink to this definition">¶</a></dt>
 <dd>Look for the smallest region name of form r1, r2, ... available.</dd></dl>
 
 <dl class="method">
+<dt id="regions.RegionFileInterface.indexOfRegionWithName">
+<tt class="descname">indexOfRegionWithName</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#regions.RegionFileInterface.indexOfRegionWithName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="regions.RegionFileInterface.readFile">
 <tt class="descname">readFile</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#regions.RegionFileInterface.readFile" title="Permalink to this definition">¶</a></dt>
 <dd>For file format information, refer to writeFile() above.</dd></dl>
+
+<dl class="method">
+<dt id="regions.RegionFileInterface.setToDefaultName">
+<tt class="descname">setToDefaultName</tt><big>(</big><em>region</em><big>)</big><a class="headerlink" href="#regions.RegionFileInterface.setToDefaultName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="regions.RegionFileInterface.writeFile">
@@ -205,6 +322,86 @@ values = Lists of faces connecting the two regions</p>
 <tt class="descclassname">regions.</tt><tt class="descname">pointLineIntersection</tt><big>(</big><em>pt1</em>, <em>pt2</em>, <em>test_pt</em><big>)</big><a class="headerlink" href="#regions.pointLineIntersection" title="Permalink to this definition">¶</a></dt>
 <dd>Given two points (pt1, pt2), find the point on the line formed by those points that is nearest
 to test_pt and give the distance.</dd></dl>
+
+</div>
+<div class="section" id="fsa-py-finite-state-automaton-module">
+<h2>fsa.py - Finite-State Automaton module<a class="headerlink" href="#fsa-py-finite-state-automaton-module" title="Permalink to this headline">¶</a></h2>
+<p>Defines a specific model for finite state automata, including a method to read in files
+produced by JTLV and a method to execute the automaton.</p>
+<dl class="class">
+<dt id="fsa.Automaton">
+<em class="property">class </em><tt class="descclassname">fsa.</tt><tt class="descname">Automaton</tt><big>(</big><em>regions</em>, <em>sensor_handler</em>, <em>actuator_handler</em>, <em>motion_handler</em><big>)</big><a class="headerlink" href="#fsa.Automaton" title="Permalink to this definition">¶</a></dt>
+<dd><p>An automaton object is a collection of state objects along with information about the
+current state of the automaton when being executed.</p>
+<dl class="method">
+<dt id="fsa.Automaton.chooseInitialState">
+<tt class="descname">chooseInitialState</tt><big>(</big><em>init_region</em>, <em>init_outputs</em><big>)</big><a class="headerlink" href="#fsa.Automaton.chooseInitialState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search through all our states to find one that satisfies our current system and environment states,
+so that we may begin our execution from there.</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">init_region</span></tt> is the number of our starting region</li>
+<li><tt class="docutils literal"><span class="pre">init_outputs</span></tt> is a list of output proposition names that are TRUE initially.</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="fsa.Automaton.dumpStates">
+<tt class="descname">dumpStates</tt><big>(</big><big>)</big><a class="headerlink" href="#fsa.Automaton.dumpStates" title="Permalink to this definition">¶</a></dt>
+<dd>Print out the contents of the automaton in a human-readable format</dd></dl>
+
+<dl class="method">
+<dt id="fsa.Automaton.findTransitionableStates">
+<tt class="descname">findTransitionableStates</tt><big>(</big><em>initial=False</em><big>)</big><a class="headerlink" href="#fsa.Automaton.findTransitionableStates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of states that we could conceivably transition to, given
+the environment state (determined by querying the sensor handler)</p>
+<p>If <tt class="docutils literal"><span class="pre">initial</span></tt> is true, the current region and output propositions will constrain
+state selection as well.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fsa.Automaton.loadFile">
+<tt class="descname">loadFile</tt><big>(</big><em>filename</em>, <em>sensors</em>, <em>actuators</em>, <em>custom_props</em><big>)</big><a class="headerlink" href="#fsa.Automaton.loadFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an automaton by reading in a file produced by TLV.</p>
+<p>In addition to a filename, you also need to provide a list of sensor names (so that we can tell the difference between system and environment propositions when reading the file), and a list of actuator names (so we can distinguish internal state propositions from outputs).</p>
+<p>Basically just a lot of regexes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="fsa.Automaton.regionFromState">
+<tt class="descname">regionFromState</tt><big>(</big><em>state</em><big>)</big><a class="headerlink" href="#fsa.Automaton.regionFromState" title="Permalink to this definition">¶</a></dt>
+<dd>Given a state object, look at its &#8216;bitX&#8217; outputs to determine the region encoded,
+and return the NUMBER of this region.</dd></dl>
+
+<dl class="method">
+<dt id="fsa.Automaton.runIteration">
+<tt class="descname">runIteration</tt><big>(</big><big>)</big><a class="headerlink" href="#fsa.Automaton.runIteration" title="Permalink to this definition">¶</a></dt>
+<dd>Run, run, run the automaton!  (For one evaluation step)</dd></dl>
+
+<dl class="method">
+<dt id="fsa.Automaton.stateWithName">
+<tt class="descname">stateWithName</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#fsa.Automaton.stateWithName" title="Permalink to this definition">¶</a></dt>
+<dd>Find the state with the given name</dd></dl>
+
+<dl class="method">
+<dt id="fsa.Automaton.updateOutputs">
+<tt class="descname">updateOutputs</tt><big>(</big><em>state</em><big>)</big><a class="headerlink" href="#fsa.Automaton.updateOutputs" title="Permalink to this definition">¶</a></dt>
+<dd>Update the values of current outputs in our execution environment to reflect the output
+proposition values associated with the given state</dd></dl>
+
+<dl class="method">
+<dt id="fsa.Automaton.writeDot">
+<tt class="descname">writeDot</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#fsa.Automaton.writeDot" title="Permalink to this definition">¶</a></dt>
+<dd>Write a dot file so we can look at the automaton visually.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="fsa.FSA_State">
+<em class="property">class </em><tt class="descclassname">fsa.</tt><tt class="descname">FSA_State</tt><big>(</big><em>name</em>, <em>inputs</em>, <em>outputs</em>, <em>transitions</em><big>)</big><a class="headerlink" href="#fsa.FSA_State" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each state in the automaton is an object.</p>
+<p>WARNING/FIXME: Since all states belong to a list within the Automaton object, the states may
+also be referred to just by their index within that list.  This can get confusing sometimes.</p>
+</dd></dl>
 
 </div>
 <div class="section" id="filemethods-py-file-access-methods">
@@ -270,6 +467,118 @@ as comments in the appropriate section of the file.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="parseenglishtoltl-py-structured-english-to-ltl-translator">
+<h2>parseEnglishToLTL.py - Structured English to LTL Translator<a class="headerlink" href="#parseenglishtoltl-py-structured-english-to-ltl-translator" title="Permalink to this headline">¶</a></h2>
+<p>Module that parses a set of structured English sentences into the
+corresponding LTL subformulas.</p>
+<dl class="function">
+<dt id="parseEnglishToLTL.bitEncoding">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">bitEncoding</tt><big>(</big><em>numRegions</em>, <em>numBits</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.bitEncoding" title="Permalink to this definition">¶</a></dt>
+<dd>This function creates a dictionary that contains the bit encoding for the current
+and next region. Takes number of regions and returns a dictionary with &#8216;current&#8217;         and &#8216;next&#8217; as keys, each containing a list of the respective encodings.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.createStayFormula">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">createStayFormula</tt><big>(</big><em>numBits</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.createStayFormula" title="Permalink to this definition">¶</a></dt>
+<dd>This function replaces the region names with the appropriate bit encoding.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.parseCond">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">parseCond</tt><big>(</big><em>condition</em>, <em>sensorList</em>, <em>allRobotProp</em>, <em>ReqType</em>, <em>lineInd</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.parseCond" title="Permalink to this definition">¶</a></dt>
+<dd>This function creates the LTL formula representing the condition part of a conditional.
+It takes the condition and PropList - a list of propositions (to check that only &#8216;legal&#8217;
+propositions are used)and &#8216;lineInd&#8217; that indicates which line is being processed.
+Returns the LTL formula as a string.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.parseConditional">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">parseConditional</tt><big>(</big><em>Condition</em>, <em>ReqFormulaInfo</em>, <em>CondType</em>, <em>sensorList</em>, <em>allRobotProp</em>, <em>lineInd</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.parseConditional" title="Permalink to this definition">¶</a></dt>
+<dd>This function creates the LTL formula representing a conditional.
+It takes the condition, the requirement formula (that was already parsed),
+the condition type, and the list of all propositions (to check that only &#8216;legal&#8217;
+propositions are used) and &#8216;lineInd&#8217; that indicates which line is being processed.
+Returns a dictionary with 2 keys: &#8216;formula&#8217; containing the LTL formula as a string and &#8216;type&#8217; containing
+the type of the requirement.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.parseEvent">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">parseEvent</tt><big>(</big><em>EventProp</em>, <em>SetEvent</em>, <em>ResetEvent</em>, <em>sensorProp</em>, <em>RobotProp</em>, <em>lineInd</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.parseEvent" title="Permalink to this definition">¶</a></dt>
+<dd>This function creates the LTL formulas encoding when a proposition should be true and when false.
+This is used as a macro to define &#8216;memory&#8217; propositions.
+It takes the proposition, the boolean formulas defining the set and reset events, the propositions
+(to check that only &#8216;legal&#8217; propositions are used) and &#8216;lineInd&#8217; that indicates which line is being processed.
+Returns the LTL formula as a string.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.parseInit">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">parseInit</tt><big>(</big><em>sentence</em>, <em>PropList</em>, <em>lineInd</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.parseInit" title="Permalink to this definition">¶</a></dt>
+<dd>This function creates the LTL formula representing the initial conditions.
+It takes the sentence and PropList - a list of propositions (to check that only &#8216;legal&#8217;
+propositions are used) and &#8216;lineInd&#8217; that indicates which line is being processed.
+Returns the LTL formula as a string.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.parseLiveness">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">parseLiveness</tt><big>(</big><em>sentence</em>, <em>sensorList</em>, <em>allRobotProp</em>, <em>lineInd</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.parseLiveness" title="Permalink to this definition">¶</a></dt>
+<dd>This function creates the LTL formula representing a basic liveness requirement.
+It takes the sentence, the sensor list and the list of all robot propositions (to check that only &#8216;legal&#8217;
+propositions are used and to determine whether it is an environment safety or a robot one)
+and &#8216;lineInd&#8217; that indicates which line is being processed.
+Returns a dictionary with 2 keys: &#8216;formula&#8217; containing the LTL formula as a string and &#8216;type&#8217; containing
+either &#8216;EnvGoals&#8217; or &#8216;SysGoals&#8217;.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.parseSafety">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">parseSafety</tt><big>(</big><em>sentence</em>, <em>sensorList</em>, <em>allRobotProp</em>, <em>lineInd</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.parseSafety" title="Permalink to this definition">¶</a></dt>
+<dd>This function creates the LTL formula representing a basic safety requirement.
+It takes the sentence, the sensor list and the list of all robot propositions (to check that only &#8216;legal&#8217;
+propositions are used and to determine whether it is an environment safety or a robot one)
+and &#8216;lineInd&#8217; that indicates which line is being processed.
+Returns a dictionary with 2 keys: &#8216;formula&#8217; containing the LTL formula as a string and &#8216;type&#8217; containing
+either &#8216;EnvTrans&#8217; or &#8216;SysTrans&#8217;.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.replaceLogicOp">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">replaceLogicOp</tt><big>(</big><em>formula</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.replaceLogicOp" title="Permalink to this definition">¶</a></dt>
+<dd>This function replaces the logic operators with TLV convention.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.replaceRegionName">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">replaceRegionName</tt><big>(</big><em>formula</em>, <em>bitEncode</em>, <em>regionList</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.replaceRegionName" title="Permalink to this definition">¶</a></dt>
+<dd>This function replaces the region names with the appropriate bit encoding.</dd></dl>
+
+<dl class="function">
+<dt id="parseEnglishToLTL.writeSpec">
+<tt class="descclassname">parseEnglishToLTL.</tt><tt class="descname">writeSpec</tt><big>(</big><em>text</em>, <em>sensorList</em>, <em>regionList</em>, <em>robotPropList</em><big>)</big><a class="headerlink" href="#parseEnglishToLTL.writeSpec" title="Permalink to this definition">¶</a></dt>
+<dd>This function creates the Spec dictionary that contains the parsed LTL
+subformulas. It takes the text that contains the structured English,
+the list of sensor propositions, the list containing
+the region names and the list of robot propositions (other than regions).</dd></dl>
+
+</div>
+<div class="section" id="createjtlvinput-py-ltl-pre-processor-routines">
+<h2>createJTLVinput.py - LTL Pre-Processor Routines<a class="headerlink" href="#createjtlvinput-py-ltl-pre-processor-routines" title="Permalink to this headline">¶</a></h2>
+<p>Module that creates the input files for the JTLV based synthesis algorithm.
+Its functions create the skeleton .smv file and the .ltl file which
+includes the topological relations and the given spec.</p>
+<dl class="function">
+<dt id="createJTLVinput.createLTLfile">
+<tt class="descclassname">createJTLVinput.</tt><tt class="descname">createLTLfile</tt><big>(</big><em>fileName</em>, <em>sensorList</em>, <em>robotPropList</em>, <em>adjData</em>, <em>spec</em><big>)</big><a class="headerlink" href="#createJTLVinput.createLTLfile" title="Permalink to this definition">¶</a></dt>
+<dd>This function writes the LTL file. It encodes the specification and 
+topological relation. 
+It takes as input a filename, the list of the
+sensor propositions, the list of robot propositions (without the regions),
+the adjacency data (transition data structure) and
+a dictionary containing the specification strings.</dd></dl>
+
+<dl class="function">
+<dt id="createJTLVinput.createSMVfile">
+<tt class="descclassname">createJTLVinput.</tt><tt class="descname">createSMVfile</tt><big>(</big><em>fileName</em>, <em>numRegions</em>, <em>sensorList</em>, <em>robotPropList</em><big>)</big><a class="headerlink" href="#createJTLVinput.createSMVfile" title="Permalink to this definition">¶</a></dt>
+<dd>This function writes the skeleton SMV file.
+It takes as input a filename, the number of regions, the list of the
+sensor propositions and the list of robot propositions (without the regions).</dd></dl>
+
+</div>
 </div>
 
 
@@ -281,8 +590,12 @@ as comments in the appropriate section of the file.</p>
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="#">Shared Modules</a><ul>
+<li><a class="reference external" href="#project-py-abstraction-layer-for-project-files">project.py - Abstraction layer for project files</a></li>
 <li><a class="reference external" href="#regions-py-regions-module">regions.py - Regions Module</a></li>
+<li><a class="reference external" href="#fsa-py-finite-state-automaton-module">fsa.py - Finite-State Automaton module</a></li>
 <li><a class="reference external" href="#filemethods-py-file-access-methods">fileMethods.py - File Access Methods</a></li>
+<li><a class="reference external" href="#parseenglishtoltl-py-structured-english-to-ltl-translator">parseEnglishToLTL.py - Structured English to LTL Translator</a></li>
+<li><a class="reference external" href="#createjtlvinput-py-ltl-pre-processor-routines">createJTLVinput.py - LTL Pre-Processor Routines</a></li>
 </ul>
 </li>
 </ul>
@@ -291,8 +604,8 @@ as comments in the appropriate section of the file.</p>
             <p class="topless"><a href="applications.html"
                                   title="previous chapter">Applications</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="config_files.html"
-                                  title="next chapter">Configuration and Data Files</a></p>
+            <p class="topless"><a href="handlers.html"
+                                  title="next chapter">Handlers</a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/modules.txt"
@@ -325,7 +638,7 @@ as comments in the appropriate section of the file.</p>
           <a href="modindex.html" title="Global Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="config_files.html" title="Configuration and Data Files"
+          <a href="handlers.html" title="Handlers"
              >next</a> |</li>
         <li class="right" >
           <a href="applications.html" title="Applications"

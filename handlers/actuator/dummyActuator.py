@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-===========================================================
-handlers/actuator/dummyActuator.py - Dummy Actuator Handler
-===========================================================
+=========================================
+dummyActuator.py - Dummy Actuator Handler
+=========================================
 
 Does nothing more than print the actuator name and state; for testing purposes.
 """

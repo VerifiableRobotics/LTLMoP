@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-===========================================================================
-handlers/locomotionCommand/orcaLocomotionCommand.py - Orca Velocity Handler
-===========================================================================
+================================================
+orcaLocomotionCommand.py - Orca Velocity Handler
+================================================
 
 Sends Vt, Vw velocity commands to Orca
 """

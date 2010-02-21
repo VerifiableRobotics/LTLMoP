@@ -13,6 +13,7 @@ Contents:
 
    applications
    modules
+   handlers
    config_files
    todo
    conventions

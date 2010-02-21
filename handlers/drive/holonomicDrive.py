@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-======================================================================
-handlers/drive/holonomicDrive.py - Ideal Holonomic Point Drive Handler
-======================================================================
+=======================================================
+holonomicDrive.py - Ideal Holonomic Point Drive Handler
+=======================================================
 
 Passes velocity requests directly through.
 Used for ideal holonomic point robots.
