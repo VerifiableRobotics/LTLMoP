@@ -32,3 +32,8 @@ OrcaPositionGroup:
 OrcaPositionPort:
 40976
 
+ColorDetectionGroup:
+239.255.255.3
+
+ColorDetectionPort:
+13332

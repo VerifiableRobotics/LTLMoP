@@ -6,27 +6,6 @@
 ======== EXPERIMENT CONFIG 1 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0154202902951,-7.90289878615,-0.0135000007493,4.93050037963
-
-InitialRegion: # Initial region number
-1
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-playerstage.lab
-
-
-Name: # Name of the experiment
-Stage (Point Robot)
-
-RobotFile: # Relative path of robot description file
-frog_stage.robot
-
-
-======== EXPERIMENT CONFIG 2 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
 0.0154202897192,-7.84324650027,-0.0145000006471,5.46750031625
 
 InitialRegion: # Initial region number
@@ -38,13 +17,31 @@ Bird
 Lab: # Lab configuration file
 cornell_asl.lab
 
-
 Name: # Name of the experiment
 Pioneer @ ASL
 
 RobotFile: # Relative path of robot description file
 pioneer_real.robot
 
+
+======== EXPERIMENT CONFIG 2 ========
+
+Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
+0.0154202902951,-7.90289878615,-0.0135000007493,4.93050037963
+
+InitialRegion: # Initial region number
+1
+
+InitialTruths: # List of initially true propositions
+
+Lab: # Lab configuration file
+playerstage.lab
+
+Name: # Name of the experiment
+Stage (Point Robot)
+
+RobotFile: # Relative path of robot description file
+frog_stage.robot
 
 
 ======== SETTINGS ========
