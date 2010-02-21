@@ -14,11 +14,8 @@ InitialRegion: # Initial region number
 InitialTruths: # List of initially true propositions
 
 Lab: # Lab configuration file
-<<<<<<< .mine
 playerstage.lab
-=======
-cornell_asl
->>>>>>> .r33
+
 
 Name: # Name of the experiment
 Stage (Point Robot)
@@ -30,11 +27,7 @@ frog_stage.robot
 ======== EXPERIMENT CONFIG 2 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-<<<<<<< .mine
-1.0,3.0,2.0,4.0
-=======
 0.0154202897192,-7.84324650027,-0.0145000006471,5.46750031625
->>>>>>> .r33
 
 InitialRegion: # Initial region number
 1
@@ -43,21 +36,15 @@ InitialTruths: # List of initially true propositions
 Bird
 
 Lab: # Lab configuration file
-<<<<<<< .mine
 cornell_asl.lab
-=======
-playerstage
->>>>>>> .r33
+
 
 Name: # Name of the experiment
 Pioneer @ ASL
 
 RobotFile: # Relative path of robot description file
-<<<<<<< .mine
 pioneer_real.robot
-=======
-partario.robot
->>>>>>> .r33
+
 
 
 ======== SETTINGS ========
