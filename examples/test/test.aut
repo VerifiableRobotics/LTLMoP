@@ -136,5 +136,5 @@ State 84 with rank 1 -> <Fly:0, bit0:0, bit1:0, bit2:1, PickUp:0, Drop:0, Carryi
 State 85 with rank 1 -> <Fly:1, bit0:0, bit1:0, bit2:0, PickUp:1, Drop:0, CarryingFly:0, s_wasI:1, s_conS:1>
 	With successors : 17, 18
 -----------------------------------------
-Strategy time: 836
+Strategy time: 832
 ===== Done ==============================

@@ -106,7 +106,9 @@ class Project:
 
     def getCoordMaps(self, exp_cfg_data):
         """
-        Returns forward and reverse coordinate mapping functions
+        Returns forward (map->lab) and reverse (lab->map) coordinate mapping functions, in that order
+
+        We are currently assuming the transformation is only linear, not affine (TODO).
         """
 
         #### Create the coordmap functions
@@ -125,16 +127,16 @@ class Project:
         inv_scale = linalg.inv(scale)
         offset = array([xoffset, yoffset])
 
-        #fwd_coordmap = lambda pt: (array((a*vstack([mat(pt).T,1]))[0:2]).flatten()) 
-        #rev_coordmap = lambda pt: (array((linalg.inv(a)*vstack([mat(pt).T,1]))[0:2]).flatten()) 
-        fwd_coordmap = lambda pt: (dot(scale, pt) + offset)
-        rev_coordmap = lambda pt: (dot(inv_scale, pt - offset))
+        #coordmap_map2lab = lambda pt: (array((a*vstack([mat(pt).T,1]))[0:2]).flatten()) 
+        #coordmap_lab2map = lambda pt: (array((linalg.inv(a)*vstack([mat(pt).T,1]))[0:2]).flatten()) 
+        coordmap_map2lab = lambda pt: (dot(scale, pt) + offset)
+        coordmap_lab2map = lambda pt: (dot(inv_scale, pt - offset))
 
-        return fwd_coordmap, rev_coordmap
+        return coordmap_map2lab, coordmap_lab2map
 
     def loadSpecFile(self, spec_file):
         # Figure out where we should be looking for files, based on the spec file name & location
-        self.project_root = os.path.dirname(spec_file)
+        self.project_root = os.path.abspath(os.path.dirname(spec_file))
         self.project_basename, ext = os.path.splitext(os.path.basename(spec_file)) 
         self.ltlmop_root = os.path.abspath(os.path.dirname(sys.argv[0]))
 
@@ -160,14 +162,49 @@ class Project:
         self.lab_data = self.loadLabData(self.exp_cfg_data)
         self.robot_data = self.loadRobotFile(self.exp_cfg_data)
         self.rfi = self.loadRegionFile()
-        self.fwd_coordmap, self.rev_coordmap = self.getCoordMaps(self.exp_cfg_data)
+        self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps(self.exp_cfg_data)
+        self.determineEnabledPropositions()
+
+    def determineEnabledPropositions(self):
+        """
+        Populate ``all_sensors``, ``initial_sensors``, and ``all_actuators`` lists based on
+        configuration information.
+        """
     
+        # Figure out what sensors are enabled, and which are initially true
+        self.all_sensors = []
+        self.initial_sensors = []
+        for line in self.spec_data['SETTINGS']['Sensors']:
+            sensor, val = line.split(',')
+            if int(val) == 1: 
+                self.all_sensors.append(sensor)
+                if sensor in self.exp_cfg_data['InitialTruths']:
+                    self.initial_sensors.append(sensor)
+
+        # Figure out what actuators are enabled
+        self.all_actuators = []
+        for line in self.spec_data['SETTINGS']['Actions']:
+            act, val = line.split(',')
+            if int(val) == 1: 
+                self.all_actuators.append(act)
+    
+    def getFilenamePrefix(self):
+        """ Returns the full path of most project files, minus the extension.
+
+            For example, if the spec file of this project is ``/home/ltlmop/examples/test/test.spec``
+            then this function will return ``/home/ltlmop/examples/test/test``
+        """
+        return os.path.join(self.project_root, self.project_basename)
+
     def getBackgroundImagePath(self):
-        img_file = os.path.join(self.project_root, self.project_basename) + "_simbg.png"
-        return img_file
+        """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
+        return self.getFilenamePrefix() + "_simbg.png"
     
     def lookupHandlers(self):
-        # Figure out which handlers we are going to use
+        """
+        Figure out which handlers we are going to use, based on the different configurations file settings
+        """
+
         # TODO: Complain nicely instead of just dying when this breaks?
         self.h_name = {}
         self.h_name['init'] = self.lab_data["InitializationHandler"]
@@ -179,8 +216,12 @@ class Project:
         self.h_name['drive'] = self.robot_data["DriveHandler"][0]
     
     def runInitialization(self, calib=False):
-        # We treat initialization handlers separately, because there may be multiple ones
-        # NOTE: These will be loaded in the same order as they are listed in the config file
+        """
+        Run the necessary initialization handlers.
+
+        We treat initialization handlers separately, because there may be more than one.
+        NOTE: These will be loaded in the same order as they are listed in the lab config file.
+        """
 
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
         init_num = 1
@@ -189,7 +230,7 @@ class Project:
             print "  -> %s" % handler
             # TODO: Is there a more elegant way to do this? This is pretty ugly...
             exec("from %s import initHandler as initHandler%d" % (handler, init_num)) in locals() # WARNING: This assumes our input data is not malicious...
-            exec("self.init_handlers.append(initHandler%d(self.project_root, self.project_basename, self.exp_cfg_data, self.robot_data, self.fwd_coordmap, self.rfi, calib=calib))" % (init_num)) in locals()
+            exec("self.init_handlers.append(initHandler%d(self, calib=calib))" % (init_num)) in locals()
             self.shared_data.update(self.init_handlers[-1].getSharedData())
             init_num += 1  # So they don't clobber each other
 
@@ -210,31 +251,15 @@ class Project:
             print "  -> %s" % self.h_name[handler]
             exec("from %s import %sHandler" % (self.h_name[handler], handler)) in locals() # WARNING: This assumes our input data is not malicious...
             if handler == 'pose':
-                self.pose_handler = poseHandler(self.shared_data)
+                self.pose_handler = poseHandler(self, self.shared_data)
+                print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
             elif handler == 'sensor':
-                # Figure out what sensors are enabled, and which are initially true
-                self.all_sensors = []
-                initial_sensors = []
-                for line in self.spec_data['SETTINGS']['Sensors']:
-                    sensor, val = line.split(',')
-                    if int(val) == 1: 
-                        self.all_sensors.append(sensor)
-                        if sensor in self.exp_cfg_data['InitialTruths']:
-                            initial_sensors.append(sensor)
-
-                self.sensor_handler = sensorHandler(self.shared_data, self.all_sensors, initial_sensors)
+                self.sensor_handler = sensorHandler(self, self.shared_data)
             elif handler == 'actuator':
-                # Figure out what actuators are enabled
-                self.all_actuators = []
-                for line in self.spec_data['SETTINGS']['Actions']:
-                    act, val = line.split(',')
-                    if int(val) == 1: 
-                        self.all_actuators.append(act)
-
-                self.actuator_handler = actuatorHandler(self.shared_data)
+                self.actuator_handler = actuatorHandler(self, self.shared_data)
             elif handler == 'locomotionCommand':
-                self.loco_handler = locomotionCommandHandler(self.shared_data)
+                self.loco_handler = locomotionCommandHandler(self, self.shared_data)
             elif handler == 'drive':
-                self.drive_handler = driveHandler(self.shared_data, self.loco_handler)
+                self.drive_handler = driveHandler(self, self.shared_data)
             elif handler == 'motionControl':
-                self.motion_handler = motionControlHandler(self.shared_data, self.pose_handler, self.drive_handler, self.rfi, self.fwd_coordmap)
+                self.motion_handler = motionControlHandler(self, self.shared_data)

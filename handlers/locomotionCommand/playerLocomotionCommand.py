@@ -1,17 +1,23 @@
 #!/usr/bin/env python
 """
-Sends X,Y velocity commands to player
+===========================================================================
+handlers/locomotionCommand/playerLocomotionCommand.py - Player Pos2D Client
+===========================================================================
+
+Sends velocity commands to player
 """
 
 class locomotionCommandHandler:
-    def __init__(self, shared_data):
+    def __init__(self, proj, shared_data):
         try:
             self.p = shared_data['PlayerPos2D']
         except KeyError:
-            print "(POSE) ERROR: Player doesn't seem to be initialized!"
+            print "(LOCO) ERROR: Player doesn't seem to be initialized!"
             sys.exit(-1)
         pass
 
     def sendCommand(self, cmd):
+        """ Send command to player.  Arguments depend on robot model. """ 
+
         self.p.set_cmd_vel(cmd[0], cmd[1], 0, 1)        
 

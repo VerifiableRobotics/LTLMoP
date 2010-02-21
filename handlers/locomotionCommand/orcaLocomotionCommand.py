@@ -1,21 +1,42 @@
 #!/usr/bin/env python
 """
-Sends X,Y velocity commands to Orca
+===========================================================================
+handlers/locomotionCommand/orcaLocomotionCommand.py - Orca Velocity Handler
+===========================================================================
+
+Sends Vt, Vw velocity commands to Orca
 """
 import array as pyarray
 
 class locomotionCommandHandler:
-    def __init__(self, shared_data):
+    def __init__(self, proj, shared_data):
+        """
+        Opens socket and connects to Orca velocity server.
+
+        Hostnames and ports are read in from the robot description file.
+        """
+
+        ### Connect to Orca:
+
         try:
-            self.sock = shared_data['Vel2DSock']
-            self.VEL2D_HOST = shared_data['VEL2D_HOST']
-            self.VEL2D_PORT = shared_data['VEL2D_PORT']
-        except KeyError:
-            print "(LOCO) ERROR: Orca connection doesn't seem to be initialized!"
+            self.VEL2D_HOST = proj.robot_data['OrcaVelocityHost'][0]
+            self.VEL2D_PORT = int(robot_data['OrcaVelocityPort'][0])
+        except KeyError, ValueError:
+            print "(LOCO) ERROR: Cannot find Orca network settings ('OrcaVelocityHost', 'OrcaVelocityPort') in robot file."
             sys.exit(-1)
 
+        # Open up sockets
+        print '(LOCO) Connecting to Orca server...'
+        self.vel2d_sock = socket(AF_INET, SOCK_DGRAM)
+
+        print "(LOCO) OK! We've successfully connected."
+
     def sendCommand(self, cmd):
-        # We are expecting a [vt, vw] command
+        """ Send a command to the Orca Velocy server.
+
+            Expects [Vt, Vw].
+        """
+
         cmd_data = pyarray.array('d')
         cmd_data.fromlist([cmd[0], 0, cmd[1]])
         self.sock.sendto(cmd_data, (self.VEL2D_HOST, self.VEL2D_PORT))

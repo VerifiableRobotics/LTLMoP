@@ -1,36 +1,34 @@
 #!/usr/bin/env python
 """
-Create config files for Stage and start it up in a subprocess
+================================================================
+handlers/init/stage.py - Stage Simulation Initialization Handler
+================================================================
+
+Create config files for Stage and start it up (as part of a player server) in a subprocess
 """
 
 import textwrap, os, subprocess, time
-from numpy import *
 
 class initHandler:
-    def __init__(self, project_root, project_basename, exp_cfg_data, rdf_data, fwd_coordmap, rfi, calib=False):
+    def __init__(self, proj, calib=False):
         """
-        If ``calib`` is ``True``, we'll start the robot at ``(0,0)``.
+        If ``calib`` is ``True``, we'll start the robot at location ``(0, 0)``.
 
-        Otherwise it will begin in the center of the initial region.
+        Otherwise, it will begin in the center of the defined initial region.
         """
 
-        #############################
-        # Create Stage config files #
-        #############################
+        ### Create Stage config files
 
         print "(INIT) Writing Stage configuration files..."
-        self.writeSimConfig(project_root, project_basename, exp_cfg_data, rdf_data, fwd_coordmap, rfi, calib)
+        self.writeSimConfig(proj, calib)
 
-        ###############################
-        # Start Stage (Player server) #
-        ###############################
+        ### Start Stage (Player server)
 
         print "(INIT) Starting Stage (Player server)..."
         print "=============================================="
 
         # Create a subprocess
-        fileNamePrefix = os.path.join(project_root, project_basename)
-        p_player = subprocess.Popen(["player", "%s.cfg" % fileNamePrefix], stdout=subprocess.PIPE)
+        p_player = subprocess.Popen(["player", proj.getFilenamePrefix() + ".cfg"], stdout=subprocess.PIPE)
         fd_player = p_player.stdout
 
         # Wait for it to fully start up
@@ -38,43 +36,43 @@ class initHandler:
             input = fd_player.readline()
             print input, # Pass it on
             if input == '': # EOF
-                print "WARNING: Player seems to have died!"
+                print "(INIT) WARNING: Player seems to have died!"
                 break
             if "Stage driver creating 1 device" in input:
                 # NOTE: I'd prefer to wait for "Listening on ports" but it's buffered so we never get it until Stage quits
                 # We'll just have to wait for a moment after this to be sure
-                time.sleep(3)
+                time.sleep(1)
                 print "=============================================="
                 print "OK! Looks like Stage is at least mostly alive."
                 # TODO: Better handling of error cases
                 break
 
     def getSharedData(self):
-        return {}  # We have nothing to store
+        """ Returns nothing """
+        return {}  # We have nothing to share
          
-    def writeSimConfig(self, project_root, project_basename, exp_cfg_data, rdf_data, fwd_coordmap, rfi, calib):
+    def writeSimConfig(self, proj, calib):
         """
         Generates .world and .cfg files for Stage.
         """
 
-        fileNamePrefix = os.path.abspath(os.path.join(project_root, project_basename))
-        
         # Choose starting position
         if calib:
             # Seems like a reasonable place to start, no?
             startpos = array([0,0])
         else:
             # Start in the center of the defined initial region
-            startpos = fwd_coordmap(rfi.regions[int(exp_cfg_data['InitialRegion'][0])].getCenter())
+            initial_region = proj.rfi.regions[int(proj.exp_cfg_data['InitialRegion'][0])]
+            startpos = proj.coordmap_map2lab(initial_region.getCenter())
 
         # Choose an appropriate background image
-        bgFile = fileNamePrefix + "_simbg.png"
+        bgFile = proj.getBackgroundImagePath()
 
         ####################
         # Stage world file #
         ####################
 
-        f_world = open(fileNamePrefix + ".world", "w")
+        f_world = open(proj.getFilenamePrefix() + ".world", "w")
 
         f_world.write(textwrap.dedent("""
             # Just a really simple robot abstraction
@@ -165,10 +163,10 @@ class initHandler:
             """))
 
             pts = []
-            for region in rfi.regions:
+            for region in proj.rfi.regions:
                 for pt in region.getPoints():
                     if pt not in pts: # Only draw shared vertices once!
-                        f_world.write("puck( pose [%f %f 0.0 ] color \"red\" )\n" % tuple(fwd_coordmap(pt)))
+                        f_world.write("puck( pose [%f %f 0.0 ] color \"red\" )\n" % tuple(proj.coordmap_map2lab(pt)))
                         pts.append(pt)
 
         f_world.close()
@@ -177,7 +175,7 @@ class initHandler:
         # Stage configuration file #
         ############################
 
-        f_cfg = open(fileNamePrefix + ".cfg", "w")
+        f_cfg = open(proj.getFilenamePrefix() + ".cfg", "w")
 
         f_cfg.write(textwrap.dedent("""
             # Load the Stage plugin simulation driver
@@ -206,6 +204,6 @@ class initHandler:
             provides ["position2d:0"]
             model "robot1"
             )
-        """ % fileNamePrefix))
+        """ % proj.getFilenamePrefix()))
 
         f_cfg.close()

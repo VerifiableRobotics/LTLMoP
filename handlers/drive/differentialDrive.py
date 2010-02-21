@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 """
+================================================================
+handlers/drive/differentialDrive.py - Differential Drive Handler
+================================================================
+
 Converts a desired global velocity vector into translational and rotational rates for a differential-drive robot,
 using feedback linearization.
 """
@@ -7,10 +11,14 @@ using feedback linearization.
 from math import sin, cos
 
 class driveHandler:
-    def __init__(self, shared_data, loco_handler):
-        self.loco = loco_handler
+    def __init__(self, proj, shared_data):
+        try.
+            self.loco = proj.loco_handler
+        except NameError:
+            print "(DRIVE) Locomotion Command Handler not found."
+            exit(-1)
 
-    def setVelocity(self,x,y,theta=0):
+    def setVelocity(self, x, y, w=0):
         # Feedback linearization code:
         #d = 0.125 # Distance from front axle to point we are abstracting to [m]
         d = 0.4 # Distance from front axle to point we are abstracting to [m]

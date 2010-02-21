@@ -2,7 +2,6 @@ Name: # Name for this lab configuration
 Cornell ASL Lab
 
 InitializationHandler:
-handlers.init.orca
 
 PoseHandler:
 handlers.pose.orcaPose

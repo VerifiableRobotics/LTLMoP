@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-""" LTLMoP Toolkit - Convex Polygon Point Controller
+""" 
+    ================================================================================
+    handlers/motionControl/heatControllerHelper.py - Convex Polygon Point Controller
+    ================================================================================
     
     A Python translation and trimming of David C. Conner's MATLAB implementation.
-
-    Adapted by Cameron Finucane (cameronp@seas.upenn.edu)
-
-    Last updated September 2007
 """
 
 from math import atan2, acos

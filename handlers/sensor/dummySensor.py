@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 """
-Displays a silly little window for faking sensor values.
+=====================================================
+handlers/sensor/dummySensor.py - Dummy Sensor Handler
+=====================================================
+
+Displays a silly little window for faking sensor values by clicking on buttons.
 """
 
-import threading, subprocess, os
+import threading, subprocess, os, time
 
 class sensorHandler:
-    def __init__(self, shared_data, all_sensors, initial_sensors):
+    def __init__(self, proj, shared_data):
         """
         Start up sensor handler subwindow and create a new thread to listen to it.
         """
@@ -18,8 +22,8 @@ class sensorHandler:
         self.sensorListenInitialized = False
         
         # Create a subprocess
-        print "Starting sensorHandler window and listen thread..."
-        self.p_sensorHandler = subprocess.Popen(os.path.join("handlers","sensor","SensorHandler.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE) # TODO: this will only work if we're in the root working directory
+        print "(SENS) Starting sensorHandler window and listen thread..."
+        self.p_sensorHandler = subprocess.Popen(os.path.join(proj.ltlmop_root,"handlers","sensor","SensorHandler.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
         self.fd_sensorHandler = self.p_sensorHandler.stderr
 
@@ -29,18 +33,18 @@ class sensorHandler:
 
         # Block until the sensor listener gets the go-ahead from the subwindow
         while not self.sensorListenInitialized:
-            pass
+            time.sleep(0.05) # Yield cpu
 
         # Tell the subwindow what buttons to create/enable
-        for sensor in all_sensors:
-            if sensor in initial_sensors:
+        for sensor in proj.all_sensors:
+            if sensor in proj.initial_sensors:
                 self.p_sensorHandler.stdin.write(sensor + ",1\n")
             else:
                 self.p_sensorHandler.stdin.write(sensor + ",0\n")
 
         # Initialize our internal cache
-        for sensor in all_sensors:
-            self.sensorValue[sensor] = (sensor in initial_sensors)
+        for sensor in proj.all_sensors:
+            self.sensorValue[sensor] = (sensor in proj.initial_sensors)
 
     def getSensorValue(self, sensor_name):
         """
@@ -52,7 +56,7 @@ class sensorHandler:
         if sensor_name in self.sensorValue:
             return self.sensorValue[sensor_name]
         else:
-            print "WARNING: Sensor %s is unknown!" % sensor_name
+            print "(SENS) WARNING: Sensor %s is unknown!" % sensor_name
             return None
 
     def sensorListen(self):
@@ -64,7 +68,7 @@ class sensorHandler:
             # Wait for and receive a message from the subwindow
             input = self.fd_sensorHandler.readline()
             if input == '':  # EOF indicates that the connection has been destroyed
-                print "Sensor handler listen thread is shutting down."
+                print "(SENS) Sensor handler listen thread is shutting down."
                 break
 
             # Check for the initialization signal, if necessary

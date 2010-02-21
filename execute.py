@@ -162,7 +162,8 @@ def main(argv):
 
     # Create a subprocess
     print "Starting GUI window and listen thread..."
-    p_gui = subprocess.Popen(os.path.join(".","simGUI.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE) # TODO: this will only work if we're in the root working directory
+    p_gui = subprocess.Popen(os.path.join(proj.ltlmop_root, "simGUI.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+
     fd_gui_output = p_gui.stderr
     fd_gui_input = p_gui.stdin
 
@@ -210,8 +211,8 @@ def main(argv):
     init_state = FSA.chooseInitialState(init_region, init_outputs)
 
     if init_state is None:
-        print "Unable to execute. Quitting..."
-        sys.exit(0)
+        print "No suitable initial state found; unable to execute. Quitting..."
+        sys.exit(-1)
     else:
         print "Starting from state %s." % init_state.name
 
@@ -220,7 +221,6 @@ def main(argv):
     avg_freq = 0
 
     while True:
-
         # Idle if we're not running
         while not runFSA:
             proj.drive_handler.setVelocity(0,0) 
@@ -241,8 +241,8 @@ def main(argv):
         if time.time() - last_gui_update_time > 0.05:
             avg_freq = 0.9*avg_freq + 0.1*1/(toc-tic) # IIR filter
             print "Running at approximately %dHz..." % int(avg_freq)
-            pose = proj.pose_handler.getLastPose()[0:2]  # TODO: Maybe we should just get the pose here and pass it on to the FSA each time
-            print "POSE:%d,%d" % tuple(map(int, proj.rev_coordmap(pose[0:2])))
+            pose = proj.pose_handler.getPose()[0:2]  # TODO: cache?
+            print "POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose)))
 
             last_gui_update_time = time.time()
 

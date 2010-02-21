@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 """
+==========================================================================================
+handlers/motionControl/heatController.py - Potential Field Region-to-Region Motion Control
+==========================================================================================
+
 Uses the heat-controller to take a current position, current region, and destination region and return a global velocity vector that will help us get there
 """
 
@@ -7,15 +11,17 @@ import heatControllerHelper
 from numpy import *
 
 class motionControlHandler:
-    def __init__(self, shared_data, pose_handler, drive_handler, rfi, fwd_coordmap):
-        self.drive_handler = drive_handler
-        self.pose_handler = pose_handler
-        self.fwd_coordmap = fwd_coordmap
-        self.rfi = rfi
+    def __init__(self, proj, shared_data):
+        self.drive_handler = proj.drive_handler
+        self.pose_handler = proj.pose_handler
+        self.fwd_coordmap = proj.coordmap_map2lab
+        self.rfi = proj.rfi
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
         If ``last`` is true, we will move to the center of the region.
+        
+        Returns ``true`` if we are outside the supposed ``current_reg``
         """
 
         if current_reg == next_reg and not last:
