@@ -52,8 +52,6 @@ class SimGUI_Frame(wx.Frame):
         self.sb.SetFieldsCount(1)
         self.sb.SetStatusText("PAUSED")
 
-        self.fileNum = 1
-
         self.button_sim_log_export.Enable(False)
 
         # Create new thread to communicate with subwindow
@@ -236,23 +234,22 @@ class SimGUI_Frame(wx.Frame):
         """
         Ask the user for a filename to save the Log as, and then save it.
         """
-        default = 'StatusLog' + str(self.fileNum)
-    
+        default = 'StatusLog'
     
         # Get a filename
         fileName = wx.FileSelector("Save File As", 
-                  os.path.dirname(os.path.abspath(sys.argv[2])),
-                                  default_filename=default,
-                                  default_extension="txt",
-                                  wildcard="Status Log files (*.txt)|*.txt",
-                                  flags = wx.SAVE | wx.OVERWRITE_PROMPT)
+                                    os.path.join(os.getcwd(),'examples'),
+                                    default_filename=default,
+                                    default_extension="txt",
+                                    wildcard="Status Log files (*.txt)|*.txt",
+                                    flags = wx.SAVE | wx.OVERWRITE_PROMPT)
         if fileName == "": return # User cancelled.
 
         # Force a .txt extension.  How mean!!!
         if os.path.splitext(fileName)[1] != ".txt":
             fileName = fileName + ".txt"
         
-        self.fileNum = self.fileNum + 1
+
         # Save data to the file
         self.saveFile(fileName)
         event.Skip()
@@ -265,11 +262,14 @@ class SimGUI_Frame(wx.Frame):
         if fileName is None:
             return
 
-        log = {"Status Log": str(self.text_ctrl_sim_log.GetValue())}
+        f = open(fileName,'w')
 
-        comments = {"Status Log": "Status Log of simulation"}
+        print >>f, "Experiment Status Log"
+        print >>f
+        # write the log
+        print >>f, str(self.text_ctrl_sim_log.GetValue())
 
-        fileMethods.writeToFile(fileName, log, comments)
+        f.close()
 
     def onSimClear(self, event): # wxGlade: SimGUI_Frame.<event_handler>
         self.text_ctrl_sim_log.Clear()

@@ -31,7 +31,6 @@ import project
 #######################################################
 
 
-
 class CheckGrid(wx.grid.Grid):
     """
     A Grid subclass to allow one-click-toggle checkboxes in the grid.
@@ -135,6 +134,7 @@ class simSetupDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.onSimDelete, self.button_sim_delete)
         self.Bind(wx.EVT_BUTTON, self.onSimCopy, self.button_sim_copy)
         self.Bind(wx.EVT_TEXT, self.onSimNameEdit, self.text_ctrl_sim_experiment_name)
+        self.Bind(wx.EVT_CHOICE, self.onSimRobot, self.choice_sim_robot)
         self.Bind(wx.EVT_BUTTON, self.onClickCalibrate, self.button_sim_cali)
         self.Bind(wx.EVT_BUTTON, self.onClickApply, self.button_sim_apply)
         self.Bind(wx.EVT_BUTTON, self.onClickOK, self.button_sim_ok)
@@ -333,7 +333,7 @@ class simSetupDialog(wx.Dialog):
         fileList = os.listdir(os.path.join(os.getcwd(),'robots'))
 
         for robotFile in fileList:
-            if 'robot' == robotFile.split('.')[1] :
+            if robotFile.endswith('.robot'):
                 self.choice_sim_robot.Append(robotFile.split('.')[0])
                 if robotFile == self.tempSimSetup[id]['RobotFile']:
                     self.choice_sim_robot.Select(self.choice_sim_robot.GetItems().index(robotFile.split('.')[0]))
@@ -397,6 +397,7 @@ class simSetupDialog(wx.Dialog):
         transformation.
         """
         
+
         # Make sure not simulating already
         # TODO: Update this part
         if self.parent.subprocess[PROCESS_PLAYER] is not None \
@@ -582,6 +583,41 @@ class simSetupDialog(wx.Dialog):
         event.Skip()
 
 
+
+    def onSimRobot(self, event): # wxGlade: simSetupDialog.<event_handler>
+        """
+            Warn user when the selected robot does not have all sensor and actions needed.
+        """
+        rdf_name = self.choice_sim_robot.GetStringSelection()
+        if not rdf_name.endswith('.robot'):
+            rdf_name = rdf_name+'.robot' 
+        rdf_data = fileMethods.readFromFile(os.path.join(os.path.join(os.getcwd(),'robots'), rdf_name))
+        warning = False
+        
+        # Check sensors 
+        for sensor in self.list_box_init_sensors.GetItems():
+            if sensor not in rdf_data['Sensors']:
+                selection = wx.MessageBox('Sorry. Robot does not have all required sensors.\n Do you want to continue?', 'Sensor Unavailable!', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_EXCLAMATION)
+                if selection == wx.NO:
+                    self.choice_sim_robot.Select(self.choice_sim_robot.GetItems().index(self.tempSimSetup[self.list_box_experiment_name.GetSelection()]['RobotFile'].split('.')[0]))
+                    warning = True
+                    break
+                else:
+                    break
+
+        if not warning:
+            # Check actions 
+            for action in self.list_box_init_actions.GetItems():
+                if action not in rdf_data['Actions']:
+                    selection = wx.MessageBox('Sorry. Robot does not have all required actions.\n Do you want to continue?', 'Action Unavailable!', wx.YES_NO | wx.NO_DEFAULT | wx.ICON_EXCLAMATION)
+                    if selection == wx.NO:
+                        self.choice_sim_robot.Select(self.choice_sim_robot.GetItems().index(self.tempSimSetup[self.list_box_experiment_name.GetSelection()]['RobotFile'].split('.')[0]))
+                        break
+                    else:
+                        break
+
+                    
+        event.Skip()
 
 # end of class simSetupDialog
 
@@ -930,6 +966,7 @@ class SpecEditorFrame(wx.Frame):
                                   wildcard="Robot description files (*.robot)|*.robot",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if fileName == "": return
+
         self.readRobotFile(fileName)
 
     def readRobotFile(self, fileName):
@@ -1027,6 +1064,7 @@ class SpecEditorFrame(wx.Frame):
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if fileName == "": return
 
+        self.openFile(fileName)
         #event.Skip()
 
     def onMenuSave(self, event=None): # wxGlade: SpecEditorFrame.<event_handler>
@@ -1052,7 +1090,7 @@ class SpecEditorFrame(wx.Frame):
             default = self.fileName
 
         # Get a filename
-        fileName = wx.FileSelector("Save File As", "Saving",
+        fileName = wx.FileSelector("Save File As", "examples",
                                   default_filename=default,
                                   default_extension="spec",
                                   wildcard="Specification files (*.spec)|*.spec",
@@ -1189,12 +1227,8 @@ class SpecEditorFrame(wx.Frame):
         self.proj = project.Project()
         self.proj.loadProject(fileName)
  
-        #data = fileMethods.readFromFile(fileName )
         data = self.proj.spec_data
-        if data is None:
-            wx.MessageBox("Cannot open specification file %s" % (fileName), "Error",
-                        style = wx.OK | wx.ICON_ERROR)
-            return
+
 
 
         self.setDefaults()
@@ -1420,303 +1454,7 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_log.EndTextColour()
         self.text_ctrl_log.ShowPosition(self.text_ctrl_log.GetLastPosition())
 
-    def writeSimConfig(self, calib=False):
-        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
 
-        fwd_coordmap = lambda pt: (self.simSetup['XScale'] * pt.x + self.simSetup['XOffset'],
-                                   self.simSetup['YScale'] * pt.y + self.simSetup['YOffset'])
-
-        if calib:
-            # Seems like a reasonable place to start, no?
-            startpos = wx.Point(0,0)
-        else:
-            # Start in the center of the defined initial region
-            startpos = fwd_coordmap(self.rfi.regions[self.simSetup['InitialRegion']].getCenter())
-
-        # Choose an appropriate background image
-        if self.simSetup['BackgroundOverlay']:
-            bgFile = fileNamePrefix + "_simbg.png"
-        else:
-            bgFile = os.path.normpath(os.path.join(self.projectPath, self.rfi.background))
-
-        f_world = open(fileNamePrefix + ".world", "w")
-
-        if self.simSetup['SimType'].lower() == 'stage':
-
-            ####################
-            # Stage world file #
-            ####################
-
-            f_world.write("""
-# Just a really simple robot abstraction
-define pointbot position
-(
-  # Actual size
-  size [0.33 0.33]
-
-  # Show the front
-  gui_nose 1
-
-  # Just a silly box
-  polygons 1
-  polygon[0].points 4
-  polygon[0].point[0] [  0  0 ]
-  polygon[0].point[1] [  0  1 ]
-  polygon[0].point[2] [  1  1 ]
-  polygon[0].point[3] [  1  0 ]
-
-  # Simplify as holonomic robot
-  drive "omni"
-)
-
-# Defines "map" object used for floorplans
-define map model
-(
-  # sombre, sensible, artistic
-  color "black"
-
-  # most maps will need a bounding box
-  boundary 1
-
-  gui_nose 0
-  gui_grid 1
-  gui_movemask 0
-  gui_outline 0
-
-  gripper_return 0
-)
-
-# size of the world in meters
-size [16 12]
-
-# set the resolution of the underlying raytrace model in meters
-resolution 0.02
-
-# update the screen every 10ms 
-gui_interval 20
-
-# configure the GUI window
-window
-(
-  size [ 591.000 638.000 ]
-  center [0 0]
-  scale 0.028
-)
-
-# load an environment bitmap
-map
-(
-  bitmap "%s"
-  size [16 12]
-  name "example1"
-  boundary 0
-  obstacle_return 0
-)
-
-# create a robot
-pointbot
-(
-  name "robot1"
-  color "red"
-  pose [%f %f 0]
-
-  localization "gps"
-  localization_origin [0 0 0]
-)
-        """ % (bgFile, startpos[0], startpos[1]))
-            if self.simSetup["VertexMarkers"]:
-                f_world.write("""          
-define puck model(
-  size [ 0.08 0.08 ]
-  gripper_return 1
-  gui_movemask 3
-  gui_nose 0
-)
-                """)
-                pts = []
-                for region in self.rfi.regions:
-                    for pt in region.getPoints():
-                        if pt not in pts:
-                            f_world.write("puck( pose [%f %f 0.0 ] color \"red\" )\n" % fwd_coordmap(pt))
-
-                # TODO: Draw me some sensors!?
-
-        elif self.simSetup['SimType'].lower() == 'gazebo':
-
-            #####################
-            # Gazebo world file #
-            #####################
-
-            f_world.write("""\
-<?xml version="1.0"?>
-
-<gz:world 
-  xmlns:gz='http://playerstage.sourceforge.net/gazebo/xmlschema/#gz'
-  xmlns:model='http://playerstage.sourceforge.net/gazebo/xmlschema/#model'
-  xmlns:sensor='http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor'
-  xmlns:window='http://playerstage.sourceforge.net/gazebo/xmlschema/#window'
-  xmlns:param='http://playerstage.sourceforge.net/gazebo/xmlschema/#params'
-  xmlns:ui='http://playerstage.sourceforge.net/gazebo/xmlschema/#params'>
-
-  <param:Global>
-    <skyColor>0 0 0</skyColor>
-  </param:Global>
-
-  <model:ObserverCam>
-    <id>userCam0</id>
-    <xyz>0 0 16.0</xyz>
-    <rpy>0 90 90</rpy>
-    <imageSize>640 480</imageSize>
-    <updateRate>10</updateRate>
-  </model:ObserverCam>
-
-  <model:LightSource>
-    <id>light1</id>
-    <xyz>10.0 -10.0 100.0</xyz>
-  </model:LightSource>
-
-  <model:ImmovableObject>
-    <plugin>immovableObject.so</plugin>
-    <id>map_picture</id>
-    <xyz>0.0 0.0 0.0</xyz>
-    <rpy>0 0 0</rpy>
-    <size>24 18 0.0</size>
-    <textureFile>%s</textureFile>
-  </model:ImmovableObject>
-
-  <model:Scarab>
-    <plugin>Scarab.so</plugin>
-    <xyz>%f %f 0.23</xyz>
-    <rpy>0.0 0.0 0.0</rpy>
-    <id>robot1</id>
-    <bodyColor>0 1 0</bodyColor>
-    <wheelColor>1 0 0</wheelColor>
-    <model:TruthWidget>
-      <id>robot1_truth</id>
-    </model:TruthWidget>
-  </model:Scarab>
-            """ % (bgFile, startpos[0], startpos[1]))
-
-            # TODO: Account for aspect ratio of background image!
-
-            if self.simSetup["VertexMarkers"]:
-                pts = []
-                for region in self.rfi.regions:
-                    for pt in region.getPoints():
-                        if pt not in pts:
-                            f_world.write("""
-<model:ImmovableObject>
-    <xyz>%f %f 0.0</xyz>
-    <rpy>0 0 0</rpy>
-    <size>0.1 0.1 0.1</size>
-    <color>1 0 0</color>
-</model:ImmovableObject>
-                            """ % fwd_coordmap(pt))
-            f_world.write("</gz:world>\n")
-
-
-                # TODO: Draw me some sensors!?
-
-        f_world.close()
-
-        f_cfg = open(fileNamePrefix + ".cfg", "w")
-
-        if self.simSetup['SimType'].lower() == 'stage':
-
-            ############################
-            # Stage configuration file #
-            ############################
-
-            f_cfg.write("""
-# Load the Stage plugin simulation driver
-driver
-(
-  name "stage"
-  provides ["simulation:0" ]
-  plugin "libstageplugin"
-
-  # load the named file into the simulator
-  worldfile "%s.world"
-)
-
-driver
-(
-  name "stage"
-  provides ["map:0"]
-  model "example1"
-)
-
-# Create a Stage driver and attach position2d interfaces 
-# to the model "robot1"
-driver
-(
-  name "stage"
-  provides ["position2d:0"]
-  model "robot1"
-)
-""" % fileNamePrefix)
-
-        elif self.simSetup['SimType'].lower() == 'gazebo':
-
-            #############################
-            # Gazebo configuration file #
-            #############################
-            f_cfg.write("""
-driver
-(
-  name "gazebo"
-  provides ["simulation:0"]
-  plugin "libgazeboplugin"
-  server_id "default"
-  alwayson 1
-)
-
-driver
-(
-  name "gazebo"
-  provides ["position2d:0"]
-  gz_id "robot1"
-)
-
-driver
-(
-  name "gazeboTrack"
-  plugin "gazeboTrack"
-  provides ["fiducial:0"]
-  num_target 1
-  # Make sure that you are adding gazebo truth widgets to the robots you wish 
-  # track in gazebo.
-  # Format:
-  # target_id_<index> "id from gazebo truth model"
-  target_id_0 "robot1_truth"
-)
-            """)
-        
-        f_cfg.close()
-
-    def runSimEnvironment(self):
-        """
-        Start Gazebo/Player/Stage as necessary.
-        """
-
-
-        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
-
-        if self.simSetup['SimType'].lower() == 'gazebo':
-            # Run Gazebo first if necessary
-            self.subprocess[PROCESS_GAZEBO] = wx.Process(self, PROCESS_GAZEBO)
-            self.appendLog("Starting Gazebo...\n")
-
-            self.subprocess[PROCESS_GAZEBO].Redirect()
-            wx.Execute("wxgazebo %s.world" % fileNamePrefix, wx.EXEC_ASYNC, self.subprocess[PROCESS_GAZEBO])
-            time.sleep(1) # HACK: Wait for Gazebo to start up
-            
-        if self.simSetup['SimType'].lower() != 'none':
-            # Run Player server unless using real robot
-            self.subprocess[PROCESS_PLAYER] = wx.Process(self, PROCESS_PLAYER)
-            self.appendLog("Starting Player...\n")
-            self.playerPID = wx.Execute("player %s.cfg" % fileNamePrefix, wx.EXEC_ASYNC, self.subprocess[PROCESS_PLAYER])
-            time.sleep(1)
 
     def onMenuSimulate(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """ Run the simulation with current experiment configration. """
@@ -1736,35 +1474,6 @@ driver
         sys.stderr = redir
 
         subprocess.Popen(["python", "execute.py", "-a", fileNamePrefix + ".aut", "-s", fileNamePrefix + ".spec"])
-
-
-        """
-        if self.simSetup['SimType'].lower() != 'none':
-            # only need this if running a simulation - Stage/Gazebo
-            self.writeSimConfig()
-            #TODO: if dirty:
-            #wx.MessageBox("Please save before running a simulation.", "Error",
-            #              style = wx.OK | wx.ICON_ERROR)
-            self.onMenuSave()
-            self.runSimEnvironment()
-
-            # Run the simulation 
-            self.appendLog("Starting client...\n")
-            cmd = subprocess.Popen(["python", "playerClient.py", fileNamePrefix + ".spec", fileNamePrefix + ".aut", "localhost"])
-            #os.system("./playerClient.py %s.spec %s.aut" % (os.path.join(wd,self.projectName), os.path.join(wd,self.projectName)))
-        else:
-            # Running on a real robot - don't need to run player, just the client
-            # need to pass the host name
-            self.appendLog("Starting client...\n")
-            cmd = subprocess.Popen(["python", "orcaClient.py", fileNamePrefix + ".spec", fileNamePrefix + ".aut","scarab-6"])
-
-            while cmd.poll():
-                wx.Yield()
-
-            # TODO: Detect quit, make interface
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-        """
 
 
     def onClickEditRegions(self, event): # wxGlade: SpecEditorFrame.<event_handler>
