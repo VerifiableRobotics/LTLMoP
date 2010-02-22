@@ -341,6 +341,13 @@ class simSetupDialog(wx.Dialog):
         transformation.
         """
 
+        name = self.text_ctrl_sim_experiment_name.GetValue()
+
+
+        for id, config in enumerate(self.tempSimSetup):
+            if name == config['Name']:
+                self.saveSimSetup(id)
+
         # Make sure not simulating already
         # TODO: Update this part
         #if self.parent.subprocess[PROCESS_PLAYER] is not None \
@@ -384,14 +391,6 @@ class simSetupDialog(wx.Dialog):
         ###########################################
         # Simulation configuration dialog cleanup #
         ###########################################
-
-        # Save the current experiment config
-        name = self.text_ctrl_sim_experiment_name.GetValue()
-
-        for id, config in enumerate(self.tempSimSetup):
-            if name == config['Name']:
-                self.saveSimSetup(id)
-
 
         name = self.text_ctrl_sim_experiment_name.GetValue()
 

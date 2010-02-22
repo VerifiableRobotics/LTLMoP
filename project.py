@@ -30,9 +30,10 @@ class Project:
 
         # Find the section that corresponds to this configuration
         for key, val in self.spec_data.iteritems():
-            if key.startswith("EXPERIMENT CONFIG") and val['Name'][0] == exp_cfg_name:
+            if key.startswith("EXPERIMENT CONFIG") and val['Name'][0] == exp_cfg_name :
                 print "  -> Using experiment configuration \"%s\"" % exp_cfg_name
                 return val
+
 
         print "ERROR: Could not find experiment config with name \"%s\" in spec file!" % exp_cfg_name
         sys.exit(0)
