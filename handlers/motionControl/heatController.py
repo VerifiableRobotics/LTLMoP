@@ -21,7 +21,7 @@ class motionControlHandler:
         """
         If ``last`` is true, we will move to the center of the region.
         
-        Returns ``true`` if we are outside the supposed ``current_reg``
+        Returns ``True`` if we are outside the supposed ``current_reg``
         """
 
         if current_reg == next_reg and not last:
@@ -37,7 +37,7 @@ class motionControlHandler:
 
         self.drive_handler.setVelocity(X[0,0], X[1,0], pose[2])
         
-        return inside
+        return not inside
 
 
     def get_controller(self, current, next, last, cache={}):

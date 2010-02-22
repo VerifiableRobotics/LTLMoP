@@ -385,9 +385,9 @@ class Automaton:
         # Move one step towards the next region (or stay in the same region)
         # TODO: Use the "last" controllers?
         
-        inside = self.motion_handler.gotoRegion(self.current_region, self.next_region)
+        arrived = self.motion_handler.gotoRegion(self.current_region, self.next_region)
 
-        if not inside:
+        if arrived:
             ### The move handler has told us that we have finally reached our destination region
             # TODO: Finish this check to see whether actually inside next region that we expected:
             #    # Check what region we're in.
