@@ -49,7 +49,7 @@ class sensorHandler:
         print "(SENSOR) OK! We've successfully connected."
 
         self.last_update = 0
-        self.red_values = [0]*4 #Initialize off
+        self.red_values = [0]*6 #Initialize off
         self.red_index = 0 # Index for ring buffer
 
     def readFromOrca(self):
@@ -79,7 +79,7 @@ class sensorHandler:
         If such a sensor does not exist, returns ``None``
         """
 
-        MIN_BLOB_PERIOD = 0.5
+        MIN_BLOB_PERIOD = 0.1
 
         if sensor_name in ['fire', 'hazardous_item']:
             return False
@@ -95,7 +95,7 @@ class sensorHandler:
 
                 self.last_update = now
     
-            red_visible = sum(self.red_values) > 2
+            red_visible = sum(self.red_values) > 1
             return red_visible
         else:
             print "WARNING: Sensor %s is unknown!" % sensor_name

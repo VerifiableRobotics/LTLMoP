@@ -141,8 +141,9 @@ class Automaton:
         Basically just a lot of regexes.
         """
 
-        # These will be used later by updateOutputs()
+        # These will be used later by updateOutputs() and findTransitionableState()
         self.actuators = actuators
+        self.sensors = sensors
         self.custom_props = custom_props
 
         FILE = open(filename,"r")
@@ -285,6 +286,12 @@ class Automaton:
         else:
             state_list = self.current_state.transitions + [self.current_state] # Allow for self-transition
 
+        # Take a snapshot of our current sensor readings
+        # This is so we don't risk the readings changing in the middle of our state search
+        sensor_state = {}
+        for sensor in self.sensors:
+            sensor_state[sensor] = self.sensor_handler.getSensorValue(sensor) 
+
         for state in state_list:
             okay = True
 
@@ -304,12 +311,10 @@ class Automaton:
                 if not okay: continue
 
             # Now check whether our current sensor values match those of the state
-            for key, value in state.inputs.iteritems():
-
-                if self.sensor_handler.getSensorValue(key) != (value == "1"):                    
+            for key, value in state.inputs.iteritems(): 
+                if sensor_state[key] != (value == "1"):                    
                     okay = False
                     break
-
 
             if okay:
                 candidates.append(state)

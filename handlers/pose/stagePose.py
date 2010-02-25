@@ -24,15 +24,19 @@ class poseHandler:
             print "(POSE) ERROR: Player client doesn't seem to be initialized!"
             sys.exit(-1)
 
-    def getPose(self):
+        self.last_pose = None
+
+    def getPose(self, cached=False):
         """ Returns the most recent (x,y,theta) reading from Stage's GPS """
 
-        # Get updated information
-        if self.c.read() == None:
-            print playerc_error_str()
-            print "(POSE) ERROR: Client disconnected."
-            sys.exit(-1)
-
-        return array([self.p.px, self.p.py, self.p.pa])
+        if not cached or self.last_pose is None:
+            # Get updated information
+            if self.c.read() == None:
+                print playerc_error_str()
+                print "(POSE) ERROR: Client disconnected."
+                sys.exit(-1)
+            self.last_pose = array([self.p.px, self.p.py, self.p.pa])
+        
+        return self.last_pose
     
 
