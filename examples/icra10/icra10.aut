@@ -1,978 +1,526 @@
-
- Automaton States
-
-State 1 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 2 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 3 rank 1
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 4 rank 1
-fire = 0           person = 1         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 5 rank 1
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 6 rank 1
-fire = 1           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 7 rank 1
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 8 rank 1
-fire = 1           person = 1         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 9 rank 1
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 10 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 11 rank 2
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 12 rank 2
-fire = 0           person = 1         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 13 rank 2
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 14 rank 2
-fire = 1           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 15 rank 2
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 16 rank 2
-fire = 1           person = 1         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 17 rank 2
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 18 rank 6
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 19 rank 6
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 20 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 21 rank 2
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 22 rank 3
-fire = 0           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 23 rank 3
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 24 rank 3
-fire = 1           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 25 rank 3
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 26 rank 3
-fire = 1           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 27 rank 3
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 28 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 29 rank 1
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 30 rank 6
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 31 rank 6
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 32 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 1
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 33 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 34 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 35 rank 3
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 36 rank 3
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 37 rank 3
-fire = 0           person = 1         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 38 rank 3
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 39 rank 3
-fire = 1           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 40 rank 3
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 41 rank 3
-fire = 1           person = 1         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 42 rank 3
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 43 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 44 rank 4
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 45 rank 4
-fire = 0           person = 1         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 46 rank 4
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 47 rank 4
-fire = 1           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 48 rank 4
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 49 rank 4
-fire = 1           person = 1         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 50 rank 4
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 51 rank 5
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 52 rank 5
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 53 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 54 rank 1
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 55 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 56 rank 2
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 57 rank 3
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 58 rank 3
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 59 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 60 rank 4
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 61 rank 5
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 1
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 62 rank 6
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 63 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 64 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 65 rank 1
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 66 rank 1
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 67 rank 1
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 68 rank 1
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 69 rank 2
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 70 rank 2
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 71 rank 2
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 72 rank 1
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 73 rank 1
-fire = 0           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 74 rank 1
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 75 rank 1
-fire = 1           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 76 rank 1
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 77 rank 1
-fire = 1           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 78 rank 1
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 79 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 80 rank 2
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 81 rank 2
-fire = 0           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 82 rank 2
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 83 rank 2
-fire = 1           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 84 rank 2
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 85 rank 2
-fire = 1           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 86 rank 2
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 87 rank 6
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 88 rank 6
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 89 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 90 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 91 rank 5
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 92 rank 5
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 93 rank 5
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 94 rank 5
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 95 rank 5
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 96 rank 5
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 97 rank 5
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 98 rank 5
-fire = 0           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 99 rank 5
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 100 rank 5
-fire = 1           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 101 rank 5
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 102 rank 5
-fire = 1           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 103 rank 5
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 104 rank 6
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 105 rank 6
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 106 rank 6
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 107 rank 6
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 108 rank 6
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 109 rank 3
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 110 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 111 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 112 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 113 rank 5
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 114 rank 5
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 115 rank 5
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 116 rank 5
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 117 rank 5
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 118 rank 5
-fire = 0           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 119 rank 5
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 120 rank 5
-fire = 1           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 121 rank 5
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 122 rank 5
-fire = 1           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 123 rank 5
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 124 rank 6
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 125 rank 6
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 126 rank 6
-fire = 0           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 127 rank 6
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 0     carrying_item = 1
-
-State 128 rank 6
-fire = 1           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 129 rank 6
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 1     carrying_item = 1
-
-State 130 rank 6
-fire = 1           person = 1         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 131 rank 6
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 1          extinguish = 1     carrying_item = 1
-
-State 132 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 133 rank 1
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 134 rank 6
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 135 rank 6
-fire = 0           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 136 rank 6
-fire = 1           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 137 rank 6
-fire = 1           person = 1         hazardous_item = 1 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 138 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 1           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 139 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 140 rank 4
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 141 rank 4
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 142 rank 4
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 143 rank 4
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 144 rank 5
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 145 rank 5
-fire = 0           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 146 rank 6
-fire = 0           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 0     carrying_item = 0
-
-State 147 rank 6
-fire = 1           person = 0         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 0          extinguish = 1     carrying_item = 0
-
-State 148 rank 6
-fire = 1           person = 1         hazardous_item = 1 bit0 = 1
-bit1 = 0           bit2 = 0           pick_up = 1        drop = 0
-radio = 1          extinguish = 1     carrying_item = 0
-
-State 149 rank 3
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 150 rank 3
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 151 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 1
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 152 rank 5
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 153 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 154 rank 2
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 155 rank 3
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 1
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 156 rank 4
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 157 rank 5
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 158 rank 5
-fire = 0           person = 0         hazardous_item = 1 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 159 rank 6
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 1
-radio = 0          extinguish = 0     carrying_item = 1
-
-State 160 rank 1
-fire = 0           person = 0         hazardous_item = 0 bit0 = 0
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 161 rank 2
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-State 162 rank 3
-fire = 0           person = 0         hazardous_item = 0 bit0 = 1
-bit1 = 0           bit2 = 1           pick_up = 0        drop = 0
-radio = 0          extinguish = 0     carrying_item = 0
-
-
- Automaton Transitions
-
-From 1 to  2 3 4 5 6 7 8 9
-From 2 to  89 97 98 99 100 101 102 103
-From 3 to  17 16 15 14 13 12 11 10
-From 4 to  111 4 162 3 161 96 113 114 115 116 9 7 5 8 6 1
-From 5 to  17 16 15 14 13 12 11 10
-From 6 to  111 6 162 3 161 96 113 114 115 116 9 7 5 8 4 1
-From 7 to  17 16 15 14 13 12 11 10
-From 8 to  111 8 162 3 161 96 113 114 115 116 9 7 5 6 4 1
-From 9 to  17 16 15 14 13 12 11 10
-From 10 to  20 21 12 13 14 15 16 17
-From 11 to  20 21 12 13 14 15 16 17
-From 12 to  13 14 15 16 17 12 18 19 11 10
-From 13 to  12 14 15 16 17 13 18 19 11 10
-From 14 to  12 13 15 16 17 14 18 19 11 10
-From 15 to  12 13 14 16 17 15 18 19 11 10
-From 16 to  12 13 14 15 17 16 18 19 11 10
-From 17 to  12 13 14 15 16 17 18 19 11 10
-From 18 to  17 16 15 14 13 12 31 30
-From 19 to  17 16 15 14 13 12 31 30
-From 20 to  18 19 22 23 24 25 26 27 21
-From 21 to  18 19 22 23 24 25 26 27 20
-From 22 to  20 21 23 24 25 26 27 28 29
-From 23 to  20 21 22 24 25 26 27 28 29
-From 24 to  20 21 22 23 25 26 27 28 29
-From 25 to  20 21 22 23 24 26 27 28 29
-From 26 to  20 21 22 23 24 25 27 28 29
-From 27 to  20 21 22 23 24 25 26 28 29
-From 28 to  27 26 25 24 23 22 21 20
-From 29 to  27 26 25 24 23 22 21 20
-From 30 to  32
-From 31 to  32
-From 32 to  33
-From 33 to  34
-From 34 to  35 36 37 38 39 40 41 42
-From 35 to  78 77 76 75 74 73 72 110
-From 36 to  57 58 45 46 47 48 49 50
-From 37 to  63 65 37 66 67 68 146 147 148 144 145 141 142 143 140 139 69 70 71 42 41 40 39 38 36 34
-From 38 to  50 49 48 47 46 45 44 43
-From 39 to  63 65 66 39 67 68 146 147 148 144 145 141 142 143 140 139 69 70 71 42 41 40 38 37 36 34
-From 40 to  50 49 48 47 46 45 44 43
-From 41 to  63 65 66 67 41 68 146 147 148 144 145 141 142 143 140 139 69 70 71 42 40 39 38 37 36 34
-From 42 to  50 49 48 47 46 45 44 43
-From 43 to  50 49 48 47 46 45 158 157
-From 44 to  50 49 48 47 46 45 158 157
-From 45 to  43 44 46 47 48 49 50 57 58 55 56 53 54 51 52
-From 46 to  43 44 45 47 48 49 50 57 58 55 56 53 54 51 52
-From 47 to  43 44 45 46 48 49 50 57 58 55 56 53 54 51 52
-From 48 to  43 44 45 46 47 49 50 57 58 55 56 53 54 51 52
-From 49 to  43 44 45 46 47 48 50 57 58 55 56 53 54 51 52
-From 50 to  43 44 45 46 47 48 49 57 58 55 56 53 54 51 52
-From 51 to  30 31 45 46 47 48 49 50
-From 52 to  30 31 45 46 47 48 49 50
-From 53 to  50 49 48 47 46 45 154 153
-From 54 to  50 49 48 47 46 45 154 153
-From 55 to  50 49 48 47 46 45 150 149
-From 56 to  50 49 48 47 46 45 150 149
-From 57 to  50 49 48 47 46 45 60 59
-From 58 to  50 49 48 47 46 45 60 59
-From 59 to  61
-From 60 to  61
-From 61 to  62
-From 62 to  63
-From 63 to  64 65 37 66 39 67 41 68
-From 64 to  2 72 73 74 75 76 77 78
-From 65 to  53 54 45 46 47 48 49 50
-From 66 to  50 49 48 47 46 45 56 55
-From 67 to  50 49 48 47 46 45 56 55
-From 68 to  50 49 48 47 46 45 56 55
-From 69 to  50 49 48 47 46 45 58 57
-From 70 to  50 49 48 47 46 45 58 57
-From 71 to  50 49 48 47 46 45 58 57
-From 72 to  79 80 81 82 83 84 85 86
-From 73 to  64 74 75 76 77 78 73 91 72 92 93 94 90 35 89
-From 74 to  86 85 84 83 82 81 80 79
-From 75 to  64 73 74 76 77 78 75 91 72 92 93 94 90 35 89
-From 76 to  86 85 84 83 82 81 80 79
-From 77 to  64 73 74 75 76 78 91 72 92 93 94 90 35 89
-From 78 to  86 85 84 83 82 81 80 79
-From 79 to  86 85 84 83 82 81 21 20
-From 80 to  86 85 84 83 82 81 21 20
-From 81 to  82 83 84 85 86 79 80 87 88
-From 82 to  81 83 84 85 86 79 80 87 88
-From 83 to  81 82 84 85 86 79 80 87 88
-From 84 to  81 82 83 85 86 79 80 87 88
-From 85 to  81 82 83 84 86 79 80 87 88
-From 86 to  81 82 83 84 85 79 80 87 88
-From 87 to  86 85 84 83 82 81 52 51
-From 88 to  86 85 84 83 82 81 52 51
-From 89 to  78 77 76 75 74 73 72 34
-From 90 to  78 77 76 75 74 73 72 139
-From 91 to  94 77 93 75 92 73 72 95
-From 92 to  86 85 84 83 82 81 88 87
-From 93 to  86 85 84 83 82 81 88 87
-From 94 to  86 85 84 83 82 81 88 87
-From 95 to  103 102 101 100 99 98 97 96
-From 96 to  9 8 7 6 5 4 3 104
-From 97 to  20 21 22 23 24 25 26 27
-From 98 to  95 97 99 100 101 102 103 110 109 2 108 107 106 105 104
-From 99 to  20 21 22 23 24 25 26 27
-From 100 to  95 97 98 99 101 102 103 110 109 2 108 107 106 105 104
-From 101 to  20 21 22 23 24 25 26 27
-From 102 to  95 97 98 99 100 101 103 110 109 2 108 107 106 105 104
-From 103 to  20 21 22 23 24 25 26 27
-From 104 to  103 102 101 100 99 98 97 2
-From 105 to  27 26 25 24 23 22 29 28
-From 106 to  27 26 25 24 23 22 29 28
-From 107 to  27 26 25 24 23 22 29 28
-From 108 to  27 26 25 24 23 22 29 28
-From 109 to  103 102 101 100 99 98 97 35
-From 110 to  103 102 101 100 99 98 97 111
-From 111 to  9 8 7 6 5 4 3 112
-From 112 to  96 117 118 119 120 121 122 123
-From 113 to  17 16 15 14 13 12 19 18
-From 114 to  17 16 15 14 13 12 19 18
-From 115 to  17 16 15 14 13 12 19 18
-From 116 to  17 16 15 14 13 12 19 18
-From 117 to  131 130 129 128 127 126 133 132
-From 118 to  112 119 120 121 122 123 135 136 137 138 117 134
-From 119 to  131 130 129 128 127 126 125 124
-From 120 to  112 118 119 121 122 123 135 136 137 138 117 134
-From 121 to  131 130 129 128 127 126 125 124
-From 122 to  112 118 119 120 121 123 135 136 137 138 117 134
-From 123 to  131 130 129 128 127 126 125 124
-From 124 to  131 130 129 128 127 126 52 51
-From 125 to  131 130 129 128 127 126 52 51
-From 126 to  124 125 127 128 129 130 131 132 133
-From 127 to  124 125 126 128 129 130 131 132 133
-From 128 to  124 125 126 127 129 130 131 132 133
-From 129 to  124 125 126 127 128 130 131 132 133
-From 130 to  124 125 126 127 128 129 131 132 133
-From 131 to  124 125 126 127 128 129 130 132 133
-From 132 to  124 125 126 127 128 129 130 131 133
-From 133 to  124 125 126 127 128 129 130 131 132
-From 134 to  1 117 118 135 120 136 122 137
-From 135 to  132 133 126 127 128 129 130 131
-From 136 to  132 133 126 127 128 129 130 131
-From 137 to  132 133 126 127 128 129 130 131
-From 138 to  34 117 118 135 120 136 122 137
-From 139 to  143 41 142 39 141 37 140 112
-From 140 to  50 49 48 47 46 45 44 43
-From 141 to  51 52 45 46 47 48 49 50
-From 142 to  51 52 45 46 47 48 49 50
-From 143 to  51 52 45 46 47 48 49 50
-From 144 to  143 41 142 39 141 37 145 112
-From 145 to  50 49 48 47 46 45 52 51
-From 146 to  50 49 48 47 46 45 54 53
-From 147 to  50 49 48 47 46 45 54 53
-From 148 to  50 49 48 47 46 45 54 53
-From 149 to  151
-From 150 to  151
-From 151 to  152
-From 152 to  96
-From 153 to  155
-From 154 to  155
-From 155 to  156
-From 156 to  139
-From 157 to  159
-From 158 to  159
-From 159 to  160
-From 160 to  1
-From 161 to  9 8 7 6 5 4 3 138
-From 162 to  9 8 7 6 5 4 3 109
+Removed 240 stutter states.  Poor guys :(
+
+
+State 1 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 242, 2, 4, 6, 8, 458, 460, 462
+State 2 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 4 with rank 1 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 6 with rank 1 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 8 with rank 1 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 33 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 51, 52, 53, 54, 55, 56
+State 34 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 51, 52, 53, 54, 55, 56
+State 49 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 50 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 51 with rank 1 -> <fire:0, person:1, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 52 with rank 1 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 53 with rank 1 -> <fire:1, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 54 with rank 1 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 55 with rank 1 -> <fire:1, person:1, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 56 with rank 1 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 57 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 59, 60, 101, 102, 103, 104, 105, 106
+State 58 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 59, 60, 101, 102, 103, 104, 105, 106
+State 59 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 107
+State 60 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 107
+State 67 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 101, 102, 103, 104, 105, 106
+State 68 with rank 0 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 101, 102, 103, 104, 105, 106
+State 75 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 101, 102, 103, 104, 105, 106
+State 76 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 101, 102, 103, 104, 105, 106
+State 83 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 101, 102, 103, 104, 105, 106
+State 84 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 101, 102, 103, 104, 105, 106
+State 91 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 101, 102, 103, 104, 105, 106, 33, 34
+State 92 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 101, 102, 103, 104, 105, 106, 33, 34
+State 99 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 101, 102, 103, 104, 105, 106
+State 100 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 101, 102, 103, 104, 105, 106
+State 101 with rank 4 -> <fire:0, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 102 with rank 4 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 103 with rank 4 -> <fire:1, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 104 with rank 4 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 105 with rank 4 -> <fire:1, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 106 with rank 4 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 107 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:1, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 108
+State 108 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 109
+State 109 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 110, 111, 113, 115, 117, 482, 484, 486
+State 110 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 456, 258, 260, 262, 264, 275, 277, 279
+State 111 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 158, 159, 160, 161, 162, 163, 164, 165
+State 113 with rank 2 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 115 with rank 2 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 117 with rank 2 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 118 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 496, 497, 160, 161, 162, 163, 164, 165
+State 119 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 496, 497, 160, 161, 162, 163, 164, 165
+State 126 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 59, 60, 160, 161, 162, 163, 164, 165
+State 127 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 59, 60, 160, 161, 162, 163, 164, 165
+State 134 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 59, 60, 160, 161, 162, 163, 164, 165
+State 135 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 59, 60, 160, 161, 162, 163, 164, 165
+State 142 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 492, 493, 160, 161, 162, 163, 164, 165
+State 143 with rank 0 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 492, 493, 160, 161, 162, 163, 164, 165
+State 150 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 488, 489, 160, 161, 162, 163, 164, 165
+State 151 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 488, 489, 160, 161, 162, 163, 164, 165
+State 158 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 166, 167, 160, 161, 162, 163, 164, 165
+State 159 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 166, 167, 160, 161, 162, 163, 164, 165
+State 160 with rank 2 -> <fire:0, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 161 with rank 2 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 162 with rank 2 -> <fire:1, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 163 with rank 2 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 164 with rank 2 -> <fire:1, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 165 with rank 2 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 166 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 168
+State 167 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 168
+State 168 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:1, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 169
+State 169 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 170
+State 170 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 171, 172, 174, 176, 178, 180, 182, 184
+State 171 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 187, 189, 191, 193, 1, 275, 277, 279
+State 172 with rank 0 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 142, 143, 160, 161, 162, 163, 164, 165
+State 174 with rank 0 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 150, 151, 160, 161, 162, 163, 164, 165
+State 176 with rank 0 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 150, 151, 160, 161, 162, 163, 164, 165
+State 178 with rank 0 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 150, 151, 160, 161, 162, 163, 164, 165
+State 179 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 158, 159, 160, 161, 162, 163, 164, 165
+State 180 with rank 1 -> <fire:0, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 186, 111, 113, 115, 117, 482, 484, 486
+State 181 with rank 1 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 158, 159, 160, 161, 162, 163, 164, 165
+State 182 with rank 1 -> <fire:1, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 186, 111, 113, 115, 117, 482, 484, 486
+State 183 with rank 1 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 158, 159, 160, 161, 162, 163, 164, 165
+State 184 with rank 1 -> <fire:1, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 186, 111, 113, 115, 117, 482, 484, 486
+State 185 with rank 1 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 158, 159, 160, 161, 162, 163, 164, 165
+State 186 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 110, 111, 113, 115, 117, 482, 484, 486
+State 187 with rank 0 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 234, 235, 236, 237, 238, 239, 240, 241
+State 189 with rank 0 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 191 with rank 0 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 193 with rank 0 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 194 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 236, 237, 238, 239, 240, 241
+State 195 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 236, 237, 238, 239, 240, 241
+State 202 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 236, 237, 238, 239, 240, 241
+State 203 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 236, 237, 238, 239, 240, 241
+State 210 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 236, 237, 238, 239, 240, 241
+State 211 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 236, 237, 238, 239, 240, 241
+State 218 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 236, 237, 238, 239, 240, 241
+State 219 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 236, 237, 238, 239, 240, 241
+State 226 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 134, 135, 236, 237, 238, 239, 240, 241
+State 227 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 134, 135, 236, 237, 238, 239, 240, 241
+State 234 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 236, 237, 238, 239, 240, 241
+State 235 with rank 0 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 236, 237, 238, 239, 240, 241
+State 236 with rank 0 -> <fire:0, person:1, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 237 with rank 0 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 238 with rank 0 -> <fire:1, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 239 with rank 0 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 240 with rank 0 -> <fire:1, person:1, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 241 with rank 0 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 242 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 109, 243, 245, 247, 249, 275, 277, 279
+State 243 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 194, 195, 236, 237, 238, 239, 240, 241
+State 245 with rank 1 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 202, 203, 236, 237, 238, 239, 240, 241
+State 247 with rank 1 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 202, 203, 236, 237, 238, 239, 240, 241
+State 249 with rank 1 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 202, 203, 236, 237, 238, 239, 240, 241
+State 250 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 210, 211, 236, 237, 238, 239, 240, 241
+State 252 with rank 2 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 210, 211, 236, 237, 238, 239, 240, 241
+State 254 with rank 2 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 210, 211, 236, 237, 238, 239, 240, 241
+State 256 with rank 2 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 210, 211, 236, 237, 238, 239, 240, 241
+State 257 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 464, 258, 260, 262, 264, 275, 277, 279
+State 258 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 210, 211, 236, 237, 238, 239, 240, 241
+State 260 with rank 3 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 218, 219, 236, 237, 238, 239, 240, 241
+State 262 with rank 3 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 218, 219, 236, 237, 238, 239, 240, 241
+State 264 with rank 3 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 218, 219, 236, 237, 238, 239, 240, 241
+State 265 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 281, 266, 268, 270, 272, 275, 277, 279
+State 266 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 218, 219, 236, 237, 238, 239, 240, 241
+State 268 with rank 4 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 226, 227, 236, 237, 238, 239, 240, 241
+State 270 with rank 4 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 226, 227, 236, 237, 238, 239, 240, 241
+State 272 with rank 4 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 226, 227, 236, 237, 238, 239, 240, 241
+State 273 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 187, 189, 191, 193, 1, 275, 277, 279
+State 274 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 234, 235, 236, 237, 238, 239, 240, 241
+State 275 with rank 5 -> <fire:0, person:1, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 171, 187, 189, 191, 193, 275, 277, 279
+State 276 with rank 5 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 234, 235, 236, 237, 238, 239, 240, 241
+State 277 with rank 5 -> <fire:1, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 171, 187, 189, 191, 193, 275, 277, 279
+State 278 with rank 5 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 234, 235, 236, 237, 238, 239, 240, 241
+State 279 with rank 5 -> <fire:1, person:1, hazardous_item:0, bit0:0, bit1:1, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 171, 187, 189, 191, 193, 275, 277, 279
+State 280 with rank 5 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 234, 235, 236, 237, 238, 239, 240, 241
+State 281 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 282, 283, 285, 287, 289, 299, 301, 303
+State 282 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 290, 305, 307, 309, 311, 345, 347, 349
+State 283 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 285 with rank 4 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 287 with rank 4 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 289 with rank 4 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 290 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 298, 299, 300, 301, 302, 303, 304, 1
+State 291 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 293 with rank 5 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 295 with rank 5 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 297 with rank 5 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 298 with rank 0 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 299 with rank 0 -> <fire:0, person:1, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 1, 2, 4, 6, 8, 458, 460, 462
+State 300 with rank 0 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 301 with rank 0 -> <fire:1, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 1, 2, 4, 6, 8, 458, 460, 462
+State 302 with rank 0 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 303 with rank 0 -> <fire:1, person:1, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 1, 2, 4, 6, 8, 458, 460, 462
+State 304 with rank 0 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 49, 50, 51, 52, 53, 54, 55, 56
+State 305 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 67, 68, 101, 102, 103, 104, 105, 106
+State 307 with rank 5 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 67, 68, 101, 102, 103, 104, 105, 106
+State 309 with rank 5 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 67, 68, 101, 102, 103, 104, 105, 106
+State 311 with rank 5 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 67, 68, 101, 102, 103, 104, 105, 106
+State 312 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 313, 315, 317, 319, 1, 345, 347, 349
+State 313 with rank 0 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 67, 68, 101, 102, 103, 104, 105, 106
+State 315 with rank 0 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 75, 76, 101, 102, 103, 104, 105, 106
+State 317 with rank 0 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 75, 76, 101, 102, 103, 104, 105, 106
+State 319 with rank 0 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 75, 76, 101, 102, 103, 104, 105, 106
+State 320 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 425, 321, 323, 325, 327, 345, 347, 349
+State 321 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 75, 76, 101, 102, 103, 104, 105, 106
+State 323 with rank 1 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 83, 84, 101, 102, 103, 104, 105, 106
+State 325 with rank 1 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 83, 84, 101, 102, 103, 104, 105, 106
+State 327 with rank 1 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 83, 84, 101, 102, 103, 104, 105, 106
+State 328 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 448, 329, 331, 333, 335, 345, 347, 349
+State 329 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 83, 84, 101, 102, 103, 104, 105, 106
+State 331 with rank 2 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 91, 92, 101, 102, 103, 104, 105, 106
+State 333 with rank 2 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 91, 92, 101, 102, 103, 104, 105, 106
+State 335 with rank 2 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 91, 92, 101, 102, 103, 104, 105, 106
+State 336 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 337, 339, 341, 343, 345, 347, 349, 353
+State 337 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 91, 92, 101, 102, 103, 104, 105, 106
+State 339 with rank 3 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 99, 100, 101, 102, 103, 104, 105, 106
+State 341 with rank 3 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 99, 100, 101, 102, 103, 104, 105, 106
+State 343 with rank 3 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 99, 100, 101, 102, 103, 104, 105, 106
+State 344 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 345 with rank 4 -> <fire:0, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 351, 305, 307, 309, 311, 345, 347, 349
+State 346 with rank 4 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 347 with rank 4 -> <fire:1, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 351, 305, 307, 309, 311, 345, 347, 349
+State 348 with rank 4 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 349 with rank 4 -> <fire:1, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 351, 305, 307, 309, 311, 345, 347, 349
+State 350 with rank 4 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 57, 58, 101, 102, 103, 104, 105, 106
+State 351 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 313, 315, 317, 319, 1, 345, 347, 349
+State 353 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 282, 354, 356, 358, 360, 442, 444, 446
+State 354 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 356 with rank 4 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 358 with rank 4 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 360 with rank 4 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 361 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 134, 135, 403, 404, 405, 406, 407, 408
+State 362 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 134, 135, 403, 404, 405, 406, 407, 408
+State 403 with rank 4 -> <fire:0, person:1, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 404 with rank 4 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 405 with rank 4 -> <fire:1, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 406 with rank 4 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 407 with rank 4 -> <fire:1, person:1, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 408 with rank 4 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 361, 362, 403, 404, 405, 406, 407, 408
+State 410 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 412 with rank 5 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 414 with rank 5 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 416 with rank 5 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 417 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 312, 418, 420, 422, 424, 442, 444, 446
+State 418 with rank 0 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 420 with rank 0 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 422 with rank 0 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 424 with rank 0 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 425 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 109, 426, 428, 430, 432, 442, 444, 446
+State 426 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 428 with rank 1 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 430 with rank 1 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 432 with rank 1 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 433 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 186, 434, 436, 438, 440, 442, 444, 446
+State 434 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 436 with rank 2 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 438 with rank 2 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 440 with rank 2 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 441 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 442 with rank 3 -> <fire:0, person:1, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 353, 354, 356, 358, 360, 442, 444, 446
+State 443 with rank 3 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 444 with rank 3 -> <fire:1, person:0, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 353, 354, 356, 358, 360, 442, 444, 446
+State 445 with rank 3 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 446 with rank 3 -> <fire:1, person:1, hazardous_item:0, bit0:0, bit1:1, bit2:1, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 353, 354, 356, 358, 360, 442, 444, 446
+State 447 with rank 3 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:1, bit2:1, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 403, 404, 405, 406, 407, 408, 361, 362
+State 448 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 110, 449, 451, 453, 455, 458, 460, 462
+State 449 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 451 with rank 2 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 453 with rank 2 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 455 with rank 2 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 456 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 336, 457, 458, 459, 460, 461, 462, 463
+State 457 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 458 with rank 3 -> <fire:0, person:1, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 281, 283, 285, 287, 289, 299, 301, 303
+State 459 with rank 3 -> <fire:0, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 460 with rank 3 -> <fire:1, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 281, 283, 285, 287, 289, 299, 301, 303
+State 461 with rank 3 -> <fire:1, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 462 with rank 3 -> <fire:1, person:1, hazardous_item:0, bit0:0, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 281, 283, 285, 287, 289, 299, 301, 303
+State 463 with rank 3 -> <fire:1, person:1, hazardous_item:1, bit0:0, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 33, 34, 51, 52, 53, 54, 55, 56
+State 464 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 465, 467, 469, 471, 353, 482, 484, 486
+State 465 with rank 3 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 118, 119, 160, 161, 162, 163, 164, 165
+State 467 with rank 3 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 126, 127, 160, 161, 162, 163, 164, 165
+State 469 with rank 3 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 126, 127, 160, 161, 162, 163, 164, 165
+State 471 with rank 3 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 126, 127, 160, 161, 162, 163, 164, 165
+State 472 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 353, 473, 475, 477, 479, 482, 484, 486
+State 473 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 126, 127, 160, 161, 162, 163, 164, 165
+State 475 with rank 4 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 134, 135, 160, 161, 162, 163, 164, 165
+State 477 with rank 4 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 134, 135, 160, 161, 162, 163, 164, 165
+State 479 with rank 4 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 134, 135, 160, 161, 162, 163, 164, 165
+State 480 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 171, 172, 174, 176, 178, 180, 182, 184
+State 481 with rank 5 -> <fire:0, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 142, 143, 160, 161, 162, 163, 164, 165
+State 482 with rank 5 -> <fire:0, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 170, 172, 174, 176, 178, 180, 182, 184
+State 483 with rank 5 -> <fire:0, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 142, 143, 160, 161, 162, 163, 164, 165
+State 484 with rank 5 -> <fire:1, person:0, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 170, 172, 174, 176, 178, 180, 182, 184
+State 485 with rank 5 -> <fire:1, person:0, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:0, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 142, 143, 160, 161, 162, 163, 164, 165
+State 486 with rank 5 -> <fire:1, person:1, hazardous_item:0, bit0:1, bit1:0, bit2:0, pick_up:0, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 170, 172, 174, 176, 178, 180, 182, 184
+State 487 with rank 5 -> <fire:1, person:1, hazardous_item:1, bit0:1, bit1:0, bit2:0, pick_up:1, drop:0, radio:1, extinguish:1, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 142, 143, 160, 161, 162, 163, 164, 165
+State 488 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 490
+State 489 with rank 2 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 490
+State 490 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:1, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 491
+State 491 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 282
+State 492 with rank 1 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 494
+State 493 with rank 1 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 494
+State 494 with rank 2 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:1, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 495
+State 495 with rank 3 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 464
+State 496 with rank 4 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 498
+State 497 with rank 4 -> <fire:0, person:0, hazardous_item:1, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 498
+State 498 with rank 5 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:1, radio:0, extinguish:0, carrying_item:1, s_wasI:1, s_conS:1>
+	With successors : 499
+State 499 with rank 0 -> <fire:0, person:0, hazardous_item:0, bit0:0, bit1:0, bit2:1, pick_up:0, drop:0, radio:0, extinguish:0, carrying_item:0, s_wasI:1, s_conS:1>
+	With successors : 312
+-----------------------------------------
+Strategy time: 2520
+===== Done ==============================

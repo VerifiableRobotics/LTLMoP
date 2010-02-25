@@ -61,6 +61,8 @@ def readFromFile(fileName):
     data = {'':{}}  # Initialize, so a section title is optional
 
     for line in f:
+        if line[0] == "#" or line.strip() == "": continue # Ignore commented line
+
         m_sec = p_sec.match(line)
         m_head = p_head.match(line)
 
@@ -76,10 +78,9 @@ def readFromFile(fileName):
         else:
             # We've found non-header data
             if key is None:
-                if line[0] != "#" and line.strip() != "":
-                    # We never found a header for this data!  Unless it is a comment or a blank line, assume the file is bad.
-                    print "ERROR: Found data before header while reading from file %s." % (fileName)
-                    return None
+                # We never found a header for this data!  Unless it is a comment or a blank line, assume the file is bad.
+                print "ERROR: Found data before header while reading from file %s." % (fileName)
+                return None
             else:
                 data[title][key].append(line.strip())
 

@@ -303,9 +303,11 @@ class Automaton:
 
             # Now check whether our current sensor values match those of the state
             for key, value in state.inputs.iteritems():
-                if self.sensor_handler.getSensorValue(key) != (value == "1"): 
+
+                if self.sensor_handler.getSensorValue(key) != (value == "1"):                    
                     okay = False
                     break
+
 
             if okay:
                 candidates.append(state)

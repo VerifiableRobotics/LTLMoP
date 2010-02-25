@@ -56,7 +56,7 @@ window
 # load an environment bitmap
 map
 (
-    bitmap "/Users/cameron/Projects/ltlmop/examples/icra10/icra10_simbg.png"
+    bitmap "/home/cornell/Desktop/ltlmop/examples/icra10/icra10_simbg.png"
     size [16 12]
     name "example1"
     boundary 0

@@ -153,33 +153,32 @@ def main(argv):
     # Start status/control GUI #
     ############################
 
-    # TODO: implement NO-GUI option
+    if show_gui:
+        global runFSA, fd_gui_output, fd_gui_input, guiListenInitialized  # For sharing with thread
 
-    global runFSA, fd_gui_output, fd_gui_input, guiListenInitialized  # For sharing with thread
+        runFSA = False  # Start out paused
+        guiListenInitialized = False
 
-    runFSA = False  # Start out paused
-    guiListenInitialized = False
+        # Create a subprocess
+        print "Starting GUI window and listen thread..."
+        p_gui = subprocess.Popen(os.path.join(proj.ltlmop_root, "simGUI.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
-    # Create a subprocess
-    print "Starting GUI window and listen thread..."
-    p_gui = subprocess.Popen(os.path.join(proj.ltlmop_root, "simGUI.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        fd_gui_output = p_gui.stderr
+        fd_gui_input = p_gui.stdin
 
-    fd_gui_output = p_gui.stderr
-    fd_gui_input = p_gui.stdin
+        # Create new thread to communicate with subwindow
+        guiListenThread = threading.Thread(target = guiListen)
+        guiListenThread.start()
 
-    # Create new thread to communicate with subwindow
-    guiListenThread = threading.Thread(target = guiListen)
-    guiListenThread.start()
+        # Block until the GUI listener gets the go-ahead from the subwindow
+        while not guiListenInitialized:
+            time.sleep(0.05) # We need to sleep to give up the CPU
 
-    # Block until the GUI listener gets the go-ahead from the subwindow
-    while not guiListenInitialized:
-        time.sleep(0.05) # We need to sleep to give up the CPU
+        # Tell GUI to load background image
+        print >>fd_gui_input, "BG:" + proj.getBackgroundImagePath()
 
-    # Tell GUI to load background image
-    print >>fd_gui_input, "BG:" + proj.getBackgroundImagePath()
-
-    # Forward all messages from here on to the GUI window
-    sys.stdout = fd_gui_input
+        # Forward all messages from here on to the GUI window
+        sys.stdout = fd_gui_input
     
     #############################
     # Begin automaton execution #
@@ -189,8 +188,12 @@ def main(argv):
 
     ### Wait for the initial start command
 
-    while not runFSA:
-        time.sleep(0.05) # We need to sleep to give up the CPU
+    if show_gui:
+        while not runFSA:
+            time.sleep(0.05) # We need to sleep to give up the CPU
+    else:
+        raw_input('Press enter to begin...')
+        runFSA = True
 
     ### Figure out where we should start from
 
@@ -241,7 +244,7 @@ def main(argv):
         if time.time() - last_gui_update_time > 0.05:
             avg_freq = 0.9*avg_freq + 0.1*1/(toc-tic) # IIR filter
             print "Running at approximately %dHz..." % int(avg_freq)
-            pose = proj.pose_handler.getPose()[0:2]  # TODO: cache?
+            pose = proj.pose_handler.getPose(cached=True)[0:2]
             print "POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose)))
 
             last_gui_update_time = time.time()

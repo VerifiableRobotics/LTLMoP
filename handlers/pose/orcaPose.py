@@ -51,27 +51,32 @@ class poseHandler:
         print "(POSE) Detected time delay of %fsec." % self.time_offset
         print "(POSE) OK! We've successfully connected."
 
-    def getPose(self):
+        self.cached_pose = None
+
+    def getPose(self, cached=False):
         """
         Gets the most recent pose reading from the multicast stream.
         """
 
-        #TODO: It would be nice if we could actually just flush the socket...
+        if not cached or self.cached_pose is None:
+            #TODO: It would be nice if we could actually just flush the socket...
 
-        MIN_DELAY = 0.01  # seconds
+            MIN_DELAY = 0.01  # seconds
 
-        time_stamp = 0.0
-        now = time.time() + self.time_offset
-        while (now-time_stamp)>MIN_DELAY:
-            data = self.sock.recv(1500)
-            #print "Packet size: " + str(len(data))
-            packet_doubles = pyarray.array('d')
-            packet_doubles.fromstring(data)
-            time_stamp = packet_doubles[0] + (1e-6)*packet_doubles[1]
+            time_stamp = 0.0
+            now = time.time() + self.time_offset
+            while (now-time_stamp)>MIN_DELAY:
+                data = self.pos2d_sock.recv(1500)
+                #print "Packet size: " + str(len(data))
+                packet_doubles = pyarray.array('d')
+                packet_doubles.fromstring(data)
+                time_stamp = packet_doubles[0] + (1e-6)*packet_doubles[1]
 
-        pos_x = packet_doubles[2]
-        pos_y = packet_doubles[3]
-        pos_o = packet_doubles[4]
+            pos_x = packet_doubles[2]
+            pos_y = packet_doubles[3]
+            pos_o = packet_doubles[4]
 
-        return array([pos_x, pos_y, pos_o])
+            self.cached_pose = array([pos_x, pos_y, pos_o])
+
+        return self.cached_pose
 
