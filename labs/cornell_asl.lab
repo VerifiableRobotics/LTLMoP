@@ -7,11 +7,11 @@ PoseHandler:
 handlers.pose.orcaPose
 
 SensorHandler:
-#handlers.sensor.colorBallSensor
-handlers.sensor.dummySensor
+handlers.sensor.colorBallSensor
+#handlers.sensor.dummySensor
 
 ActuatorHandler:
-handlers.actuator.dummyActuator
+handlers.actuator.gimbalActuator
 
 LocomotionCommandHandler:
 handlers.locomotionCommand.orcaLocomotionCommand

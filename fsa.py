@@ -154,7 +154,7 @@ class Automaton:
         ###################
 
         # A magical regex to slurp up a state and its information all at once
-        p = re.compile(r"State (?P<num>\d+) with rank (?P<rank>\d+) -> <(?P<conds>(?:\w+:\d(?:, )?)+)>", re.IGNORECASE|re.MULTILINE)
+        p = re.compile(r"State (?P<num>\d+) with rank (?P<rank>[\d-]+) -> <(?P<conds>(?:\w+:\d(?:, )?)+)>", re.IGNORECASE|re.MULTILINE)
         m = p.finditer(fsa_description)
 
         # Now, for each state we find:
@@ -199,6 +199,7 @@ class Automaton:
 
             # Create the state and add it to our collection
             newstate = FSA_State(number, inputs, outputs, transitions)
+            newstate.rank=rank
             self.states.append(newstate)
 
 
@@ -251,6 +252,7 @@ class Automaton:
                 if state.outputs[key] == '1' and not re.match('^bit\d+$',key):
                     # Only propositions that are TRUE and not bitXs are written in the state
                     FILE.write( key + ' \\n ')
+            FILE.write( "("+state.rank + ')\\n ')
             FILE.write('\" ];\n')
 
         # Write the transitions with the input labels (only inputs that are true)
@@ -342,7 +344,11 @@ class Automaton:
         self.next_state = None
         self.next_region = None
 
-        self.updateOutputs(self.current_state)  # Bring our actuator states up-to-date
+        # Bring our actuator states up-to-date
+        for key, output_val in self.current_state.outputs.iteritems():
+            # Skip any "bitX" region encodings
+            if re.match('^bit\d+$', key): continue 
+            self.actuator_handler.setActuator(key, output_val)
 
         return self.current_state
 

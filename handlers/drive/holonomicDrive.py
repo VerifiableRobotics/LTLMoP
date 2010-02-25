@@ -16,6 +16,6 @@ class driveHandler:
             print "(DRIVE) Locomotion Command Handler not found."
             exit(-1)
 
-    def setVelocity(self, x, y, w=0):
+    def setVelocity(self, x, y, theta=0):
         self.loco.sendCommand([x,y])
 

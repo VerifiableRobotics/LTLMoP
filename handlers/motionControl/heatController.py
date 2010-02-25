@@ -27,7 +27,7 @@ class motionControlHandler:
         if current_reg == next_reg and not last:
             # No need to move!
             self.drive_handler.setVelocity(0, 0)  # So let's stop
-            return True
+            return False
 
         controller = self.get_controller(current_reg, next_reg, last)
 

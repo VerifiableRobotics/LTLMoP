@@ -355,13 +355,13 @@ public class GROneGame {
                 int j2 = state2.get_rank();
                 if ((j2 == (j1 + 1) % sys.justiceNum()) &&
                      state1.equals(state2, false)) {
-                    /* Find any states pointing to state1  */
+                    // Find any states pointing to state1
                     for (RawState state3 : aut) {
                         if (state3.get_succ().indexOf(state1) != -1) {
-                            /* Redirect transitions to state2 */
+                            // Redirect transitions to state2
                             state3.del_succ(state1); 
                             state3.add_succ(state2); 
-                            /* Mark the extra state for deletion */
+                            // Mark the extra state for deletion 
                             state1.set_rank(-1);
                         }
                     }

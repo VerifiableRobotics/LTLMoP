@@ -66,6 +66,8 @@ class SimGUI_Frame(wx.Frame):
         print >>sys.__stdout__, "(GUI) Starting controller listen thread..."
         self.controllerListenThread = threading.Thread(target = self.controllerListen)
         self.controllerListenThread.start()
+    
+        self.robotVel = (0,0)
 
         # Let everyone know we're ready
         print "Hello!"
@@ -100,7 +102,12 @@ class SimGUI_Frame(wx.Frame):
             elif input.startswith("POSE:"):
                 [x,y] = map(float, input.split(":")[1].split(","))
                 [x,y] = map(int, (self.mapScale*x, self.mapScale*y)) 
-                wx.CallAfter(self.drawRobot, x, y)
+                self.robotPos = (x, y)
+                wx.CallAfter(self.drawRobot)
+            elif input.startswith("VEL:"):
+                [x,y] = map(float, input.split(":")[1].split(","))
+                [x,y] = map(int, (self.mapScale*x, self.mapScale*y)) 
+                self.robotVel = (x, y)
             elif input.startswith("PAUSE"):
                 # FIXME: Sometimes we'll still get rate updates AFTER a pause
                 wx.CallAfter(self.sb.SetStatusText, input, 0)
@@ -201,7 +208,7 @@ class SimGUI_Frame(wx.Frame):
         if event is not None:
             event.Skip()
 
-    def drawRobot(self, x, y):
+    def drawRobot(self):
         memory = wx.MemoryDC()
         size = self.scaledMap.GetSize()
         newMap = wx.EmptyBitmap(size.x, size.y)
@@ -209,7 +216,9 @@ class SimGUI_Frame(wx.Frame):
 
         memory.BeginDrawing()
         memory.DrawBitmap(self.scaledMap, 0, 0)
-        memory.DrawCircle(x, y, 5)
+        memory.DrawCircle(self.robotPos[0], self.robotPos[1], 5)
+        memory.DrawLine(self.robotPos[0], self.robotPos[1], 
+                        self.robotPos[0] + self.robotVel[0], self.robotPos[1] - self.robotVel[1])
         memory.EndDrawing()
         memory.SelectObject(wx.NullBitmap)
         self.bitmap_map.SetBitmap(newMap)
