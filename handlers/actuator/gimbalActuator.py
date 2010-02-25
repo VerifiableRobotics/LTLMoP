@@ -24,22 +24,36 @@ class actuatorHandler:
 
         print "(ACT) connected :)"
 
+        self.actionValues = [{'name': 'radio',
+                            'ON_cmdValue': [2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            'OFF_cmdValue': [2, 70, 0, 0, 0, 0, 0, 0, 0, 0]},
+                            {'name': 'pick_up',
+                            'ON_cmdValue': [2, 20, 0, 0, 0, 0, 0, 0, 0, 0],
+                            'OFF_cmdValue': [2, 70, 0, 0, 0, 0, 0, 0, 0, 0]},
+                            {'name': 'drop',
+                            'ON_cmdValue': [2, 40, 0, 0, 0, 0, 0, 0, 0, 0],
+                            'OFF_cmdValue': [2, 70, 0, 0, 0, 0, 0, 0, 0, 0]},
+                            {'name': 'extinguish',
+                            'ON_cmdValue': [3, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            'OFF_cmdValue': [3, 70, 0, 0, 0, 0, 0, 0, 0, 0]}]
+
     def setActuator(self, name, val):
         """
         Pretends to set actuator of name ``name`` to be in state ``val`` (binary).
         """
 
-        if name == 'radio':
-            if int(val):
-                print "RADIO ON"
-                ang = 0
-            else:
-                print "RADIO OFF"
-                ang = 70
+        for value in self.actionValues:
+            if name == value['name']:
+                if int(val):
+                    print "%s ON" % value['name']
+                    cmdValue = value['ON_cmdValue']
+                else:
+                    print "%s OFF" % value['name']
+                    cmdValue = value['OFF_cmdValue']
 
-            cmd_data = pyarray.array('d')
-            cmd_data.fromlist([2, ang, 0, 0, 0, 0, 0, 0, 0, 0])
-            self.gimbal_sock.sendto(cmd_data, (self.GIMBAL_HOST, self.GIMBAL_PORT))
+                cmd_data = pyarray.array('d')
+                cmd_data.fromlist(cmdValue)
+                self.gimbal_sock.sendto(cmd_data, (self.GIMBAL_HOST, self.GIMBAL_PORT))
 
         print "(ACT) Actuator %s is now %s!" % tuple(map(str, (name, val)))
 

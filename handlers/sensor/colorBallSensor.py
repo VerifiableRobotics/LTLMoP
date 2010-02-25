@@ -49,8 +49,20 @@ class sensorHandler:
         print "(SENSOR) OK! We've successfully connected."
 
         self.last_update = 0
-        self.red_values = [0]*6 #Initialize off
-        self.red_index = 0 # Index for ring buffer
+        # Initialize off
+        # Index for ring buffer
+        self.sensorValues = [{'name': 'person',
+                            'values': [0]*6,
+                            'index': 0,
+                            'range': [0.5, 1.5]},
+                            {'name': 'fire',
+                            'values': [0]*6,
+                            'index': 0,
+                            'range': [1.5, 2.5]},
+                            {'name': 'hazardous_item',
+                            'values': [0]*6,
+                            'index': 0,
+                            'range': [2.5, 3.5]}]
 
     def readFromOrca(self):
         MIN_DELAY = 0.01  # seconds
@@ -81,22 +93,24 @@ class sensorHandler:
 
         MIN_BLOB_PERIOD = 0.1
 
-        if sensor_name in ['fire', 'hazardous_item']:
-            return False
-        elif sensor_name == 'person':
+        if sensor_name in ['fire', 'person', 'hazardous_item']: # fire is blue ball, person is red ball, hazardous_item is both ball
             now = time.time()
             if (now - self.last_update) > 0.1:
                 orca_val = self.readFromOrca()
-                self.red_values[self.red_index] = (orca_val > 0.5 and orca_val < 1.5)
 
-                self.red_index += 1
-                if self.red_index == len(self.red_values):
-                    self.red_index = 0
+                for value in self.sensorValues:
+                    value['values'][value['index']] = (orca_val > value['range'][0] and orca_val < value['range'][1])
+                    value['index'] += 1
 
-                self.last_update = now
-    
-            red_visible = sum(self.red_values) > 1
-            return red_visible
+
+                    if value['index'] == len(value['values']):
+                        value['index'] = 0
+
+                    if sensor_name == value['name']:
+                        return sum(value['values']) > 1
+
+                self.last_update = now 
+
         else:
             print "WARNING: Sensor %s is unknown!" % sensor_name
             return None
