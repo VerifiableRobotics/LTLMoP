@@ -55,11 +55,11 @@ class sensorHandler:
                             'values': [0]*6,
                             'index': 0,
                             'range': [0.5, 1.5]},
-                            {'name': 'fire',
+                            {'name': 'hazardous_item',
                             'values': [0]*6,
                             'index': 0,
                             'range': [1.5, 2.5]},
-                            {'name': 'hazardous_item',
+                            {'name': 'fire',
                             'values': [0]*6,
                             'index': 0,
                             'range': [2.5, 3.5]}]
@@ -93,7 +93,7 @@ class sensorHandler:
 
         MIN_BLOB_PERIOD = 0.1
 
-        if sensor_name in ['fire', 'person', 'hazardous_item']: # fire is blue ball, person is red ball, hazardous_item is both ball
+        if sensor_name in ['fire', 'person', 'hazardous_item']: # hazard is blue ball, person is red ball, fire is both ball
             now = time.time()
             if (now - self.last_update) > 0.1:
                 orca_val = self.readFromOrca()
@@ -106,10 +106,12 @@ class sensorHandler:
                     if value['index'] == len(value['values']):
                         value['index'] = 0
 
-                    if sensor_name == value['name']:
-                        return sum(value['values']) > 1
-
                 self.last_update = now 
+
+            for value in self.sensorValues:
+                if sensor_name == value['name']:
+                    return sum(value['values']) > 1
+
 
         else:
             print "WARNING: Sensor %s is unknown!" % sensor_name

@@ -165,8 +165,12 @@ class RegionFileInterface:
 
         if data is None:
             return False
-        
-        self.background = data["Background"][0]
+
+        try:
+            self.background = data["Background"][0]
+        except KeyError:
+            self.background = "None"
+
         self.thumb = data["Thumbnail"][0]
 
         self.regions = []

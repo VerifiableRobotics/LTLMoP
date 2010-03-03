@@ -6,26 +6,6 @@
 ======== EXPERIMENT CONFIG 1 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0154202902951,-7.90289878615,-0.0135000007493,4.93050037963
-
-InitialRegion: # Initial region number
-1
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-playerstage.lab
-
-Name: # Name of the experiment
-Stage (Point Robot)
-
-RobotFile: # Relative path of robot description file
-partario.robot
-
-
-======== EXPERIMENT CONFIG 2 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
 0.0154202897192,-7.84324650027,-0.0145000006471,5.46750031625
 
 InitialRegion: # Initial region number
@@ -42,6 +22,26 @@ Pioneer @ ASL
 
 RobotFile: # Relative path of robot description file
 pioneer_real.robot
+
+
+======== EXPERIMENT CONFIG 2 ========
+
+Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
+0.0159613530417,-6.23252142771,-0.0140000006982,2.42610786642
+
+InitialRegion: # Initial region number
+1
+
+InitialTruths: # List of initially true propositions
+
+Lab: # Lab configuration file
+playerstage.lab
+
+Name: # Name of the experiment
+Stage (Point Robot)
+
+RobotFile: # Relative path of robot description file
+partario.robot
 
 
 ======== SETTINGS ========
@@ -71,27 +71,18 @@ Stage (Point Robot)
 ======== SPECIFICATION ========
 
 Spec: # Specification in simple English
-
-# Initial Conditions
 Env starts with false
 Robot starts with false
-
-# Transitions
 Do PickUp if and only if you are sensing Fly and you are not activating CarryingFly
 Do Drop if and only if you are activating CarryingFly and you were in mystery
 If you are activating PickUp or you activated PickUp then stay there
 If you are activating Drop or you activated Drop then stay there
-
 If you activated PickUp then do CarryingFly
 If you activated Drop then do not CarryingFly
-
 If you activated CarryingFly and you did not activate Drop then do CarryingFly
 If you did not activate CarryingFly and you did not activate PickUp then do not CarryingFly
-
 If you were in mystery then do not Fly
 If you did not activate CarryingFly then always not mystery
-
-# Goals
 If you are not activating CarryingFly then visit hash_brown
 If you are not activating CarryingFly then visit bacon
 If you are not activating CarryingFly then visit eggy

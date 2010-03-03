@@ -10,7 +10,6 @@ MODULE main
 
 MODULE env -- inputs
     VAR
-		fire : boolean;
 		person : boolean;
 		hazardous_item : boolean;
 
@@ -22,5 +21,4 @@ MODULE sys -- outputs
 		pick_up : boolean;
 		drop : boolean;
 		radio : boolean;
-		extinguish : boolean;
 		carrying_item : boolean;

@@ -217,8 +217,8 @@ class SimGUI_Frame(wx.Frame):
         memory.BeginDrawing()
         memory.DrawBitmap(self.scaledMap, 0, 0)
         memory.DrawCircle(self.robotPos[0], self.robotPos[1], 5)
-        memory.DrawLine(self.robotPos[0], self.robotPos[1], 
-                        self.robotPos[0] + self.robotVel[0], self.robotPos[1] + self.robotVel[1])
+        #memory.DrawLine(self.robotPos[0], self.robotPos[1], 
+        #                self.robotPos[0] + self.robotVel[0], self.robotPos[1] + self.robotVel[1])
         memory.EndDrawing()
         memory.SelectObject(wx.NullBitmap)
         self.bitmap_map.SetBitmap(newMap)
