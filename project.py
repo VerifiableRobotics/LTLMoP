@@ -21,6 +21,7 @@ class Project:
     """
 
     def __init__(self):
+        self.project_basename = None
         pass
 
     def getExperimentConfig(self, exp_cfg_name):
@@ -36,7 +37,7 @@ class Project:
 
 
         print "ERROR: Could not find experiment config with name \"%s\" in spec file!" % exp_cfg_name
-        sys.exit(0)
+        return
 
     def loadLabData(self, exp_cfg_data):
         """
@@ -44,9 +45,13 @@ class Project:
         """
 
         #### Load in the lab setup file
-
         
-        lab_name = exp_cfg_data['Lab'][0]
+        try:
+            lab_name = exp_cfg_data['Lab'][0]
+        except IndexError, KeyError:
+            print "WARNING: Lab configuration file undefined"        
+            return
+
         # Add extension to the name if there isn't one. 
         if not lab_name.endswith('.lab'):
             lab_name = lab_name+'.lab'     
@@ -60,7 +65,7 @@ class Project:
                 lab_data = fileMethods.readFromFile(os.path.join(self.ltlmop_root, "labs", lab_name))   
             except IOError:
                 print "ERROR: Couldn't find lab setup file in project directory or labs folder."
-                sys.exit(1)
+                return
         print "  -> Looks like you want to run your experiment with %s. Good choice." % lab_data["Name"][0]
         
         return lab_data
@@ -72,7 +77,12 @@ class Project:
 
         #### Load in the robot file
         
-        rdf_name = exp_cfg_data['RobotFile'][0]
+        try:
+            rdf_name = exp_cfg_data['RobotFile'][0]
+        except IndexError, KeyError:
+            print "WARNING: Robot description file undefined"        
+            return
+
         # Add extension to the name if there isn't one. 
         if not rdf_name.endswith('.robot'):
             rdf_name = rdf_name+'.robot'  
@@ -87,7 +97,7 @@ class Project:
                 rdf_data = fileMethods.readFromFile(os.path.join(self.ltlmop_root, "robots", rdf_name))   
             except IOError:
                 print "ERROR: Couldn't find robot description file in project directory or robots folder."
-                sys.exit(1)
+                return
         print "  -> %s looks excited for this run." % rdf_data["Name"][0]
         
         return rdf_data
@@ -99,7 +109,11 @@ class Project:
 
         #### Load in the region file
 
-        regf_name = self.spec_data['SETTINGS']['RegionFile'][0]
+        try:
+            regf_name = self.spec_data['SETTINGS']['RegionFile'][0]
+        except IndexError, KeyError:
+            print "WARNING: Region file undefined"        
+            return
 
         print "Loading region file %s..." % regf_name
         rfi = regions.RegionFileInterface() 
@@ -123,8 +137,8 @@ class Project:
             transformValues = exp_cfg_data['Calibration'][0].split(",")
             [xscale, xoffset, yscale, yoffset] = map(float, transformValues)
         except KeyError, ValueError:
-            print "Error: Please calibrate and update values before running simulation."
-            sys.exit(0)
+            print "ERROR: Please calibrate and update values before running simulation."
+            return
 
         # Create functions for coordinate transformation
         # (numpy may seem like overkill for this, but we already have it as a dependency anyways...)
@@ -203,7 +217,9 @@ class Project:
 
     def getBackgroundImagePath(self):
         """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
-        return self.getFilenamePrefix() + "_simbg.png"
+        # TODO: Use Thumbnail property in regions file?
+        return self.rfi.thumb
+        #return self.getFilenamePrefix() + "_simbg.png"
     
     def lookupHandlers(self):
         """

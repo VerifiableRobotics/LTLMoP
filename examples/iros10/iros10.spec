@@ -55,7 +55,7 @@ Customs: # List of custom propositions
 carrying_item
 
 RegionFile: # Relative path of region description file
-icra10.regions
+iros10.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
 fire,0
@@ -69,25 +69,36 @@ PlayerStage
 ======== SPECIFICATION ========
 
 Spec: # Specification in simple English
+# Initial conditions
 Env starts with false
 Robot starts with false
+
+# Assumptions about the environment
+If you were in porch then do not person
+If you were in porch then do not hazardous_item
+
+# Define when and how to pick up and drop
 Do pick_up if and only if you are sensing hazardous_item and you are not activating carrying_item
 Do drop if and only if you are activating carrying_item and you were in porch
 If you are activating pick_up or you activated pick_up then stay there
 If you are activating drop or you activated drop then stay there
+
+# Define when and how to radio
+Do radio if and only if you are sensing person
+If you are activating radio or you activated radio then stay there
+
+# Define behavior of carrying_item proposition
 If you activated pick_up then do carrying_item
 If you activated drop then do not carrying_item
 If you activated carrying_item and you did not activate drop then do carrying_item
 If you did not activate carrying_item and you did not activate pick_up then do not carrying_item
-If you were in porch then do not hazardous_item
-If you did not activate carrying_item then always not porch
-Do radio if and only if you are sensing person
-If you are activating radio or you activated radio then stay there
-If you were in porch then do not person
+
+# Patrol goals
 If you are not activating carrying_item and you are not activating radio then visit dining
 If you are not activating carrying_item and you are not activating radio then visit deck
 If you are not activating carrying_item and you are not activating radio then visit living
 If you are not activating carrying_item and you are not activating radio then visit bedroom
 If you are not activating carrying_item and you are not activating radio then visit kitchen
+If you did not activate carrying_item then always not porch
 If you are activating carrying_item and you are not activating radio then visit porch
 

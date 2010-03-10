@@ -907,9 +907,10 @@ class DrawingFrame(wx.Frame):
 
         memory.EndDrawing()
         memory.SelectObject(wx.NullBitmap)
-        bitmap.SaveFile(os.path.join(os.path.dirname(self.fileName),"%s_simbg.png" % name), wx.BITMAP_TYPE_PNG)
+        fname = os.path.join(os.path.dirname(self.fileName),"%s_simbg.png" % name)
+        bitmap.SaveFile(fname, wx.BITMAP_TYPE_PNG)
 
-        return "%s_simbg.png" % name
+        return fname
 
     def onPaintEvent(self, event):
         """ Respond to a request to redraw the contents of our drawing panel.

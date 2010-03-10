@@ -359,6 +359,7 @@ class simSetupDialog(wx.Dialog):
         fileNamePrefix = os.path.join(self.parent.projectPath, self.parent.projectName)
 
         # TODO: save the config first
+        self.parent.onMenuSave()
         proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec", self.list_box_experiment_name.GetStringSelection()],stderr=subprocess.PIPE)
         
         output = proc.stderr.readline().strip()
@@ -749,6 +750,8 @@ class SpecEditorFrame(wx.Frame):
 
         # Set default values
         self.setDefaults()
+        self.proj = project.Project()
+
 
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
@@ -1075,18 +1078,18 @@ class SpecEditorFrame(wx.Frame):
                             "Customs": self.dumpListBox(self.list_box_customs),
                             "currentExperimentName": self.currentExperimentName,
                             }
-        if len(self.simSetup)>1:
+        if len(self.simSetup)>0:
             for id, config in enumerate(self.simSetup):
-                if config['Name'] != 'Default':
-                    expConfig = {   "Name": config['Name'],
-                                    "RobotFile": config['RobotFile'],
-                                    "Lab": config['LabFile'],
-                                    "Calibration": ",".join(map(str,[config["XScale"], config["XOffset"],
-                                                        config["YScale"], config["YOffset"]])),
-                                    "InitialTruths": config['InitialTruths'],
-                                    "InitialRegion": config['InitialRegion']
-                                }
-                    data['EXPERIMENT CONFIG '+str(id)] = expConfig
+                #if config['Name'] != 'Default': # TODO: Ask Jim why he put this here
+                expConfig = {   "Name": config['Name'],
+                                "RobotFile": config['RobotFile'],
+                                "Lab": config['LabFile'],
+                                "Calibration": ",".join(map(str,[config["XScale"], config["XOffset"],
+                                                    config["YScale"], config["YOffset"]])),
+                                "InitialTruths": config['InitialTruths'],
+                                "InitialRegion": config['InitialRegion']
+                            }
+                data['EXPERIMENT CONFIG '+str(id)] = expConfig
 
 
         comments = {"FILE_HEADER": "This is a specification definition file for the LTLMoP toolkit.\n" +
@@ -1105,6 +1108,10 @@ class SpecEditorFrame(wx.Frame):
                     "Name": 'Name of the experiment'}
 
         fileMethods.writeToFile(fileName, data, comments)
+
+        # If this is the first time saving, reload the Project object
+        if self.proj.project_basename is None:
+            self.proj.loadProject(fileName)
             
     def dumpListBox(self, list):
         data = []
@@ -1161,7 +1168,6 @@ class SpecEditorFrame(wx.Frame):
         if fileName is None:
             return
 
-        self.proj = project.Project()
         self.proj.loadProject(fileName)
  
         data = self.proj.spec_data
@@ -1209,6 +1215,10 @@ class SpecEditorFrame(wx.Frame):
                       
                 if 'Lab' in content and len(content['Lab']) > 0:
                     self.simSetup[-1]['LabFile'] = content['Lab'][0]
+
+        # Remove default if we have other configs
+        if len(self.simSetup) > 1:
+            del self.simSetup[0]
 
         # Update the window title
         title = os.path.basename(fileName)
@@ -1276,8 +1286,9 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuPaste(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        if self.text_ctrl_spec.CanPaste():
-            self.text_ctrl_spec.Paste()
+        # FIXME: On Mac, this double pastes-- check on Linux
+        #if self.text_ctrl_spec.CanPaste():
+        #    self.text_ctrl_spec.Paste()
         event.Skip()
 
     def onMenuCompile(self, event): # wxGlade: SpecEditorFrame.<event_handler>
@@ -1293,6 +1304,10 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
 
+        if self.proj.project_basename is None:
+            wx.MessageBox("Please save your project before compiling.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
 
         # Clear the log so we can start fresh grocer
         self.text_ctrl_log.Clear()
