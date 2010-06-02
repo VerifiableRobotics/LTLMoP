@@ -203,6 +203,7 @@ class RegionFileInterface:
                 self.regions[self.indexOfRegionWithName(name)].alignmentPoints[int(index)] = True
             
         return True
+
    
 ############################################################
  
@@ -546,6 +547,96 @@ class Region:
         elif y < rY - 3: return False
         elif y > rY + 3: return False
         else:            return True
+        
+    def findRegionNear(self, distance, mode='underEstimate'):
+        """
+        Given a region object and a distance value, return a new region object which covers
+        the area that is within the 'distance' away from the given region.
+        """
+        
+        if distance<0:
+            print "The distance cannot be negative."
+            return
+            
+        newRegion = Region()
+        # the new region will have most features  same as the old one
+        newRegion.name              = self.name
+        newRegion.type              = self.type
+        newRegion.position          = self.position
+        newRegion.size              = self.size
+        newRegion.color             = self.color
+        newRegion.pointArray        = []
+        newRegion.alignmentPoints   = [False] * 2 * len([x for x in self.getPoints()])    
+        faces=self.getFaces()
+        center=self.getCenter()
+        
+        for i,face in enumerate(faces):
+            # find slope of the face line
+            x1=face[0][0]
+            y1=face[0][1]
+            x2=face[1][0]
+            y2=face[1][1]
+            print x1,y1,x2,y2
+            if x1 == x2: # vertical line
+                if center[0]>x1:
+                    x1_new=x1-distance
+                    x2_new=x2-distance
+                else:
+                    x1_new=x1+distance
+                    x2_new=x2+distance
+                y1_new=y1
+                y2_new=y2
+            elif y1 == y2: # horizontal line
+                if center[1]>y1:
+                    print 'pass'
+                    y1_new=y1-distance
+                    y2_new=y2-distance
+                else:
+                    y1_new=y1+distance
+                    y2_new=y2+distance
+                x1_new=x1
+                x2_new=x2
+            else:
+                faceSlope=(y1-y2)/(x1-x2*1.0)
+                # find slope that is orthogonal to the face
+                orthSlope=(-1.0)/faceSlope
+                
+                # figure out which direction the boundary should be shifted to
+                offsetX=distance*math.sqrt(1/(1+orthSlope**2))
+                offsetY=distance*math.sqrt(1/(1+1/orthSlope**2))
+                if orthSlope>0:
+                    direction1=math.sqrt((x1+offsetX-center[0])**2+(y1+offsetY-center[1])**2)
+                    direction2=math.sqrt((x1-offsetX-center[0])**2+(y1-offsetY-center[1])**2)
+                    if direction1>direction2:
+                        x1_new=x1+offsetX
+                        y1_new=y1+offsetY
+                        x2_new=x2+offsetX
+                        y2_new=y2+offsetY
+                    else:
+                        x1_new=x1-offsetX
+                        y1_new=y1-offsetY
+                        x2_new=x2-offsetX
+                        y2_new=y2-offsetY
+                else:
+                    direction1=math.sqrt((x1+offsetX-center[0])**2+(y1-offsetY-center[1])**2)
+                    direction2=math.sqrt((x1-offsetX-center[0])**2+(y1+offsetY-center[1])**2)
+                    if direction1>direction2:
+                        x1_new=x1+offsetX
+                        y1_new=y1-offsetY
+                        x2_new=x2+offsetX
+                        y2_new=y2-offsetY
+                    else:
+                        x1_new=x1-offsetX
+                        y1_new=y1+offsetY
+                        x2_new=x2-offsetX
+                        y2_new=y2+offsetY
+            newRegion.pointArray.append(wx.Point(int(x1_new), int(y1_new))-newRegion.position)
+            newRegion.pointArray.append(wx.Point(int(x2_new), int(y2_new))-newRegion.position)
+        
+        #newRegion.pointArray=sorted(newRegion.pointArray)    
+        newRegion.recalcBoundingBox()
+        
+        return newRegion
 
 
 ############################################################
@@ -582,4 +673,6 @@ def pointLineIntersection(pt1, pt2, test_pt):
         d = None
 
     return [d, wx.Point(xi, yi)]
+    
+    
 

@@ -299,7 +299,7 @@ class DrawingFrame(wx.Frame):
         self.rfi = RegionFileInterface()
         self.backgroundImage = None
         self.fileName  = fileName
-
+        
         self.transitionFaces = {}          # The keys are faces that are shared by more than one region
 
         self.dirty     = False
