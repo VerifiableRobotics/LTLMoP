@@ -3,33 +3,13 @@
 # Note that all values are separated by *tabs*.
 
 
-======== EXPERIMENT CONFIG 1 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.00667619043562,0.519140956528,-0.00536700273334,2.25351186904
-
-InitialRegion: # Initial region number
-1
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-cornell_asl.lab
-
-Name: # Name of the experiment
-ASL
-
-RobotFile: # Relative path of robot description file
-pioneer_real.robot
-
-
-======== EXPERIMENT CONFIG 2 ========
+======== EXPERIMENT CONFIG 0 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
 0.0145090906457,-7.97493804517,-0.0163607845119,5.97177404282
 
 InitialRegion: # Initial region number
-1
+0
 
 InitialTruths: # List of initially true propositions
 
@@ -41,6 +21,26 @@ PlayerStage
 
 RobotFile: # Relative path of robot description file
 pioneer_stage.robot
+
+
+======== EXPERIMENT CONFIG 1 ========
+
+Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
+0.00667619043562,0.519140956528,-0.00536700273334,2.25351186904
+
+InitialRegion: # Initial region number
+0
+
+InitialTruths: # List of initially true propositions
+
+Lab: # Lab configuration file
+cornell_asl.lab
+
+Name: # Name of the experiment
+ASL
+
+RobotFile: # Relative path of robot description file
+pioneer_real.robot
 
 
 ======== SETTINGS ========
@@ -63,40 +63,30 @@ person,1
 hazardous_item,1
 
 currentExperimentName:
-PlayerStage
+ASL
 
 
 ======== SPECIFICATION ========
 
 Spec: # Specification in simple English
-# Initial conditions
 Env starts with false
 Robot starts with false
-
-# Assumptions about the environment
 If you were in porch then do not person
 If you were in porch then do not hazardous_item
-
-# Define when and how to pick up and drop
 Do pick_up if and only if you are sensing hazardous_item and you are not activating carrying_item
 Do drop if and only if you are activating carrying_item and you were in porch
 If you are activating pick_up or you activated pick_up then stay there
 If you are activating drop or you activated drop then stay there
-
-# Define when and how to radio
 Do radio if and only if you are sensing person
 If you are activating radio or you activated radio then stay there
-
-# Define behavior of carrying_item proposition
 If you activated pick_up then do carrying_item
 If you activated drop then do not carrying_item
 If you activated carrying_item and you did not activate drop then do carrying_item
 If you did not activate carrying_item and you did not activate pick_up then do not carrying_item
-
-# Patrol goals
 If you are not activating carrying_item and you are not activating radio then visit dining
 If you are not activating carrying_item and you are not activating radio then visit deck
-If you are not activating carrying_item and you are not activating radio then visit living
+always not living
+#If you are not activating carrying_item and you are not activating radio then visit living
 If you are not activating carrying_item and you are not activating radio then visit bedroom
 If you are not activating carrying_item and you are not activating radio then visit kitchen
 If you did not activate carrying_item then always not porch

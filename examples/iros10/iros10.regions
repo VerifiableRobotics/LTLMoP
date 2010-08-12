@@ -18,7 +18,7 @@ living	poly	299	80	572	240	233	123	19	0	0	572	0	572	240	565	240	220	240	0	240
 kitchen	poly	299	331	220	244	255	0	0	0	0	220	0	220	230	219	238	0	244
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
-/home/jim/Desktop/ltlmop/examples/iros10/iros10_simbg.png
+iros10_simbg.png
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
 porch	living	299	80	299	320

@@ -41,8 +41,8 @@ public class GROneMain {
 		// constructing the system module.
 		SMVModule sys = (SMVModule) Env.getModule("main.s");
 		Spec[] sys_conjuncts = GROneParser.parseConjuncts(spcs[1]);
-		// GRParser.addReactiveBehavior(sys, sys_conjuncts);
-		GROneParser.addPureReactiveBehavior(sys, sys_conjuncts);
+		GRParser.addReactiveBehavior(sys, sys_conjuncts);
+		//GROneParser.addPureReactiveBehavior(sys, sys_conjuncts);
 
 		// env.setFullPrintingMode(true);
 		// System.out.println(env);

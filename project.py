@@ -218,7 +218,7 @@ class Project:
     def getBackgroundImagePath(self):
         """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
         # TODO: Use Thumbnail property in regions file?
-        return self.rfi.thumb
+        return os.path.join(self.project_root, self.rfi.thumb)
         #return self.getFilenamePrefix() + "_simbg.png"
     
     def lookupHandlers(self):
