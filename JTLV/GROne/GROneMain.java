@@ -41,7 +41,7 @@ public class GROneMain {
 		// constructing the system module.
 		SMVModule sys = (SMVModule) Env.getModule("main.s");
 		Spec[] sys_conjuncts = GROneParser.parseConjuncts(spcs[1]);
-		GRParser.addReactiveBehavior(sys, sys_conjuncts);
+		GROneParser.addReactiveBehavior(sys, sys_conjuncts);
 		//GROneParser.addPureReactiveBehavior(sys, sys_conjuncts);
 
 		// env.setFullPrintingMode(true);
@@ -116,9 +116,13 @@ public class GROneMain {
 		System.out.println("==== Building an implementation =========");
 		System.out.println("-----------------------------------------");
 		System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
-		g.printWinningStrategy(g.getEnvPlayer().initial().and(
+		/*
+        g.printWinningStrategy(g.getEnvPlayer().initial().and(
 				g.getSysPlayer().initial()).satOne(env.moduleUnprimeVars().union(
 						sys.moduleUnprimeVars()), false));  // Added BDDVarSet argument so that initial condition is fully specified -Cameron
+        */
+        g.printWinningStrategy(g.getEnvPlayer().initial().and(
+				               g.getSysPlayer().initial()));
 		System.setOut(System.out); // restore STDOUT
 		System.out.print("-----------------------------------------\n");
 		long t2 = (System.currentTimeMillis() - time);

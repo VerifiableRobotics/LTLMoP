@@ -208,147 +208,175 @@ public class GROneGame {
 		Stack<RawState> aut = new Stack<RawState>();
 		// FDSModule res = new FDSModule("strategy");
 
-		st_stack.push(ini);
-		j_stack.push(new Integer(0));
+        BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
+        int a = 0;
+        while (ini_iterator.hasNext()) {
 
-		// iterating over the stacks.
-		while (!st_stack.isEmpty()) {
-			// making a new entry.
-			BDD p_st = st_stack.pop();
-			int p_j = j_stack.pop().intValue();
+            BDD this_ini = (BDD) ini_iterator.next();
 
-            /* Create a new automaton state for our current state 
-              (or use a matching one if it already exists) */
-			RawState new_state = new RawState(aut.size(), p_st, p_j);
-			int nidx = aut.indexOf(new_state);
-			if (nidx == -1) {
-				aut.push(new_state);
-			} else {
-				new_state = aut.elementAt(nidx);
-			}
+            RawState test_st = new RawState(aut.size(), this_ini, 0);
 
-            /* Find Y index of current state */
-			// find minimal cy and an i
-			int p_cy = -1;
-			for (int i = 0; i < y_mem[p_j].length; i++) {
-				if (!p_st.and(y_mem[p_j][i]).isZero()) {
-					p_cy = i;
-					break;
-				}
-			}
-			assert p_cy >= 0 : "Couldn't find p_cy";
-            /* Find  X index of current state */
-			int p_i = -1;
-			for (int i = 0; i < env.justiceNum(); i++) {
-				if (!p_st.and(x_mem[p_j][i][p_cy]).isZero()) {
-					p_i = i;
-					break;
-				}
-			}
-			assert p_i >= 0 : "Couldn't find p_i";
+            int idx = -1;
+            for (RawState cmp_st : aut) {
+                if (cmp_st.equals(test_st, false)) { // search ignoring rank
+                    idx = aut.indexOf(cmp_st);
+                    break;
+                }
+            }
 
-			// computing the set of env possible successors.
-			Vector<BDD> succs = new Vector<BDD>();
-			BDD all_succs = env.succ(p_st);
-			for (BDDIterator all_states = all_succs.iterator(env
-					.moduleUnprimeVars()); all_states.hasNext();) {
-				BDD sin = (BDD) all_states.next();
-				succs.add(sin);
-			}
+            if (idx != -1) {
+                // This initial state is already in the automaton
+                continue;
+            }
+            /*if (a == 1) {
+                break;
+            }
+            a++;*/
+            // Otherwise, we need to attach this initial state to the automaton
 
-			// For each env successor, find a strategy successor
-			for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
-					.hasNext();) {
-				BDD primed_cur_succ = Env.prime(iter_succ.next());
-				BDD next_op = Env
-						.unprime(sys.trans().and(p_st).and(primed_cur_succ)
-								.exist(
-										env.moduleUnprimeVars().union(
-												sys.moduleUnprimeVars())));
-				BDD candidate = Env.FALSE();
-				int jcand = p_j;
+            st_stack.push(this_ini);
+            j_stack.push(new Integer(0)); // TODO: is there a better default j?
+            this_ini.printSet();
 
-				int local_kind = strategy_kind;
-				while (candidate.isZero() & (local_kind >= 0)) {
-					// a - first successor option in the strategy.
-                    // (rho_1 in Piterman; satisfy current goal and move to next goal)
-					if ((local_kind == 3) | (local_kind == 7)
-							| (local_kind == 10) | (local_kind == 13)
-							| (local_kind == 18) | (local_kind == 21)) {
-						int next_p_j = (p_j + 1) % sys.justiceNum();
-						if (!p_st.and(sys.justiceAt(p_j)).isZero()) {
-							BDD opt = next_op.and(z_mem[next_p_j]);
-							if (!opt.isZero()) {
-								candidate = opt;
-								jcand = next_p_j;
-							}
-						}
-					}
-					// b - second successor option in the strategy.
-                    // (rho_2 in Piterman; move closer to current goal)
-					if ((local_kind == 2) | (local_kind == 5)
-							| (local_kind == 11) | (local_kind == 15)
-							| (local_kind == 17) | (local_kind == 22)) {
-						if (p_cy > 0) {
-							int look_r = 0;
-							// look for the farest r.
-							while ((next_op.and(y_mem[p_j][look_r]).isZero())
-									& (look_r < p_cy)) {
-								look_r++;
-							}
-							
-							BDD opt = next_op.and(y_mem[p_j][look_r]);
-							if ((look_r != p_cy) && (!opt.isZero())) {
-								candidate = opt;
-							}
-						}
-					}
+            // iterating over the stacks.
+            while (!st_stack.isEmpty()) {
+                // making a new entry.
+                BDD p_st = st_stack.pop();
+                int p_j = j_stack.pop().intValue();
 
-					// c - third successor option in the strategy.
-                    // (rho_3 in Piterman; falsify environment :()
-					if ((local_kind == 1) | (local_kind == 6)
-							| (local_kind == 9) | (local_kind == 14)
-							| (local_kind == 19) | (local_kind == 23)) {
-						if (!p_st.and(env.justiceAt(p_i).not()).isZero()) {
-							BDD opt = next_op.and(x_mem[p_j][p_i][p_cy]);
-							if (!opt.isZero()) {
-								candidate = opt;
-							}
-						}
-					}
+                /* Create a new automaton state for our current state 
+                  (or use a matching one if it already exists) */
+                RawState new_state = new RawState(aut.size(), p_st, p_j);
+                int nidx = aut.indexOf(new_state);
+                if (nidx == -1) {
+                    aut.push(new_state);
+                } else {
+                    new_state = aut.elementAt(nidx);
+                }
 
-					// no successor was found yet.
-					assert ((local_kind != 0) & (local_kind != 4)
-							& (local_kind != 8) & (local_kind != 12)
-							& (local_kind != 16) & (local_kind != 20)) : "No successor was found";
+                /* Find Y index of current state */
+                // find minimal cy and an i
+                int p_cy = -1;
+                for (int i = 0; i < y_mem[p_j].length; i++) {
+                    if (!p_st.and(y_mem[p_j][i]).isZero()) {
+                        p_cy = i;
+                        break;
+                    }
+                }
+                assert p_cy >= 0 : "Couldn't find p_cy";
+                /* Find  X index of current state */
+                int p_i = -1;
+                for (int i = 0; i < env.justiceNum(); i++) {
+                    if (!p_st.and(x_mem[p_j][i][p_cy]).isZero()) {
+                        p_i = i;
+                        break;
+                    }
+                }
+                assert p_i >= 0 : "Couldn't find p_i";
 
-					local_kind--;
-				}
+                // computing the set of env possible successors.
+                Vector<BDD> succs = new Vector<BDD>();
+                BDD all_succs = env.succ(p_st);
+                for (BDDIterator all_states = all_succs.iterator(env
+                        .moduleUnprimeVars()); all_states.hasNext();) {
+                    BDD sin = (BDD) all_states.next();
+                    succs.add(sin);
+                }
 
-				// picking one candidate. In JDD satOne is not take
-				// env.unprimeVars().union(sys.unprimeVars()) into its
-				// considerations.
-				// BDD one_cand = candidate.satOne();
-				BDD one_cand = candidate.satOne(env.moduleUnprimeVars().union(
-						sys.moduleUnprimeVars()), false);
+                // For each env successor, find a strategy successor
+                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
+                        .hasNext();) {
+                    BDD primed_cur_succ = Env.prime(iter_succ.next());
+                    BDD next_op = Env
+                            .unprime(sys.trans().and(p_st).and(primed_cur_succ)
+                                    .exist(
+                                            env.moduleUnprimeVars().union(
+                                                    sys.moduleUnprimeVars())));
+                    BDD candidate = Env.FALSE();
+                    int jcand = p_j;
 
-				RawState gsucc = new RawState(aut.size(), one_cand, jcand);
-				int idx = aut.indexOf(gsucc); // the equals doesn't consider
+                    int local_kind = strategy_kind;
+                    while (candidate.isZero() & (local_kind >= 0)) {
+                        // a - first successor option in the strategy.
+                        // (rho_1 in Piterman; satisfy current goal and move to next goal)
+                        if ((local_kind == 3) | (local_kind == 7)
+                                | (local_kind == 10) | (local_kind == 13)
+                                | (local_kind == 18) | (local_kind == 21)) {
+                            int next_p_j = (p_j + 1) % sys.justiceNum();
+                            if (!p_st.and(sys.justiceAt(p_j)).isZero()) {
+                                BDD opt = next_op.and(z_mem[next_p_j]);
+                                if (!opt.isZero()) {
+                                    candidate = opt;
+                                    jcand = next_p_j;
+                                }
+                            }
+                        }
+                        // b - second successor option in the strategy.
+                        // (rho_2 in Piterman; move closer to current goal)
+                        if ((local_kind == 2) | (local_kind == 5)
+                                | (local_kind == 11) | (local_kind == 15)
+                                | (local_kind == 17) | (local_kind == 22)) {
+                            if (p_cy > 0) {
+                                int look_r = 0;
+                                // look for the farest r.
+                                while ((next_op.and(y_mem[p_j][look_r]).isZero())
+                                        & (look_r < p_cy)) {
+                                    look_r++;
+                                }
+                                
+                                BDD opt = next_op.and(y_mem[p_j][look_r]);
+                                if ((look_r != p_cy) && (!opt.isZero())) {
+                                    candidate = opt;
+                                }
+                            }
+                        }
+
+                        // c - third successor option in the strategy.
+                        // (rho_3 in Piterman; falsify environment :()
+                        if ((local_kind == 1) | (local_kind == 6)
+                                | (local_kind == 9) | (local_kind == 14)
+                                | (local_kind == 19) | (local_kind == 23)) {
+                            if (!p_st.and(env.justiceAt(p_i).not()).isZero()) {
+                                BDD opt = next_op.and(x_mem[p_j][p_i][p_cy]);
+                                if (!opt.isZero()) {
+                                    candidate = opt;
+                                }
+                            }
+                        }
+
+                        // no successor was found yet.
+                        assert ((local_kind != 0) & (local_kind != 4)
+                                & (local_kind != 8) & (local_kind != 12)
+                                & (local_kind != 16) & (local_kind != 20)) : "No successor was found";
+
+                        local_kind--;
+                    }
+
+                    // picking one candidate. In JDD satOne is not take
+                    // env.unprimeVars().union(sys.unprimeVars()) into its
+                    // considerations.
+                    // BDD one_cand = candidate.satOne();
+                    BDD one_cand = candidate.satOne(env.moduleUnprimeVars().union(
+                            sys.moduleUnprimeVars()), false);
+
+                    RawState gsucc = new RawState(aut.size(), one_cand, jcand);
+                    idx = aut.indexOf(gsucc); // the equals doesn't consider
                                               // the id number.
-				if (idx == -1) {
-					st_stack.push(one_cand);
-					j_stack.push(jcand);
-					aut.add(gsucc);
-					idx = aut.indexOf(gsucc);
-				}
-				new_state.add_succ(aut.elementAt(idx));
-			}
-		}
+                    if (idx == -1) {
+                        st_stack.push(one_cand);
+                        j_stack.push(jcand);
+                        aut.add(gsucc);
+                        idx = aut.indexOf(gsucc);
+                    }
+                    new_state.add_succ(aut.elementAt(idx));
+                }
+            }
+        }
 
         /* Remove stuttering */
         // TODO: Make this more efficient (and less ugly) if possible
         int num_removed = 0;
-
+         
         for (RawState state1 : aut) {
             int j1 = state1.get_rank();
             for (RawState state2 : state1.get_succ()) {
@@ -372,7 +400,8 @@ public class GROneGame {
                 num_removed++;
             }
         }
-        System.out.println("Removed " + num_removed + " stutter states.  P-p-p-poor guys :(");
+        
+        System.out.println("Removed " + num_removed + " stutter states.");
 
         /* Print output */
 
