@@ -61,7 +61,7 @@ def readFromFile(fileName):
     data = {'':{}}  # Initialize, so a section title is optional
 
     for line in f:
-        if line[0] == "#" or line.strip() == "": continue # Ignore commented line
+        if key != "Spec" and (line[0] == "#" or line.strip() == ""): continue # Ignore commented line
 
         m_sec = p_sec.match(line)
         m_head = p_head.match(line)
