@@ -69,7 +69,27 @@ class Project:
         print "  -> Looks like you want to run your experiment with %s. Good choice." % lab_data["Name"][0]
         
         return lab_data
-
+        
+    def loadRegionMapping(self, spec_data):
+        """
+        Takes the region mapping data and returns region mapping dictionary.
+        """
+        try:
+            mapping_data = spec_data['SPECIFICATION']['RegionMapping']
+        except IndexError, KeyError:
+            print "WARNING: Region mapping data undefined"        
+            return {'Null':['Null']}
+        if len(mapping_data) == 0:
+            print "WARNING: Region mapping data is empty"        
+            return {'Null':['Null']}
+        
+        regionMapping = {}
+        for line in mapping_data:
+            oldRegionName,newRegionList = line.split('=')
+            regionMapping[oldRegionName] = newRegionList.split(',')
+        return regionMapping
+        
+        
     def loadRobotFile(self, exp_cfg_data):
         """
         Takes an experiment config dictionary and returns a robot description dictionary.
@@ -102,7 +122,7 @@ class Project:
         
         return rdf_data
 
-    def loadRegionFile(self):
+    def loadRegionFile(self, decomposed=False):
         """
         Returns a Region File Interface object corresponding to the regions file referenced in the spec file
         """
@@ -111,6 +131,8 @@ class Project:
 
         try:
             regf_name = self.spec_data['SETTINGS']['RegionFile'][0]
+            if decomposed:
+                regf_name = regf_name.split(".")[0] + "_decomposed.regions"
         except IndexError, KeyError:
             print "WARNING: Region file undefined"        
             return
@@ -177,6 +199,7 @@ class Project:
         if exp_cfg_name is None:
             exp_cfg_name = self.spec_data['SETTINGS']['currentExperimentName'][0]
 
+        self.regionMapping = self.loadRegionMapping(self.spec_data)
         self.exp_cfg_data = self.getExperimentConfig(exp_cfg_name)
         self.lab_data = self.loadLabData(self.exp_cfg_data)
         self.robot_data = self.loadRobotFile(self.exp_cfg_data)
@@ -218,7 +241,7 @@ class Project:
     def getBackgroundImagePath(self):
         """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
         # TODO: Use Thumbnail property in regions file?
-        return os.path.join(self.project_root, self.rfi.thumb)
+        return self.rfi.thumb
         #return self.getFilenamePrefix() + "_simbg.png"
     
     def lookupHandlers(self):

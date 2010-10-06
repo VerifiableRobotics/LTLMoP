@@ -228,10 +228,10 @@ public class GROneGame {
                 // This initial state is already in the automaton
                 continue;
             }
-            /*if (a == 1) {
+            if (a == 1) {
                 break;
             }
-            a++;*/
+            a++;
             // Otherwise, we need to attach this initial state to the automaton
 
             st_stack.push(this_ini);
@@ -267,6 +267,7 @@ public class GROneGame {
                 /* Find  X index of current state */
                 int p_i = -1;
                 for (int i = 0; i < env.justiceNum(); i++) {
+			System.out.println(p_j + "," + i + "," + p_cy);
                     if (!p_st.and(x_mem[p_j][i][p_cy]).isZero()) {
                         p_i = i;
                         break;
@@ -376,7 +377,7 @@ public class GROneGame {
         /* Remove stuttering */
         // TODO: Make this more efficient (and less ugly) if possible
         int num_removed = 0;
-         
+        /* 
         for (RawState state1 : aut) {
             int j1 = state1.get_rank();
             for (RawState state2 : state1.get_succ()) {
@@ -400,6 +401,7 @@ public class GROneGame {
                 num_removed++;
             }
         }
+*/
         
         System.out.println("Removed " + num_removed + " stutter states.");
 

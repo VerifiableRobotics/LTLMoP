@@ -5,7 +5,7 @@
     specEditor.py - Specification Editor
     ====================================
     
-    A development environment for specifications written in structure English,
+    A development environment for specifications written in structured English,
     allowing for editing, compilation, and execution/simulation
 """
 
@@ -16,9 +16,11 @@ import wx, wx.richtext
 from regions import *
 from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import writeSpec
+from regionEditor import DrawableRegion
 import fileMethods
 import project
 import fsa
+import parseLP
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
@@ -637,6 +639,7 @@ class SpecEditorFrame(wx.Frame):
         self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER|wx.SP_LIVE_UPDATE)
         self.window_1_pane_2 = wx.Panel(self.window_1, -1)
         self.notebook_1 = wx.Notebook(self.window_1_pane_2, -1, style=0)
+        self.notebook_1_pane_3 = wx.Panel(self.notebook_1, -1)
         self.notebook_1_pane_2 = wx.Panel(self.notebook_1, -1)
         self.notebook_1_pane_1 = wx.Panel(self.notebook_1, -1)
         self.window_1_pane_1 = wx.Panel(self.window_1, -1)
@@ -697,6 +700,10 @@ class SpecEditorFrame(wx.Frame):
         self.button_custom_delete = wx.Button(self.panel_1, -1, "Delete")
         self.text_ctrl_log = wx.richtext.RichTextCtrl(self.notebook_1_pane_1, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.text_ctrl_LTL = wx.TextCtrl(self.notebook_1_pane_2, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
+        self.label_locphrases = wx.StaticText(self.notebook_1_pane_3, -1, "Active locative phrases:")
+        self.list_box_locphrases = wx.ListBox(self.notebook_1_pane_3, -1, choices=[], style=wx.LB_ALWAYS_SB)
+        self.checkbox_regionlabel = wx.CheckBox(self.notebook_1_pane_3, -1, "Show region names")
+        self.panel_locmap = wx.Panel(self.notebook_1_pane_3, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.FULL_REPAINT_ON_RESIZE)
 
         self.__set_properties()
         self.__do_layout()
@@ -727,7 +734,13 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onPropositionDblClick, self.list_box_customs)
         self.Bind(wx.EVT_BUTTON, self.onCustomNew, self.button_custom_new)
         self.Bind(wx.EVT_BUTTON, self.onCustomDelete, self.button_custom_delete)
+        self.Bind(wx.EVT_LISTBOX, self.onLocPhraseSelect, self.list_box_locphrases)
+        self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelToggle, self.checkbox_regionlabel)
         # end wxGlade
+
+        # Set up locative phrase map
+        self.panel_locmap.SetBackgroundColour(wx.WHITE)   
+        self.panel_locmap.Bind(wx.EVT_PAINT, self.drawLocMap)
 
         # Set up extra event bindings
         self.Bind(wx.EVT_CLOSE, self.doClose)
@@ -751,8 +764,9 @@ class SpecEditorFrame(wx.Frame):
         # Set default values
         self.setDefaults()
         self.proj = project.Project()
-
-
+        self.proj.regionMapping = {}
+        self.parser = None
+       
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
@@ -764,12 +778,15 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_customs.SetMinSize((123, 75))
         self.button_custom_delete.Enable(False)
         self.panel_1.SetScrollRate(10, 10)
+        self.checkbox_regionlabel.SetValue(1)
         # end wxGlade
 
     def __do_layout(self):
         # begin wxGlade: SpecEditorFrame.__do_layout
         sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_14 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_15 = wx.BoxSizer(wx.VERTICAL)
         sizer_9 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
@@ -800,8 +817,20 @@ class SpecEditorFrame(wx.Frame):
         self.notebook_1_pane_1.SetSizer(sizer_3)
         sizer_9.Add(self.text_ctrl_LTL, 1, wx.EXPAND, 0)
         self.notebook_1_pane_2.SetSizer(sizer_9)
+        sizer_14.Add((5, 20), 0, 0, 0)
+        sizer_15.Add((20, 20), 0, 0, 0)
+        sizer_15.Add(self.label_locphrases, 0, 0, 0)
+        sizer_15.Add(self.list_box_locphrases, 1, wx.EXPAND, 0)
+        sizer_15.Add((20, 20), 0, 0, 0)
+        sizer_15.Add(self.checkbox_regionlabel, 0, wx.EXPAND, 0)
+        sizer_15.Add((20, 20), 0, 0, 0)
+        sizer_14.Add(sizer_15, 1, wx.EXPAND, 0)
+        sizer_14.Add((5, 20), 0, 0, 0)
+        sizer_14.Add(self.panel_locmap, 2, wx.EXPAND, 0)
+        self.notebook_1_pane_3.SetSizer(sizer_14)
         self.notebook_1.AddPage(self.notebook_1_pane_1, "Compiler Log")
         self.notebook_1.AddPage(self.notebook_1_pane_2, "LTL Output")
+        self.notebook_1.AddPage(self.notebook_1_pane_3, "Workspace Decomposition")
         sizer_2.Add(self.notebook_1, 1, wx.EXPAND, 0)
         self.window_1_pane_2.SetSizer(sizer_2)
         self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 500)
@@ -814,6 +843,84 @@ class SpecEditorFrame(wx.Frame):
         # Make it so that the log window doesn't change height when the window is resized
         # NOTE: May not work on older versions of wxWidgets
         self.window_1.SetSashGravity(1.0)
+
+    def drawLocMap(self, event):
+        """ Respond to a request to redraw the contents of our drawing panel.
+        """
+
+        # Nothing to draw if there are no regions loaded yet
+        if self.parser is None or self.proj.regionMapping is None:
+            return
+
+        pdc = wx.PaintDC(self.panel_locmap)
+        try:
+            dc = wx.GCDC(pdc)
+        except:
+            dc = pdc
+        else:
+            self.panel_locmap.PrepareDC(pdc)
+
+        self.panel_locmap.PrepareDC(dc)
+        dc.BeginDrawing()
+
+        # TODO: draw background image?
+        
+        # Figure out scaling
+        maximumWidth = self.panel_locmap.GetSize().x
+        maximumHeight = self.panel_locmap.GetSize().y
+        windowAspect = 1.0*maximumHeight/maximumWidth
+
+        # TODO: this doesn't need to be recalculated each time
+        leftMargin = min([pt.x for region in self.parser.proj.rfi.regions for pt in region.getPoints()])
+        topMargin = min([pt.y for region in self.parser.proj.rfi.regions for pt in region.getPoints()])
+        rightExtent = max([pt.x for region in self.parser.proj.rfi.regions for pt in region.getPoints()])
+        downExtent = max([pt.y for region in self.parser.proj.rfi.regions for pt in region.getPoints()])
+
+        W = rightExtent + 2*leftMargin
+        H = downExtent + 2*topMargin
+
+        imgAspect = 1.0*H/W
+
+        if imgAspect >= windowAspect:
+            NewH = maximumHeight
+            mapScale = 1.0*NewH/H
+        else:
+            NewW = maximumWidth
+            mapScale = 1.0*NewW/W
+
+        self.drawRegions(dc, pdc, drawLabels=self.checkbox_regionlabel.GetValue(), scale=mapScale)
+
+        dc.EndDrawing()
+        
+    def drawRegions(self, dc, pdc, drawLabels=True, scale=1):
+        for i in range(len(self.parser.proj.rfi.regions)-1, -1, -1):
+            obj = self.parser.proj.rfi.regions[i]
+            doHighlight = (obj.name in self.parser.proj.regionMapping[self.list_box_locphrases.GetStringSelection()])
+
+            obj.draw(dc, pdc, False, scale, showAlignmentPoints=False, highlight=doHighlight)
+    
+            if drawLabels:
+                # Draw region labels
+                dc.SetTextForeground(wx.BLACK)
+                dc.SetBackgroundMode(wx.TRANSPARENT)
+                font = wx.Font(12, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.BOLD, False)
+                dc.SetFont(font)
+                
+                textWidth, textHeight = dc.GetTextExtent(obj.name)
+                
+                # TODO: Better text placement algorithm for concave polygons?
+                dc.SetBrush(wx.Brush(obj.color, wx.SOLID))
+                dc.SetPen(wx.Pen(obj.color, 1, wx.SOLID))
+                center = obj.getCenter()
+                if obj.name.lower() == "boundary":
+                    textX = scale*obj.position.x
+                    textY = scale*obj.position.y + scale*obj.size.height + textHeight/2
+                else:
+                    textX = scale*center.x - textWidth/2
+                    textY = scale*center.y - textHeight/2
+
+                dc.DrawRoundedRectangle(textX - 5, textY - 3, textWidth + 10, textHeight + 6, 3)
+                dc.DrawText(obj.name, textX, textY)
 
     def onPropositionDblClick(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -961,6 +1068,7 @@ class SpecEditorFrame(wx.Frame):
         if not self.rfi.readFile(fileName):
             wx.MessageBox("Cannot open region file %s" % (fileName), "Error",
                         style = wx.OK | wx.ICON_ERROR)
+            self.rfi = None
             return
 
         # Update the path information
@@ -985,6 +1093,7 @@ class SpecEditorFrame(wx.Frame):
             self.mapDialog.Destroy()
         self.mapDialog = MapDialog(frame_1, bitmap, frame_1)
         frame_1.button_map.Enable(True)
+
 
     def onMenuNew(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -1069,9 +1178,18 @@ class SpecEditorFrame(wx.Frame):
             if self.list_box_sensors.IsChecked(i):
                 sensorList.append(sensor)
                 
-
         data = {'SPECIFICATION':{}, 'SETTINGS':{}}
-        data['SPECIFICATION'] = {'Spec': str(self.text_ctrl_spec.GetValue())}
+        
+        regionMappingData = ''
+        if len(self.proj.regionMapping)>0:
+            mappingData = ''
+            for nameOfRegion,regionList in self.proj.regionMapping.iteritems():
+                mappingData = '='.join([nameOfRegion,','.join(regionList)])
+                regionMappingData = '\n'.join([regionMappingData,mappingData])
+        else:
+            regionMappingData='Null=Null'
+        
+        data['SPECIFICATION'] = {'Spec': str(self.text_ctrl_spec.GetValue()),'RegionMapping': regionMappingData}
         data['SETTINGS'] = {"RegionFile": self.projectFiles["RegionFile"],
                             "Sensors": self.dumpListBox(self.list_box_sensors),
                             "Actions": self.dumpListBox(self.list_box_actions),
@@ -1317,7 +1435,48 @@ class SpecEditorFrame(wx.Frame):
 
         sys.stdout = redir
         sys.stderr = redir
+        
+        ##########################
+        # Create new region File #
+        ##########################
+        
+        self.appendLog("Parsing locative prepositions...\n", "BLUE")
+        wx.Yield()
+        self.saveFile(self.fileName)
+        self.parser = parseLP.parseLP()
+        self.parser.main(self.fileName)
+        self.proj.regionMapping = self.parser.proj.regionMapping
+        self.saveFile(self.fileName)
+        
+        # Update workspace decomposition listbox
+        self.list_box_locphrases.Set(self.proj.regionMapping.keys())
+        self.list_box_locphrases.Select(0)
+        
+        # Convert from Regions to DrawableRegions
+        for i, region in enumerate(self.parser.proj.rfi.regions):
+            obj = DrawableRegion(region.type)
+            obj.setData(region.getData())
+            self.parser.proj.rfi.regions[i] = obj
+            del region
+        
+        # update the rfi for new regions
+        rfi = self.parser.proj.rfi
+        
+        # substitute the regions name in specs
+        text = self.text_ctrl_spec.GetValue()
+        for m in re.finditer(r'near (?P<rA>\w+)', text):
+            text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(self.parser.newPolysMap['near$'+m.group('rA')+'$'+str(50)])+")", text)
+        for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
+            text=re.sub(r'within ' + m.group('dist')+' (from|of) '+ m.group('rA'), "("+' or '.join(self.parser.newPolysMap['near$'+m.group('rA')+'$'+m.group('dist')])+")", text)
+        for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
+            text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(self.parser.newPolysMap['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"])+")", text)
+        for rname in self.parser.oldPolys.keys():
+            text=re.sub(rname, "("+' or '.join(self.parser.newPolysMap[rname])+")", text)
 
+        print "===== New Specs ====="
+        print
+        print text
+        print "====================="
         ###################
         # Create SMV File #
         ###################
@@ -1325,7 +1484,7 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Creating SMV file...\n", "BLUE")
         wx.Yield()
 
-        numRegions = len(self.rfi.regions)
+        numRegions = len(rfi.regions)
 
         sensorList = []
         for i, sensor in enumerate(self.list_box_sensors.GetItems()):
@@ -1348,12 +1507,11 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Creating LTL file...\n", "BLUE")
         wx.Yield()
-        text = self.text_ctrl_spec.GetValue()
-        regionList = [x.name for x in self.rfi.regions]
+        regionList = [x.name for x in rfi.regions]
 
         spec = writeSpec(text, sensorList, regionList, robotPropList)
         # TODO: Catch errors here
-        adjData = self.rfi.transitions
+        adjData = rfi.transitions
 
         createLTLfile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
         if os.path.exists(fileNamePrefix+".ltl"):
@@ -1539,6 +1697,14 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuAbout(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         print "Event handler `onMenuAbout' not implemented"
+        event.Skip()
+
+    def onRegionLabelToggle(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        self.panel_locmap.Refresh()
+        event.Skip()
+
+    def onLocPhraseSelect(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        self.panel_locmap.Refresh()
         event.Skip()
 
 # end of class SpecEditorFrame

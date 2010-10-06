@@ -354,6 +354,9 @@ class DrawingFrame(wx.Frame):
             self._moveObjects(1, 0)
         elif event.GetKeyCode() == wx.WXK_BACK:
             self.doDelete()
+        elif event.GetKeyCode() == wx.WXK_SPACE:
+            self.testNear()
+            #self.testBetween()
         elif event.GetKeyCode() == wx.WXK_ESCAPE:
             self.mouseMode = mouse_NONE
             self.sb.SetStatusText("", 1)
@@ -362,7 +365,20 @@ class DrawingFrame(wx.Frame):
             self.drawPanel.Refresh()
         else:
             event.Skip()
+    
+    def testNear(self):
+        newReg = self.selection[0].findRegionNear(20, mode='overEstimate')
+        obj = DrawableRegion(newReg.type)
+        obj.setData(newReg.getData())
+        self.rfi.regions.append(obj)
+        self.drawPanel.Refresh()
 
+    def testBetween(self):
+        newReg = findRegionBetween(self.selection[0], self.selection[1])
+        obj = DrawableRegion(newReg.type)
+        obj.setData(newReg.getData())
+        self.rfi.regions.append(obj)
+        self.drawPanel.Refresh()
 
     def onMouseEvent(self, event):
         """ Respond to the user clicking on our main drawing panel.
@@ -940,10 +956,14 @@ class DrawingFrame(wx.Frame):
     def drawRegions(self, dc, pdc, drawLabels=True, drawAdjacencies=True):
         for i in range(len(self.rfi.regions)-1, -1, -1):
             obj = self.rfi.regions[i]
+
+            # If this region is concave, indicate this with hatching
+            doHighlight = (obj.name.lower() != "boundary" and obj.getDirection() == dir_CONCAVE)
+
             if obj in self.selection:
-                obj.draw(dc, pdc, True)
+                obj.draw(dc, pdc, True, highlight=doHighlight)
             else:
-                obj.draw(dc, pdc, False)
+                obj.draw(dc, pdc, False, highlight=doHighlight)
     
             if drawLabels:
                 # Draw region labels
@@ -958,8 +978,12 @@ class DrawingFrame(wx.Frame):
                 dc.SetBrush(wx.Brush(obj.color, wx.SOLID))
                 dc.SetPen(wx.Pen(obj.color, 1, wx.SOLID))
                 center = obj.getCenter()
-                textX = center.x - textWidth/2
-                textY = center.y - textHeight/2
+                if obj.name.lower() == "boundary":
+                    textX = obj.position.x
+                    textY = obj.position.y + obj.size.height + textHeight/2
+                else:
+                    textX = center.x - textWidth/2
+                    textY = center.y - textHeight/2
                 dc.DrawRoundedRectangle(textX - 5, textY - 3, textWidth + 10, textHeight + 6, 3)
                 dc.DrawText(obj.name, textX, textY)
 
@@ -1082,45 +1106,10 @@ class DrawingFrame(wx.Frame):
         
     def recalcAdjacency(self):
         """
-        Calculate the region adjacency matrix and a list of shared faces
+        Call the RegionFileInterface's recalcAdjacency() method to figure out where to draw dotted transition lines
         """
 
-        # Calculate adjoining faces:
-        self.rfi.transitions = [[[] for j in range(len(self.rfi.regions))] for i in range(len(self.rfi.regions))]
-
-        self.transitionFaces = {} # This is just a list of faces to draw dotted lines on
-
-        for obj in self.rfi.regions:
-            for face in obj.getFaces():
-                if face not in self.transitionFaces: self.transitionFaces[face] = []
-                ignore = False
-                for other_obj in self.transitionFaces[face]:
-                    # Prevent detection of adjoining faces when Duplicate 
-                    # command creates object on top of itself
-                    if other_obj.position == obj.position and \
-                       [x for x in other_obj.getPoints()] == [x for x in obj.getPoints()]:
-                        ignore = True
-    
-                if not ignore:
-                    self.transitionFaces[face].append(obj)
-
-        toDelete = []
-        for face, objarray in self.transitionFaces.iteritems():
-            if len(objarray) > 1:
-                # If this face is shared by multiple regions
-                for obj in objarray:
-                    key = self.rfi.regions.index(obj)
-                    for other_obj in objarray:
-                        if other_obj == obj: continue
-                        key2 = self.rfi.regions.index(other_obj)
-                        self.rfi.transitions[key][key2].append(face)
-            else:
-                # Otherwise mark for deletion (we can't delete it in the middle of iteration)
-                toDelete.append(face)
-
-        # Delete all those dudes
-        for unused_face in toDelete:
-            del self.transitionFaces[unused_face]                    
+        self.transitionFaces = self.rfi.recalcAdjacency() # This is just a list of faces to draw dotted lines on
 
         #self.drawPanel.Refresh()
 
@@ -1320,12 +1309,19 @@ class DrawingFrame(wx.Frame):
         editor = EditRegionDialog(self, "Edit Region Name")
         editor.objectToDialog(obj)
         editor.Centre()
-        if editor.ShowModal() == wx.ID_CANCEL:
-            editor.Destroy()
-            return
+
+        while 1:
+            if editor.ShowModal() == wx.ID_CANCEL:
+                editor.Destroy()
+                return
+
+            if editor.textCtrl.GetValue() not in [r.name for r in self.rfi.regions]:
+                break
+
+            wx.MessageBox("Region with name \"%s\" already exists." % (editor.textCtrl.GetValue()), "Error", 
+                           style = wx.OK | wx.ICON_ERROR)
 
         self._saveUndoInfo()
-
         editor.dialogToObject(obj)
         editor.Destroy()
 
@@ -1903,45 +1899,53 @@ class DrawableRegion(Region):
     # == Object Drawing Methods ==
     # ============================
 
-    def draw(self, dc, pdc, selected):
+    def draw(self, dc, pdc, selected, scale=1.0, showAlignmentPoints=True, highlight=False):
         """ Draw this Region into our window.
 
             'dc' is the device context to use for drawing.  If 'selected' is
             True, the object is currently selected and should be drawn as such.
         """
-        dc.SetPen(wx.Pen(self.color, 1, wx.SOLID))
-        dc.SetBrush(wx.Brush(wx.Colour(self.color.Red(), self.color.Green(),
-                     self.color.Blue(), 128), wx.SOLID))
 
-        self._privateDraw(dc, self.position, selected)
+        if self.name.lower() == "boundary":
+            dc.SetPen(wx.Pen(self.color, 3, wx.SOLID))
+            dc.SetBrush(wx.Brush(wx.Colour(self.color.Red(), self.color.Green(),
+                         self.color.Blue(), 0), wx.TRANSPARENT))
+        else:
+            dc.SetPen(wx.Pen(self.color, 1, wx.SOLID))
+            dc.SetBrush(wx.Brush(wx.Colour(self.color.Red(), self.color.Green(),
+                         self.color.Blue(), 128), wx.SOLID))
 
-        # If this region is concave, indicate this with hatching
-        if self.getDirection() == dir_CONCAVE:
-            pdc.SetPen(wx.Pen(self.color, 1, wx.SOLID))
-            pdc.SetBrush(wx.Brush(wx.RED, wx.BDIAGONAL_HATCH))
+        self._privateDraw(dc, self.position, selected, scale, showAlignmentPoints)
 
-            self._privateDraw(pdc, self.position, selected)
+        if highlight:
+            pdc.SetPen(wx.Pen(wx.BLACK, 3, wx.SOLID))
+            #pdc.SetBrush(wx.Brush(wx.RED, wx.BDIAGONAL_HATCH))
+            pdc.SetBrush(wx.Brush(wx.BLACK, wx.CROSSDIAG_HATCH))
+
+            self._privateDraw(pdc, self.position, selected, scale, showAlignmentPoints)
 
 
     # =====================
     # == Private Methods ==
     # =====================
 
-    def _privateDraw(self, dc, position, selected):
+    def _privateDraw(self, dc, position, selected, scale, showAlignmentPoints):
         """ Private routine to draw this Region.
 
             'dc' is the device context to use for drawing, while 'position' is
             the position in which to draw the object.  If 'selected' is True,
-            the object is drawn with selection handles.  This private drawing
+            the object is drawn with selection handles.  'scale' is a fixed 
+            scaling ratio to use when drawing.  This private drawing
             routine assumes that the pen and brush have already been set by the
             caller.
         """
 
         if self.type == reg_POLY:
-            dc.DrawPolygon(self.pointArray + [self.pointArray[0]], position.x, position.y)
+            scaledPointArray = map(lambda pt: wx.Point(scale*pt.x, scale*pt.y), self.pointArray)
+            dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]], scale*position.x, scale*position.y)
         elif self.type == reg_RECT:
-            dc.DrawRectangle(position.x, position.y,
-                             self.size.width, self.size.height)
+            dc.DrawRectangle(scale*position.x, scale*position.y,
+                             scale*self.size.width, scale*self.size.height)
                 
         for i, pt in enumerate(self.getPoints()):
             if selected:
@@ -1949,7 +1953,7 @@ class DrawableRegion(Region):
                 dc.SetPen(wx.TRANSPARENT_PEN)
                 dc.SetBrush(wx.BLACK_BRUSH)
                 self._drawSelHandle(dc, pt.x, pt.y)
-            if self.alignmentPoints[i]:
+            if showAlignmentPoints and self.alignmentPoints[i]:
                 # Highlight vertices to be used for calibration
                 dc.SetBrush(wx.Brush(wx.RED, wx.SOLID))
                 dc.SetPen(wx.Pen(wx.BLACK, 1, wx.SOLID))
@@ -1961,7 +1965,7 @@ class DrawableRegion(Region):
                 font = wx.Font(12, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.BOLD, False)
                 dc.SetFont(font)
                 
-		labelStr = self.name + "_P" + str(i);
+                labelStr = self.name + "_P" + str(i);
                 textWidth, textHeight = dc.GetTextExtent(labelStr)
                 
                 textX = pt.x + 8 # - textWidth/2

@@ -126,6 +126,8 @@ def main(argv):
 
     proj = project.Project()
     proj.loadProject(spec_file)
+    proj.rfiold = proj.rfi
+    proj.rfi = proj.loadRegionFile(decomposed=True)
 
     ##########################
     # Initialize each module #
@@ -199,10 +201,13 @@ def main(argv):
 
     if 'InitialRegion' in proj.exp_cfg_data: 
         init_region = int(proj.exp_cfg_data['InitialRegion'][0])
+        init_region = proj.rfi.indexOfRegionWithName(proj.regionMapping[proj.rfiold.regions[init_region].name][0])
     else:
         print "WARNING: Initial region auto-detection not yet implemented" # TODO: determine initial region
         init_region = 0
 
+    print proj.rfi.regions[init_region].name
+    
     ### Have the FSA find a valid initial state
 
     # Figure out our initially true outputs

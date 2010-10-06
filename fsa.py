@@ -111,7 +111,7 @@ class Automaton:
                 # The state of this output proposition has changed!
 
                 print "Output proposition \"%s\" is now %s!" % (key, str(new_val))
-
+                
                 # Run any actuator handlers if appropriate
                 if key in self.actuators:
                     self.motion_handler.gotoRegion(self.current_region, self.current_region)  # Stop, in case actuation takes time
@@ -397,7 +397,6 @@ class Automaton:
 
         # Move one step towards the next region (or stay in the same region)
         # TODO: Use the "last" controllers?
-        
         arrived = self.motion_handler.gotoRegion(self.current_region, self.next_region)
 
         if arrived:
