@@ -1,0 +1,2806 @@
+(main.e.bear=0 and (main.e.fruit=0 and (main.s.bit0=1 and (main.s.bit1=0 and (main.s.bit2=1 and (main.s.bit3=1 and (main.s.bit4=0 and (main.s.bit5=1 and (main.s.pick_up=0 and (main.s.drop=0 and (main.s.play_dead=0 and (main.s.sing=0 and main.s.carrying_item=0))))))))))))
+0,0,9
+0,0,8
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+3,0,1
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,0
+0,0,0
+1,0,11
+1,0,10
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+0,0,9
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+0,0,10
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,7
+1,0,1
+1,0,12
+0,0,1
+2,0,1
+2,0,6
+1,0,1
+1,0,11
+0,0,1
+2,0,1
+2,0,5
+2,0,4
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,2
+3,0,2
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,1
+0,0,1
+3,0,0
+3,0,0
+2,0,1
+2,0,3
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+3,0,4
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,4
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,3
+3,0,3
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,1
+1,0,8
+1,0,7
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,1
+0,0,5
+0,0,4
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,5
+3,0,5
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,0
+2,0,0
+1,0,1
+1,0,8
+0,0,1
+0,0,3
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+3,0,5
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,5
+2,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,6
+3,0,6
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+0,0,0
+3,0,0
+3,0,6
+3,0,6
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+0,0,4
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+0,0,5
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,3
+1,0,1
+0,0,1
+2,0,1
+2,0,3
+1,0,1
+1,0,7
+0,0,1
+2,0,1
+2,0,2
+1,0,1
+1,0,7
+1,0,6
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+3,0,7
+3,0,6
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,6
+3,0,7
+2,0,0
+1,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+2,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,9
+3,0,9
+2,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,8
+3,0,8
+2,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,7
+3,0,7
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,1
+3,0,0
+3,0,0
+0,0,3
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,3
+2,0,2
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,1
+1,0,7
+0,0,1
+0,0,4
+3,0,0
+3,0,0
+2,0,1
+1,0,1
+1,0,6
+1,0,5
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,1
+3,0,0
+3,0,0
+0,0,3
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,5
+1,0,1
+0,0,1
+2,0,1
+2,0,4
+1,0,1
+1,0,4
+1,0,3
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,10
+3,0,10
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,1
+0,0,3
+0,0,2
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,8
+3,0,8
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+0,0,0
+3,0,0
+3,0,9
+3,0,9
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+0,0,2
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,4
+1,0,1
+0,0,1
+2,0,1
+2,0,5
+1,0,1
+1,0,4
+0,0,1
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,8
+3,0,8
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+1,0,5
+0,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,4
+1,0,1
+3,0,0
+3,0,0
+2,0,1
+2,0,6
+1,0,1
+1,0,2
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,10
+3,0,9
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+2,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,8
+3,0,7
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+2,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,7
+3,0,7
+2,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,6
+3,0,6
+3,0,7
+3,0,8
+3,0,9
+3,0,10
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,1
+0,0,4
+3,0,0
+3,0,0
+2,0,1
+2,0,7
+1,0,1
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+3,0,10
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,9
+3,0,0
+0,0,0
+1,0,0
+2,0,0
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,9
+3,0,10
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,10
+3,0,10
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,8
+2,0,7
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,1
+1,0,2
+0,0,1
+0,0,6
+0,0,5
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+1,0,1
+1,0,2
+0,0,1
+0,0,4
+0,0,0
+1,0,0
+2,0,0
+3,0,0
+0,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,11
+3,0,11
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,7
+1,0,1
+1,0,3
+0,0,1
+3,0,0
+3,0,0
+0,0,6
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+1,0,1
+1,0,3
+0,0,1
+0,0,5
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,7
+1,0,1
+1,0,3
+0,0,1
+2,0,1
+2,0,6
+2,0,5
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+1,0,1
+1,0,4
+0,0,1
+0,0,7
+0,0,6
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+0,0,7
+0,0,0
+0,0,0
+1,0,0
+1,0,0
+2,0,0
+2,0,0
+3,0,0
+3,0,0
+3,0,0
+3,0,0
+2,0,1
+2,0,5
+1,0,1
+1,0,6
+0,0,1
+2,0,1
+1,0,1
+1,0,5
+0,0,1
+3,0,0
+3,0,0
+2,0,1
+2,0,4
+1,0,0
+0,0,1
+0,0,5
+3,0,0
+3,0,0
+2,0,1
+2,0,8
+0,0,1
+0,0,2
+2,0,1
+2,0,3
+1,0,1
+1,0,5
+0,0,1
+0,0,2
+3,0,0
+3,0,0
+2,0,1
+1,0,1
+1,0,6
+0,0,1
+0,0,6
+3,0,0
+3,0,0
+2,0,1
+2,0,2
+1,0,1
+1,0,9
+3,0,0
+3,0,1
+2,0,0
+1,0,0
+0,0,0
+0,0,0
+0,0,0
+3,0,0
+3,0,1
+3,0,1
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+0,0,0
+3,0,0
+3,0,1
+3,0,1
+2,0,0
+2,0,0
+2,0,0
+1,0,0
+1,0,0
+1,0,0
+0,0,0
+0,0,1
+0,0,7
+Removed 0 stutter states.
+
+
+State 0 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 1
+State 1 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 2, 3, 4, 5
+State 2 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 174, 128, 129, 130
+State 3 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 18, 19, 20, 21
+State 4 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 58, 60, 61, 62
+State 5 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 6, 7, 8, 9
+State 6 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 38, 39, 12, 13
+State 7 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 38, 39, 12, 13
+State 8 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 10, 11, 12, 13
+State 9 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 10, 11, 12, 13
+State 10 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 28, 29, 16, 17
+State 11 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 28, 29, 16, 17
+State 12 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 14, 15, 16, 17
+State 13 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 14, 15, 16, 17
+State 14 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 42, 43, 16, 17
+State 15 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 42, 43, 16, 17
+State 16 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 18, 19, 20, 21
+State 17 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 18, 19, 20, 21
+State 18 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 22, 23, 8, 9
+State 19 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 22, 23, 8, 9
+State 20 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 6, 7, 8, 9
+State 21 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 6, 7, 8, 9
+State 22 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 24, 25, 26, 27
+State 23 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 24, 25, 26, 27
+State 24 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 40, 41, 44, 45
+State 25 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 40, 41, 44, 45
+State 26 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 28, 29, 30, 31
+State 27 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 28, 29, 30, 31
+State 28 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 42, 43, 30, 31
+State 29 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 42, 43, 30, 31
+State 30 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 32, 33, 34, 35
+State 31 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 32, 33, 34, 35
+State 32 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 50, 51, 36, 37
+State 33 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 50, 51, 36, 37
+State 34 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 22, 23, 36, 37
+State 35 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 22, 23, 36, 37
+State 36 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 38, 39, 26, 27
+State 37 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 38, 39, 26, 27
+State 38 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 40, 41, 30, 31
+State 39 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 40, 41, 30, 31
+State 40 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 42, 43, 44, 45
+State 41 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 42, 43, 44, 45
+State 42 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 56
+State 43 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 56
+State 44 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 46, 47, 48, 49
+State 45 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 46, 47, 48, 49
+State 46 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 50, 51, 52, 53
+State 47 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 50, 51, 52, 53
+State 48 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 50, 51, 52, 53
+State 49 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 50, 51, 52, 53
+State 50 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 24, 25, 54, 55
+State 51 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 24, 25, 54, 55
+State 52 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 24, 25, 54, 55
+State 53 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 24, 25, 54, 55
+State 54 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 40, 41, 44, 45
+State 55 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 40, 41, 44, 45
+State 56 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:1, play_dead:0, sing:0, carrying_item:1>
+	With successors : 57
+State 57 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 58
+State 58 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 59, 60, 61, 62
+State 59 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 178, 131, 132, 133
+State 60 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 6, 7, 8, 9
+State 61 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 63, 64, 65, 66
+State 62 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 10, 11, 12, 13
+State 63 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 103, 64, 65, 66
+State 64 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 10, 11, 12, 13
+State 65 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 67, 68, 69, 70
+State 66 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 14, 15, 16, 17
+State 67 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 71, 3, 4, 5
+State 68 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 18, 19, 20, 21
+State 69 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 1, 3, 4, 5
+State 70 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 18, 19, 20, 21
+State 71 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 1, 72, 73, 74
+State 72 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 32, 33, 34, 35
+State 73 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 75, 76, 77, 78
+State 74 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 22, 23, 36, 37
+State 75 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 58, 76, 77, 78
+State 76 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 22, 23, 36, 37
+State 77 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 79, 80, 81, 82
+State 78 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 38, 39, 26, 27
+State 79 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 63, 80, 81, 82
+State 80 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 38, 39, 26, 27
+State 81 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 83, 84, 85, 86
+State 82 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 28, 29, 30, 31
+State 83 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 87, 72, 73, 74
+State 84 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 32, 33, 34, 35
+State 85 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 71, 72, 73, 74
+State 86 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 32, 33, 34, 35
+State 87 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 71, 88, 89, 90
+State 88 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 46, 47, 48, 49
+State 89 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 91, 92, 93, 94
+State 90 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 50, 51, 52, 53
+State 91 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 75, 92, 93, 94
+State 92 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 50, 51, 52, 53
+State 93 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 95, 96, 97, 98
+State 94 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 24, 25, 54, 55
+State 95 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 79, 96, 97, 98
+State 96 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 24, 25, 54, 55
+State 97 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 99, 100, 101, 102
+State 98 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 40, 41, 44, 45
+State 99 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 87, 88, 89, 90
+State 100 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 46, 47, 48, 49
+State 101 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 87, 88, 89, 90
+State 102 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 46, 47, 48, 49
+State 103 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 104, 105, 106, 107
+State 104 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 134, 135, 136, 137
+State 105 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 120, 121, 122, 123
+State 106 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 124, 125, 126, 127
+State 107 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 108, 109, 110, 111
+State 108 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 14, 15, 110, 111
+State 109 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 14, 15, 110, 111
+State 110 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 112, 113, 114, 115
+State 111 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 112, 113, 114, 115
+State 112 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 116, 117, 118, 119
+State 113 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 116, 117, 118, 119
+State 114 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 116, 117, 118, 119
+State 115 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 116, 117, 118, 119
+State 116 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 120, 121, 122, 123
+State 117 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 120, 121, 122, 123
+State 118 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 120, 121, 122, 123
+State 119 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 120, 121, 122, 123
+State 120 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 108, 109, 110, 111
+State 121 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 108, 109, 110, 111
+State 122 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 108, 109, 110, 111
+State 123 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 108, 109, 110, 111
+State 124 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 2, 128, 129, 130
+State 125 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 112, 113, 114, 115
+State 126 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 2, 128, 129, 130
+State 127 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 112, 113, 114, 115
+State 128 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 112, 113, 114, 115
+State 129 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 59, 131, 132, 133
+State 130 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 116, 117, 118, 119
+State 131 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 116, 117, 118, 119
+State 132 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 103, 105, 106, 107
+State 133 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 120, 121, 122, 123
+State 134 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:0>
+	With successors : 223, 187, 188, 189
+State 135 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 150, 151, 152, 153
+State 136 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 170, 171, 172, 173
+State 137 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 138, 139, 140, 141
+State 138 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 108, 109, 140, 141
+State 139 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 108, 109, 140, 141
+State 140 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 142, 143, 144, 145
+State 141 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 142, 143, 144, 145
+State 142 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 162, 163, 148, 149
+State 143 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 162, 163, 148, 149
+State 144 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 146, 147, 148, 149
+State 145 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 146, 147, 148, 149
+State 146 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 166, 167, 152, 153
+State 147 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 166, 167, 152, 153
+State 148 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 150, 151, 152, 153
+State 149 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 150, 151, 152, 153
+State 150 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 140, 141
+State 151 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 140, 141
+State 152 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 138, 139, 140, 141
+State 153 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 138, 139, 140, 141
+State 154 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:1>
+	With successors : 138, 139, 156, 157
+State 155 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:1>
+	With successors : 138, 139, 156, 157
+State 156 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:1>
+	With successors : 158, 159, 160, 161
+State 157 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:1>
+	With successors : 158, 159, 160, 161
+State 158 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:1>
+	With successors : 162, 163, 164, 165
+State 159 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:1>
+	With successors : 162, 163, 164, 165
+State 160 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:1>
+	With successors : 162, 163, 164, 165
+State 161 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:1>
+	With successors : 162, 163, 164, 165
+State 162 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:1>
+	With successors : 166, 167, 168, 169
+State 163 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:1>
+	With successors : 166, 167, 168, 169
+State 164 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:1>
+	With successors : 166, 167, 168, 169
+State 165 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:1>
+	With successors : 166, 167, 168, 169
+State 166 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:1>
+	With successors : 154, 155, 156, 157
+State 167 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:1>
+	With successors : 154, 155, 156, 157
+State 168 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:1>
+	With successors : 154, 155, 156, 157
+State 169 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:1>
+	With successors : 154, 155, 156, 157
+State 170 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 194, 175, 176, 177
+State 171 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 142, 143, 144, 145
+State 172 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 174, 175, 176, 177
+State 173 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 142, 143, 144, 145
+State 174 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 194, 175, 176, 177
+State 175 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 142, 143, 144, 145
+State 176 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 178, 179, 180, 181
+State 177 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 146, 147, 148, 149
+State 178 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 182, 179, 180, 181
+State 179 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 146, 147, 148, 149
+State 180 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 104, 135, 136, 137
+State 181 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 150, 151, 152, 153
+State 182 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:0>
+	With successors : 183, 184, 185, 186
+State 183 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 906, 315, 316, 317
+State 184 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:1, carrying_item:0>
+	With successors : 162, 163, 164, 165
+State 185 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:0>
+	With successors : 134, 187, 188, 189
+State 186 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:1, carrying_item:0>
+	With successors : 166, 167, 168, 169
+State 187 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:1, carrying_item:0>
+	With successors : 166, 167, 168, 169
+State 188 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:0>
+	With successors : 190, 191, 192, 193
+State 189 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:1, carrying_item:0>
+	With successors : 154, 155, 156, 157
+State 190 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:0>
+	With successors : 194, 195, 196, 197
+State 191 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:1, carrying_item:0>
+	With successors : 158, 159, 160, 161
+State 192 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:0>
+	With successors : 194, 195, 196, 197
+State 193 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:1, carrying_item:0>
+	With successors : 158, 159, 160, 161
+State 194 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:1, carrying_item:0>
+	With successors : 198, 195, 196, 197
+State 195 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:1, carrying_item:0>
+	With successors : 158, 159, 160, 161
+State 196 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:1, carrying_item:0>
+	With successors : 182, 184, 185, 186
+State 197 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:1, carrying_item:0>
+	With successors : 162, 163, 164, 165
+State 198 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 199, 200, 201, 202
+State 199 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 231, 232, 233, 234
+State 200 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 215, 216, 217, 218
+State 201 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 219, 220, 221, 222
+State 202 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 203, 204, 205, 206
+State 203 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 166, 167, 209, 210
+State 204 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 166, 167, 209, 210
+State 205 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 207, 208, 209, 210
+State 206 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 207, 208, 209, 210
+State 207 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 213, 214
+State 208 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 213, 214
+State 209 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 211, 212, 213, 214
+State 210 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 211, 212, 213, 214
+State 211 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 213, 214
+State 212 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 213, 214
+State 213 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 215, 216, 217, 218
+State 214 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 215, 216, 217, 218
+State 215 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 162, 163, 205, 206
+State 216 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 162, 163, 205, 206
+State 217 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 203, 204, 205, 206
+State 218 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 203, 204, 205, 206
+State 219 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 182, 220, 221, 222
+State 220 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 203, 204, 205, 206
+State 221 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 223, 224, 225, 226
+State 222 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 207, 208, 209, 210
+State 223 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 190, 228, 229, 230
+State 224 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 211, 212, 213, 214
+State 225 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 227, 228, 229, 230
+State 226 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 211, 212, 213, 214
+State 227 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 194, 200, 201, 202
+State 228 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 215, 216, 217, 218
+State 229 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 198, 200, 201, 202
+State 230 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 215, 216, 217, 218
+State 231 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 520, 419, 420, 421
+State 232 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 247, 248, 249, 250
+State 233 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 283, 284, 285, 286
+State 234 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 235, 236, 237, 238
+State 235 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 267, 268, 241, 242
+State 236 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 267, 268, 241, 242
+State 237 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 239, 240, 241, 242
+State 238 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 239, 240, 241, 242
+State 239 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 257, 258, 245, 246
+State 240 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 257, 258, 245, 246
+State 241 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 243, 244, 245, 246
+State 242 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 243, 244, 245, 246
+State 243 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 211, 212, 245, 246
+State 244 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 211, 212, 245, 246
+State 245 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 247, 248, 249, 250
+State 246 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 247, 248, 249, 250
+State 247 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 251, 252, 237, 238
+State 248 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 251, 252, 237, 238
+State 249 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 235, 236, 237, 238
+State 250 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 235, 236, 237, 238
+State 251 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 253, 254, 255, 256
+State 252 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 253, 254, 255, 256
+State 253 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 271, 272
+State 254 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 271, 272
+State 255 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 257, 258, 259, 260
+State 256 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 257, 258, 259, 260
+State 257 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 269, 270, 259, 260
+State 258 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 269, 270, 259, 260
+State 259 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 261, 262, 263, 264
+State 260 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 261, 262, 263, 264
+State 261 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 277, 278, 265, 266
+State 262 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 277, 278, 265, 266
+State 263 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 251, 252, 265, 266
+State 264 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 251, 252, 265, 266
+State 265 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 267, 268, 255, 256
+State 266 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 267, 268, 255, 256
+State 267 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 269, 270, 259, 260
+State 268 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 269, 270, 259, 260
+State 269 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 271, 272
+State 270 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 154, 155, 271, 272
+State 271 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 273, 274, 275, 276
+State 272 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 273, 274, 275, 276
+State 273 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 162, 163, 279, 280
+State 274 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 162, 163, 279, 280
+State 275 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 277, 278, 279, 280
+State 276 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 277, 278, 279, 280
+State 277 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 166, 167, 281, 282
+State 278 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 166, 167, 281, 282
+State 279 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 253, 254, 281, 282
+State 280 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 253, 254, 281, 282
+State 281 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 269, 270, 271, 272
+State 282 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 269, 270, 271, 272
+State 283 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 326, 284, 285, 286
+State 284 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 235, 236, 237, 238
+State 285 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 287, 288, 289, 290
+State 286 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 239, 240, 241, 242
+State 287 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 223, 288, 289, 290
+State 288 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 239, 240, 241, 242
+State 289 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 291, 292, 293, 294
+State 290 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 243, 244, 245, 246
+State 291 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 295, 232, 233, 234
+State 292 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 247, 248, 249, 250
+State 293 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 199, 232, 233, 234
+State 294 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 247, 248, 249, 250
+State 295 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 199, 296, 297, 298
+State 296 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 261, 262, 263, 264
+State 297 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 299, 300, 301, 302
+State 298 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 251, 252, 265, 266
+State 299 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 183, 300, 301, 302
+State 300 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 251, 252, 265, 266
+State 301 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 303, 304, 305, 306
+State 302 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 267, 268, 255, 256
+State 303 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 287, 304, 305, 306
+State 304 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 267, 268, 255, 256
+State 305 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 307, 308, 309, 310
+State 306 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 257, 258, 259, 260
+State 307 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 311, 296, 297, 298
+State 308 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 261, 262, 263, 264
+State 309 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 295, 296, 297, 298
+State 310 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 261, 262, 263, 264
+State 311 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 295, 312, 313, 314
+State 312 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 273, 274, 275, 276
+State 313 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 183, 315, 316, 317
+State 314 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 277, 278, 279, 280
+State 315 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 277, 278, 279, 280
+State 316 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 318, 319, 320, 321
+State 317 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 253, 254, 281, 282
+State 318 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 134, 319, 320, 321
+State 319 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 253, 254, 281, 282
+State 320 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 322, 323, 324, 325
+State 321 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 269, 270, 271, 272
+State 322 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 194, 312, 313, 314
+State 323 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 273, 274, 275, 276
+State 324 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 311, 312, 313, 314
+State 325 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 273, 274, 275, 276
+State 326 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 327, 328, 329, 330
+State 327 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 556, 572, 573, 574
+State 328 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 343, 344, 345, 346
+State 329 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 411, 412, 413, 414
+State 330 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 331, 332, 333, 334
+State 331 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 363, 364, 337, 338
+State 332 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 363, 364, 337, 338
+State 333 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 335, 336, 337, 338
+State 334 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 335, 336, 337, 338
+State 335 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 243, 244, 337, 338
+State 336 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 243, 244, 337, 338
+State 337 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 339, 340, 341, 342
+State 338 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 339, 340, 341, 342
+State 339 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 357, 358, 345, 346
+State 340 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 357, 358, 345, 346
+State 341 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 343, 344, 345, 346
+State 342 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 343, 344, 345, 346
+State 343 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 347, 348, 333, 334
+State 344 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 347, 348, 333, 334
+State 345 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 331, 332, 333, 334
+State 346 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 331, 332, 333, 334
+State 347 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 349, 350, 351, 352
+State 348 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 349, 350, 351, 352
+State 349 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 363, 364, 385, 386
+State 350 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 363, 364, 385, 386
+State 351 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 353, 354, 355, 356
+State 352 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 353, 354, 355, 356
+State 353 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 391, 392, 359, 360
+State 354 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 391, 392, 359, 360
+State 355 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 357, 358, 359, 360
+State 356 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 357, 358, 359, 360
+State 357 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 381, 382, 361, 362
+State 358 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 381, 382, 361, 362
+State 359 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 347, 348, 361, 362
+State 360 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 347, 348, 361, 362
+State 361 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 363, 364, 351, 352
+State 362 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 363, 364, 351, 352
+State 363 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 365, 366, 351, 352
+State 364 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 365, 366, 351, 352
+State 365 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 211, 212, 367, 368
+State 366 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 211, 212, 367, 368
+State 367 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 369, 370, 371, 372
+State 368 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 369, 370, 371, 372
+State 369 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 357, 358, 375, 376
+State 370 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 357, 358, 375, 376
+State 371 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 373, 374, 375, 376
+State 372 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 373, 374, 375, 376
+State 373 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 347, 348, 379, 380
+State 374 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 347, 348, 379, 380
+State 375 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 377, 378, 379, 380
+State 376 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 377, 378, 379, 380
+State 377 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 363, 364, 367, 368
+State 378 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 363, 364, 367, 368
+State 379 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 365, 366, 367, 368
+State 380 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 365, 366, 367, 368
+State 381 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 383, 384, 385, 386
+State 382 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 383, 384, 385, 386
+State 383 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 349, 350, 399, 400
+State 384 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 349, 350, 399, 400
+State 385 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 387, 388, 389, 390
+State 386 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 387, 388, 389, 390
+State 387 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 405, 406, 393, 394
+State 388 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 405, 406, 393, 394
+State 389 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 391, 392, 393, 394
+State 390 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 391, 392, 393, 394
+State 391 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 397, 398, 395, 396
+State 392 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 397, 398, 395, 396
+State 393 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 381, 382, 395, 396
+State 394 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 381, 382, 395, 396
+State 395 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 349, 350, 385, 386
+State 396 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 349, 350, 385, 386
+State 397 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 383, 384, 399, 400
+State 398 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 383, 384, 399, 400
+State 399 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 401, 402, 403, 404
+State 400 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 401, 402, 403, 404
+State 401 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 405, 406, 407, 408
+State 402 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 405, 406, 407, 408
+State 403 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 405, 406, 407, 408
+State 404 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 405, 406, 407, 408
+State 405 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 397, 398, 409, 410
+State 406 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 397, 398, 409, 410
+State 407 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 397, 398, 409, 410
+State 408 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 397, 398, 409, 410
+State 409 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 383, 384, 399, 400
+State 410 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 383, 384, 399, 400
+State 411 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 287, 412, 413, 414
+State 412 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 331, 332, 333, 334
+State 413 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 415, 416, 417, 418
+State 414 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 335, 336, 337, 338
+State 415 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 422, 419, 420, 421
+State 416 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 339, 340, 341, 342
+State 417 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 231, 419, 420, 421
+State 418 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 339, 340, 341, 342
+State 419 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 339, 340, 341, 342
+State 420 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 326, 328, 329, 330
+State 421 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 343, 344, 345, 346
+State 422 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 423, 424, 425, 426
+State 423 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 520, 468, 469, 470
+State 424 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 353, 354, 355, 356
+State 425 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 427, 428, 429, 430
+State 426 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 357, 358, 359, 360
+State 427 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 455, 428, 429, 430
+State 428 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 357, 358, 359, 360
+State 429 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 431, 432, 433, 434
+State 430 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 347, 348, 361, 362
+State 431 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 439, 432, 433, 434
+State 432 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 347, 348, 361, 362
+State 433 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 435, 436, 437, 438
+State 434 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 363, 364, 351, 352
+State 435 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 423, 424, 425, 426
+State 436 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 353, 354, 355, 356
+State 437 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 422, 424, 425, 426
+State 438 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 353, 354, 355, 356
+State 439 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 223, 440, 441, 442
+State 440 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 377, 378, 379, 380
+State 441 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 443, 444, 445, 446
+State 442 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 365, 366, 367, 368
+State 443 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 422, 448, 449, 450
+State 444 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 369, 370, 371, 372
+State 445 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 447, 448, 449, 450
+State 446 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 369, 370, 371, 372
+State 447 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 422, 448, 449, 450
+State 448 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 369, 370, 371, 372
+State 449 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 451, 452, 453, 454
+State 450 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 373, 374, 375, 376
+State 451 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 427, 452, 453, 454
+State 452 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 373, 374, 375, 376
+State 453 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 439, 440, 441, 442
+State 454 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 377, 378, 379, 380
+State 455 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 456, 457, 458, 459
+State 456 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 486, 475, 476, 477
+State 457 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 391, 392, 393, 394
+State 458 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 460, 461, 462, 463
+State 459 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 381, 382, 395, 396
+State 460 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 431, 461, 462, 463
+State 461 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 381, 382, 395, 396
+State 462 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 464, 465, 466, 467
+State 463 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 349, 350, 385, 386
+State 464 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 471, 468, 469, 470
+State 465 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 387, 388, 389, 390
+State 466 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 423, 468, 469, 470
+State 467 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 387, 388, 389, 390
+State 468 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 387, 388, 389, 390
+State 469 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 455, 457, 458, 459
+State 470 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 391, 392, 393, 394
+State 471 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 423, 472, 473, 474
+State 472 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 401, 402, 403, 404
+State 473 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 456, 475, 476, 477
+State 474 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 405, 406, 407, 408
+State 475 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 405, 406, 407, 408
+State 476 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 478, 479, 480, 481
+State 477 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 397, 398, 409, 410
+State 478 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 460, 479, 480, 481
+State 479 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 397, 398, 409, 410
+State 480 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 482, 483, 484, 485
+State 481 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 383, 384, 399, 400
+State 482 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 471, 472, 473, 474
+State 483 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 401, 402, 403, 404
+State 484 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 471, 472, 473, 474
+State 485 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:1, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 401, 402, 403, 404
+State 486 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 487, 488, 489, 490
+State 487 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 614, 615, 616, 617
+State 488 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 503, 504, 505, 506
+State 489 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 507, 508, 509, 510
+State 490 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 491, 492, 493, 494
+State 491 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 383, 384, 497, 498
+State 492 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 383, 384, 497, 498
+State 493 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 495, 496, 497, 498
+State 494 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 495, 496, 497, 498
+State 495 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 383, 384, 497, 498
+State 496 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 383, 384, 497, 498
+State 497 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 499, 500, 501, 502
+State 498 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 499, 500, 501, 502
+State 499 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 405, 406, 505, 506
+State 500 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 405, 406, 505, 506
+State 501 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 503, 504, 505, 506
+State 502 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 503, 504, 505, 506
+State 503 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 397, 398, 493, 494
+State 504 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 397, 398, 493, 494
+State 505 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 491, 492, 493, 494
+State 506 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 491, 492, 493, 494
+State 507 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 478, 508, 509, 510
+State 508 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 491, 492, 493, 494
+State 509 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 511, 512, 513, 514
+State 510 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 495, 496, 497, 498
+State 511 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 471, 516, 517, 518
+State 512 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 499, 500, 501, 502
+State 513 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 515, 516, 517, 518
+State 514 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 499, 500, 501, 502
+State 515 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 519, 516, 517, 518
+State 516 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 499, 500, 501, 502
+State 517 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 486, 488, 489, 490
+State 518 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 503, 504, 505, 506
+State 519 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 520, 521, 522, 523
+State 520 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 455, 583, 584, 585
+State 521 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 536, 537, 538, 539
+State 522 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 556, 557, 558, 559
+State 523 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 524, 525, 526, 527
+State 524 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 542, 543, 530, 531
+State 525 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 542, 543, 530, 531
+State 526 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 528, 529, 530, 531
+State 527 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 528, 529, 530, 531
+State 528 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 546, 547, 534, 535
+State 529 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 546, 547, 534, 535
+State 530 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 532, 533, 534, 535
+State 531 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 532, 533, 534, 535
+State 532 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 546, 547, 534, 535
+State 533 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 546, 547, 534, 535
+State 534 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 536, 537, 538, 539
+State 535 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 536, 537, 538, 539
+State 536 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 540, 541, 526, 527
+State 537 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 540, 541, 526, 527
+State 538 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 524, 525, 526, 527
+State 539 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 524, 525, 526, 527
+State 540 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 542, 543, 544, 545
+State 541 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 542, 543, 544, 545
+State 542 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 546, 547, 548, 549
+State 543 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 546, 547, 548, 549
+State 544 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 546, 547, 548, 549
+State 545 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 546, 547, 548, 549
+State 546 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 335, 336, 548, 549
+State 547 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 335, 336, 548, 549
+State 548 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 550, 551, 552, 553
+State 549 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 550, 551, 552, 553
+State 550 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 540, 541, 554, 555
+State 551 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 540, 541, 554, 555
+State 552 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 540, 541, 554, 555
+State 553 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 540, 541, 554, 555
+State 554 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 542, 543, 544, 545
+State 555 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 542, 543, 544, 545
+State 556 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 486, 557, 558, 559
+State 557 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 524, 525, 526, 527
+State 558 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 560, 561, 562, 563
+State 559 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 528, 529, 530, 531
+State 560 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 575, 561, 562, 563
+State 561 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 528, 529, 530, 531
+State 562 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 564, 565, 566, 567
+State 563 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 532, 533, 534, 535
+State 564 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 568, 521, 522, 523
+State 565 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 536, 537, 538, 539
+State 566 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 519, 521, 522, 523
+State 567 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:1, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 536, 537, 538, 539
+State 568 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 520, 569, 570, 571
+State 569 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 550, 551, 552, 553
+State 570 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 327, 572, 573, 574
+State 571 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 540, 541, 554, 555
+State 572 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 540, 541, 554, 555
+State 573 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 575, 576, 577, 578
+State 574 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 542, 543, 544, 545
+State 575 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 411, 576, 577, 578
+State 576 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 542, 543, 544, 545
+State 577 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 579, 580, 581, 582
+State 578 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 546, 547, 548, 549
+State 579 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 568, 569, 570, 571
+State 580 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 550, 551, 552, 553
+State 581 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 568, 569, 570, 571
+State 582 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 550, 551, 552, 553
+State 583 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 598, 599, 600, 601
+State 584 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 602, 603, 604, 605
+State 585 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 586, 587, 588, 589
+State 586 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 349, 350, 592, 593
+State 587 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 349, 350, 592, 593
+State 588 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 590, 591, 592, 593
+State 589 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 590, 591, 592, 593
+State 590 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 335, 336, 592, 593
+State 591 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 335, 336, 592, 593
+State 592 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 594, 595, 596, 597
+State 593 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 594, 595, 596, 597
+State 594 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 391, 392, 600, 601
+State 595 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 391, 392, 600, 601
+State 596 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 598, 599, 600, 601
+State 597 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 598, 599, 600, 601
+State 598 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 381, 382, 588, 589
+State 599 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 381, 382, 588, 589
+State 600 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 586, 587, 588, 589
+State 601 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 586, 587, 588, 589
+State 602 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 411, 603, 604, 605
+State 603 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 586, 587, 588, 589
+State 604 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 606, 607, 608, 609
+State 605 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 590, 591, 592, 593
+State 606 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 423, 610, 611, 612
+State 607 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 594, 595, 596, 597
+State 608 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 520, 610, 611, 612
+State 609 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 594, 595, 596, 597
+State 610 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 598, 599, 600, 601
+State 611 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 613, 583, 584, 585
+State 612 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 598, 599, 600, 601
+State 613 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 556, 583, 584, 585
+State 614 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 726, 727, 728, 729
+State 615 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 630, 631, 632, 633
+State 616 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 714, 715, 716, 717
+State 617 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 618, 619, 620, 621
+State 618 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 622, 623, 624, 625
+State 619 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 622, 623, 624, 625
+State 620 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 622, 623, 624, 625
+State 621 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 622, 623, 624, 625
+State 622 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 634, 635, 624, 625
+State 623 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 634, 635, 624, 625
+State 624 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 626, 627, 628, 629
+State 625 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 626, 627, 628, 629
+State 626 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 630, 631, 632, 633
+State 627 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 630, 631, 632, 633
+State 628 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 630, 631, 632, 633
+State 629 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 630, 631, 632, 633
+State 630 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 618, 619, 620, 621
+State 631 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 618, 619, 620, 621
+State 632 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 618, 619, 620, 621
+State 633 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 618, 619, 620, 621
+State 634 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 638, 639
+State 635 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 638, 639
+State 636 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 666, 667, 654, 655
+State 637 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 666, 667, 654, 655
+State 638 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 640, 641, 642, 643
+State 639 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 640, 641, 642, 643
+State 640 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 660, 661, 646, 647
+State 641 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 660, 661, 646, 647
+State 642 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 644, 645, 646, 647
+State 643 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 644, 645, 646, 647
+State 644 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 652, 653, 650, 651
+State 645 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 652, 653, 650, 651
+State 646 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 648, 649, 650, 651
+State 647 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 648, 649, 650, 651
+State 648 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 638, 639
+State 649 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 638, 639
+State 650 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 634, 635, 638, 639
+State 651 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 634, 635, 638, 639
+State 652 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 654, 655
+State 653 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 654, 655
+State 654 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 656, 657, 658, 659
+State 655 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 656, 657, 658, 659
+State 656 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 660, 661, 662, 663
+State 657 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 660, 661, 662, 663
+State 658 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 660, 661, 662, 663
+State 659 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 660, 661, 662, 663
+State 660 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 652, 653, 664, 665
+State 661 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 652, 653, 664, 665
+State 662 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 652, 653, 664, 665
+State 663 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 652, 653, 664, 665
+State 664 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 636, 637, 654, 655
+State 665 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 636, 637, 654, 655
+State 666 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 668, 669, 670, 671
+State 667 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 668, 669, 670, 671
+State 668 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 269, 270, 688, 689
+State 669 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 269, 270, 688, 689
+State 670 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 672, 673, 674, 675
+State 671 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 672, 673, 674, 675
+State 672 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 694, 695, 678, 679
+State 673 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 694, 695, 678, 679
+State 674 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 676, 677, 678, 679
+State 675 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 676, 677, 678, 679
+State 676 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 684, 685, 682, 683
+State 677 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 684, 685, 682, 683
+State 678 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 680, 681, 682, 683
+State 679 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 680, 681, 682, 683
+State 680 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 668, 669, 670, 671
+State 681 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 668, 669, 670, 671
+State 682 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 666, 667, 670, 671
+State 683 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 666, 667, 670, 671
+State 684 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 686, 687, 688, 689
+State 685 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 686, 687, 688, 689
+State 686 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 668, 669, 702, 703
+State 687 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 668, 669, 702, 703
+State 688 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 690, 691, 692, 693
+State 689 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 690, 691, 692, 693
+State 690 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 708, 709, 696, 697
+State 691 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 708, 709, 696, 697
+State 692 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 694, 695, 696, 697
+State 693 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 694, 695, 696, 697
+State 694 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 700, 701, 698, 699
+State 695 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 700, 701, 698, 699
+State 696 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 684, 685, 698, 699
+State 697 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 684, 685, 698, 699
+State 698 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 668, 669, 688, 689
+State 699 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 668, 669, 688, 689
+State 700 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 686, 687, 702, 703
+State 701 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 686, 687, 702, 703
+State 702 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 704, 705, 706, 707
+State 703 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 704, 705, 706, 707
+State 704 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 708, 709, 710, 711
+State 705 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 708, 709, 710, 711
+State 706 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 708, 709, 710, 711
+State 707 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 708, 709, 710, 711
+State 708 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 700, 701, 712, 713
+State 709 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 700, 701, 712, 713
+State 710 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 700, 701, 712, 713
+State 711 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 700, 701, 712, 713
+State 712 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 686, 687, 702, 703
+State 713 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 686, 687, 702, 703
+State 714 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 507, 715, 716, 717
+State 715 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 618, 619, 620, 621
+State 716 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 718, 719, 720, 721
+State 717 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 622, 623, 624, 625
+State 718 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 722, 723, 724, 725
+State 719 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 626, 627, 628, 629
+State 720 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 722, 723, 724, 725
+State 721 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 626, 627, 628, 629
+State 722 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 515, 723, 724, 725
+State 723 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 626, 627, 628, 629
+State 724 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 487, 615, 616, 617
+State 725 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 630, 631, 632, 633
+State 726 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 790, 816, 817, 818
+State 727 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 742, 743, 744, 745
+State 728 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 778, 779, 780, 781
+State 729 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 730, 731, 732, 733
+State 730 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 748, 749, 732, 733
+State 731 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 748, 749, 732, 733
+State 732 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 734, 735, 736, 737
+State 733 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 734, 735, 736, 737
+State 734 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 756, 757, 740, 741
+State 735 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 756, 757, 740, 741
+State 736 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 738, 739, 740, 741
+State 737 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 738, 739, 740, 741
+State 738 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 760, 761, 744, 745
+State 739 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 760, 761, 744, 745
+State 740 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 742, 743, 744, 745
+State 741 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 742, 743, 744, 745
+State 742 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 746, 747, 732, 733
+State 743 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 746, 747, 732, 733
+State 744 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 730, 731, 732, 733
+State 745 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 730, 731, 732, 733
+State 746 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 748, 749, 750, 751
+State 747 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 748, 749, 750, 751
+State 748 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 764, 765
+State 749 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 764, 765
+State 750 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 752, 753, 754, 755
+State 751 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 752, 753, 754, 755
+State 752 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 756, 757, 758, 759
+State 753 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 756, 757, 758, 759
+State 754 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 756, 757, 758, 759
+State 755 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 756, 757, 758, 759
+State 756 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 760, 761, 762, 763
+State 757 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 760, 761, 762, 763
+State 758 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 760, 761, 762, 763
+State 759 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 760, 761, 762, 763
+State 760 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 746, 747, 750, 751
+State 761 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 746, 747, 750, 751
+State 762 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 746, 747, 750, 751
+State 763 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 746, 747, 750, 751
+State 764 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 766, 767, 768, 769
+State 765 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 766, 767, 768, 769
+State 766 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 660, 661, 772, 773
+State 767 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 660, 661, 772, 773
+State 768 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 770, 771, 772, 773
+State 769 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 770, 771, 772, 773
+State 770 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 652, 653, 776, 777
+State 771 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 652, 653, 776, 777
+State 772 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 774, 775, 776, 777
+State 773 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 774, 775, 776, 777
+State 774 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 764, 765
+State 775 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 636, 637, 764, 765
+State 776 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 748, 749, 764, 765
+State 777 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 748, 749, 764, 765
+State 778 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 807, 783, 784, 785
+State 779 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 734, 735, 736, 737
+State 780 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 782, 783, 784, 785
+State 781 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 734, 735, 736, 737
+State 782 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 722, 783, 784, 785
+State 783 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 734, 735, 736, 737
+State 784 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 614, 786, 787, 788
+State 785 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 738, 739, 740, 741
+State 786 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 742, 743, 744, 745
+State 787 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 789, 727, 728, 729
+State 788 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 742, 743, 744, 745
+State 789 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 790, 727, 728, 729
+State 790 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 791, 792, 793, 794
+State 791 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 885, 863, 864, 865
+State 792 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 774, 775, 776, 777
+State 793 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 795, 796, 797, 798
+State 794 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 748, 749, 764, 765
+State 795 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 854, 800, 801, 802
+State 796 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 766, 767, 768, 769
+State 797 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 799, 800, 801, 802
+State 798 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 766, 767, 768, 769
+State 799 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 807, 800, 801, 802
+State 800 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 766, 767, 768, 769
+State 801 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 803, 804, 805, 806
+State 802 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 770, 771, 772, 773
+State 803 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 614, 804, 805, 806
+State 804 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 770, 771, 772, 773
+State 805 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 790, 792, 793, 794
+State 806 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 774, 775, 776, 777
+State 807 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 808, 809, 810, 811
+State 808 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 515, 823, 824, 825
+State 809 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 752, 753, 754, 755
+State 810 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 812, 813, 814, 815
+State 811 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 756, 757, 758, 759
+State 812 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 614, 813, 814, 815
+State 813 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 756, 757, 758, 759
+State 814 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 726, 816, 817, 818
+State 815 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 760, 761, 762, 763
+State 816 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 760, 761, 762, 763
+State 817 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 819, 820, 821, 822
+State 818 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 746, 747, 750, 751
+State 819 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 807, 809, 810, 811
+State 820 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 752, 753, 754, 755
+State 821 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 807, 809, 810, 811
+State 822 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 752, 753, 754, 755
+State 823 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 838, 839, 840, 841
+State 824 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 842, 843, 844, 845
+State 825 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 826, 827, 828, 829
+State 826 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 760, 761, 832, 833
+State 827 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 760, 761, 832, 833
+State 828 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 830, 831, 832, 833
+State 829 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 830, 831, 832, 833
+State 830 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 746, 747, 836, 837
+State 831 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 746, 747, 836, 837
+State 832 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 834, 835, 836, 837
+State 833 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 834, 835, 836, 837
+State 834 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 746, 747, 836, 837
+State 835 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 746, 747, 836, 837
+State 836 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 838, 839, 840, 841
+State 837 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 838, 839, 840, 841
+State 838 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 756, 757, 828, 829
+State 839 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:1>
+	With successors : 756, 757, 828, 829
+State 840 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 826, 827, 828, 829
+State 841 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:1>
+	With successors : 826, 827, 828, 829
+State 842 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 812, 843, 844, 845
+State 843 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 826, 827, 828, 829
+State 844 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 846, 847, 848, 849
+State 845 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 830, 831, 832, 833
+State 846 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 507, 847, 848, 849
+State 847 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 830, 831, 832, 833
+State 848 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 850, 851, 852, 853
+State 849 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 834, 835, 836, 837
+State 850 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 807, 823, 824, 825
+State 851 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 838, 839, 840, 841
+State 852 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 808, 823, 824, 825
+State 853 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:1, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 838, 839, 840, 841
+State 854 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 855, 856, 857, 858
+State 855 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 722, 870, 871, 872
+State 856 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 656, 657, 658, 659
+State 857 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 859, 860, 861, 862
+State 858 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 660, 661, 662, 663
+State 859 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 803, 860, 861, 862
+State 860 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 660, 661, 662, 663
+State 861 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 791, 863, 864, 865
+State 862 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 652, 653, 664, 665
+State 863 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 652, 653, 664, 665
+State 864 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 866, 867, 868, 869
+State 865 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 636, 637, 654, 655
+State 866 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 854, 856, 857, 858
+State 867 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 656, 657, 658, 659
+State 868 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 854, 856, 857, 858
+State 869 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:0, bit4:1, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 656, 657, 658, 659
+State 870 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 640, 641, 642, 643
+State 871 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 873, 874, 875, 876
+State 872 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 644, 645, 646, 647
+State 873 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 487, 874, 875, 876
+State 874 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 644, 645, 646, 647
+State 875 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 877, 878, 879, 880
+State 876 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 648, 649, 650, 651
+State 877 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 791, 878, 879, 880
+State 878 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 648, 649, 650, 651
+State 879 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 881, 882, 883, 884
+State 880 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 634, 635, 638, 639
+State 881 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 854, 870, 871, 872
+State 882 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 640, 641, 642, 643
+State 883 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 855, 870, 871, 872
+State 884 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:1, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 640, 641, 642, 643
+State 885 with rank 2 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 886, 887, 888, 889
+State 886 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 318, 910, 911, 912
+State 887 with rank 2 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 680, 681, 682, 683
+State 888 with rank 2 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 890, 891, 892, 893
+State 889 with rank 2 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 666, 667, 670, 671
+State 890 with rank 3 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 902, 895, 896, 897
+State 891 with rank 3 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 672, 673, 674, 675
+State 892 with rank 3 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 894, 895, 896, 897
+State 893 with rank 3 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 672, 673, 674, 675
+State 894 with rank 0 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 902, 895, 896, 897
+State 895 with rank 0 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 672, 673, 674, 675
+State 896 with rank 0 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 898, 899, 900, 901
+State 897 with rank 0 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 676, 677, 678, 679
+State 898 with rank 1 -> <bear:0, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 859, 899, 900, 901
+State 899 with rank 1 -> <bear:0, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 676, 677, 678, 679
+State 900 with rank 1 -> <bear:1, fruit:0, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 885, 887, 888, 889
+State 901 with rank 1 -> <bear:1, fruit:1, bit0:1, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 680, 681, 682, 683
+State 902 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 311, 903, 904, 905
+State 903 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 690, 691, 692, 693
+State 904 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 906, 907, 908, 909
+State 905 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 694, 695, 696, 697
+State 906 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 898, 907, 908, 909
+State 907 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 694, 695, 696, 697
+State 908 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 886, 910, 911, 912
+State 909 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 684, 685, 698, 699
+State 910 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 684, 685, 698, 699
+State 911 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 913, 914, 915, 916
+State 912 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 668, 669, 688, 689
+State 913 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 917, 903, 904, 905
+State 914 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 690, 691, 692, 693
+State 915 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 902, 903, 904, 905
+State 916 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:1, bit2:0, bit3:0, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 690, 691, 692, 693
+State 917 with rank 0 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 902, 918, 919, 920
+State 918 with rank 0 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 704, 705, 706, 707
+State 919 with rank 0 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 921, 922, 923, 924
+State 920 with rank 0 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 708, 709, 710, 711
+State 921 with rank 1 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 906, 922, 923, 924
+State 922 with rank 1 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 708, 709, 710, 711
+State 923 with rank 1 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 925, 926, 927, 928
+State 924 with rank 1 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 700, 701, 712, 713
+State 925 with rank 2 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 886, 926, 927, 928
+State 926 with rank 2 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 700, 701, 712, 713
+State 927 with rank 2 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 929, 930, 931, 932
+State 928 with rank 2 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 686, 687, 702, 703
+State 929 with rank 3 -> <bear:0, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 917, 918, 919, 920
+State 930 with rank 3 -> <bear:0, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:0, sing:0, carrying_item:0>
+	With successors : 704, 705, 706, 707
+State 931 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:0, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 917, 918, 919, 920
+State 932 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
+	With successors : 704, 705, 706, 707
+-----------------------------------------
+Strategy time: 1755
+===== Done ==============================
