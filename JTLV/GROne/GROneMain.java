@@ -22,7 +22,7 @@ public class GROneMain {
 
         // Check that we have enough arguments
         if (args.length < 2) {
-            System.err.println("Usage: java GROneMain [smv_file] [spec_file]");
+            System.err.println("Usage: java GROneMain [smv_file] [ltl_file]");
             System.exit(1);
         }
 
@@ -57,25 +57,17 @@ public class GROneMain {
 		long t1 = (System.currentTimeMillis() - time);
 		System.out.println("Games time: " + t1);
 
-		// ///////////////////////////////////////////////
-		// ///////////////////////////////////////////////
-		// old
-		// BDD all_init = g.getSysPlayer().initial().and(
-		// g.getEnvPlayer().initial());
-		// BDD counter_exmple = g.envWinningStates().and(all_init);
-		// if (!counter_exmple.isZero()) {
-		// System.out.println("Specification is unrealizable...");
-		// System.out.println("The env player can win from states:");
-		// System.out.println("\t" + counter_exmple);
-		// } else {
-		// System.out.println("Specification is realizable...");
-		// System.out.println("==== Building an implementation =========");
-		// System.out.println("-----------------------------------------");
-		// g.printWinningStrategy();
-		// System.out.print("-----------------------------------------\n");
-		// long t2 = (System.currentTimeMillis() - time);
-		// System.out.println("Strategy time: " + t2);
-		// }
+		 ///////////////////////////////////////////////
+		 ///////////////////////////////////////////////
+		 //old
+		 BDD all_init = g.getSysPlayer().initial().and( g.getEnvPlayer().initial());
+		 BDD counter_exmple = g.envWinningStates().and(all_init);
+		 if (!counter_exmple.isZero()) {
+		 System.out.println("Specification is unrealizable...");
+		 System.out.println("The env player can win from states:");
+		 System.out.println("\t" + counter_exmple);
+         return;
+		 } 
 
 		// ///////////////////////////////////////////////
 		// ///////////////////////////////////////////////
@@ -97,12 +89,14 @@ public class GROneMain {
 		// ///////////////////////////////////////////////
 		// ///////////////////////////////////////////////
 		// new
-		BDD env_ini = g.getEnvPlayer().initial();
+/*		BDD env_ini = g.getEnvPlayer().initial();
 		BDDVarSet env_vars = g.getEnvPlayer().moduleUnprimeVars();
 		for (BDDIterator it = env_ini.iterator(env_vars); it.hasNext();) {
 			BDD eini = (BDD) it.next();
 			BDD sys_response = eini.and(g.getSysPlayer().initial()).and(
 					g.sysWinningStates());
+            System.out.println("---------------");
+            sys_response.printSet();
 			if (sys_response.isZero()) {
 				System.out.println("Specification is unrealizable...");
 				System.out.println("The env player can win from states:");
@@ -110,7 +104,7 @@ public class GROneMain {
 				System.out.println("===== Done ==============================");
 				return;
 			}
-		}
+		}*/
 		// otherwise we can synthesis
 		System.out.println("Specification is realizable...");
 		System.out.println("==== Building an implementation =========");
