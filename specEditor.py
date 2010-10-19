@@ -1318,8 +1318,12 @@ class SpecEditorFrame(wx.Frame):
                 self.simSetup.append({})
                 if 'Name' in content and len(content['Name']) > 0:
                     self.simSetup[-1]["Name"] = content['Name'][0]
+                else:
+                    self.simSetup[-1]["Name"]=""
                 if 'RobotFile' in content and len(content['RobotFile']) > 0:
                     self.simSetup[-1]["RobotFile"] = content['RobotFile'][0]
+                else:
+                    self.simSetup[-1]["RobotFile"]=""
                 if 'InitialTruths' in content:
                     self.simSetup[-1]['InitialTruths'] = content['InitialTruths']
                 if 'InitialRegion' in content and len(content['InitialRegion']) > 0:
@@ -1330,9 +1334,10 @@ class SpecEditorFrame(wx.Frame):
                     self.simSetup[-1]['XOffset'] = float(xOffset)
                     self.simSetup[-1]['YScale'] = float(yScale)
                     self.simSetup[-1]['YOffset'] = float(yOffset)
-                      
                 if 'Lab' in content and len(content['Lab']) > 0:
                     self.simSetup[-1]['LabFile'] = content['Lab'][0]
+                else:
+                    self.simSetup[-1]["LabFile"]=""
 
         # Remove default if we have other configs
         if len(self.simSetup) > 1:

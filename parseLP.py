@@ -70,7 +70,6 @@ class parseLP:
         
         # decompose any regions with holes or are concave
         self.decomp()
-        self.drawAllPortions()
 
         # store the regionMapping data to project file
         self.proj.regionMapping = self.newPolysMap
