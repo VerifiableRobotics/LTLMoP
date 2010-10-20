@@ -193,19 +193,20 @@ class parseLP:
                 result = de.MP5()
             
             if len(result)>1:
-                # the region is decomposed to smaller parts 
+                # the region is decomposed to smaller parts
+                newPortionName=[]
+                # add the new portions                
+                for item in result:
+                    portionName = 'p'+str(self.count)
+                    newPortionName.append(portionName)
+                    tempDic[portionName] = item
+                    self.count = self.count + 1
                 
                 # update the mapping dictionary
                 for nameOfRegion,portionList in self.newPolysMap.iteritems():
                     if nameOfPortion in portionList:
                         self.newPolysMap[nameOfRegion].remove(nameOfPortion)
-                        
-                        # add the new portions                
-                        for item in result:
-                            portionName = 'p'+str(self.count)
-                            tempDic[portionName] = item
-                            self.newPolysMap[nameOfRegion].append(portionName)
-                            self.count = self.count + 1
+                        self.newPolysMap[nameOfRegion].extend(newPortionName)
                 
             else:
                 tempDic[nameOfPortion] = Polygon.Polygon(result[0])
