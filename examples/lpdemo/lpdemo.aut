@@ -2802,5 +2802,5 @@ State 931 with rank 3 -> <bear:1, fruit:0, bit0:0, bit1:0, bit2:0, bit3:1, bit4:
 State 932 with rank 3 -> <bear:1, fruit:1, bit0:0, bit1:0, bit2:0, bit3:1, bit4:0, bit5:0, pick_up:1, drop:0, play_dead:1, sing:0, carrying_item:0>
 	With successors : 704, 705, 706, 707
 -----------------------------------------
-Strategy time: 1755
+Strategy time: 1690
 ===== Done ==============================

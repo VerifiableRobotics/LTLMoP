@@ -224,7 +224,7 @@ class parseLP:
         polyList = []    
         for nameOfPortion,poly in self.portionOfRegion.iteritems():
             polyList.append(poly)
-        Polygon.IO.writeSVG('/home/jim/Desktop/allPortions.svg', polyList)
+        Polygon.IO.writeSVG('/home/cornell/Desktop/ltlmop-google/allPortions.svg', polyList)
         
     def removeSmallRegions(self):
         """

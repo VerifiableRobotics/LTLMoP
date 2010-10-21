@@ -12,6 +12,13 @@ InitialRegion: # Initial region number
 3
 
 InitialTruths: # List of initially true propositions
+pick_up
+drop
+play_dead
+sing
+carrying_item
+bear
+fruit
 
 Lab: # Lab configuration file
 playerstage.lab
@@ -20,7 +27,7 @@ Name: # Name of the experiment
 test1
 
 RobotFile: # Relative path of robot description file
-rabbit.robot
+pioneer_stage.robot
 
 
 ======== SETTINGS ========

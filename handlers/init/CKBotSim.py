@@ -5,7 +5,7 @@ import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-import math, time, copy
+import math, time, copy, sys
 
 info = """CKBotSim
 
@@ -2100,7 +2100,7 @@ class CKBotSim:
 
 	# Load the new robot data from the new file "name".ckbot.
 	print("==========\nReconfiguring: " + name + "\n==========")
-	robotfile = "CKBot/" + name + ".ckbot"
+	robotfile = "robots/CKBot/" + name + ".ckbot"
 	self.loadRobotData(robotfile)
 
 	# Update the position of the base module (always module 0) as the sum of the current configuration's pose
@@ -2245,7 +2245,8 @@ if (__name__ == '__main__'):
     print info
 
     ### FOR NOW, SET THE FILENAME HERE
-    robotfile = "CKBot/Slinky.ckbot"
+    for arg in sys.argv:
+        robotfile = "robots/CKBot/" + arg + ".ckbot"
 
     sim = CKBotSim(robotfile, standalone=0)
     sim.run()

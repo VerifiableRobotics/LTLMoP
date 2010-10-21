@@ -56,7 +56,7 @@ window
 # load an environment bitmap
 map
 (
-    bitmap "/home/jim/Desktop/ltlmop-google/examples/lpdemo/lpdemo_simbg.png"
+    bitmap "/home/cornell/Desktop/ltlmop-google/examples/lpdemo/lpdemo_simbg.png"
     size [16 12]
     name "example1"
     boundary 0
