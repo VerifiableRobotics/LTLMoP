@@ -1,0 +1,81 @@
+# CKBot Simulator Robot File
+# This Gait made by Sarah Koehler
+# 8-Module Loop Configuration
+ConfigName:
+Loop
+
+# module order (by row): tail, body, left arm, right arm
+ConnMatrix:
+0 7 0 0 0 0 0 0 0 0
+1 0 7 0 0 0 0 0 0 0
+0 1 0 7 0 0 0 0 0 0
+0 0 1 0 7 0 0 0 0 0
+0 0 0 1 0 7 0 0 0 0
+0 0 0 0 1 0 7 0 0 0
+0 0 0 0 0 1 0 7 0 0
+0 0 0 0 0 0 1 0 7 0
+0 0 0 0 0 0 0 1 0 7
+0 0 0 0 0 0 0 0 1 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0 0.5 0
+
+# This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
+RelativeRotation:
+-90 x
+-90 y
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+# This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
+# except for the last row which is the time taken for the entire gait to loop (in seconds)
+Gaits:
+Gain 1
+Type Fixed
+
+# Gait 1 -- make a loop
+Gait 1
+0 4500 4500 9000 0 0 9000 4500 4500 0
+0 0 4500 4500 9000 0 0 9000 4500 4500
+4500 0 0 4500 4500 9000 0 0 9000 4500
+4500 4500 0 0 4500 4500 9000 0 0 9000
+9000 4500 4500 0 0 4500 4500 9000 0 0
+0 9000 4500 4500 0 0 4500 4500 9000 0
+0 0 9000 4500 4500 0 0 4500 4500 9000
+9000 0 0 9000 4500 4500 0 0 4500 4500
+4500 9000 0 0 9000 4500 4500 0 0 4500
+0 4500 4500 9000 0 0 9000 4500 4500 0
+15
+
+# Gait 2 -- loop 2, change 2 at a time
+Gait 2
+0 4500 4500 9000 0 0 9000 4500 4500 0
+4500 0 0 4500 4500 9000 0 0 9000 4500
+9000 4500 4500 0 0 4500 4500 9000 0 0
+0 0 9000 4500 4500 0 0 4500 4500 9000
+4500 9000 0 0 9000 4500 4500 0 0 4500
+7
+
+# Gait 3 -- somersault
+Gait 3
+0 0 0 0 0 0 0 0 0 0
+0 4500 4500 9000 0 0 0 0 0 0
+0 0 4500 4500 9000 0 0 0 0 0
+0 0 0 4500 4500 9000 0 0 0 0
+0 0 0 0 4500 4500 9000 0 0 0
+0 0 0 0 0 4500 4500 9000 0 0
+0 0 0 0 0 0 4500 4500 9000 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 -9000 -4500 -4500 0
+0 0 0 0 0 -9000 -4500 -4500 0 0
+0 0 0 0 -9000 -4500 -4500 0 0 0
+0 0 0 -9000 -4500 -4500 0 0 0 0
+0 0 -9000 -4500 -4500 0 0 0 0 0
+0 -9000 -4500 -4500 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0
+25
+

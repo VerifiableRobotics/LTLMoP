@@ -1,0 +1,79 @@
+# CKBot Simulator Robot File
+# 4 Module Slinky Configuration
+
+ConfigName:
+Slinky
+
+ConnMatrix:
+0 7 0 0 
+1 0 7 0 
+0 1 0 7 
+0 0 1 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0.0 0.5 0.0
+
+# This represents a relative rotation of 90 degrees about the x axis.
+RelativeRotation:
+90 x
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+# This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
+# except for the last row which is the time taken for the entire gait to loop (in seconds)
+Gaits:
+Gain 1.0
+Type Fixed
+
+
+# Gait 1 -- slinky back and forth
+Gait 1
+0 0 0 0
+0 8000 8000 0
+0 9000 9000 3000
+0 9000 9000 8000
+-4500 9000 9000 3000
+-9000 7500 7500 0 
+0 0 0 0
+0 -8000 -8000 0
+0 -9000 -9000 -3000
+0 -9000 -9000 -8000
+4500 -9000 -9000 -3000
+9000 -7500 -7500 0 
+0 0 0 0
+26
+
+# Gait 2 -- slinky forward
+Gait 2
+0 0 0 0
+0 8000 8000 0
+0 9000 9000 3000
+0 9000 9000 8000
+-4500 9000 9000 3000
+-9000 7500 7500 0 
+0 0 0 0
+0 -8000 -8000 0
+-3000 -9000 -9000 0
+-8000 -9000 -9000 0 
+-3000 -9000 -9000 4500
+0 -7500 -7500 9000 
+0 0 0 0
+26
+
+# Gait 3 -- slinky backward
+Gait 3
+0 0 0 0
+0 8000 8000 0
+3000 9000 9000 0
+8000 9000 9000 0
+3000 9000 9000 -4500
+0 7500 7500 -9000 
+0 0 0 0
+0 -8000 -8000 0
+0 -9000 -9000 -3000
+0 -9000 -9000 -8000
+4500 -9000 -9000 -3000
+9000 -7500 -7500 0 
+0 0 0 0
+26

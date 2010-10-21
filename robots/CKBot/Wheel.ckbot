@@ -1,0 +1,53 @@
+# CKBot Simulator Robot File
+# 12-Module Wheel Configuration
+
+ConfigName:
+Wheel
+
+ConnMatrix:
+0 7 0 0 0 0 0 0 0 0 0 0
+1 0 7 0 0 0 0 0 0 0 0 0
+0 1 0 7 0 0 0 0 0 0 0 0
+0 0 1 0 7 0 0 0 0 0 0 0 
+0 0 0 1 0 7 0 0 0 0 0 0
+0 0 0 0 1 0 7 0 0 0 0 0
+0 0 0 0 0 1 0 7 0 0 0 0 
+0 0 0 0 0 0 1 0 7 0 0 0
+0 0 0 0 0 0 0 1 0 7 0 0
+0 0 0 0 0 0 0 0 1 0 7 0
+0 0 0 0 0 0 0 0 0 1 0 7
+0 0 0 0 0 0 0 0 0 0 1 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0.0 3.5 0.0
+
+# This represents a relative rotation of 90 degrees about the x axis.
+RelativeRotation:
+90 y
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+# This is a PERIODIC gait: First row is amplitudes, second row is frequency (in rad/s) and third row is phase (in 100*degrees)
+Gaits:
+Gain 1.0
+Type Fixed
+
+# Gait 1 -- Spin
+#Gait 1
+#-6000 -6000 -6000 -6000 -6000 -6000 -6000 -6000
+#3 3 3 3 3 3 3 3
+#0 -1500 -3000 -4500 -6000 -7500 -9000 -10500
+
+Gait 1
+-3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 
+-2500 -6500 -7500 -6500 -2500 -1500 -2500 -6500 -7500 -6500 -2500 -1500
+-3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 
+-6500 -2500 -1500 -2500 -6500 -7500 -6500 -2500 -1500 -2500 -6500 -7500
+-3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 
+3
+
+Gait 2
+-3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 
+-3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 -3000 
+3
