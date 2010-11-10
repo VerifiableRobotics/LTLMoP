@@ -21,6 +21,9 @@ This installation has been tested with ubuntu 10.04 LTS at Oct. 2010
  - The package manager will automatically mark the necessary dependencies
    some of the packages above might already be installed. if so, just ignore it.
 
+
+================ Install Player and Stage ================================
+
  - download the player (2.0.5) and stage (2.0.3) from 
     http://sourceforge.net/projects/playerstage/files/
 
@@ -77,6 +80,24 @@ This installation has been tested with ubuntu 10.04 LTS at Oct. 2010
 
   - the player and stage can be tested by
     player <stageInstallationFileFolder>/worlds/simple.cfg
+
+
+=========================== Install Polygon Package ==============================
+
+ - Download the Polygon package from 
+    http://polygon.origo.ethz.ch/download
+ - Sugguested version is 2.0.3
+
+ - After downloading, unzip it and install it by entering
+    sudo python setup.py install
+
+ - The installation should be fairly smooth
+
+ - After installation, delete the unzipped folder (otherwise the package will try to run in that folder)
+
+ - The Polygon package can be tested in python, the instruction can be found here
+    http://download.origo.ethz.ch/polygon/2101/Polygon.pdf
+
 
 
 	

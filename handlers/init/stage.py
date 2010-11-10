@@ -63,7 +63,8 @@ class initHandler:
             startpos = array([0,0])
         else:
             # Start in the center of the defined initial region
-            initial_region = proj.rfi.regions[int(proj.exp_cfg_data['InitialRegion'][0])]
+            initial_region = proj.rfiold.regions[int(proj.exp_cfg_data['InitialRegion'][0])]
+            initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(proj.regionMapping[initial_region.name][0])]
             startpos = proj.coordmap_map2lab(initial_region.getCenter())
 
         # Choose an appropriate background image

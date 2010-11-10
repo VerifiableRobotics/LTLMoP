@@ -21,7 +21,7 @@ handlers.drive.differentialDrive
 ### Below are settings for Scorpion08
 
 OrcaVelocityHost:
-10.0.0.195
+10.0.0.182
 
 OrcaVelocityPort:
 13339
