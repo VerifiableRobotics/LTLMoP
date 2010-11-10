@@ -19,7 +19,7 @@
 import wx   # Unfortunately necessary for wx.Point(), wx.Size(), and color stuff
 import fileMethods
 import re, random, math
-import Polygon, Polygon.Utils
+import Polygon, Polygon.Utils, os
 
 Polygon.setTolerance(0.01)
 
@@ -198,7 +198,7 @@ class RegionFileInterface:
         data = {"Background": self.background,
                 "Regions": regionData,
                 "Transitions": transitionData,
-                "Thumbnail": self.thumb,
+                "Thumbnail": os.path.basename(self.thumb),
                 "CalibrationPoints": calibPoints}
 
         fileMethods.writeToFile(filename, data, comments)
