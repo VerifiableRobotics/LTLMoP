@@ -52,7 +52,7 @@ This installation has been tested with ubuntu 10.04 LTS at Oct. 2010
 	mv $fichero client_libs/libplayerc++/test/test.cc
 
  - add the following line at the end of file /etc/bash.bashrc
-	export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python/$PYTHON_VERSION/site-pac
+	export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python/$PYTHON_VERSION/site-package
 
  - restart ubuntu	
 
