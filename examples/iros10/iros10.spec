@@ -68,9 +68,19 @@ ASL
 
 ======== SPECIFICATION ========
 
+RegionMapping:
+
+living=p5
+deck=p8
+porch=p4
+dining=p19,p20
+bedroom=p9
+others=p10,p11,p12,p13,p14,p15,p16,p17,p18
+kitchen=p6
+
 Spec: # Specification in simple English
 Env starts with false
-Robot starts with false
+Robot starts in deck
 If you were in porch then do not person
 If you were in porch then do not hazardous_item
 Do pick_up if and only if you are sensing hazardous_item and you are not activating carrying_item
@@ -80,7 +90,7 @@ If you are activating drop or you activated drop then stay there
 Do radio if and only if you are sensing person
 If you are activating radio or you activated radio then stay there
 If you activated pick_up then do carrying_item
-If you activated drop then do not carrying_item
+If you activated drop and you did not activate pick_up then do not carrying_item
 If you activated carrying_item and you did not activate drop then do carrying_item
 If you did not activate carrying_item and you did not activate pick_up then do not carrying_item
 If you are not activating carrying_item and you are not activating radio then visit dining
