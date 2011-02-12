@@ -1,0 +1,17 @@
+Name: # Name for this lab configuration
+Nao Real
+
+InitializationHandler:
+handlers.init.naoInit
+
+PoseHandler:
+handlers.pose.naoPose
+
+SensorHandler:
+handlers.sensor.naoSensor
+
+ActuatorHandler:
+handlers.actuator.naoActuator
+
+LocomotionCommandHandler:
+handlers.locomotionCommand.naoLocomotionCommand
