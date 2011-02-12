@@ -1315,7 +1315,8 @@ class DrawingFrame(wx.Frame):
                 editor.Destroy()
                 return
 
-            if editor.textCtrl.GetValue() not in [r.name for r in self.rfi.regions]:
+            # Check to make sure we aren't trying to change to the name of another existing region
+            if editor.textCtrl.GetValue() == obj.name or editor.textCtrl.GetValue() not in [r.name for r in self.rfi.regions]:
                 break
 
             wx.MessageBox("Region with name \"%s\" already exists." % (editor.textCtrl.GetValue()), "Error", 
