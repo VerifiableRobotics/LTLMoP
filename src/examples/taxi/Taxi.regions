@@ -1,0 +1,50 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+Lot	1
+I03	1
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+Lot	rect	220	359	121	111	0	0	255
+R04	rect	527	158	59	312	0	255	0
+R03	poly	163	159	57	311	0	255	0	0	0	57	0	57	200	57	311	0	311
+I06	poly	901	470	69	55	255	0	0	0	0	69	0	69	54	69	55	0	55
+R07	poly	586	470	315	55	0	255	0	0	55	0	0	315	0	315	55	3	55
+I05	rect	527	470	59	55	255	0	0
+R06	poly	220	470	307	55	0	255	0	0	0	121	0	307	0	307	55	0	55
+I04	poly	163	470	57	56	255	0	0	0	0	57	0	57	55	57	56	0	56
+R05	poly	901	158	69	312	0	255	0	0	0	69	0	69	312	0	312	0	157	0	44
+I03	poly	901	103	69	55	255	0	0	0	0	69	0	69	54	69	55	0	55
+R02	poly	586	103	315	55	0	255	0	0	55	0	0	315	0	315	55	3	55
+I02	rect	527	103	59	55	255	0	0
+R01	rect	220	103	307	55	0	255	0
+I01	poly	163	103	57	56	255	0	0	0	0	57	0	57	55	57	56	0	56
+boundary	poly	13	10	1106	631	0	0	255	4	593	0	14	131	17	211	20	420	0	1106	34	979	631	485	598	377	596
+
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+Taxi_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+Lot	R03	220	359	220	470
+Lot	R06	220	470	341	470
+R04	I05	527	470	586	470
+R04	I02	527	158	586	158
+R03	I04	163	470	220	470
+R03	I01	163	159	220	159
+I06	R07	901	470	901	525
+I06	R05	901	470	970	470
+R07	I05	586	470	586	525
+I05	R06	527	470	527	525
+R06	I04	220	470	220	525
+R05	I03	901	158	970	158
+I03	R02	901	103	901	158
+R02	I02	586	103	586	158
+I02	R01	527	103	527	158
+R01	I01	220	103	220	158
+
