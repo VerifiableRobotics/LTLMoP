@@ -685,7 +685,7 @@ class SpecEditorFrame(wx.Frame):
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Help")
         self.SetMenuBar(self.frame_1_menubar)
         # Menu Bar end
-        self.text_ctrl_spec = wx.richtext.RichTextCtrl(self.window_1_pane_1, -1, "", style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE)
+        self.text_ctrl_spec = wx.richtext.RichTextCtrl(self.window_1_pane_1, -1, "", style=wx.TE_PROCESS_ENTER|wx.WANTS_CHARS|wx.TE_PROCESS_TAB|wx.TE_MULTILINE)
         self.label_1 = wx.StaticText(self.panel_1, -1, "Regions:")
         self.list_box_regions = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
         self.button_map = wx.Button(self.panel_1, -1, "Select from Map...")
@@ -1566,7 +1566,7 @@ class SpecEditorFrame(wx.Frame):
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_log.BeginTextColour(color)
         #self.text_ctrl_log.BeginBold()
-        self.text_ctrl_log.AppendText(text)
+        self.text_ctrl_log.WriteText(text)
         #self.text_ctrl_log.EndBold()
         self.text_ctrl_log.EndTextColour()
         self.text_ctrl_log.ShowPosition(self.text_ctrl_log.GetLastPosition())
@@ -1726,7 +1726,7 @@ class RedirectText:
 
     def write(self,string):
         self.out.BeginTextColour("BLACK")
-        self.out.AppendText("\t"+string)
+        self.out.WriteText("\t"+string)
         self.out.EndTextColour()
         self.out.ShowPosition(self.out.GetLastPosition())
 
