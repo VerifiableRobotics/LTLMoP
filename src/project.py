@@ -22,7 +22,11 @@ class Project:
 
     def __init__(self):
         self.project_basename = None
+        self.silent = False
         pass
+
+    def setSilent(self, silent):
+        self.silent = silent
 
     def getExperimentConfig(self, exp_cfg_name):
         """
@@ -32,11 +36,11 @@ class Project:
         # Find the section that corresponds to this configuration
         for key, val in self.spec_data.iteritems():
             if key.startswith("EXPERIMENT CONFIG") and val['Name'][0] == exp_cfg_name :
-                print "  -> Using experiment configuration \"%s\"" % exp_cfg_name
+                if not self.silent: print "  -> Using experiment configuration \"%s\"" % exp_cfg_name
                 return val
 
 
-        print "ERROR: Could not find experiment config with name \"%s\" in spec file!" % exp_cfg_name
+        if not self.silent: print "ERROR: Could not find experiment config with name \"%s\" in spec file!" % exp_cfg_name
         return
 
     def loadLabData(self, exp_cfg_data):
@@ -49,13 +53,13 @@ class Project:
         try:
             lab_name = exp_cfg_data['Lab'][0]
         except IndexError, KeyError:
-            print "WARNING: Lab configuration file undefined"        
+            if not self.silent: print "WARNING: Lab configuration file undefined"        
             return
 
         # Add extension to the name if there isn't one. 
         if not lab_name.endswith('.lab'):
             lab_name = lab_name+'.lab'     
-        print "Loading lab setup file %s..." % lab_name
+        if not self.silent: print "Loading lab setup file %s..." % lab_name
         try:
             # First try path relative to project path
             lab_data = fileMethods.readFromFile(os.path.join(self.project_root, lab_name))   
@@ -64,9 +68,9 @@ class Project:
                 # If that doesn't work, try looking in $self.ltlmop_root/labs/ directory
                 lab_data = fileMethods.readFromFile(os.path.join(self.ltlmop_root, "labs", lab_name))   
             except IOError:
-                print "ERROR: Couldn't find lab setup file in project directory or labs folder."
+                if not self.silent: print "ERROR: Couldn't find lab setup file in project directory or labs folder."
                 return
-        print "  -> Looks like you want to run your experiment with %s. Good choice." % lab_data["Name"][0]
+        if not self.silent: print "  -> Looks like you want to run your experiment with %s. Good choice." % lab_data["Name"][0]
         
         return lab_data
         
@@ -77,10 +81,10 @@ class Project:
         try:
             mapping_data = spec_data['SPECIFICATION']['RegionMapping']
         except IndexError, KeyError:
-            print "WARNING: Region mapping data undefined"        
+            if not self.silent: print "WARNING: Region mapping data undefined"        
             return {'Null':['Null']}
         if len(mapping_data) == 0:
-            print "WARNING: Region mapping data is empty"        
+            if not self.silent: print "WARNING: Region mapping data is empty"        
             return {'Null':['Null']}
         
         regionMapping = {}
@@ -100,14 +104,14 @@ class Project:
         try:
             rdf_name = exp_cfg_data['RobotFile'][0]
         except IndexError, KeyError:
-            print "WARNING: Robot description file undefined"        
+            if not self.silent: print "WARNING: Robot description file undefined"        
             return
 
         # Add extension to the name if there isn't one. 
         if not rdf_name.endswith('.robot'):
             rdf_name = rdf_name+'.robot'  
      
-        print "Loading robot description file %s..." % rdf_name
+        if not self.silent: print "Loading robot description file %s..." % rdf_name
         try:
             # First try path relative to project path
             rdf_data = fileMethods.readFromFile(os.path.join(self.project_root, rdf_name))   
@@ -116,9 +120,9 @@ class Project:
                 # If that doesn't work, try looking in $self.ltlmop_root/robots/ directory
                 rdf_data = fileMethods.readFromFile(os.path.join(self.ltlmop_root, "robots", rdf_name))   
             except IOError:
-                print "ERROR: Couldn't find robot description file in project directory or robots folder."
+                if not self.silent: print "ERROR: Couldn't find robot description file in project directory or robots folder."
                 return
-        print "  -> %s looks excited for this run." % rdf_data["Name"][0]
+        if not self.silent: print "  -> %s looks excited for this run." % rdf_data["Name"][0]
         
         return rdf_data
 
@@ -134,14 +138,14 @@ class Project:
             if decomposed:
                 regf_name = regf_name.split(".")[0] + "_decomposed.regions"
         except IndexError, KeyError:
-            print "WARNING: Region file undefined"        
+            if not self.silent: print "WARNING: Region file undefined"        
             return
 
-        print "Loading region file %s..." % regf_name
+        if not self.silent: print "Loading region file %s..." % regf_name
         rfi = regions.RegionFileInterface() 
         rfi.readFile(os.path.join(self.project_root, regf_name))
      
-        print "  -> Found definitions for %d regions." % len(rfi.regions)
+        if not self.silent: print "  -> Found definitions for %d regions." % len(rfi.regions)
 
         return rfi
 
@@ -159,7 +163,7 @@ class Project:
             transformValues = exp_cfg_data['Calibration'][0].split(",")
             [xscale, xoffset, yscale, yoffset] = map(float, transformValues)
         except KeyError, ValueError:
-            print "ERROR: Please calibrate and update values before running simulation."
+            if not self.silent: print "ERROR: Please calibrate and update values before running simulation."
             return
 
         # Create functions for coordinate transformation
@@ -182,7 +186,7 @@ class Project:
         self.ltlmop_root = os.path.abspath(os.path.dirname(sys.argv[0]))
 
         ### Load in the specification file
-        print "Loading specification file %s..." % spec_file
+        if not self.silent: print "Loading specification file %s..." % spec_file
         spec_data = fileMethods.readFromFile(spec_file)   
         
         return spec_data
@@ -271,7 +275,7 @@ class Project:
         init_num = 1
         self.init_handlers = []
         for handler in self.h_name['init']:
-            print "  -> %s" % handler
+            if not self.silent: print "  -> %s" % handler
             # TODO: Is there a more elegant way to do this? This is pretty ugly...
             exec("from %s import initHandler as initHandler%d" % (handler, init_num)) in locals() # WARNING: This assumes our input data is not malicious...
             exec("self.init_handlers.append(initHandler%d(self, calib=calib))" % (init_num)) in locals()
@@ -292,11 +296,11 @@ class Project:
 
         # Now do the rest of them
         for handler in list:
-            print "  -> %s" % self.h_name[handler]
+            if not self.silent: print "  -> %s" % self.h_name[handler]
             exec("from %s import %sHandler" % (self.h_name[handler], handler)) in locals() # WARNING: This assumes our input data is not malicious...
             if handler == 'pose':
                 self.pose_handler = poseHandler(self, self.shared_data)
-                print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
+                if not self.silent: print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
             elif handler == 'sensor':
                 self.sensor_handler = sensorHandler(self, self.shared_data)
             elif handler == 'actuator':
