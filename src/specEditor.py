@@ -16,11 +16,11 @@ import wx, wx.richtext
 from regions import *
 from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import writeSpec
-from regionEditor import DrawableRegion
 import fileMethods
 import project
 import fsa
 import parseLP
+import mapRenderer
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
@@ -576,9 +576,8 @@ class MapDialog(wx.Dialog):
     
     # FIXME: Doesn't scroll on Windows???
 
-    def __init__(self, parent, bitmap, *args, **kwds):
+    def __init__(self, parent, *args, **kwds):
         self.parent = parent
-        self.bitmap = bitmap
         # begin wxGlade: MapDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
@@ -599,18 +598,20 @@ class MapDialog(wx.Dialog):
     def __do_layout(self):
         # begin wxGlade: MapDialog.__do_layout
         sizer_10 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_11 = wx.BoxSizer(wx.HORIZONTAL)
-        bitmap_1 = wx.StaticBitmap(self.panel_2, -1, (self.bitmap))
-        sizer_11.Add(bitmap_1, 1, wx.EXPAND, 0)
-        self.panel_2.SetSizer(sizer_11)
         sizer_10.Add(self.panel_2, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_10)
         self.Layout()
         self.Centre()
         # end wxGlade
 
+        self.panel_2.SetBackgroundColour(wx.WHITE)   
+        self.panel_2.Bind(wx.EVT_PAINT, self.drawMap)
+
         # Bind to catch mouse clicks!
-        bitmap_1.Bind(wx.EVT_LEFT_DOWN, self.onMapClick)
+        self.panel_2.Bind(wx.EVT_LEFT_DOWN, self.onMapClick)
+
+    def drawMap(self, event):
+        mapRenderer.drawMap(self.panel_2, self.parent.proj, scaleToFit=False)
 
     def onMapClick(self, event):
         x, y = self.panel_2.CalcUnscrolledPosition(event.GetX(), event.GetY())
@@ -685,7 +686,7 @@ class SpecEditorFrame(wx.Frame):
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Help")
         self.SetMenuBar(self.frame_1_menubar)
         # Menu Bar end
-        self.text_ctrl_spec = wx.richtext.RichTextCtrl(self.window_1_pane_1, -1, "", style=wx.TE_PROCESS_ENTER|wx.WANTS_CHARS|wx.TE_PROCESS_TAB|wx.TE_MULTILINE)
+        self.text_ctrl_spec = wx.richtext.RichTextCtrl(self.window_1_pane_1, -1, "", style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE)
         self.label_1 = wx.StaticText(self.panel_1, -1, "Regions:")
         self.list_box_regions = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
         self.button_map = wx.Button(self.panel_1, -1, "Select from Map...")
@@ -852,75 +853,9 @@ class SpecEditorFrame(wx.Frame):
         if self.parser is None or self.proj.regionMapping is None:
             return
 
-        pdc = wx.PaintDC(self.panel_locmap)
-        try:
-            dc = wx.GCDC(pdc)
-        except:
-            dc = pdc
-        else:
-            self.panel_locmap.PrepareDC(pdc)
+        highlightList = self.parser.proj.regionMapping[self.list_box_locphrases.GetStringSelection()]
 
-        self.panel_locmap.PrepareDC(dc)
-        dc.BeginDrawing()
-
-        # TODO: draw background image?
-        
-        # Figure out scaling
-        maximumWidth = self.panel_locmap.GetSize().x
-        maximumHeight = self.panel_locmap.GetSize().y
-        windowAspect = 1.0*maximumHeight/maximumWidth
-
-        # TODO: this doesn't need to be recalculated each time
-        leftMargin = min([pt.x for region in self.parser.proj.rfi.regions for pt in region.getPoints()])
-        topMargin = min([pt.y for region in self.parser.proj.rfi.regions for pt in region.getPoints()])
-        rightExtent = max([pt.x for region in self.parser.proj.rfi.regions for pt in region.getPoints()])
-        downExtent = max([pt.y for region in self.parser.proj.rfi.regions for pt in region.getPoints()])
-
-        W = rightExtent + 2*leftMargin
-        H = downExtent + 2*topMargin
-
-        imgAspect = 1.0*H/W
-
-        if imgAspect >= windowAspect:
-            NewH = maximumHeight
-            mapScale = 1.0*NewH/H
-        else:
-            NewW = maximumWidth
-            mapScale = 1.0*NewW/W
-
-        self.drawRegions(dc, pdc, drawLabels=self.checkbox_regionlabel.GetValue(), scale=mapScale)
-
-        dc.EndDrawing()
-        
-    def drawRegions(self, dc, pdc, drawLabels=True, scale=1):
-        for i in range(len(self.parser.proj.rfi.regions)-1, -1, -1):
-            obj = self.parser.proj.rfi.regions[i]
-            doHighlight = (obj.name in self.parser.proj.regionMapping[self.list_box_locphrases.GetStringSelection()])
-
-            obj.draw(dc, pdc, False, scale, showAlignmentPoints=False, highlight=doHighlight)
-    
-            if drawLabels:
-                # Draw region labels
-                dc.SetTextForeground(wx.BLACK)
-                dc.SetBackgroundMode(wx.TRANSPARENT)
-                font = wx.Font(12, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.BOLD, False)
-                dc.SetFont(font)
-                
-                textWidth, textHeight = dc.GetTextExtent(obj.name)
-                
-                # TODO: Better text placement algorithm for concave polygons?
-                dc.SetBrush(wx.Brush(obj.color, wx.SOLID))
-                dc.SetPen(wx.Pen(obj.color, 1, wx.SOLID))
-                center = obj.getCenter()
-                if obj.name.lower() == "boundary":
-                    textX = scale*obj.position.x
-                    textY = scale*obj.position.y + scale*obj.size.height + textHeight/2
-                else:
-                    textX = scale*center.x - textWidth/2
-                    textY = scale*center.y - textHeight/2
-
-                dc.DrawRoundedRectangle(textX - 5, textY - 3, textWidth + 10, textHeight + 6, 3)
-                dc.DrawText(obj.name, textX, textY)
+        mapRenderer.drawMap(self.panel_locmap, self.parser.proj, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList)
 
     def onPropositionDblClick(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -1060,6 +995,8 @@ class SpecEditorFrame(wx.Frame):
         Parse in a region file!
         """
 
+        # TODO: The Project module needs to be properly integrated here...
+
         # Create a RFI if necessary
         if self.rfi is None:
             self.rfi = RegionFileInterface()
@@ -1086,12 +1023,9 @@ class SpecEditorFrame(wx.Frame):
             self.projectPath = os.path.dirname(os.path.abspath(fileName))
 
         # Create the map selection dialog
-        #image = wx.ImageFromData(*rfi.thumb)
-        bitmap = wx.EmptyBitmap(1, 1)
-        bitmap.LoadFile(os.path.join(self.projectPath, self.rfi.thumb), wx.BITMAP_TYPE_PNG)
         if self.mapDialog is not None:
             self.mapDialog.Destroy()
-        self.mapDialog = MapDialog(frame_1, bitmap, frame_1)
+        self.mapDialog = MapDialog(frame_1, frame_1)
         frame_1.button_map.Enable(True)
 
 
@@ -1456,13 +1390,6 @@ class SpecEditorFrame(wx.Frame):
         # Update workspace decomposition listbox
         self.list_box_locphrases.Set(self.proj.regionMapping.keys())
         self.list_box_locphrases.Select(0)
-        
-        # Convert from Regions to DrawableRegions
-        for i, region in enumerate(self.parser.proj.rfi.regions):
-            obj = DrawableRegion(region.type)
-            obj.setData(region.getData())
-            self.parser.proj.rfi.regions[i] = obj
-            del region
         
         # update the rfi for new regions
         rfi = self.parser.proj.rfi
