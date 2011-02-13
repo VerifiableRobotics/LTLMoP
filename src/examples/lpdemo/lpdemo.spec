@@ -12,13 +12,6 @@ InitialRegion: # Initial region number
 3
 
 InitialTruths: # List of initially true propositions
-pick_up
-drop
-play_dead
-sing
-carrying_item
-bear
-fruit
 
 Lab: # Lab configuration file
 playerstage.lab
@@ -58,8 +51,8 @@ RegionMapping:
 
 bridge=p9
 between$bridge$and$apple_tree$=p10,p12,p54,p55,p56
-bear_colony=p13
 near$bear_colony$40=p13,p49,p50,p51,p52,p53
+bear_colony=p13
 pear_tree=p4
 upper_river=p12,p23,p24
 apple_tree=p14
@@ -71,6 +64,7 @@ cabin=p8
 Spec: # Specification in simple English
 Env starts with false
 Robot starts in cabin
+Robot starts with false
 Always not lower_river
 Always not upper_river
 Always not within 40 of bear_colony
