@@ -1,0 +1,11 @@
+*.pyc
+*.swp
+*.aut
+*.cfg
+*.ltl
+*.smv
+*.cfg
+*.world
+*_decomposed.regions
+*~
+.player
