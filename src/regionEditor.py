@@ -13,7 +13,7 @@ import sys, copy, re, shutil
 import traceback, types
 import cPickle, os.path, os
 import wxversion
-wxversion.select('2.8')
+#wxversion.select('2.8')
 import wx
 from wx.lib.buttons import GenBitmapButton
 

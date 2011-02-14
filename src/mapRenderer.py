@@ -1,7 +1,7 @@
 import wx
 from regionEditor import DrawableRegion
 
-def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[]):
+def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], memory=False):
 	""" Draw the map contained in the given project onto the target canvas.
 	"""
 
@@ -21,16 +21,24 @@ def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[]):
 		proj.rfi.regions[i] = obj
 		del region
 
-	pdc = wx.PaintDC(target)
-	try:
-		dc = wx.GCDC(pdc)
-	except:
-		dc = pdc
+	if memory:
+		dc = wx.MemoryDC()
+		dc.SelectObject(target)
+		pdc = dc
 	else:
-		target.PrepareDC(pdc)
+		pdc = wx.PaintDC(target)
+		try:
+			dc = wx.GCDC(pdc)
+		except:
+			dc = pdc
+		else:
+			target.PrepareDC(pdc)
 
-	target.PrepareDC(dc)
+		target.PrepareDC(dc)
+
 	dc.BeginDrawing()
+
+	dc.Clear()
 
 	# TODO: draw background image?
 	
@@ -92,3 +100,8 @@ def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[]):
 			dc.DrawText(obj.name, textX, textY)
 
 	dc.EndDrawing()
+
+	if memory:
+		dc.SelectObject(wx.NullBitmap)
+
+	return mapScale

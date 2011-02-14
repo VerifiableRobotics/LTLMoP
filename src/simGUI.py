@@ -15,6 +15,7 @@ import math, time, sys, os, re
 import wxversion
 import wx, wx.richtext, wx.grid
 import threading
+import project, mapRenderer
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -33,7 +34,6 @@ class SimGUI_Frame(wx.Frame):
         self.window_1_pane_2 = wx.Panel(self.window_1, -1)
         self.sizer_2_copy_staticbox = wx.StaticBox(self.window_1_pane_2, -1, "Status Log")
         self.window_1_pane_1 = wx.Panel(self.window_1, -1)
-        self.bitmap_map = wx.StaticBitmap(self.window_1_pane_1, -1, wx.NullBitmap)
         self.text_ctrl_sim_log = wx.richtext.RichTextCtrl(self.window_1_pane_2, -1, "", style=wx.TE_MULTILINE)
         self.button_sim_startPause = wx.Button(self.window_1_pane_2, -1, "Start")
         self.button_sim_log_clear = wx.Button(self.window_1_pane_2, -1, "Clear Log")
@@ -53,6 +53,11 @@ class SimGUI_Frame(wx.Frame):
         self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onResize, self.window_1)
         # end wxGlade
 
+        self.mapBitmap = None
+
+        self.Bind(wx.EVT_PAINT, self.onPaint)
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBG)
+
         # Make status bar at bottom.
 
         self.sb = wx.StatusBar(self)
@@ -67,16 +72,21 @@ class SimGUI_Frame(wx.Frame):
         self.controllerListenThread = threading.Thread(target = self.controllerListen)
         self.controllerListenThread.start()
     
+        self.robotPos = None
         self.robotVel = (0,0)
 
         # Let everyone know we're ready
         print "Hello!"
 
     def setMapImage(self, filename):
-        # Load and display the Map
-        self.originalMap = wx.Image(filename, wx.BITMAP_TYPE_PNG)
-        self.onResize()
+        # Load and display the map
+        self.proj = project.Project()
+        self.proj.setSilent(True)
+        self.proj.loadProject(filename)
+
         self.Bind(wx.EVT_SIZE, self.onResize, self)
+
+        self.onResize()
 
     def controllerListen(self):
         """
@@ -101,9 +111,8 @@ class SimGUI_Frame(wx.Frame):
                 wx.CallAfter(self.sb.SetStatusText, input, 0)
             elif input.startswith("POSE:"):
                 [x,y] = map(float, input.split(":")[1].split(","))
-                [x,y] = map(int, (self.mapScale*x, self.mapScale*y)) 
                 self.robotPos = (x, y)
-                wx.CallAfter(self.drawRobot)
+                wx.CallAfter(self.onPaint)
             elif input.startswith("VEL:"):
                 [x,y] = map(float, input.split(":")[1].split(","))
                 [x,y] = map(int, (self.mapScale*x, self.mapScale*y)) 
@@ -145,10 +154,6 @@ class SimGUI_Frame(wx.Frame):
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_43_copy_copy = wx.BoxSizer(wx.VERTICAL)
         sizer_2_copy = wx.StaticBoxSizer(self.sizer_2_copy_staticbox, wx.HORIZONTAL)
-        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_4.Add((20, 30), 0, 0, 0)
-        sizer_4.Add(self.bitmap_map, 1, wx.EXPAND, 0)
-        self.window_1_pane_1.SetSizer(sizer_4)
         sizer_5.Add((20, 30), 0, 0, 0)
         sizer_43_copy_copy.Add((20, 20), 0, 0, 0)
         sizer_2_copy.Add(self.text_ctrl_sim_log, 1, wx.ALL|wx.EXPAND, 2)
@@ -181,47 +186,52 @@ class SimGUI_Frame(wx.Frame):
         self.Layout()
         # end wxGlade
 
+        self.window_1.SetSashPosition(self.GetSize().y/2)
+        self.window_1_pane_1.SetBackgroundColour(wx.WHITE)   
+
     def onResize(self, event=None): # wxGlade: SimGUI_Frame.<event_handler>
-        # Figure out scaling
-        maximumWidth = self.bitmap_map.GetSize().x
-        maximumHeight = self.bitmap_map.GetSize().y
-        windowAspect = 1.0*maximumHeight/maximumWidth
+        size = self.window_1_pane_1.GetSize()
+        self.mapBitmap = wx.EmptyBitmap(size.x, size.y)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj, scaleToFit=True, drawLabels=False, memory=True)
 
-        W = self.originalMap.GetWidth()
-        H = self.originalMap.GetHeight()
-        imgAspect = 1.0*H/W
-
-        if imgAspect >= windowAspect:
-            NewH = maximumHeight
-            self.mapScale = 1.0*NewH/H
-            NewW = W * self.mapScale
-        else:
-            NewW = maximumWidth
-            self.mapScale = 1.0*NewW/W
-            NewH = H * self.mapScale
-
-        self.scaledMap = wx.BitmapFromImage(self.originalMap.Scale(NewW, NewH))
-
-        # Set background
-        self.bitmap_map.SetBitmap(self.scaledMap)
+        self.Refresh()
+        self.Update()
 
         if event is not None:
             event.Skip()
 
-    def drawRobot(self):
-        memory = wx.MemoryDC()
-        size = self.scaledMap.GetSize()
-        newMap = wx.EmptyBitmap(size.x, size.y)
-        memory.SelectObject(newMap)
+    def onEraseBG(self, event):
+        # Avoid unnecessary flicker by intercepting this event
+        pass
 
-        memory.BeginDrawing()
-        memory.DrawBitmap(self.scaledMap, 0, 0)
-        memory.DrawCircle(self.robotPos[0], self.robotPos[1], 5)
-        #memory.DrawLine(self.robotPos[0], self.robotPos[1], 
-        #                self.robotPos[0] + self.robotVel[0], self.robotPos[1] + self.robotVel[1])
-        memory.EndDrawing()
-        memory.SelectObject(wx.NullBitmap)
-        self.bitmap_map.SetBitmap(newMap)
+    def onPaint(self, event=None):
+        if self.mapBitmap is None:
+            return
+
+        pdc = wx.AutoBufferedPaintDC(self.window_1_pane_1)
+        try:
+            dc = wx.GCDC(pdc)
+        except:
+            dc = pdc
+        else:
+            self.window_1_pane_1.PrepareDC(pdc)
+
+        self.window_1_pane_1.PrepareDC(dc)
+        dc.BeginDrawing()
+
+        # Draw background
+        dc.DrawBitmap(self.mapBitmap, 0, 0)
+
+        # Draw robot
+        if self.robotPos is not None:
+            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
+            dc.DrawCircle(x, y, 5)
+
+        # Draw velocity vector of robot (for debugging)
+        #dc.DrawLine(self.robotPos[0], self.robotPos[1], 
+        #            self.robotPos[0] + self.robotVel[0], self.robotPos[1] + self.robotVel[1])
+
+        dc.EndDrawing()
 
     def appendLog(self, text, color="BLACK"):
         # for printing everything on the log
@@ -229,7 +239,7 @@ class SimGUI_Frame(wx.Frame):
         self.text_ctrl_sim_log.AppendText("["+time.strftime("%H:%M:%S", time.gmtime())+"] "+text)
         self.text_ctrl_sim_log.EndTextColour()
         self.text_ctrl_sim_log.ShowPosition(self.text_ctrl_sim_log.GetLastPosition())
-        self.Refresh()
+        self.text_ctrl_sim_log.Refresh()
 
     def onSimStartPause(self, event): # wxGlade: SimGUI_Frame.<event_handler>
         btn_label = self.button_sim_startPause.GetLabel()

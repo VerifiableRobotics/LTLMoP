@@ -177,7 +177,7 @@ def main(argv):
             time.sleep(0.05) # We need to sleep to give up the CPU
 
         # Tell GUI to load background image
-        print >>fd_gui_input, "BG:" + proj.getBackgroundImagePath()
+        print >>fd_gui_input, "BG:" + proj.getFilenamePrefix() + ".spec"
 
         # Forward all messages from here on to the GUI window
         sys.stdout = fd_gui_input
