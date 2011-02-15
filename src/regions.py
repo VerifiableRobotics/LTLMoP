@@ -108,6 +108,60 @@ class RegionFileInterface:
         # Everything was full, so let's just append to the end
         return last + 1
 
+    def compareFace(self,face1,face2):
+        """
+        A function that compare if two faces are the same with small tolerance
+        One face could be shorter than the other but overlap with the other
+        """
+        f1=[[float(face1[0][0]),float(face1[0][1])],[float(face1[1][0]),float(face1[1][1])]]
+        f2=[[float(face2[0][0]),float(face2[0][1])],[float(face2[1][0]),float(face2[1][1])]]
+        if math.sqrt((f2[0][0]-f2[1][0])**2+(f2[0][1]-f2[1][1])**2) < math.sqrt((f1[0][0]-f1[1][0])**2+(f1[0][1]-f1[1][1])**2):
+            shortFace=face2
+            longFace=face1
+        else:
+            shortFace=face1
+            longFace=face2
+
+        tol=0.0001
+        # get unit vector of line for both faces
+        ux=(f1[0][0]-f1[1][0])/math.sqrt((f1[0][0]-f1[1][0])**2+(f1[0][1]-f1[1][1])**2)
+        uy=(f1[0][1]-f1[1][1])/math.sqrt((f1[0][0]-f1[1][0])**2+(f1[0][1]-f1[1][1])**2)
+        vx=(f2[0][0]-f2[1][0])/math.sqrt((f2[0][0]-f2[1][0])**2+(f2[0][1]-f2[1][1])**2)
+        vy=(f2[0][1]-f2[1][1])/math.sqrt((f2[0][0]-f2[1][0])**2+(f2[0][1]-f2[1][1])**2)
+        if (math.fabs(ux-vx)<=tol and math.fabs(uy-vy)<=tol) or \
+            (math.fabs(ux+vx)<=tol and math.fabs(ux+vx)<=tol):
+            # they are parallel
+        
+            # calculating the distance between one point on one face and the other face
+            side1=math.sqrt((f2[0][0]-f2[1][0])**2+(f2[0][1]-f2[1][1])**2)
+            side2=math.sqrt((f1[0][0]-f2[0][0])**2+(f1[0][1]-f2[0][1])**2)
+            side3=math.sqrt((f1[0][0]-f2[1][0])**2+(f1[0][1]-f2[1][1])**2)
+            p=(side1+side2+side3)/2
+            area=math.sqrt(p*(p-side1)*(p-side2)*(p-side3))
+            dist=area*2/side1
+            if dist<=tol:
+                
+                # check if the lines are overlapping
+                if longFace[0][0]>longFace[1][0]:
+                    x1=longFace[1][0]
+                    x2=longFace[0][0]
+                else:
+                    x1=longFace[0][0]
+                    x2=longFace[1][0]
+                if longFace[0][1]>longFace[1][1]:
+                    y1=longFace[1][1]
+                    y2=longFace[0][1]
+                else:
+                    y1=longFace[0][1]
+                    y2=longFace[1][1]
+
+
+                if x1-tol<shortFace[0][0] and shortFace[0][0]<x2+tol and y1-tol<shortFace[0][1] and shortFace[0][1]<y2+tol and \
+                    x1-tol<shortFace[1][0] and shortFace[1][0]<x2+tol and y1-tol<shortFace[1][1] and shortFace[1][1]<y2+tol:
+
+                    return longFace,shortFace,True
+                
+        return longFace,shortFace,False
     def recalcAdjacency(self):
         """
         Calculate the region adjacency matrix and a list of shared faces
@@ -121,7 +175,7 @@ class RegionFileInterface:
         transitionFaces = {} # This is just a list of faces to draw dotted lines on
 
         for obj in self.regions:
-            for face in obj.getFaces():
+            for face in obj.getFaces():                
                 if face not in transitionFaces: transitionFaces[face] = []
                 ignore = False
                 for other_obj in transitionFaces[face]:
@@ -133,6 +187,24 @@ class RegionFileInterface:
     
                 if not ignore:
                     transitionFaces[face].append(obj)
+
+        toDelete = []
+
+        for face in transitionFaces.keys():
+            for otherFace in transitionFaces.keys():
+                if face!=otherFace:
+                    longFace,shortFace,overlap=self.compareFace(face, otherFace)
+                    if overlap:
+                        for obj in transitionFaces[longFace]:
+                            if obj not in transitionFaces[shortFace]:
+                                transitionFaces[shortFace].append(obj)
+                        # mark for deletion (we can't delete it in the middle of iteration)
+                        toDelete.append(longFace)
+
+         # Delete all those dudes
+        for unused_face in toDelete:
+            if unused_face in transitionFaces:
+                del transitionFaces[unused_face]                   
 
         toDelete = []
         for face, objarray in transitionFaces.iteritems():
@@ -220,7 +292,7 @@ class RegionFileInterface:
         except KeyError:
             self.background = "None"
 
-        self.thumb = data["Thumbnail"][0]
+        self.thumb = os.path.join(os.path.split(filename)[0],data["Thumbnail"][0])
 
         self.regions = []
         for region in data["Regions"]:

@@ -153,6 +153,26 @@ class decomposition():
                         removeList.append(pt)
                 #print 'removing...............',removeList
                 map(points.remove,removeList)
+
+                # Check for and remove any vertices that create 0degree angles
+                clean = False
+                while not clean:
+                    clean = True                
+                    for i in xrange(len(points)):
+                        a = points[(i-1)%len(points)]
+                        b = points[(i)%len(points)]
+                        c = points[(i+1)%len(points)]
+                        v1 = (a[0]-b[0], a[1]-b[1])
+                        v2 = (c[0]-b[0], c[1]-b[1])
+                        mag1 = math.sqrt(v1[0]**2 + v1[1]**2)
+                        mag2 = math.sqrt(v2[0]**2 + v2[1]**2)
+                        ndp = (v1[0]*v2[0]+v1[1]*v2[1])/(mag1*mag2)
+                        if abs(ndp-1) < 0.0001:
+                            print "DELETED A PITBULL"
+                            points.pop(i)
+                            clean = False
+                            break
+
                 return Polygon.Polygon(points)    
             
         
@@ -448,7 +468,7 @@ class decomposition():
             angleBC = angleBC+2*math.pi
         
         
-        if (angleBA<angleBC) and (angleBA + math.pi >= angleBC):
+        if (angleBA<=angleBC) and (angleBA + math.pi >= angleBC):
             return True
         else:
             return False
