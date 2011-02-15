@@ -249,7 +249,7 @@ class parseLP:
                         self.newPolysMap[nameOfRegion].remove(nameOfPortion)
                         
         for region in smallRegion:
-            print "remove"+region
+            #print "remove"+region
             del self.portionOfRegion[region]
             
     def intAllPoints(self,poly):
