@@ -141,23 +141,13 @@ class decomposition():
                         del points[0:endIndex-length]
                     else:
                         del points[startIndex:endIndex]
-                
-                # remove the duplicated points if they are next to each other
-                removeList = []
-                for i,pt in enumerate(points):
-                    if i < len(points)-1:
-                        nextPoint = points[i+1]
-                    else:
-                        nextPoint = points[0]
-                    if (pt[0]==nextPoint[0]) and (pt[1]==nextPoint[1]):
-                        removeList.append(pt)
-                #print 'removing...............',removeList
-                map(points.remove,removeList)
 
                 # Check for and remove any vertices that create 0degree angles
                 # TODO: Use numpy or something for this
                 clean = False
+
                 while not clean:
+                    points = self.removeDuplicatePoints(points)
                     clean = True                
                     for i in xrange(len(points)):
                         a = points[(i-1)%len(points)]
@@ -175,7 +165,21 @@ class decomposition():
 
                 return Polygon.Polygon(points)    
             
-        
+    def removeDuplicatePoints(self, points):
+        # remove the duplicated points if they are next to each other
+        removeList = []
+        for i,pt in enumerate(points):
+            if i < len(points)-1:
+                nextPoint = points[i+1]
+            else:
+                nextPoint = points[0]
+            if (pt[0]==nextPoint[0]) and (pt[1]==nextPoint[1]):
+                removeList.append(pt)
+        #print 'removing...............',removeList
+        map(points.remove,removeList)
+
+        return points
+
     def mergeHole(self,allVertices,initialIndex,holeIndex,vertexIndex):
         hole = self.holeList[holeIndex]
         del self.holeList[holeIndex]
@@ -200,7 +204,7 @@ class decomposition():
         mergePoints = [allVertices[initialIndex]] + mergePoints
         
         points = tuple([(p.x,p.y) for p in mergePoints])
-        #print points
+        #print points                print points
                  
         for pt in mergePoints:
             allVertices.insert(initialIndex+1,pt) 
@@ -394,7 +398,7 @@ class decomposition():
         allVertices:    List of all vertices of the polygon to be decomposed
         """
         
-        # TODO start searching from the last point of the last polygon
+        # start searching from the last point of the last polygon
         i = 0
         for p, v in enumerate(allVertices):
             #print v.x
@@ -403,20 +407,19 @@ class decomposition():
                 break
                 
         initial_i = i   
-        while i < initial_i + len(allVertices)-1:
-            j=self.indexInRange(i)
-            if ((j not in self.notchVertices) and (j+len(allVertices) not in self.notchVertices) and (j-len(allVertices) not in self.notchVertices))\
-            and (not self.calcAngle(allVertices[j-1],allVertices[j],allVertices[j+1])):
-                self.indexOfVertex = self.indexInRange(j+1)
-                self.vertexIndexOfNextPoly.append(j)
+        #while i < initial_i + len(allVertices)-1:
+        for i in xrange(initial_i, initial_i+len(allVertices)):
+            a = (i-1)%len(allVertices)
+            b = (i)%len(allVertices)
+            c = (i+1)%len(allVertices)
+            if (b not in self.notchVertices) and not self.calcAngle(allVertices[a],allVertices[b],allVertices[c]):
+                self.indexOfVertex = c
+                self.vertexIndexOfNextPoly.append(b)
                 self.vertexIndexOfNextPoly.append(self.indexOfVertex)
                 #print 'Find Initial Vertex!', allVertices[j].x,allVertices[j].y
                 #print
                 #raw_input()
                 break
-            else:
-                i = i +1
-
                 
     def getVertices(self,poly):
         for pt in Polygon.Utils.pointList(poly):
