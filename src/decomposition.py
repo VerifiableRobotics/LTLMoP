@@ -155,6 +155,7 @@ class decomposition():
                 map(points.remove,removeList)
 
                 # Check for and remove any vertices that create 0degree angles
+                # TODO: Use numpy or something for this
                 clean = False
                 while not clean:
                     clean = True                
@@ -168,7 +169,6 @@ class decomposition():
                         mag2 = math.sqrt(v2[0]**2 + v2[1]**2)
                         ndp = (v1[0]*v2[0]+v1[1]*v2[1])/(mag1*mag2)
                         if abs(ndp-1) < 0.0001:
-                            print "DELETED A PITBULL"
                             points.pop(i)
                             clean = False
                             break
