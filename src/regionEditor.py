@@ -1781,10 +1781,25 @@ class DrawingFrame(wx.Frame):
     def _getObjectAt(self, pt):
         """ Return the first object found which is at the given point.
         """
+        BOUNDARY_TOLERANCE = 2
+
         for obj in self.rfi.regions:
             # TODO: Do preliminary, less-expensive checking first
-            if obj.objectContainsPoint(pt.x, pt.y):
-                return obj
+
+            if obj.name.lower() == "boundary":
+                # Special case for boundary: only react to clicks on perimeter
+
+                # Check faces
+                for face in obj.getFaces():
+                    pta = wx.Point(*face[0])
+                    ptb = wx.Point(*face[1])
+                    [on_segment, d, pint] = pointLineIntersection(pta, ptb, pt)
+                    if on_segment and d <= BOUNDARY_TOLERANCE:
+                        return obj
+            else: 
+                if obj.objectContainsPoint(pt.x, pt.y):
+                    return obj
+
         return None
 
 
