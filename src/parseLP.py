@@ -10,11 +10,6 @@ import decomposition
 
 Polygon.setTolerance(0.1)
 
-
-#########################
-# MAIN EXECUTION THREAD #
-#########################
-
 class parseLP:
     """
     A parser to parse the locative prepositions in specification
@@ -35,11 +30,18 @@ class parseLP:
         self.proj = project.Project()
         self.proj.loadProject(spec_file)
         
-        # store the boundary region data and remove it from the region list
+        # Look for a defined boundary region, and set it aside if available
+        self.boundaryRegion = None
         for region in self.proj.rfi.regions:
             if region.name.lower() == 'boundary':
                 self.boundaryRegion = region
                 self.proj.rfi.regions.remove(region)
+                break
+    
+        # TODO: If not defined, use the minimum bounding polygon by default
+        if self.boundaryRegion is None:
+            print "ERROR: You need to define a boundary region (just create a region named 'boundary' in RegionEditor)"
+            return
 
         # turn list of string into one string
         spec = "\n".join(self.proj.spec_data['SPECIFICATION']['Spec'])
