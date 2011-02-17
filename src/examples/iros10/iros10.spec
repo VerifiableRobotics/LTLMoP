@@ -9,7 +9,7 @@ Calibration: # Coordinate transformation between map and experiment: XScale, XOf
 0.0145090906457,-7.97493804517,-0.0163607845119,5.97177404282
 
 InitialRegion: # Initial region number
-0
+2
 
 InitialTruths: # List of initially true propositions
 
@@ -29,7 +29,7 @@ Calibration: # Coordinate transformation between map and experiment: XScale, XOf
 0.00667619043562,0.519140956528,-0.00536700273334,2.25351186904
 
 InitialRegion: # Initial region number
-0
+2
 
 InitialTruths: # List of initially true propositions
 
@@ -63,24 +63,25 @@ person,1
 hazardous_item,1
 
 currentExperimentName:
-ASL
+PlayerStage
 
 
 ======== SPECIFICATION ========
 
 RegionMapping:
 
-living=p5
-porch=p4
-deck=p8
-others=p10,p11,p12,p13,p14,p15,p16,p17,p18
-dining=p19,p20
-bedroom=p9
-kitchen=p6
+living=p4
+deck=p7
+porch=p3
+dining=p6
+bedroom=p8
+others=p2,p9,p10
+kitchen=p5
 
 Spec: # Specification in simple English
 Env starts with false
-Robot starts in deck
+Robot starts in porch
+Robot starts with false
 If you were in porch then do not person
 If you were in porch then do not hazardous_item
 Do pick_up if and only if you are sensing hazardous_item and you are not activating carrying_item
@@ -96,6 +97,7 @@ If you did not activate carrying_item and you did not activate pick_up then do n
 If you are not activating carrying_item and you are not activating radio then visit dining
 If you are not activating carrying_item and you are not activating radio then visit deck
 #always not living
+always kitchen or porch or deck or bedroom or dining or living
 If you are not activating carrying_item and you are not activating radio then visit living
 If you are not activating carrying_item and you are not activating radio then visit bedroom
 If you are not activating carrying_item and you are not activating radio then visit kitchen
