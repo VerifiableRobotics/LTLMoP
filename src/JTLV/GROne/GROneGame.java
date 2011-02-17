@@ -27,27 +27,35 @@ import edu.wis.jtlv.old_lib.games.GameException;
 public class GROneGame {
 	private ModuleWithWeakFairness env;
 	private ModuleWithWeakFairness sys;
+	int sysJustNum, envJustNum;
 	private BDD player2_winning;
 
 	// p2_winning in GRGAmes are !p1_winning
 
-	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys)
-			throws GameException {
+	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, int sysJustNum, int envJustNum)
+	throws GameException {
 		if ((env == null) || (sys == null)) {
 			throw new GameException(
 					"cannot instanciate a GR[1] Game with an empty player.");
 		}
-
+		
 		this.env = env;
 		this.sys = sys;
-
+		this.sysJustNum = sysJustNum;
+		this.envJustNum = envJustNum;
+		
 		// for now I'm giving max_y 50, at the end I'll cut it (and during, I'll
 		// extend if needed. (using vectors only makes things more complicate
 		// since we cannot instantiate vectors with new vectors)
-		x_mem = new BDD[sys.justiceNum()][env.justiceNum()][50];
-		y_mem = new BDD[sys.justiceNum()][50];
-		z_mem = new BDD[sys.justiceNum()];
-		this.player2_winning = this.calculate_win();
+		x_mem = new BDD[sysJustNum][envJustNum][50];
+		y_mem = new BDD[sysJustNum][50];
+		z_mem = new BDD[sysJustNum];		
+		this.player2_winning = this.calculate_win();		 
+	}
+	
+	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys)
+			throws GameException {
+		this(env, sys, sys.justiceNum(), env.justiceNum());
 	}
 
 	public BDD[][][] x_mem;
@@ -68,14 +76,15 @@ public class GROneGame {
 
 		z = Env.TRUE();
 		for (iterZ = new FixPoint<BDD>(); iterZ.advance(z);) {
-			for (int j = 0; j < sys.justiceNum(); j++) {
+			//for (int j = 0; j < sys.justiceNum(); j++) {
+			for (int j = 0; j < sysJustNum; j++) {
 				cy = 0;
 				y = Env.FALSE();
 				for (iterY = new FixPoint<BDD>(); iterY.advance(y);) {
 					BDD start = sys.justiceAt(j).and(env.yieldStates(sys, z))
 							.or(env.yieldStates(sys, y));
-					y = Env.FALSE();
-					for (int i = 0; i < env.justiceNum(); i++) {
+					//y = Env.FALSE();
+					for (int i = 0; i < envJustNum; i++) {
 						BDD negp = env.justiceAt(i).not();
 						x = z.id();
 						for (iterX = new FixPoint<BDD>(); iterX.advance(x);) {
@@ -266,7 +275,7 @@ public class GROneGame {
                 assert p_cy >= 0 : "Couldn't find p_cy";
                 /* Find  X index of current state */
                 int p_i = -1;
-                for (int i = 0; i < env.justiceNum(); i++) {
+                for (int i = 0; i < envJustNum; i++) {
 			System.out.println(p_j + "," + i + "," + p_cy);
                     if (!p_st.and(x_mem[p_j][i][p_cy]).isZero()) {
                         p_i = i;
@@ -376,8 +385,9 @@ public class GROneGame {
 
         /* Remove stuttering */
         // TODO: Make this more efficient (and less ugly) if possible
-        int num_removed = 0;
-        /* 
+        /*
+		int num_removed = 0;
+      	   
         for (RawState state1 : aut) {
             int j1 = state1.get_rank();
             for (RawState state2 : state1.get_succ()) {
@@ -400,10 +410,13 @@ public class GROneGame {
             if (state1.get_rank() == -1) {
                 num_removed++;
             }
+            
         }
-*/
+
         
         System.out.println("Removed " + num_removed + " stutter states.");
+        
+        */
 
         /* Print output */
 

@@ -162,6 +162,7 @@ class RegionFileInterface:
                     return longFace,shortFace,True
                 
         return longFace,shortFace,False
+
     def recalcAdjacency(self):
         """
         Calculate the region adjacency matrix and a list of shared faces

@@ -6,6 +6,7 @@ import edu.wis.jtlv.env.module.SMVModule;
 import edu.wis.jtlv.env.spec.Spec;
 import java.io.File;
 import java.io.PrintStream;
+import edu.wis.jtlv.lib.FixPoint;
 
 public class GROneMain {
 
@@ -24,7 +25,7 @@ public class GROneMain {
         if (args.length < 2) {
             System.err.println("Usage: java GROneMain [smv_file] [ltl_file]");
             System.exit(1);
-        }
+        }                
 
         Env.loadModule(args[0]);
         Spec[] spcs = Env.loadSpecFile(args[1]);
@@ -53,20 +54,24 @@ public class GROneMain {
 
 		System.out.print("==== Constructing and playing the game ======\n");
 		long time = System.currentTimeMillis();
-		GROneGame g = new GROneGame(env, sys);
+		GROneGame g = new GROneGame(env,sys);
 		long t1 = (System.currentTimeMillis() - time);
 		System.out.println("Games time: " + t1);
+		
+		GROneDebug.analyze(env,sys);
+		GROneDebug.justiceChecks(env,sys);
 
 		 ///////////////////////////////////////////////
 		 ///////////////////////////////////////////////
 		 //old
-		 BDD all_init = g.getSysPlayer().initial().and( g.getEnvPlayer().initial());
+		 BDD all_init = g.getSysPlayer().initial().and(g.getEnvPlayer().initial());
 		 BDD counter_exmple = g.envWinningStates().and(all_init);
 		 if (!counter_exmple.isZero()) {
 		 System.out.println("Specification is unrealizable...");
 		 System.out.println("The env player can win from states:");
 		 System.out.println("\t" + counter_exmple);
-         return;
+		 
+         return;     
 		 } 
 
 		// ///////////////////////////////////////////////
@@ -89,7 +94,7 @@ public class GROneMain {
 		// ///////////////////////////////////////////////
 		// ///////////////////////////////////////////////
 		// new
-/*		BDD env_ini = g.getEnvPlayer().initial();
+	/*	BDD env_ini = g.getEnvPlayer().initial();
 		BDDVarSet env_vars = g.getEnvPlayer().moduleUnprimeVars();
 		for (BDDIterator it = env_ini.iterator(env_vars); it.hasNext();) {
 			BDD eini = (BDD) it.next();
@@ -106,22 +111,26 @@ public class GROneMain {
 			}
 		}*/
 		// otherwise we can synthesis
+		
 		System.out.println("Specification is realizable...");
 		System.out.println("==== Building an implementation =========");
 		System.out.println("-----------------------------------------");
+		PrintStream orig_out = System.out;
 		System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
 		/*
         g.printWinningStrategy(g.getEnvPlayer().initial().and(
 				g.getSysPlayer().initial()).satOne(env.moduleUnprimeVars().union(
 						sys.moduleUnprimeVars()), false));  // Added BDDVarSet argument so that initial condition is fully specified -Cameron
         */
-        g.printWinningStrategy(g.getEnvPlayer().initial().and(
-				               g.getSysPlayer().initial()));
-		System.setOut(System.out); // restore STDOUT
+		g.printWinningStrategy(g.getEnvPlayer().initial().and(
+	               g.getSysPlayer().initial()));
+		System.setOut(orig_out); // restore STDOUT
 		System.out.print("-----------------------------------------\n");
 		long t2 = (System.currentTimeMillis() - time);
 		System.out.println("Strategy time: " + t2);
 		System.out.println("===== Done ==============================");
+		
+	
 	}
-
+	
 }

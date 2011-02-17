@@ -4,5 +4,5 @@ If not already in the JTLV directory, download jtlv-prompt, NOT the plugin JAR
 
 cd GROne
 javac -sourcepath . -cp ../jtlv-prompt1.4.0.jar *.java
-java -Xmx128m -cp ../jtlv-prompt1.4.0.jar:. GROneMain [smv_file] [ltl_file]
+java -Xmx128m -cp ../jtlv-prompt1.4.0.jar:. GROneMain [smv_file] [spec_file]
 

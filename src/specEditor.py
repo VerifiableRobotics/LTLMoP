@@ -21,11 +21,15 @@ import project
 import fsa
 import parseLP
 import mapRenderer
+import recolorLTL
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
 #   The .wxg file is located in the dev/ directory.   #
 #######################################################
+
+#### CAVEAT TO THE ABOVE: wxglade does not support wx.WANTS_CHARS, so you need to
+#### to manually append this to the style of text_ctrl_spec after code regeneration
 
 class simSetupDialog(wx.Dialog):
     """
@@ -655,6 +659,7 @@ class SpecEditorFrame(wx.Frame):
         global MENU_SIMCONFIG; MENU_SIMCONFIG = wx.NewId()
         global MENU_SIMULATE; MENU_SIMULATE = wx.NewId()
         global MENU_DOTTY; MENU_DOTTY = wx.NewId()
+        global MENU_ANALYZE; MENU_ANALYZE = wx.NewId()
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(wx.ID_NEW, "&New\tCtrl-N", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(wx.ID_OPEN, "&Open...\tCtrl-O", "", wx.ITEM_NORMAL)
@@ -682,11 +687,14 @@ class SpecEditorFrame(wx.Frame):
         wxglade_tmp_menu.Append(MENU_DOTTY, "View &Automaton\tF9", "", wx.ITEM_NORMAL)
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Run")
         wxglade_tmp_menu = wx.Menu()
+        wxglade_tmp_menu.Append(MENU_ANALYZE, "&Analyze\tF8", "", wx.ITEM_NORMAL)
+        self.frame_1_menubar.Append(wxglade_tmp_menu, "&Debug")
+        wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(wx.ID_ABOUT, "&About Specification Editor...", "", wx.ITEM_NORMAL)
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Help")
         self.SetMenuBar(self.frame_1_menubar)
         # Menu Bar end
-        self.text_ctrl_spec = wx.richtext.RichTextCtrl(self.window_1_pane_1, -1, "", style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE)
+        self.text_ctrl_spec = wx.richtext.RichTextCtrl(self.window_1_pane_1, -1, "", style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.WANTS_CHARS)
         self.label_1 = wx.StaticText(self.panel_1, -1, "Regions:")
         self.list_box_regions = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
         self.button_map = wx.Button(self.panel_1, -1, "Select from Map...")
@@ -726,6 +734,7 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuConfigSim, id=MENU_SIMCONFIG)
         self.Bind(wx.EVT_MENU, self.onMenuSimulate, id=MENU_SIMULATE)
         self.Bind(wx.EVT_MENU, self.onMenuViewAut, id=MENU_DOTTY)
+        self.Bind(wx.EVT_MENU, self.onMenuAnalyze, id=MENU_ANALYZE)
         self.Bind(wx.EVT_MENU, self.onMenuAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onPropositionDblClick, self.list_box_regions)
         self.Bind(wx.EVT_BUTTON, self.onMapSelect, self.button_map)
@@ -1049,7 +1058,7 @@ class SpecEditorFrame(wx.Frame):
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if fileName == "": return
 
-        self.openFile(fileName)
+        self.openFile(fileName, 0, -1, -1)  # FIXME: This is really ugly
         #event.Skip()
 
     def onMenuSave(self, event=None): # wxGlade: SpecEditorFrame.<event_handler>
@@ -1123,7 +1132,14 @@ class SpecEditorFrame(wx.Frame):
         else:
             regionMappingData='Null=Null'
         
-        data['SPECIFICATION'] = {'Spec': str(self.text_ctrl_spec.GetValue()),'RegionMapping': regionMappingData}
+        view = self.text_ctrl_spec.GetValue()
+        specOnly = ""
+        for line in view:
+            if (line == "RESULT") : break
+            else : specOnly += line
+            
+            
+        data['SPECIFICATION'] = {'Spec': str(specOnly),'RegionMapping': regionMappingData}
         data['SETTINGS'] = {"RegionFile": self.projectFiles["RegionFile"],
                             "Sensors": self.dumpListBox(self.list_box_sensors),
                             "Actions": self.dumpListBox(self.list_box_actions),
@@ -1215,7 +1231,7 @@ class SpecEditorFrame(wx.Frame):
         self.subprocess[PROCESS_REGED] = None
         self.subprocess[PROCESS_DOTTY] = None
 
-    def openFile(self, fileName):
+    def openFile(self, fileName, recolor, sysColor, envColor):          
 
         if fileName is None:
             return
@@ -1229,8 +1245,27 @@ class SpecEditorFrame(wx.Frame):
         filePath = os.path.dirname(os.path.abspath(fileName))
 
         for name, content in data.iteritems():
-            if name == 'SPECIFICATION' and 'Spec' in content and len(content['Spec']) > 0: 
-                self.text_ctrl_spec.SetValue("\n".join(content['Spec']))
+            if name == 'SPECIFICATION' and 'Spec' in content and len(content['Spec']) > 0:
+                for line in content['Spec']: 
+                    if recolor == 1:                   
+                        if (line.strip() in recolorLTL.readFromColFile("sysBugs.txt")):
+                            line = line + "\n"
+                            self.text_ctrl_spec.BeginTextColour(sysColor)
+                            self.text_ctrl_spec.WriteText(line)
+                            self.text_ctrl_spec.EndTextColour()   
+                        elif (line.strip() in recolorLTL.readFromColFile("envBugs.txt")):
+                            line = line + "\n"
+                            self.text_ctrl_spec.BeginTextColour(envColor)
+                            self.text_ctrl_spec.WriteText(line)
+                            self.text_ctrl_spec.EndTextColour()
+                        else:  
+                            self.text_ctrl_spec.BeginTextColour(wx.Colour(0,0,0))
+                            line = line + "\n"
+                            self.text_ctrl_spec.WriteText(line)                                                 
+                    else: 
+                        self.text_ctrl_spec.BeginTextColour(wx.Colour(0,0,0))
+                        line = line + "\n"
+                        self.text_ctrl_spec.WriteText(line)
 
             elif name =='SETTINGS':
                 if 'RegionFile' in content and len(content['RegionFile']) > 0:
@@ -1465,7 +1500,7 @@ class SpecEditorFrame(wx.Frame):
         else:
             classpath = os.path.join(self.proj.ltlmop_root, "JTLV", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "JTLV", "GROne")
 
-        cmd = subprocess.Popen(["java", "-Xmx128m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+        cmd = subprocess.Popen(["java", "-ea", "-Xmx128m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
     
         # TODO: Make this output live
         while cmd.poll():
@@ -1616,7 +1651,9 @@ class SpecEditorFrame(wx.Frame):
             return
 
         self.appendLog("Generating PostScript file from automaton...\n", "BLUE")
-        aut = fsa.Automaton(self.rfi.regions, None, None, None) 
+
+        aut = fsa.Automaton(self.parser.proj.rfi.regions, None, None, None) 
+
         aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
         aut.writeDot(fileNamePrefix+".dot")
         self.subprocess[PROCESS_DOTTY] = wx.Process(self, PROCESS_DOTTY)
@@ -1638,6 +1675,413 @@ class SpecEditorFrame(wx.Frame):
     def onLocPhraseSelect(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.panel_locmap.Refresh()
         event.Skip()
+
+    def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        # Let's make sure we have everything!
+
+        #This is all copied from Compile -- Vasu
+        
+        if self.rfi is None:
+            wx.MessageBox("Please compile before analyzing.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+    
+        if self.text_ctrl_spec.GetValue() == "":
+            wx.MessageBox("Please write a specification before analyzing.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+        if self.proj.project_basename is None:
+            wx.MessageBox("Please save your project before analyzing.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+        # Clear the log so we can start fresh grocer
+        self.text_ctrl_log.Clear()
+
+        # Redirect all output to the log
+        redir = RedirectText(self.text_ctrl_log)
+
+        sys.stdout = redir
+        sys.stderr = redir
+        
+        ##########################
+        # Create new region File #
+        ##########################
+        
+        self.appendLog("Parsing locative prepositions...\n", "BLUE")
+        wx.Yield()
+        self.saveFile(self.fileName)
+        self.parser = parseLP.parseLP()
+        self.parser.main(self.fileName)
+        self.proj.regionMapping = self.parser.proj.regionMapping
+        self.saveFile(self.fileName)
+        
+        # Update workspace decomposition listbox
+        self.list_box_locphrases.Set(self.proj.regionMapping.keys())
+        self.list_box_locphrases.Select(0)
+        
+        # update the rfi for new regions
+        rfi = self.parser.proj.rfi
+        
+        # substitute the regions name in specs
+        text = self.text_ctrl_spec.GetValue()
+        for m in re.finditer(r'near (?P<rA>\w+)', text):
+            text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(self.parser.newPolysMap['near$'+m.group('rA')+'$'+str(50)])+")", text)
+        for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
+            text=re.sub(r'within ' + m.group('dist')+' (from|of) '+ m.group('rA'), "("+' or '.join(self.parser.newPolysMap['near$'+m.group('rA')+'$'+m.group('dist')])+")", text)
+        for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
+            text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(self.parser.newPolysMap['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"])+")", text)
+        for rname in self.parser.oldPolys.keys():
+            text=re.sub(rname, "("+' or '.join(self.parser.newPolysMap[rname])+")", text)
+
+        print "===== New Specs ====="
+        print
+        print text
+        print "====================="
+        ###################
+        # Create SMV File #
+        ###################
+
+        self.appendLog("Creating SMV file...\n", "BLUE")
+        wx.Yield()
+
+        numRegions = len(rfi.regions)
+
+        sensorList = []
+        for i, sensor in enumerate(self.list_box_sensors.GetItems()):
+            if self.list_box_sensors.IsChecked(i):
+                sensorList.append(sensor)
+
+        robotPropList = []
+        for i, action in enumerate(self.list_box_actions.GetItems()):
+            if self.list_box_actions.IsChecked(i):
+                robotPropList.append(action)
+        robotPropList.extend(self.list_box_customs.GetItems())
+
+        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
+
+        createSMVfile(fileNamePrefix, numRegions, sensorList, robotPropList)
+
+        ###################
+        # Create LTL File #
+        ###################
+
+        self.appendLog("Creating LTL file...\n", "BLUE")
+        wx.Yield()
+        regionList = [x.name for x in rfi.regions]
+
+        
+        spec = writeSpec(text, sensorList, regionList, robotPropList)
+     
+        
+        # TODO: Catch errors here
+        adjData = rfi.transitions
+
+        createLTLfile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
+        if os.path.exists(fileNamePrefix+".ltl"):
+            f = open(fileNamePrefix+".ltl","r")
+            ltl = "".join(f.readlines())
+            f.close()
+            self.text_ctrl_LTL.SetValue(ltl)
+
+        ####################
+        # Create automaton #
+        ####################
+
+        self.appendLog("Creating automaton...\n", "BLUE")
+        wx.Yield()
+        # Windows uses a different delimiter for the java classpath
+        if os.name == "nt":
+            classpath = os.path.join(self.proj.ltlmop_root, "JTLV", "jtlv-prompt1.4.0.jar") + ";" + os.path.join(self.proj.ltlmop_root, "JTLV", "GROne")
+        else:
+            classpath = os.path.join(self.proj.ltlmop_root, "JTLV", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "JTLV", "GROne")
+
+        cmd = subprocess.Popen(["java", "-ea", "-Xmx128m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+
+   
+        # TODO: Make this output live
+        while cmd.poll():
+            wx.Yield()
+            
+        #New stuff - Vasu
+
+        realizableSys = False
+        noInitSys = False
+        noInitEnv = False
+        noTransitionsSys = False
+        noTransitionsEnv = False
+        liveSafeUnsatSys = False
+        liveSafeUnsatEnv = False
+        liveUnsatSys = False
+        liveUnsatEnv = False
+        p1Real = False
+        p1Unsat = False 
+        p2Real = False
+        p2Unsat = False  
+        liveSafeRealSys = True 
+        liveSafeRealEnv = True
+        nonTrivial = False
+        lsuSys = ""
+        lsuEnv = ""    
+        lsrSys = ""
+        lsrEnv = ""      
+        
+        for line in cmd.stdout:
+            self.appendLog("\t"+line, "GREEN")
+            if "Specification is realizable" in line:
+               realizableSys = True
+            if "REV Unsat initial conditions" in line:
+               noInitEnv = True
+            elif "Unsat initial conditions" in line:
+               noInitSys = True
+            if "REV Unsat transitions" in line:
+               noTransitionsEnv = True
+            elif "Unsat transitions" in line:
+               noTransitionsSys = True
+            if "REV Unsat goal" in line:
+                liveUnsatEnv = True 
+                words = line.split()
+                for word in words:
+                    try:
+                        number = int(word.strip().split()[0])
+                        lsuEnv = lsuEnv + word + " "
+                    except (ValueError, IndexError):
+                        number = None  
+            elif "Unsat goal" in line:   
+                liveUnsatSys = True 
+                words = line.split()
+                for word in words:
+                    try:
+                        number = int(word.strip().split()[0])
+                        lsuSys = lsuSys + word + " "
+                    except (ValueError, IndexError):
+                        number = None           
+            if "Unsat between trans and goal number" in line:
+               liveSafeUnsatSys = True
+               words = line.split()
+               for word in words:
+                    try:
+                        number = int(word.strip().split()[0])
+                        lsuSys = lsuSys + word + " "
+                    except (ValueError, IndexError):
+                        number = None
+            if "REV Unsat between trans and goal number" in line:
+               liveSafeUnsatEnv = True
+               words = line.split()
+               for word in words:
+                    try:
+                        number = int(word.strip().split()[0])
+                        lsuEnv = lsrEnv + word + " "
+                    except (ValueError, IndexError):
+                        number = None
+                
+            if "cox Y = FALSE" in line:
+               p1Real = True
+            if "cox Y = TRUE" in line:
+               p1Unsat = True 
+            if "cox Y REV = FALSE" in line:
+               p2Real = True
+            if "cox Y REV = TRUE" in line:
+               p2Unsat = True  
+            if "sl Y =" in line:
+                #if  (("sl Y = true" in line)):
+                   liveSafeRealSys = False 
+                   lsrSys = lsrSys + line.strip()[len(line.strip()) - 1] + " "
+                        
+                        
+            if "sl Y REV" in line:  
+                #if (("sl Y REV = true" in line)):
+                   liveSafeRealEnv = False
+                   lsrEnv = lsrEnv + line.strip()[len(line.strip()) - 1] + " "
+                        
+        
+        cmd.stdout.close()
+        print "\n"
+
+        output = "\nRESULT\n"
+        sysBugs = []
+        envBugs = []
+        sysColor = -1
+        envColor = -1
+        envR = []
+        envU = []
+        sysR = []
+        sysU = []
+
+        if realizableSys:
+            self.appendLog("Automaton successfully synthesized.\n", "GREEN")
+            aut = fsa.Automaton(self.parser.proj.rfi.regions, None, None, None) 
+            aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
+            aut.writeDot(fileNamePrefix+".dot")
+            f = open(fileNamePrefix+".dot","r")
+            for autline in f.readlines():
+                if "->" in autline:
+                    nonTrivial = True 
+            if nonTrivial:
+                self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")
+                output += "Synthesized automaton is non-trivial.\n"
+            else:
+                self.appendLog("Synthesized automaton is trivial.\n", "GREEN")
+                output += "Synthesized automaton is trivial.\n"
+        else:
+            self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
+            output += "No automaton synthesized.\n"
+        if noTransitionsSys:
+            self.appendLog("Player 2 (System) is unsatisfiable. No transitions\n", "GREEN")
+            output = output + "System is unsatisfiable. No transitions.\n" 
+            sysBugs.append('SysTrans')
+            sysColor = 0        
+        else:
+            self.appendLog("Player 2 (System) transitions exist.\n", "GREEN")
+            if noInitSys:
+                    self.appendLog("Player 2 (System) is unsatisfiable. No legal initial states.\n", "GREEN")
+                    output = output + "System is unsatisfiable. No legal initial states.\n" 
+                    sysBugs.append('SysInit')
+                    sysColor = 0        
+            else:
+                    self.appendLog("Player 2 (System) initial states exist.\n", "GREEN")
+        if liveUnsatSys:
+                self.appendLog("Player 2 (System) highlighted goal is unsatisfiable \n", "GREEN")
+                output = output + "System highlighted goal is unsatisfiable \n"
+                sysBugs.extend(['SysGoals'])
+                for n in (lsuSys.strip()).split():
+                    number = int(n.strip().split()[0])
+                    sysU.append(number)                    
+                sysColor = 0
+        elif not noTransitionsSys: 
+            if liveSafeUnsatSys:
+                self.appendLog("Player 2 (System) is unsatisfiable between transitions and highlighted goal \n", "GREEN")
+                output = output + "System is unsatisfiable between transitions and highlighted goal \n"
+                sysBugs.extend(['SysTrans','SysGoals'])
+                for n in (lsuSys.strip()).split():
+                    number = int(n.strip().split()[0])
+                    sysU.append(number)                    
+                sysColor = 0
+            else:
+                self.appendLog("Player 2 (System) goals and transitions ok.\n", "GREEN")
+                if p2Unsat:
+                    self.appendLog("Player 2 (System) safety is unsatisfiable.\n", "GREEN")
+                    output = output + "System safety is unsatisfiable.\n"
+                    sysBugs.append('SysTrans')
+                    sysColor = 0
+                #elif p2Real:                    
+                if (not p2Real):                  
+                        self.appendLog("Player 2 (System) is unrealizable because the environment can force FALSE.\n", "GREEN")
+                        output = output + "System is unrealizable because the environment can force a system safety violation.\n"
+                        sysBugs.append('SysTrans')
+                        sysColor = 1  
+                elif (not liveSafeRealSys):
+                        self.appendLog("Player 2 (System) safety + highlighted liveness unrealizable.\n", "GREEN")
+                        output = output + "System unrealizable because of highlighted liveness.\n"
+                        sysBugs.extend(['SysTrans','SysGoals'])
+                        sysR = []
+                        for n in (lsrSys.strip()).split():
+                            number = int(n.strip().split()[0])
+                            sysR.append(number)
+                        sysColor = 1   
+                if (liveSafeRealSys and p2Real):
+                        self.appendLog("Player 2 (System) is realizable.\n", "GREEN")
+                        output = output + "System is realizable.\n"                  
+                                
+        if noTransitionsEnv:
+            self.appendLog("Player 1 (Environment) is unsatisfiable. No transitions\n", wx.Colour(0,0,255))
+            output = output + "Environment is unsatisfiable. No transitions.\n"
+            envBugs.append('EnvTrans')
+            envColor = 0
+        
+        else:
+            self.appendLog("Player 1 (Environment) Transitions exist.\n", "GREEN")
+            if noInitEnv:
+                self.appendLog("Player 1 (Environment) is unsatisfiable. No legal initial states.\n", "GREEN")
+                output = output + "Environment is unsatisfiable. No legal initial states.\n" 
+                envBugs.append('EnvInit')
+                envColor = 0        
+            else:
+                self.appendLog("Player 1 (Environment) initial states exist.\n", "GREEN")        
+        
+            
+        if liveUnsatEnv:
+                self.appendLog("Player 1 (Environment) highlighted goal is unsatisfiable \n", "GREEN")
+                output = output + "Environment highlighted goal is unsatisfiable \n"
+                envBugs.extend(['EnvGoals'])
+                for n in (lsuEnv.strip()).split():
+                    number = int(n.strip().split()[0])
+                    envU.append(number)                    
+                envColor = 0
+        elif not noTransitionsEnv:
+            if liveSafeUnsatEnv:
+                self.appendLog("Player 1 (Environment) is unsatisfiable between transitions and highlighted goal \n", "GREEN")
+                output = output + "Environment is unsatisfiable between transitions and highlighted goal \n"
+                envBugs.extend(['EnvTrans','EnvGoals'])
+                envU = []
+                for n in (lsuEnv.strip()).split():
+                    number = int(n.strip().split()[0])
+                envU.append(number)
+                envColor = 0
+            else :
+                self.appendLog("Player 1 (Environment) goals and transitions ok.\n", "GREEN")
+                if p1Unsat:
+                    self.appendLog("Player 1 (Environment) safety is unsatisfiable.\n")            
+                    output = output + "Environment safety is unsatisfiable.\n"   
+                    envBugs.append('EnvTrans')            
+                    envColor = 0
+                #elif p1Real:    
+                if (not p1Real): 
+                    self.appendLog("Player 1 (Environment) is unrealizable because the system can force FALSE.\n", "GREEN")
+                    output = output + "Environment is unrealizable because the system can force an environment safety violation.\n"
+                    envBugs.append('EnvTrans')
+                    envColor = 1                     
+                elif (not liveSafeRealEnv):
+                        self.appendLog("Player 1 (Environment) safety + highlighted liveness unrealizable.\n", "GREEN")
+                        output = output + "Environment unrealizable because of highlighted liveness.\n"   
+                        envBugs.extend(['EnvTrans','EnvGoals'])
+                        envR = []
+                        for n in (lsrEnv.strip()).split():
+                            number = int(n.strip().split()[0])
+                            envR.append(number)
+                        envColor = 1  
+                if (liveSafeRealEnv and p1Real):                
+                    self.appendLog("Player 1 (Environment) is realizable.\n", wx.Colour(0,0,255))
+                    output = output + "Environment is realizable.\n"   
+                
+       
+       
+
+        sensorList = []
+        for i, sensor in enumerate(self.list_box_sensors.GetItems()):
+            if self.list_box_sensors.IsChecked(i):
+                sensorList.append(sensor)
+
+        robotPropList = []
+        for i, action in enumerate(self.list_box_actions.GetItems()):
+            if self.list_box_actions.IsChecked(i):
+                robotPropList.append(action)
+        robotPropList.extend(self.list_box_customs.GetItems())
+                            
+                     
+        recolorLTL.badSpecs(text, self.text_ctrl_spec.GetValue(), sensorList, regionList, robotPropList, sysBugs, envBugs, sysR, envR, sysU, envU)               
+              
+               
+        if sysColor == 0: s = wx.Colour(0,0,255)
+        elif sysColor == 1: s = wx.Colour(0,200,0)
+        else: s = wx.Colour(0,0,0)
+        
+        if envColor == 0: e = wx.Colour(255,0,0)
+        elif envColor == 1: e = wx.Colour(155,0,100)
+        else: e = wx.Colour(0,0,0)
+        
+        self.openFile(self.fileName, 1, s, e)   
+        
+        self.appendLog(output, 'BLACK')
+        self.appendLog("\nError highlighting Key:\n", 'BLACK')
+        self.appendLog("Unsatisfiable portion of system specification\n", wx.Colour(0,0,255))
+        self.appendLog("Unrealizable portion of system specification\n", wx.Colour(0,200,0))
+        self.appendLog("Unsatisfiable portion of environment specification\n", wx.Colour(255,0,0))
+        self.appendLog("Unrealizable portion of environment specification\n", wx.Colour(155,0,100))
+        
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
 
 # end of class SpecEditorFrame
 
@@ -1665,6 +2109,6 @@ if __name__ == "__main__":
     frame_1.Show()
 
     if len(sys.argv) > 1:
-        frame_1.openFile(sys.argv[1])
+        frame_1.openFile(sys.argv[1], 0, -1, -1)
 
     SpecEditor.MainLoop()

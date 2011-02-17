@@ -19,7 +19,7 @@ bear_colony	poly	634	273	165	152	255	0	2	94	0	165	114	80	152	0	107	3	24
 bridge	poly	252	301	235	66	143	34	15	0	0	59	0	155	0	235	0	235	66	153	66	59	66	0	66
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
-/home/cornell/Desktop/ltlmop-google/examples/lpdemo/lpdemo_simbg.png
+lpdemo_simbg.png
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
 lower_river	boundary	390	606	498	608

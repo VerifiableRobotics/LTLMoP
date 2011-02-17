@@ -34,13 +34,13 @@ InitialRegion: # Initial region number
 InitialTruths: # List of initially true propositions
 
 Lab: # Lab configuration file
-cornell_asl.lab
+playerstage.lab
 
 Name: # Name of the experiment
 ASL
 
 RobotFile: # Relative path of robot description file
-pioneer_real.robot
+pioneer_stage.robot
 
 
 ======== SETTINGS ========
@@ -71,11 +71,11 @@ ASL
 RegionMapping:
 
 living=p5
-deck=p8
 porch=p4
+deck=p8
+others=p10,p11,p12,p13,p14,p15,p16,p17,p18
 dining=p19,p20
 bedroom=p9
-others=p10,p11,p12,p13,p14,p15,p16,p17,p18
 kitchen=p6
 
 Spec: # Specification in simple English
@@ -95,10 +95,11 @@ If you activated carrying_item and you did not activate drop then do carrying_it
 If you did not activate carrying_item and you did not activate pick_up then do not carrying_item
 If you are not activating carrying_item and you are not activating radio then visit dining
 If you are not activating carrying_item and you are not activating radio then visit deck
-always not living
-#If you are not activating carrying_item and you are not activating radio then visit living
+#always not living
+If you are not activating carrying_item and you are not activating radio then visit living
 If you are not activating carrying_item and you are not activating radio then visit bedroom
 If you are not activating carrying_item and you are not activating radio then visit kitchen
 If you did not activate carrying_item then always not porch
 If you are activating carrying_item and you are not activating radio then visit porch
+
 

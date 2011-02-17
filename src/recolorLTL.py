@@ -1,31 +1,47 @@
 """ 
     ===========================================================
-    parseEnglishToLTL.py - Structured English to LTL Translator 
+    recolor.py - modification of parseEnglishToLTL 
     ===========================================================
     
     Module that parses a set of structured English sentences into the
-    corresponding LTL subformulas.
+    corresponding LTL subformulas and picks out the ones to highlight.
 """
 import re
 import numpy
 
-def writeSpec(text, sensorList, regionList, robotPropList):
+def badSpecs(text, origText, sensorList, regionList, robotPropList, sysBugs, envBugs, sysR, envR, sysU, envU):
     ''' This function creates the Spec dictionary that contains the parsed LTL
         subformulas. It takes the text that contains the structured English,
         the list of sensor propositions, the list containing
         the region names and the list of robot propositions (other than regions). 
     '''
-
+      
+    
+    
     # Prepend "e." or "s." to propositions for JTLV
+    
+    f = open("sysBugs.txt", 'w')
+    f.close()
+    
+    f = open("envBugs.txt", 'w')
+    f.close()
+    
+    origSens = list(sensorList)
+    origProp = list(robotPropList)
+    
     for i, sensor in enumerate(sensorList):
         text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
         sensorList[i] = "e." + sensorList[i]
+        
 
     for i, prop in enumerate(robotPropList):
         text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
         robotPropList[i] = "s." + robotPropList[i]
-
-    # initializing the dictionary
+        
+    
+    textArray = origText.split("\n")
+    
+    # initializing the dictionary    
     spec = {}
     spec['EnvInit']= ''
     spec['EnvTrans']= ''
@@ -71,9 +87,16 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     StayFormula = createStayFormula(numBits)
 
     lineInd = 0
+    
+    
+    indEG = -1
+    indSG = -1
 
+    
     # iterate over the lines in the file
     for line in text.split("\n"):
+        
+        origLine = textArray[lineInd]        
 
         lineInd = lineInd + 1
 
@@ -95,13 +118,17 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
         # If the sentence describes the initial state of the environemnt
         if EnvInitRE.search(line):
-
+            
             # remove the first words     
             EnvInit = EnvInitRE.sub('',line)
 
             # parse the rest and return it to spec['EnvInit']
             LTLsubformula = parseInit(EnvInit,sensorList,lineInd)
             spec['EnvInit']= spec['EnvInit'] + LTLsubformula
+            
+            if "EnvInit" in  envBugs:
+               writeToColFile("envBugs.txt",origLine)
+
             
         # If the sentence describes the initial state of the robot
         elif SysInitRE.search(line):
@@ -135,7 +162,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 LTLActSubformula = parseInit(ActInit,robotPropList,lineInd)
             
             spec['SysInit']= spec['SysInit'] + LTLRegSubformula + LTLActSubformula
-
+            if "SysInit" in  sysBugs:
+                 writeToColFile("sysBugs.txt",origLine)
                 
 
         # If the sentence is a conditional 
@@ -167,12 +195,12 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
             elif StayRE.search(Requirement):
                 ReqFormulaInfo = {}
-                # The formula - adding the '\t\t\t []' so it will be added to the conditional
+                # The formula - adding the '\t\t\t []' so it will be added to the conditional                
                 # ( a bit of a hack, but it is just to make it a 'safety' requirement)
                 ReqFormulaInfo['formula'] = '\t\t\t []' + StayFormula
                 # the type - it has to be the system safety requirement
                 ReqFormulaInfo['type'] = 'SysTrans'
-                
+                 
             else:
                 print 'ERROR(13): Could not parse the sentence in line '+ str(lineInd)+' :'
                 print line
@@ -184,8 +212,19 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # Parse the condition and add it to the requirement
             CondFormulaInfo = parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,lineInd)
 
+            if CondFormulaInfo['type'] == 'EnvGoals': indEG += 1
+            if CondFormulaInfo['type'] == 'SysGoals': indSG += 1
+            
             spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
-
+            if CondFormulaInfo['type'] in  sysBugs:
+                if (CondFormulaInfo['type'] == 'SysGoals'):
+                    if ((indSG in sysU) | (indSG in sysR)): writeToColFile("sysBugs.txt",origLine)
+                else: writeToColFile("sysBugs.txt",origLine)
+            if CondFormulaInfo['type'] in  envBugs:
+                if (CondFormulaInfo['type'] == 'EnvGoals'):
+                     if ((indEG in envU) | (indEG in envR)): writeToColFile("envBugs.txt",origLine)
+                else: writeToColFile("envBugs.txt",origLine)
+            
 
         # An event definition
         elif EventRE.search(line):
@@ -199,6 +238,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             EventFormula = parseEvent(EventProp,SetEvent,ResetEvent,sensorList,allRobotProp,lineInd)
 
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
+            if "SysTrans" in  sysBugs:
+                 writeToColFile("sysBugs.txt",origLine)
 
 
         # A safety requirement
@@ -208,8 +249,29 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             # parse the safety requirement
             formulaInfo = parseSafety(SafetyReq,sensorList,allRobotProp,lineInd)
-
+            
+            if formulaInfo['type'] == 'EnvGoals': indEG += 1
+            if formulaInfo['type'] == 'SysGoals': indSG += 1
+            
             spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+            if formulaInfo['type'] in  sysBugs:
+                if ((formulaInfo['type'] <> 'SysGoals') | (indSG in sysU) | (indSG in sysR)): writeToColFile("sysBugs.txt",origLine)
+            if formulaInfo['type'] in  envBugs:
+                 if ((formulaInfo['type'] <> 'EnvGoals') | (indEG in envU) | (indEG in envR)): writeToColFile("envBugs.txt",origLine)
+            
+            if formulaInfo['type'] in  sysBugs:
+                if (formulaInfo['type'] == 'SysGoals'):
+                    if ((indSG in sysU) | (indSG in sysR)): writeToColFile("sysBugs.txt",origLine)
+                else: writeToColFile("sysBugs.txt",origLine)
+            if formulaInfo['type'] in  envBugs:
+                if (formulaInfo['type'] == 'EnvGoals'):
+                     if ((indEG in envU) | (indEG in envR)): writeToColFile("envBugs.txt",origLine)
+                else: writeToColFile("envBugs.txt",origLine)
+                
+            '''if formulaInfo['type'] in  sysBugs:
+                 writeToColFile("sysBugs.txt",origLine)
+            if formulaInfo['type'] in  envBugs:
+                 writeToColFile("envBugs.txt",origLine)'''
 
             
         # A 'Go to and stay there' requirement
@@ -235,9 +297,23 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 print line
                 print 'because the requirement is not system liveness'
                 continue
+            
+            if formulaInfo['type'] == 'EnvGoals': indEG += 1
+            if formulaInfo['type'] == 'SysGoals': indSG += 1
+            
 
             # Add the liveness ('go to') to the spec
-            spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+            spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']            
+            
+            if formulaInfo['type'] in  sysBugs:
+                if (formulaInfo['type'] == 'SysGoals'):
+                    if ((indSG in sysU) | (indSG in sysR)): writeToColFile("sysBugs.txt",origLine)
+                else: writeToColFile("sysBugs.txt",origLine)
+            if formulaInfo['type'] in  envBugs:
+                if (formulaInfo['type'] == 'EnvGoals'):
+                     if ((indEG in envU) | (indEG in envR)): writeToColFile("envBugs.txt",origLine)
+                else: writeToColFile("envBugs.txt",origLine)
+            
 
             # add the 'stay there' as a condition (if R then stay there)
             regCond = formulaInfo['formula'].replace('\t\t\t []<>','')
@@ -254,8 +330,21 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             # parse the liveness requirement
             formulaInfo = parseLiveness(LivenessReq,sensorList,allRobotProp,lineInd)
+            
+            if formulaInfo['type'] == 'EnvGoals': indEG += 1
+            if formulaInfo['type'] == 'SysGoals': indSG += 1
+            
 
             spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+            
+            if formulaInfo['type'] in  sysBugs:
+                if (formulaInfo['type'] == 'SysGoals'):
+                    if ((indSG in sysU) | (indSG in sysR)): writeToColFile("sysBugs.txt",origLine)
+                else: writeToColFile("sysBugs.txt",origLine)
+            if formulaInfo['type'] in  envBugs:
+                if (formulaInfo['type'] == 'EnvGoals'):
+                     if ((indEG in envU) | (indEG in envR)): writeToColFile("envBugs.txt",origLine)
+                else: writeToColFile("envBugs.txt",origLine)
 
         # Cannot parse
         else:
@@ -313,9 +402,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         print 'Warning:'
         print 'The following propositions seem to be unused:'
         print unusedProp
-        print 'They should be removed from the proposition lists\n'
+        print 'They should be removed from the proposition lists\n'   
     
-
     return spec
 
 
@@ -423,6 +511,8 @@ def parseSafety(sentence,sensorList,allRobotProp,lineInd):
 
     return formulaInfo
 
+  
+
 def parseLiveness(sentence,sensorList,allRobotProp,lineInd):
     ''' This function creates the LTL formula representing a basic liveness requirement.
         It takes the sentence, the sensor list and the list of all robot propositions (to check that only 'legal'
@@ -438,6 +528,7 @@ def parseLiveness(sentence,sensorList,allRobotProp,lineInd):
     formulaInfo['formula'] = ''
     formulaInfo['type'] = ''
     
+    
     tempFormula = sentence[:]
     PropList = sensorList + allRobotProp
     
@@ -446,6 +537,7 @@ def parseLiveness(sentence,sensorList,allRobotProp,lineInd):
 
     # checking that all propositions are 'legal' (in the list of propositions)
     for prop in re.findall('([\w\.]+)',tempFormula):
+
         if not prop in PropList:
             print 'ERROR(4): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
             formulaInfo['type'] = 'EnvGoals' # arbitrary
@@ -579,8 +671,8 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
     subCond = re.split(condRE,condition)
   
 
-    for subCondition in subCond:
-
+    for subCondition in subCond:        
+       
         # If empty string, move on...
         if subCondition == '':
             continue
@@ -812,3 +904,28 @@ def bitEncoding(numRegions,numBits):
 
     return bitEncode
 
+def readFromColFile(fileName):
+    
+    data = []
+    
+    # FIXME: This file reading function is very fragile; we should catch exceptions
+    f = open(fileName, "r")    
+
+    for line in f: 
+                data.append(line.strip())
+
+    f.close()
+    return data
+    
+def writeToColFile(fileName, line):    
+
+    f = open(fileName, "a")
+    print >>f, line
+    print >>f  # Put a blank line in between sections, just because it's prettier that way 
+    f.close()
+    
+
+                                               
+                    
+               
+            
