@@ -64,6 +64,7 @@ class motionControlHandler:
             # TODO: Account for non-determinacy?
             pt1, pt2 = self.rfi.transitions[current][next][0]
             
+            transFace = None
             # Find the index of this face
             # TODO: Why don't we just store this as the index?
             for i, face in enumerate([x for x in self.rfi.regions[current].getFaces()]):
@@ -71,6 +72,9 @@ class motionControlHandler:
                 if (pt1 == face[0] and pt2 == face[1]) or (pt1 == face[1] and pt2 == face[0]):
                     transFace = i
                     break
+            
+            if transFace is None:
+                print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.rfi.regions[current].name, self.rfi.regions[next].name)
          
         # Transform the region vertices into real coordinates
         pointArray = [x for x in self.rfi.regions[current].getPoints()]
