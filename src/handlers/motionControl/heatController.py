@@ -62,7 +62,13 @@ class motionControlHandler:
         else:
             # Find a face to go through
             # TODO: Account for non-determinacy?
-            pt1, pt2 = self.rfi.transitions[current][next][0]
+            # For now, let's just choose the largest face available, because we are probably using a big clunky robot
+            max_magsq = 0
+            for tf in self.rfi.transitions[current][next]:
+                magsq = (tf[0].x - tf[1].x)**2 + (tf[0].y - tf[1].y)**2
+                if magsq > max_magsq:
+                    pt1, pt2 = tf
+                    max_magsq = magsq
             
             transFace = None
             # Find the index of this face
