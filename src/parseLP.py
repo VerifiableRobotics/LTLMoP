@@ -281,6 +281,11 @@ class parseLP:
                 
             self.proj.rfi.regions.append(newRegion)
         
+        # Giant loop!
+        for obj1 in self.proj.rfi.regions:
+            for obj2 in self.proj.rfi.regions:
+                self.proj.rfi.splitSubfaces(obj1, obj2)
+
         self.proj.rfi.recalcAdjacency()
         self.proj.rfi.writeFile(fileName)
         

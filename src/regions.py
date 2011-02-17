@@ -108,60 +108,57 @@ class RegionFileInterface:
         # Everything was full, so let's just append to the end
         return last + 1
 
-    def compareFace(self,face1,face2):
+    def splitSubfaces(self, obj1, obj2):
         """
-        A function that compare if two faces are the same with small tolerance
-        One face could be shorter than the other but overlap with the other
+        If we have a face of region obj1 that overlaps with the face of another region obj2,
+        (i.e. the obj1 face is collinear with and has at least one point on the obj2 face)
+        we split the larger face into two or three parts as appropriate. 
         """
-        f1=[[float(face1[0][0]),float(face1[0][1])],[float(face1[1][0]),float(face1[1][1])]]
-        f2=[[float(face2[0][0]),float(face2[0][1])],[float(face2[1][0]),float(face2[1][1])]]
-        if math.sqrt((f2[0][0]-f2[1][0])**2+(f2[0][1]-f2[1][1])**2) < math.sqrt((f1[0][0]-f1[1][0])**2+(f1[0][1]-f1[1][1])**2):
-            shortFace=face2
-            longFace=face1
-        else:
-            shortFace=face1
-            longFace=face2
 
-        tol=0.0001
-        # get unit vector of line for both faces
-        ux=(f1[0][0]-f1[1][0])/math.sqrt((f1[0][0]-f1[1][0])**2+(f1[0][1]-f1[1][1])**2)
-        uy=(f1[0][1]-f1[1][1])/math.sqrt((f1[0][0]-f1[1][0])**2+(f1[0][1]-f1[1][1])**2)
-        vx=(f2[0][0]-f2[1][0])/math.sqrt((f2[0][0]-f2[1][0])**2+(f2[0][1]-f2[1][1])**2)
-        vy=(f2[0][1]-f2[1][1])/math.sqrt((f2[0][0]-f2[1][0])**2+(f2[0][1]-f2[1][1])**2)
-        if (math.fabs(ux-vx)<=tol and math.fabs(uy-vy)<=tol) or \
-            (math.fabs(ux+vx)<=tol and math.fabs(ux+vx)<=tol):
-            # they are parallel
-        
-            # calculating the distance between one point on one face and the other face
-            side1=math.sqrt((f2[0][0]-f2[1][0])**2+(f2[0][1]-f2[1][1])**2)
-            side2=math.sqrt((f1[0][0]-f2[0][0])**2+(f1[0][1]-f2[0][1])**2)
-            side3=math.sqrt((f1[0][0]-f2[1][0])**2+(f1[0][1]-f2[1][1])**2)
-            p=(side1+side2+side3)/2
-            area=math.sqrt(p*(p-side1)*(p-side2)*(p-side3))
-            dist=area*2/side1
-            if dist<=tol:
-                
-                # check if the lines are overlapping
-                if longFace[0][0]>longFace[1][0]:
-                    x1=longFace[1][0]
-                    x2=longFace[0][0]
-                else:
-                    x1=longFace[0][0]
-                    x2=longFace[1][0]
-                if longFace[0][1]>longFace[1][1]:
-                    y1=longFace[1][1]
-                    y2=longFace[0][1]
-                else:
-                    y1=longFace[0][1]
-                    y2=longFace[1][1]
+        # Doesn't make any sense to check against self
+        if obj1 is obj2:
+            return
 
+        # TODO: Optimize this code; use numpy instead of wx
 
-                if x1-tol<shortFace[0][0] and shortFace[0][0]<x2+tol and y1-tol<shortFace[0][1] and shortFace[0][1]<y2+tol and \
-                    x1-tol<shortFace[1][0] and shortFace[1][0]<x2+tol and y1-tol<shortFace[1][1] and shortFace[1][1]<y2+tol:
+        COLLINEAR_TOLERANCE = 1  # pixel
 
-                    return longFace,shortFace,True
-                
-        return longFace,shortFace,False
+        # Iterate over faces in obj1
+        for face in obj1.getFaces():
+            pta = wx.Point(*face[0])
+            ptb = wx.Point(*face[1])
+
+            # Since we are modifying obj2, it's easier to re-run the loop than keep track of indices
+            # in the case that we are adding two points.  Lazy, yes, but effective for now.
+            clean = False
+            while not clean:
+                clean = True
+                for other_face in obj2.getFaces():
+                    other_pta = wx.Point(*other_face[0])
+                    other_ptb = wx.Point(*other_face[1])
+
+                    [on_segment_a, d_a, pint_a] = pointLineIntersection(other_pta, other_ptb, pta)
+                    [on_segment_b, d_b, pint_b] = pointLineIntersection(other_pta, other_ptb, ptb)
+                    if d_a < COLLINEAR_TOLERANCE and d_b < COLLINEAR_TOLERANCE: # Check for collinearity
+                        points = [x for x in obj2.getPoints()]
+
+                        # Figure out where we would add a new point
+                        idxa = points.index(other_pta)
+                        idxb = points.index(other_ptb)
+                        if (idxa == 0 and idxb == len(points)-1) or (idxb == 0 and idxa == len(points)-1):  
+                            idx = 0
+                        else:
+                            idx = max(idxa, idxb)
+
+                        # Add a point if appropriate
+                        if on_segment_a and not (pta == other_pta or pta == other_ptb): 
+                            obj2.addPoint(pta-obj2.position, idx)
+                            clean = False
+                            break
+                        if on_segment_b and not (ptb == other_pta or ptb == other_ptb): 
+                            obj2.addPoint(ptb-obj2.position, idx)
+                            clean = False
+                            break
 
     def recalcAdjacency(self):
         """
@@ -188,24 +185,6 @@ class RegionFileInterface:
     
                 if not ignore:
                     transitionFaces[face].append(obj)
-
-        toDelete = []
-
-        for face in transitionFaces.keys():
-            for otherFace in transitionFaces.keys():
-                if face!=otherFace:
-                    longFace,shortFace,overlap=self.compareFace(face, otherFace)
-                    if overlap:
-                        for obj in transitionFaces[longFace]:
-                            if obj not in transitionFaces[shortFace]:
-                                transitionFaces[shortFace].append(obj)
-                        # mark for deletion (we can't delete it in the middle of iteration)
-                        toDelete.append(longFace)
-
-         # Delete all those dudes
-        for unused_face in toDelete:
-            if unused_face in transitionFaces:
-                del transitionFaces[unused_face]                   
 
         toDelete = []
         for face, objarray in transitionFaces.iteritems():
@@ -902,8 +881,5 @@ def pointLineIntersection(pt1, pt2, test_pt):
         d = (xm - xi)**2 + (ym - yi)**2
         on_segment = min(x1,x2) < xi < max(x1,x2) 
 
-    if not on_segment:
-        d = None
-
-    return [d, wx.Point(xi, yi)]
+    return [on_segment, d, wx.Point(xi, yi)]
 

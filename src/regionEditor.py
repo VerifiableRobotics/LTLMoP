@@ -711,8 +711,8 @@ class DrawingFrame(wx.Frame):
                             # TODO: because of the getObjectAt call,
                             # clicks outside the object will not be recognized
                             for i, face in enumerate(obj.getFaces()):
-                                [d, pint] = pointLineIntersection(wx.Point(*face[0]), wx.Point(*face[1]), mousePt)
-                                if d is not None and d <= 4:
+                                [on_segment, d, pint] = pointLineIntersection(wx.Point(*face[0]), wx.Point(*face[1]), mousePt)
+                                if on_segment and d <= 4:
                                     self._saveUndoInfo()
                                     obj.addPoint(pint-obj.position, i+1)
                                     self.dirty = True
@@ -1070,39 +1070,13 @@ class DrawingFrame(wx.Frame):
         _docList.remove(self)
         self.Destroy()
 
+    def checkSubfaces(self, obj):
+        for other_obj in self.rfi.regions:
+            if other_obj is obj:
+                continue
 
-    def checkSubfaces(self, obj1, obj2):
-        """
-        If we have a face of one region that is a subset of a face of another region,
-        we want to split the larger face into two parts appropriately. 
-        For now, this only works when the two faces share one point.
-        """
-
-        for obj in obj1:
-            for face in obj.getFaces():
-                for other_obj in obj2:
-                    points = [x for x in other_obj.getPoints()]
-                    if (face[0] in points and face[1] not in points):
-                        existing = wx.Point(*face[0])
-                        new = wx.Point(*face[1])
-                    elif (face[1] in points and face[0] not in points):
-                        existing = wx.Point(*face[1])
-                        new = wx.Point(*face[0])
-                    else:
-                        continue
-                    
-                    index = points.index(existing)
-                    prev = (index - 1) % len(points)
-                    next = (index + 1) % len(points)
-
-                    [d, pint] = pointLineIntersection(existing, points[prev], new)
-                    if d is not None and d < 1: 
-                        other_obj.addPoint(new-other_obj.position, index)
-                        break 
-                    [d, pint] = pointLineIntersection(existing, points[next], new)
-                    if d is not None and d < 1: 
-                        other_obj.addPoint(new-other_obj.position, next)
-                        break 
+            self.rfi.splitSubfaces(obj, other_obj)
+            self.rfi.splitSubfaces(other_obj, obj)
         
     def recalcAdjacency(self):
         """
@@ -1479,8 +1453,7 @@ class DrawingFrame(wx.Frame):
                             points=points)
         self.rfi.setToDefaultName(obj)
         obj.recalcBoundingBox()
-        self.checkSubfaces([obj], self.rfi.regions)
-        self.checkSubfaces(self.rfi.regions, [obj])
+        self.checkSubfaces(obj)
         self.rfi.regions.insert(0, obj)
         self.dirty = True
         self.needsAdjacencyRecalc = True
@@ -1501,8 +1474,7 @@ class DrawingFrame(wx.Frame):
         obj = DrawableRegion(reg_RECT, position=wx.Point(x, y),
                             size=wx.Size(width, height))
         self.rfi.setToDefaultName(obj)
-        self.checkSubfaces([obj], self.rfi.regions)
-        self.checkSubfaces(self.rfi.regions, [obj])
+        self.checkSubfaces(obj)
         self.rfi.regions.insert(0, obj)
         self.dirty = True
         self.needsAdjacencyRecalc = True
@@ -1746,8 +1718,7 @@ class DrawingFrame(wx.Frame):
             obj.position = topLeft
             obj.size = wx.Size(botRight.x - topLeft.x, botRight.y - topLeft.y)
 
-        self.checkSubfaces([obj], self.rfi.regions)
-        self.checkSubfaces(self.rfi.regions, [obj])
+        self.checkSubfaces(obj)
 
         self.drawPanel.Refresh()
         self.dirty = True
