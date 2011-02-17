@@ -1733,7 +1733,7 @@ class SpecEditorFrame(wx.Frame):
         for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
             text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(self.parser.newPolysMap['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"])+")", text)
         for rname in self.parser.oldPolys.keys():
-            text=re.sub(rname, "("+' or '.join(self.parser.newPolysMap[rname])+")", text)
+            text=re.sub('\\b' + rname + '\\b', "("+' or '.join(self.parser.newPolysMap[rname])+")", text)
 
         print "===== New Specs ====="
         print
