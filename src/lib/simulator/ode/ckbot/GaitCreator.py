@@ -18,10 +18,10 @@ A/S : Change selected joint angle (Large Step)
 Z/X : Change Selected joint angle (Small Step)
  O  : Reset joint angles to zero
 
- R  : Begin "Recording" new gait
+ R  : "Record" new gait
  C  : "Capture" current frame
  D  : "Done" -- Finish recording gait and save
- E  : Cancel current recording
+ N  : "Null" -- Cancel current recording
 
 """
 
@@ -66,7 +66,7 @@ class GaitCreator:
 		self._initOpenGL()
 		self.world = ode.World()
 		self.world.setGravity((0, -9.81, 0))
-		self.world.setERP(0.1)
+		self.world.setERP(0.25)
 		self.space = ode.Space()
 		self.ground = ode.GeomPlane(space=self.space, normal=(0,1,0), dist=0)
 
@@ -196,7 +196,7 @@ class GaitCreator:
 	
 					# Create a fixed joint based on the connection type.
 					### First, keep track of the parent module's position.
-					print "Creating connection: \n Modules   %d - %d \n Ports     %d - %d \n" %(parent,child,parent_port,child_port)
+					#print "Creating connection: \n Modules   %d - %d \n Ports     %d - %d \n" %(parent,child,parent_port,child_port)
 					parent_low_pos = self.lowerbody[parent].getPosition()
 					parent_up_pos = self.upperbody[parent].getPosition()
 					parent_pos = (0.5*(parent_low_pos[0]+parent_up_pos[0]),
@@ -1218,6 +1218,22 @@ class GaitCreator:
 			glEnd()
 
 			glPopMatrix()
+			
+			# Render a square on the ground in order to observe motion of the robot.
+			glPushMatrix()
+			color = (0, 0, 1)
+			glMaterialfv(GL_FRONT, GL_SPECULAR, color)
+			glBegin(GL_POLYGON)
+			glNormal3f(*normal)
+			glVertex3f(-10, 0.1, -10)
+			glNormal3f(*normal)
+			glVertex3f(-10, 0.1, 10)
+			glNormal3f(*normal)
+			glVertex3f(10, 0.1, 10)
+			glNormal3f(*normal)
+			glVertex3f(10, 0.1, -10)
+			glEnd()
+			glPopMatrix()
 
 		# If we have region data, draw the individual regions and color them accordingly.
 		else:
@@ -1342,9 +1358,9 @@ class GaitCreator:
 			self.temp_recording.append(gaittime)
 			self.saveGait()
 			print "Gait Saved"
-			self.recording = False
-		# Press E to cancel recording.
-		elif (key == pygame.K_e and self.recording):
+			self.recording = False	
+		# Press N to cancel recording.
+		elif (key == pygame.K_n and self.recording):
 			self.recording = False
 			print "Recording Cancelled\n"
 		

@@ -13,8 +13,11 @@ Differential Drive Simulator for LTLMoP
 [Sebastian Castro - Cornell University]
 [Autonomous Systems Laboratory - 2011]
 
-"""
+Manual Controls (Standalone Mode):
+Move around with W A S D
+Stop moving with X
 
+"""
 
 class DiffDriveSim:
 	"""
@@ -129,7 +132,7 @@ class DiffDriveSim:
 		boxgeom.setPosition(box_pos)
 		boxgeom.setRotation(rot)
 		boxM = ode.Mass()
-		boxM.setBox(self.cubemass,self.cubesize,self.cubesize*0.85,self.cubesize)
+		boxM.setBox(self.cubemass,self.cubesize,self.cubesize*0.75,self.cubesize)
 		boxbody.setMass(boxM)	
 		
 		# Create two Cylindrical Wheels
@@ -337,7 +340,7 @@ class DiffDriveSim:
 		# Create a window
 		pygame.init()
 		screen = pygame.display.set_mode(self.res, pygame.OPENGL | pygame.DOUBLEBUF)
-		pygame.display.set_caption('ODE Simulation')
+		pygame.display.set_caption('Pioneer Simulation')
 		pygame.mouse.set_visible(False)
 
 		glViewport(0, 0, self.res[0], self.res[1])
@@ -520,7 +523,7 @@ class DiffDriveSim:
 			self.right_speed = self.right_speed - 0.5
 		elif (key == pygame.K_d):
 			self.left_speed = self.left_speed + 0.25
-			self.right_speed = self.right_speed - 0.25	
+			self.right_speed = self.right_speed - 0.25
 		
 		# Stop with X
 		elif (key == pygame.K_x):
@@ -542,7 +545,7 @@ class DiffDriveSim:
 			self._turn2 = 0.0
 		elif (key == pygame.K_l):
 			self._align = 0.0
-			
+	
 	
 	def doEvents(self):
 		"""
@@ -556,10 +559,8 @@ class DiffDriveSim:
 				self._running = False
 			elif (e.type == pygame.KEYDOWN):
 				self._keyDown(e.key)
-				self.setWheelSpeeds(0, 0)
 			elif (e.type == pygame.KEYUP):
 				self._keyUp(e.key)
-				self.setWheelSpeeds(10, 10)
 			elif (e.type == pygame.MOUSEBUTTONDOWN):
 				if e.button == 1:
 					self.clicking = True
@@ -590,31 +591,30 @@ class DiffDriveSim:
 		contacts = ode.collide(geom1, geom2)
 
 		for c in contacts:
-			c.setBounce(0.1)
+			c.setBounce(0.05)
 			c.setMu(10000)
 			j = ode.ContactJoint(self.world, self._cjoints, c)
 			j.attach(body1, body2)
 
 
-	def get2DPose(self, num):
+	def get2DPose(self):
 		"""
-		Get the 2D Pose (x, y, yaw) of module 'num'
+		Get the 2D Pose (x, y, yaw) of the differential drive robot.
 		"""
 
-		# Find 2-D pose using module num's position and rotation matrix.
+		# Find 2-D pose using robot body's position and rotation matrix.
 		# NOTE: Due to the definition of the axes, the (x,y) position is actually (x,-z)
 		pose2d = [0,0,0]
-		# X and Y values are the average of the lower and upper parts of the base module.
-		pose2d[0] = 0.5*(self.lowerjoint[num].getPosition()[0] + self.upperjoint[num].getPosition()[0])
-		pose2d[1] = -0.5*(self.lowerjoint[num].getPosition()[2] + self.upperjoint[num].getPosition()[2])
+		# X and Y values are the average of the lower and upper parts of the robot body.
+		pose2d[0] = self.boxgeom.getPosition()[0]
+		pose2d[1] = -self.boxgeom.getPosition()[2]
 		# Find 2D Orientation using the rotation matrix and the x-direction unit vector.
 		# Rotate the vector [1, 0, 0] using the rotation matrix and find the angle to the x-axis using the atan2 function (to cover all 4 quadrants)
-		rot = self.lowerjoint[num].getRotation()
-		rotvec = self.rotate(self.fwdvec,rot)		
-		pose2d[2] = math.atan2(-rotvec[2],rotvec[0]) 
-	
-		return pose2d
+		rot = self.boxgeom.getRotation()
+		rotvec = self.rotate([1,0,0],rot)		
+		pose2d[2] = math.atan2(-rotvec[2],rotvec[0]) - math.pi/2
 
+		return pose2d
 
 	def setWheelSpeeds(self, left, right):
 		"""
@@ -623,6 +623,17 @@ class DiffDriveSim:
 		
 		self.left_speed = float(left)/self.wheelradius
 		self.right_speed = float(right)/self.wheelradius
+		
+		
+	def setVW(self, v, w):
+		"""
+		Set the linear and angular velocities of the robot.
+		"""
+		
+		# From differential drive kinematics:
+		left = v - 0.5*self.track*w
+		right = v + 0.5*self.track*w
+		self.setWheelSpeeds(left, right)
 		
 		
 	def run(self):
@@ -646,6 +657,9 @@ class DiffDriveSim:
 			# Set wheel hinge speeds.
 			self.lefthinge.setParam(ode.ParamVel, self.left_speed)
 			self.righthinge.setParam(ode.ParamVel, self.right_speed)
+			
+			#pose = self.get2DPose()
+			#print pose
 			
 			# Simulation Step
 			self.space.collide((), self._nearcb)

@@ -8,9 +8,7 @@ Reads from the ODE Simulation pose information
 """
 
 import sys
-from playerc import *
 from numpy import *
-from socket import *
 import math
 
 class poseHandler:

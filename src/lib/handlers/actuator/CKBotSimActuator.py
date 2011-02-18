@@ -10,10 +10,9 @@ Does nothing more than print the actuator name and state; for testing purposes.
 import time, math
 import sys
 import os
-from lib.simulator.ode.ckbot.CKBotLib import CKBotLib
-#sys.path.append('home/cornell/Desktop/ltlmop-google/robots/CKBot')
-sys.path.append('./robots/CKBot')
-#from CKBotLib import *
+sys.path.append('./lib/simulator/ode/ckbot/config/')
+sys.path.append('./lib/simulator/ode/ckbot/')
+from CKBotLib import CKBotLib
 
 class actuatorHandler:
 
@@ -24,20 +23,33 @@ class actuatorHandler:
 		"""
 		Sets CKBot configurations.
 		"""
-		
+	
+		if name=="slinky" and val==True:
+			self.simulator.reconfigure("FoldOver")
+
+		elif name=="snake" and val==True:
+			self.simulator.reconfigure("Snake")
+
+		elif name=="play_dead" and val==True:
+			self.simulator.reconfigure("Plus3")
+
+		elif name=="hexapod" and val==True:
+			self.simulator.reconfigure("Hexapod")
+	
+		# Use library if we can		
 		words = name.split("_and_")
-		print "name is " + name
-		print "desired words are " 
-		print words
+		#print "name is " + name
+		#print "desired words are " 
+		#print words
 		libs = CKBotLib()
 		libs.readLibe()
 		config = libs.findGait(words)
 		if (type(config) != type(None)) and (self.simulator.config != config) and (val==True):
 			self.simulator.reconfigure(config)
 
-		# Make the default configuration Snake
+		# Make the default configuration Hexapod
 		# After we're done with any gait, switch back to snake
-		if name!="drop" and val==False:
-			self.simulator.reconfigure("Snake")
+		elif name!="hoard" and val==False:
+			self.simulator.reconfigure("Hexapod")
 
 		print "(ACT) Actuator %s is now %s!" % tuple(map(str, (name, val)))

@@ -5,8 +5,6 @@ import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-
-
 import math, time, copy, sys
 
 info = """CKBotSim
@@ -16,9 +14,6 @@ CKBot Simulator for LTLMoP
 [Autonomous Systems Laboratory - 2010]
 
 """
-
-### TODO:
-### 1. Maybe fix some pose things for reconfiguration?
 
 class CKBotSim:
 	"""
@@ -125,9 +120,9 @@ class CKBotSim:
 		self._ay = 0.0
 		self._az = 0.0
 		self._align = 0.0
+		self.clicking = False
 		
-		# Make stairs
-		#self.make_stairs()
+		# Create Obstacles
 		if (obstaclefile!=None):
 		    self.loadObstacles(obstaclefile)
 
@@ -868,10 +863,10 @@ class CKBotSim:
 				if (len(info)==0):
 					reading_regions = 0
 				# Do not plot the boundary region.
-				elif info[0]!="Boundary":
+				elif info[0]!="Boundary" and info[0]!="boundary":
 					# Polygon-type region -- extract color and all the vertices in the polygon.
 					if info[1]=="poly":
-						region_color = [float(info[6])/255, float(info[7])/255, float(info[8])/255]
+						region_color = [float(info[6])/255.0, float(info[7])/255.0, float(info[8])/255.0]
 						posx = int(info[2])
 						posy = int(info[3])
 						vertices = []
@@ -881,7 +876,7 @@ class CKBotSim:
 						temp_info.extend(vertices)
 						self.region_data.append(temp_info)
 					elif info[1]=="rect":
-						region_color = [float(info[6])/255, float(info[7])/255, float(info[8])/255]
+						region_color = [float(info[6])/255.0, float(info[7])/255.0, float(info[8])/255.0]
 						posx = int(info[2])
 						posy = int(info[3])
 						width = int(info[4])
@@ -1122,8 +1117,6 @@ class CKBotSim:
 		pygame.display.set_caption('CKBot Simulation')
 		pygame.mouse.set_visible(False)
 
-		
-
 		glViewport(0, 0, self.res[0], self.res[1])
 		glClearColor(0.8, 0.8, 0.9, 0)
 
@@ -1232,8 +1225,9 @@ class CKBotSim:
 		aspect = float(self.res[0]) / float(self.res[1])
 
 		x, y = pygame.mouse.get_pos()
-		self._xRot = (y - self.res[1]/2) * self._xCoeff
-		self._yRot = (x - self.res[0]/2) * self._yCoeff
+		if self.clicking:
+			self._xRot = (y - self.res[1]/2) * self._xCoeff
+			self._yRot = (x - self.res[0]/2) * self._yCoeff
 		if (self._xRot < 0):
 			self._xRot = 0
 
@@ -1351,10 +1345,15 @@ class CKBotSim:
 			elif (e.type == pygame.KEYUP):
 				self._keyUp(e.key)
 			elif (e.type == pygame.MOUSEBUTTONDOWN):
-				if e.button == 4:
+				if e.button == 1:
+					self.clicking = True
+				elif e.button == 4:
 					self.cameraDistance -= 5
 				elif e.button == 5:
 					self.cameraDistance += 5
+			elif (e.type == pygame.MOUSEBUTTONUP):
+				if e.button == 1:
+					self.clicking = False
 
 
 
@@ -1583,6 +1582,7 @@ class CKBotSim:
 		self.obstacleM.append(step1M)
 
 		self._geoms.extend(self.obstaclepiece)
+
 
 # Main method for standalone mode.
 if (__name__ == '__main__'):
