@@ -863,7 +863,7 @@ class CKBotSim:
 				if (len(info)==0):
 					reading_regions = 0
 				# Do not plot the boundary region.
-				elif info[0]!="Boundary" and info[0]!="boundary":
+				elif info[0].lower()!="boundary":
 					# Polygon-type region -- extract color and all the vertices in the polygon.
 					if info[1]=="poly":
 						region_color = [float(info[6])/255.0, float(info[7])/255.0, float(info[8])/255.0]

@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 """
-===================================================
-CKBot.py -- CKBot Simulation Initialization Handler
-===================================================
+================================================================
+DiffDriveSimInit.py -- Pioneer Simulation Initialization Handler
+================================================================
 """
 
 import os, sys, time
 import CKBotSim
 from numpy import *
 
-sys.path.append('home/cornell/Downloads/ltlmop-google/handlers/init')
-import CKBotSim
+sys.path.append('home/cornell/Downloads/ltlmop-asl/handlers/init')
+import DiffDriveSim
 
 class initHandler:
     def __init__(self, proj, calib=False):
@@ -30,7 +30,7 @@ class initHandler:
 		# Convert the file path to the path to the decomposed region file instead.
 		k = len(regionfile)-8
 		regionfile = regionfile[0:k] + "_decomposed.regions"
-		
+
 		# Multiply the initial pose by the calibration constants from specEditor.
 		initial_pose = [region_calib[0]*center[0], region_calib[1]*center[1]]
 		# Convert this initial (x,y) pose to (x,y,z) pose in the simulator.
@@ -38,11 +38,7 @@ class initHandler:
 		initial_pose_sim = [initial_pose[0], 0, -initial_pose[1]]
 
 		# Initiate the CKBot simulator and render it once.
-		self.simulator = CKBotSim.CKBotSim("robots/CKBot/Hexapod.ckbot",standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim)
-		self.simulator.gait = 1
-		for i in range(5):
-			self.simulator.run_once()
-		self.simulator.gait = 0
+		self.simulator = DiffDriveSim.DiffDriveSim(standalone=0, regionfile=regionfile, region_calib = region_calib, startingpose=initial_pose_sim)
 		self.simulator.run_once()
 
     def getSharedData(self):

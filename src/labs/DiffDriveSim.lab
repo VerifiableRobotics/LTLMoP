@@ -1,0 +1,17 @@
+Name: # Name for this lab configuration
+Pioneer-ODE (Local)
+
+InitializationHandler: 		# Initializes ODE Simulator
+handlers.init.DiffDriveSimInit
+
+PoseHandler:			# Pulls Base Object's Pose from ODE
+handlers.pose.DiffDriveSimPose
+
+SensorHandler:
+handlers.sensor.dummySensor
+
+ActuatorHandler:
+handlers.actuator.dummyActuator
+
+LocomotionCommandHandler:	# Commands joint angles to ODE Simulator
+handlers.locomotionCommand.DiffDriveSimLocomotionCommand
