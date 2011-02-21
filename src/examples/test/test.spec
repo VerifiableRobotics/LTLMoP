@@ -9,18 +9,18 @@ Calibration: # Coordinate transformation between map and experiment: XScale, XOf
 0.2,0.0,-0.2,0.0
 
 InitialRegion: # Initial region number
-0
+1
 
 InitialTruths: # List of initially true propositions
 
 Lab: # Lab configuration file
-CKBotSim.lab
+DiffDriveSim.lab
 
 Name: # Name of the experiment
 Default
 
 RobotFile: # Relative path of robot description file
-CKBotSim.robot
+DiffDriveSim.robot
 
 
 ======== SETTINGS ========
@@ -57,5 +57,9 @@ R2=p4
 r3=p3
 
 Spec: # Specification in simple English
-Visit R1 or R2 or r3 or r4
+Visit R1
+Visit R2
+Visit r3
+Visit r4
+
 

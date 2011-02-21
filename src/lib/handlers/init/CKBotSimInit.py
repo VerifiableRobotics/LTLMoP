@@ -9,7 +9,7 @@ import os, sys, time
 import CKBotSim
 from numpy import *
 
-sys.path.append('home/cornell/Downloads/ltlmop-google/handlers/init')
+from simulator.ode.ckbot import CKBotSim
 import CKBotSim
 
 class initHandler:
@@ -38,7 +38,7 @@ class initHandler:
 		initial_pose_sim = [initial_pose[0], 0, -initial_pose[1]]
 
 		# Initiate the CKBot simulator and render it once.
-		self.simulator = CKBotSim.CKBotSim("robots/CKBot/Hexapod.ckbot",standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim)
+		self.simulator = CKBotSim.CKBotSim("../../simulator/ode/ckbot/config/Hexapod.ckbot",standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim)
 		self.simulator.gait = 1
 		for i in range(5):
 			self.simulator.run_once()

@@ -9,8 +9,7 @@ import os, sys, time
 import CKBotSim
 from numpy import *
 
-sys.path.append('home/cornell/Downloads/ltlmop-asl/handlers/init')
-import DiffDriveSim
+from simulator.ode.pioneer import DiffDriveSim
 
 class initHandler:
     def __init__(self, proj, calib=False):
