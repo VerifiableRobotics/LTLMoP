@@ -6,7 +6,7 @@
 ======== EXPERIMENT CONFIG 0 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.2,0.0,-0.2,0.0
+0.3,0.0,-0.3,0.0
 
 InitialRegion: # Initial region number
 1
@@ -14,13 +14,13 @@ InitialRegion: # Initial region number
 InitialTruths: # List of initially true propositions
 
 Lab: # Lab configuration file
-DiffDriveSim.lab
+CKBotSim.lab
 
 Name: # Name of the experiment
 Default
 
 RobotFile: # Relative path of robot description file
-DiffDriveSim.robot
+CKBotSim.robot
 
 
 ======== SETTINGS ========
