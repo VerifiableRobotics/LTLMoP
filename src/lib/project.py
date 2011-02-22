@@ -278,6 +278,7 @@ class Project:
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
         init_num = 1
         self.init_handlers = []
+        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
         for handler in self.h_name['init']:
             if not self.silent: print "  -> %s" % handler
             # TODO: Is there a more elegant way to do this? This is pretty ugly...
@@ -298,6 +299,7 @@ class Project:
         if list is None:
             list = ['pose','sensor','actuator','locomotionCommand','drive','motionControl']
 
+        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
         # Now do the rest of them
         for handler in list:
             if not self.silent: print "  -> %s" % self.h_name[handler]
