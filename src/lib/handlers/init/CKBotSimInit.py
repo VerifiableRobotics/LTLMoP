@@ -8,6 +8,7 @@ CKBot.py -- CKBot Simulation Initialization Handler
 import os, sys, time
 from numpy import *
 from simulator.ode.ckbot import CKBotSim
+from simulator.ode.ckbot import CKBotLib
 
 class initHandler:
     def __init__(self, proj, calib=False):
@@ -42,8 +43,11 @@ class initHandler:
 		self.simulator.gait = 0
 		self.simulator.run_once()
 
+		# Instantiate the CKBot library
+		self.lib = CKBotLib.CKBotLib()
+
     def getSharedData(self):
         # Return a dictionary of any objects that will need to be shared with
         # other handlers
 
-        return {'Simulator': self.simulator}
+        return {'Simulator': self.simulator, "Library": self.lib}

@@ -35,8 +35,8 @@ class CKBotLib:
 		"""
 		Parse library file
 		"""
-		print os.curdir
-		f = open('library/CKBotTraits.libe','r')
+
+		f = open('lib/simulator/ode/ckbot/library/CKBotTraits.libe','r')
 
 		reading_trait = 0
 		gait_number = 0

@@ -52,10 +52,10 @@ Default
 RegionMapping:
 
 r4=p2
-others=p6,p7,p8,p9
+r3=p3
 R1=p5
 R2=p4
-r3=p3
+others=p6,p7,p8,p9
 
 Spec: # Specification in simple English
 If you are not sensing person then Visit R1
@@ -63,4 +63,5 @@ If you are not sensing person then Visit R2
 If you are not sensing person then Visit r3
 If you are not sensing person then Visit r4
 Do snake if and only if you are sensing person
+
 
