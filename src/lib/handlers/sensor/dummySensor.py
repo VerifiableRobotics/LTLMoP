@@ -23,7 +23,7 @@ class sensorHandler:
         
         # Create a subprocess
         print "(SENS) Starting sensorHandler window and listen thread..."
-        self.p_sensorHandler = subprocess.Popen(os.path.join(proj.ltlmop_root,"lib","handlers","sensor","SensorHandler.py"), stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        self.p_sensorHandler = subprocess.Popen(["python", os.path.join(proj.ltlmop_root,"lib","handlers","sensor","SensorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
         self.fd_sensorHandler = self.p_sensorHandler.stderr
 
