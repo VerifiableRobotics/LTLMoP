@@ -17,7 +17,7 @@ import wxversion
 import wx
 from wx.lib.buttons import GenBitmapButton
 
-from regions import *
+from lib.regions import *
 
 ####################################################################
 # TODO:

@@ -11,17 +11,17 @@
 
 import re, sys, os, subprocess, time, copy
 import wxversion
-wxversion.select('2.8')
+#wxversion.select('2.8')
 import wx, wx.richtext
-from regions import *
-from createJTLVinput import createLTLfile, createSMVfile
-from parseEnglishToLTL import writeSpec
-import fileMethods
-import project
-import fsa
-import parseLP
-import mapRenderer
-import recolorLTL
+from lib.regions import *
+from lib.createJTLVinput import createLTLfile, createSMVfile
+from lib.parseEnglishToLTL import writeSpec
+import lib.fileMethods as fileMethods
+import lib.project as project
+import lib.fsa as fsa
+import lib.parseLP as parseLP
+import lib.mapRenderer as mapRenderer
+import lib.recolorLTL as recolorLTL
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
@@ -366,7 +366,7 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: save the config first
         self.parent.onMenuSave()
-        proc = subprocess.Popen(["python", "calibrate.py", fileNamePrefix + ".spec", self.list_box_experiment_name.GetStringSelection()],stderr=subprocess.PIPE)
+        proc = subprocess.Popen(["python", "lib/calibrate.py", fileNamePrefix + ".spec", self.list_box_experiment_name.GetStringSelection()],stderr=subprocess.PIPE)
         
         output = proc.stderr.readline().strip()
         while not output.startswith("CALIB"):
@@ -1496,9 +1496,9 @@ class SpecEditorFrame(wx.Frame):
 
         # Windows uses a different delimiter for the java classpath
         if os.name == "nt":
-            classpath = os.path.join(self.proj.ltlmop_root, "JTLV", "jtlv-prompt1.4.0.jar") + ";" + os.path.join(self.proj.ltlmop_root, "JTLV", "GROne")
+            classpath = os.path.join(self.proj.ltlmop_root, "etc/jtlv", "jtlv-prompt1.4.0.jar") + ";" + os.path.join(self.proj.ltlmop_root, "etc/jtlv", "GROne")
         else:
-            classpath = os.path.join(self.proj.ltlmop_root, "JTLV", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "JTLV", "GROne")
+            classpath = os.path.join(self.proj.ltlmop_root, "etc/jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc/jtlv", "GROne")
 
         cmd = subprocess.Popen(["java", "-ea", "-Xmx128m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
     
