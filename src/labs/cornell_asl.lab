@@ -4,15 +4,15 @@ Cornell ASL Lab
 InitializationHandler:
 
 PoseHandler:
-handlers.pose.orcaPose
+lib.handlers.pose.orcaPose
 
 SensorHandler:
-handlers.sensor.colorBallSensor
-#handlers.sensor.dummySensor
+lib.handlers.sensor.colorBallSensor
+#lib.handlers.sensor.dummySensor
 
 ActuatorHandler:
-handlers.actuator.gimbalActuator
+lib.handlers.actuator.gimbalActuator
 
 LocomotionCommandHandler:
-handlers.locomotionCommand.orcaLocomotionCommand
+lib.handlers.locomotionCommand.orcaLocomotionCommand
 

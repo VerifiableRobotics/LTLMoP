@@ -2,16 +2,16 @@ Name: # Name for this lab configuration
 CKBot-ODE (Local)
 
 InitializationHandler: 		# Initializes ODE Simulator
-handlers.init.CKBotSimInit
+lib.handlers.init.CKBotSimInit
 
 PoseHandler:			# Pulls Base Object's Pose from ODE
-handlers.pose.CKBotSimPose
+lib.handlers.pose.CKBotSimPose
 
 SensorHandler:
-handlers.sensor.dummySensor
+lib.handlers.sensor.dummySensor
 
 ActuatorHandler:
-handlers.actuator.CKBotSimActuator
+lib.handlers.actuator.CKBotSimActuator
 
 LocomotionCommandHandler:	# Commands joint angles to ODE Simulator
-handlers.locomotionCommand.CKBotSimLocomotionCommand
+lib.handlers.locomotionCommand.CKBotSimLocomotionCommand

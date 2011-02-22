@@ -13,10 +13,10 @@ extinguish
 drop
 
 MotionControlHandler: # Module with continuous controller for moving between regions
-handlers.motionControl.heatController
+lib.handlers.motionControl.heatController
 
 DriveHandler: # Module for converting a desired velocity vector to realistic motor commands
-handlers.drive.differentialDrive
+lib.handlers.drive.differentialDrive
 
 ### Below are settings for Scorpion08
 

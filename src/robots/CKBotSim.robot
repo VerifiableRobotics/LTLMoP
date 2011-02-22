@@ -14,7 +14,7 @@ snake
 cross
 
 MotionControlHandler: # Module with continuous controller for moving between regions
-handlers.motionControl.heatController
+lib.handlers.motionControl.heatController
 
 DriveHandler:
-handlers.drive.CKBotSimDrive
+lib.handlers.drive.CKBotSimDrive

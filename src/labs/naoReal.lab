@@ -2,16 +2,16 @@ Name: # Name for this lab configuration
 Nao Real
 
 InitializationHandler:
-handlers.init.naoInit
+lib.handlers.init.naoInit
 
 PoseHandler:
-handlers.pose.naoPose
+lib.handlers.pose.naoPose
 
 SensorHandler:
-handlers.sensor.naoSensor
+lib.handlers.sensor.naoSensor
 
 ActuatorHandler:
-handlers.actuator.naoActuator
+lib.handlers.actuator.naoActuator
 
 LocomotionCommandHandler:
-handlers.locomotionCommand.naoLocomotionCommand
+lib.handlers.locomotionCommand.naoLocomotionCommand

@@ -2,18 +2,18 @@ Name: # Name for this lab configuration
 Player/Stage (Local)
 
 InitializationHandler:
-handlers.init.stage
-handlers.init.playerclient
+lib.handlers.init.stage
+lib.handlers.init.playerclient
 
 PoseHandler:
-handlers.pose.stagePose
+lib.handlers.pose.stagePose
 
 SensorHandler:
-handlers.sensor.dummySensor
+lib.handlers.sensor.dummySensor
 
 ActuatorHandler:
-handlers.actuator.dummyActuator
+lib.handlers.actuator.dummyActuator
 
 LocomotionCommandHandler:
-handlers.locomotionCommand.playerLocomotionCommand
+lib.handlers.locomotionCommand.playerLocomotionCommand
 

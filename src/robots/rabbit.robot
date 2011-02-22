@@ -12,10 +12,10 @@ play_dead
 sing
 
 MotionControlHandler: # Module with continuous controller for moving between regions
-handlers.motionControl.heatController
+lib.handlers.motionControl.heatController
 
 DriveHandler: # Module for converting a desired velocity vector to realistic motor commands
-handlers.drive.holonomicDrive
+lib.handlers.drive.holonomicDrive
 
 PlayerHost:
 localhost
