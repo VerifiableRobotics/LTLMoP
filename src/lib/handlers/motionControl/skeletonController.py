@@ -33,7 +33,7 @@ class motionControlHandler:
         pose = self.pose_handler.getPose()
 
         # NOTE: Information about region geometry can be found in self.rfi.regions:
-        pointArray = [x for x in self.rfi.regions[current].getPoints()]
+        pointArray = [x for x in self.rfi.regions[current_reg].getPoints()]
         pointArray = map(self.coordmap_map2lab, pointArray)
         vertices = mat(pointArray).T 
 

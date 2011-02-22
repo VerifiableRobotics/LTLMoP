@@ -7,6 +7,8 @@ playerLocomotionCommand.py - Player Pos2D Client
 Sends velocity commands to player
 """
 
+import sys
+
 class locomotionCommandHandler:
     def __init__(self, proj, shared_data):
         try:
