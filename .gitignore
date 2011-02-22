@@ -11,3 +11,5 @@
 .player
 envBugs.txt
 sysBugs.txt
+.project
+.pydevproject
