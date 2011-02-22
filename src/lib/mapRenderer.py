@@ -1,5 +1,101 @@
 import wx
-from regionEditor import DrawableRegion
+import sys, os
+from regions import *
+
+#----------------------------------------------------------------------------
+
+class DrawableRegion(Region):
+    """ Extends the Region class to allow drawing.
+    """
+
+    # ============================
+    # == Object Drawing Methods ==
+    # ============================
+
+    def draw(self, dc, pdc, selected, scale=1.0, showAlignmentPoints=True, highlight=False):
+        """ Draw this Region into our window.
+
+            'dc' is the device context to use for drawing.  If 'selected' is
+            True, the object is currently selected and should be drawn as such.
+        """
+
+        if self.name.lower() == "boundary":
+            dc.SetPen(wx.Pen(self.color, 3, wx.SOLID))
+            dc.SetBrush(wx.Brush(wx.Colour(self.color.Red(), self.color.Green(),
+                         self.color.Blue(), 0), wx.TRANSPARENT))
+        else:
+            dc.SetPen(wx.Pen(self.color, 1, wx.SOLID))
+            dc.SetBrush(wx.Brush(wx.Colour(self.color.Red(), self.color.Green(),
+                         self.color.Blue(), 128), wx.SOLID))
+
+        self._privateDraw(dc, self.position, selected, scale, showAlignmentPoints)
+
+        if highlight:
+            pdc.SetPen(wx.Pen(wx.BLACK, 3, wx.SOLID))
+            #pdc.SetBrush(wx.Brush(wx.RED, wx.BDIAGONAL_HATCH))
+            pdc.SetBrush(wx.Brush(wx.BLACK, wx.CROSSDIAG_HATCH))
+
+            self._privateDraw(pdc, self.position, selected, scale, showAlignmentPoints)
+
+
+    # =====================
+    # == Private Methods ==
+    # =====================
+
+    def _privateDraw(self, dc, position, selected, scale, showAlignmentPoints):
+        """ Private routine to draw this Region.
+
+            'dc' is the device context to use for drawing, while 'position' is
+            the position in which to draw the object.  If 'selected' is True,
+            the object is drawn with selection handles.  'scale' is a fixed 
+            scaling ratio to use when drawing.  This private drawing
+            routine assumes that the pen and brush have already been set by the
+            caller.
+        """
+
+        if self.type == reg_POLY:
+            scaledPointArray = map(lambda pt: wx.Point(scale*pt.x, scale*pt.y), self.pointArray)
+            dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]], scale*position.x, scale*position.y)
+        elif self.type == reg_RECT:
+            dc.DrawRectangle(scale*position.x, scale*position.y,
+                             scale*self.size.width, scale*self.size.height)
+                
+        for i, pt in enumerate(self.getPoints()):
+            if selected:
+                # Draw selection handles at all vertices
+                dc.SetPen(wx.TRANSPARENT_PEN)
+                dc.SetBrush(wx.BLACK_BRUSH)
+                self._drawSelHandle(dc, pt.x, pt.y)
+            if showAlignmentPoints and self.alignmentPoints[i]:
+                # Highlight vertices to be used for calibration
+                dc.SetBrush(wx.Brush(wx.RED, wx.SOLID))
+                dc.SetPen(wx.Pen(wx.BLACK, 1, wx.SOLID))
+                dc.DrawRectangle(pt.x - 5, pt.y - 5, 10, 10)
+
+                # Draw aligment vertex labels
+                dc.SetTextForeground(wx.BLACK)
+                dc.SetBackgroundMode(wx.TRANSPARENT)
+                font = wx.Font(12, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.BOLD, False)
+                dc.SetFont(font)
+                
+                labelStr = self.name + "_P" + str(i);
+                textWidth, textHeight = dc.GetTextExtent(labelStr)
+                
+                textX = pt.x + 8 # - textWidth/2
+                textY = pt.y - 1.5*textHeight
+                dc.DrawText(labelStr, textX, textY)
+
+
+    def _drawSelHandle(self, dc, x, y):
+        """ Draw a selection handle around this Region.
+
+            'dc' is the device context to draw the selection handle within,
+            while 'x' and 'y' are the coordinates to use for the centre of the
+            selection handle.
+        """
+        dc.DrawRectangle(x - 3, y - 3, 6, 6)
+
+#----------------------------------------------------------------------------
 
 def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], memory=False):
 	""" Draw the map contained in the given project onto the target canvas.
