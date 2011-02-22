@@ -163,7 +163,7 @@ def main(argv):
 
         # Create a subprocess
         print "Starting GUI window and listen thread..."
-        p_gui = subprocess.Popen(["python",os.path.join(proj.ltlmop_root, "simGUI.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        p_gui = subprocess.Popen(["python",os.path.join(proj.ltlmop_root, "lib", "simGUI.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
         fd_gui_output = p_gui.stderr
         fd_gui_input = p_gui.stdin

@@ -184,6 +184,10 @@ class Project:
         self.project_root = os.path.abspath(os.path.dirname(spec_file))
         self.project_basename, ext = os.path.splitext(os.path.basename(spec_file)) 
         self.ltlmop_root = os.path.abspath(os.path.dirname(sys.argv[0]))
+        
+        # Handle the case where we are being called by a subprogram inside the lib/ directory
+        if os.path.basename(self.ltlmop_root) == "lib":
+            self.ltlmop_root = os.path.dirname(self.ltlmop_root)
 
         ### Load in the specification file
         if not self.silent: print "Loading specification file %s..." % spec_file

@@ -366,7 +366,7 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: save the config first
         self.parent.onMenuSave()
-        proc = subprocess.Popen(["python", "lib/calibrate.py", fileNamePrefix + ".spec", self.list_box_experiment_name.GetStringSelection()],stderr=subprocess.PIPE)
+        proc = subprocess.Popen(["python", os.path.join("lib","calibrate.py"), fileNamePrefix + ".spec", self.list_box_experiment_name.GetStringSelection()],stderr=subprocess.PIPE)
         
         output = proc.stderr.readline().strip()
         while not output.startswith("CALIB"):
@@ -1552,7 +1552,7 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = redir
         sys.stderr = redir
 
-        subprocess.Popen(["python", "execute.py", "-a", fileNamePrefix + ".aut", "-s", fileNamePrefix + ".spec"])
+        subprocess.Popen(["python", os.path.join("lib","execute.py"), "-a", fileNamePrefix + ".aut", "-s", fileNamePrefix + ".spec"])
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
