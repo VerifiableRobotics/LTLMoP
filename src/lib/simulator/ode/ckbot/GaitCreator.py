@@ -1,0 +1,1621 @@
+#!/usr/bin/env python
+
+import ode, xode.parser
+import pygame
+from OpenGL.GL import *
+from OpenGL.GLU import *
+from OpenGL.GLUT import *
+import math, time, copy, sys
+
+info = """Gait Creator
+
+CKBot Gait Creator for LTLMoP
+[Sebastian Castro - Cornell University]
+[Autonomous Systems Laboratory - 2011]
+
+Q/W : Cycle through modules (highlighted in red)
+A/S : Change selected joint angle (Large Step)
+Z/X : Change Selected joint angle (Small Step)
+ O  : Reset joint angles to zero
+
+ R  : Begin "Recording" new gait
+ C  : "Capture" current frame
+ D  : "Done" -- Finish recording gait and save
+ E  : Cancel current recording
+
+"""
+
+class GaitCreator:
+	"""
+	CKBot Gait Creator Class
+	"""
+
+	fps = 25.0
+	cameraDistance = 40.0
+	vel = 0.5
+	turn = 0.5
+	turn2 = 0.5
+	clip = 150.0
+	res = (800, 600)
+
+	def __init__(self,robotfile, standalone=1,obstaclefile=None,regionfile=None,region_calib=None,startingpose=None):
+		"""
+		Initialize the simulator.
+		"""
+
+		# Setting standalone to 1 allows for manual key input.
+		# Setting standalone to 0 (LTLMoP mode) causes the camera to automatically follow the spawned robot)
+		if standalone==1:
+			self.standalone = 1
+		else:
+			self.standalone = 0   
+			self.clock = pygame.time.Clock()
+
+		# If regionfile=0, render the ground as default solid green terrain.
+		# Otherwise, load the regions file specified and draw the region colors on the ground.
+		self.region_data = []
+
+		# Load a region file if it has been specified on instantiation.
+		#regionfile = "examples/sandbox/sandbox.regions"
+		#region_calib = [0.1,-0.1]
+		if (regionfile!=None):
+			self.loadRegionData(regionfile)
+			self.region_calib = region_calib
+
+		# Simulation world parameters.
+		self._initOpenGL()
+		self.world = ode.World()
+		self.world.setGravity((0, -9.81, 0))
+		self.world.setERP(0.1)
+		self.space = ode.Space()
+		self.ground = ode.GeomPlane(space=self.space, normal=(0,1,0), dist=0)
+
+		# CKBot module parameters.
+		self.cubesize = 6.0
+		self.cubemass = 10.0
+		self.hingemaxangle = 1.6
+		self.hingeminangle = -1.6
+		self.hingemaxforce = 5000000
+
+		# Control parameters.
+		self.gait = 0
+		self.gain = 0
+		self.counter = 0
+
+		# Define Modular Arrays
+		self.body = []
+		self.lowerjoint = []
+		self.upperjoint = []
+		self.hinge = []
+		self.fixed = []
+		self.M = []
+
+		# Configuration/Gait Data
+		self.config = "none"
+		self.connM = []	
+		self.basepos = []
+		self.baserot = self.genmatrix(0,1)      	# Identity Matrix for now.
+		self.gaits = []
+		self.robotfile = robotfile
+		self.loadRobotData(self.robotfile)
+		
+		# Obstacle Data
+		self.obstacle = []
+		self.obstaclepiece = []
+		self.obstacleM = []
+
+		# Account for the "startingpose" argument which translates all the modules
+		self.startingpose = startingpose
+		if self.startingpose != None:
+			tempx = self.basepos[0] + self.startingpose[0]
+			tempy = self.basepos[1] + self.startingpose[1]
+			tempz = self.basepos[2] + self.startingpose[2]	 
+			self.basepos = (tempx, tempy, tempz)
+
+		# Load the objects.
+		self._loadObjects()
+		self._cjoints = ode.JointGroup()
+
+		self._xRot = 0.0
+		self._yRot = 0.0
+
+		self._xCoeff = 360.0 / 480.0
+		self._yCoeff = 360.0 / 640.0
+
+		self._vel = 0.0
+		self._turn = 0.0
+		self._turn2 = 0.0
+
+		# Camera alignment parameters.
+		self._ax = 0.0
+		self._ay = 0.0
+		self._az = 0.0
+		self._align = 0.0
+		self.clicking = False
+		
+		# Gait Creator parameters.
+		self.current_module = 0
+		self.num_modules = len(self.connM)
+		self.ref_angles = []
+		for i in range(self.num_modules):
+			self.ref_angles.append(0)
+		self.recording = False
+		self.saved_frame = []
+		
+		# Make obstacles if they exist.
+		if (obstaclefile!=None):
+		    self.loadObstacles(obstaclefile)
+
+	def _loadObjects(self):
+		"""
+		Spawns the CKBot configuration based on the first module's position and orientation.
+		All joint angles originally set to zero (0).
+		"""  
+
+		# Wipe the original lists of bodies, joints, hinges, etc.
+		# This step is necessary for reconfiguration, since these lists are non-empty.
+		self.lowerbody = []
+		self.lowerjoint = []
+		self.upperbody = []
+		self.upperjoint = []
+		self.upperM = []
+		self.lowerM = []	
+		self.hinge = []
+		self.fixed = []
+
+		# Figure out the connectivity of each module.
+		# Each element in the "conninfo" list will show information as follows:
+		# [Parent Module, Child Module, Parent Port, Child Port]
+		conninfo = []
+		for idx in range(len(self.connM)):
+			for j in range(idx,len(self.connM)):
+				if (self.connM[idx][j] > 0):
+					conninfo.append([idx, j, self.connM[idx][j], self.connM[j][idx]])
+
+		# Create the first module.
+		if (self.connM != []):
+
+			# Find the module positions and rotations relative to the specified base position.
+			lower_offset = self.rotate((0, -self.cubesize*0.25, 0), self.baserot)					
+			upper_offset = self.rotate((0, self.cubesize*0.25, 0), self.baserot)													
+			rot = self.baserot
+
+			# Spawn the module.
+			self.create_module(self.basepos, lower_offset, upper_offset, rot)
+
+		# Spawn subsequent modules.
+		idx = 1
+		while (conninfo != []):
+			for info in conninfo:
+				if (info[1] == idx):  # This is the next module (in order) to spawn.
+					parent = info[0]
+					child = info[1]
+					parent_port = info[2]
+					child_port = info[3]
+					conninfo.remove(info)
+	
+					# Create a fixed joint based on the connection type.
+					### First, keep track of the parent module's position.
+					print "Creating connection: \n Modules   %d - %d \n Ports     %d - %d \n" %(parent,child,parent_port,child_port)
+					parent_low_pos = self.lowerbody[parent].getPosition()
+					parent_up_pos = self.upperbody[parent].getPosition()
+					parent_pos = (0.5*(parent_low_pos[0]+parent_up_pos[0]),
+								  0.5*(parent_low_pos[1]+parent_up_pos[1]),
+								  0.5*(parent_low_pos[2]+parent_up_pos[2]))
+
+					# Create the new module, rotated and translated based on the connection type.
+					# These connection strategies are hard-coded in the giant chunk of code below.
+
+					if parent_port == 1:
+						if child_port == 1:
+
+							### CONNECTION 1-1 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, -self.cubesize*0.75, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((0, -self.cubesize*1.25, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi,3))
+						
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+	
+						elif child_port == 3:
+
+							### CONNECTION 1-3 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize*0.25, -self.cubesize, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((-self.cubesize*0.25, -self.cubesize, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.genmatrix(math.pi,2),self.genmatrix(-math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+	
+						elif child_port == 5:
+
+							### CONNECTION 1-5 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize*0.25, -self.cubesize, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize*0.25, -self.cubesize, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi/2,3))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+
+						elif child_port == 7:
+
+							### CONNECTION 1-7 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, -self.cubesize*1.25, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((0, -self.cubesize*0.75, 0),self.lowerbody[parent].getRotation())												
+							rot = self.lowerbody[parent].getRotation()
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[child],self.lowerbody[parent])
+
+                                                else:
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
+
+					elif parent_port == 2:
+						if child_port == 2:
+
+							### CONNECTION 2-2 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, -self.cubesize*0.75, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((0, -self.cubesize*1.25, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.genmatrix(math.pi,2),self.genmatrix(math.pi,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+
+						elif child_port == 4:
+
+							### CONNECTION 2-4 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*0.25, -self.cubesize, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((self.cubesize*0.25, -self.cubesize, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.genmatrix(math.pi,2),self.genmatrix(math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+
+						elif child_port == 6:
+
+							### CONNECTION 2-6 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*0.25, -self.cubesize, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((self.cubesize*0.25, -self.cubesize, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(-math.pi/2,3))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+
+						elif child_port == 7:
+
+							### CONNECTION 2-7 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, -self.cubesize*1.25, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((0, -self.cubesize*0.75, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(-math.pi/2,2))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[child],self.lowerbody[parent])
+
+                                                else:
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
+                                                        
+					elif parent_port == 3:
+						if child_port == 1:
+
+							### CONNECTION 3-1 ###
+							# Find the module positions and rotations relative to t0.5*(lower_pos[0]+upper_pos[0]),he parent position.
+							lower_offset = self.rotate((self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(-math.pi/2,3))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+
+						elif child_port == 3:
+
+							### CONNECTION 3-3 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize, self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((self.cubesize, -self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.genmatrix(math.pi,1),self.genmatrix(math.pi,2))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+
+						elif child_port == 5:
+
+							### CONNECTION 3-5 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize, self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((self.cubesize, -self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi,1))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[child],self.lowerbody[parent])
+
+						elif child_port == 7:
+
+							### CONNECTION 3-7 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())						
+							upper_offset = self.rotate((self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())												
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi/2,3))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[child],self.lowerbody[parent])
+
+                                                else:
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
+                                                        
+					elif parent_port == 4:
+						if child_port == 2:
+
+							### CONNECTION 4-2 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi,1),self.genmatrix(-math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 4:
+
+							### CONNECTION 4-4 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize, -self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize, self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi,2))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 6:
+
+							### CONNECTION 4-6 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize, -self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize, self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							rot = self.lowerbody[parent].getRotation()
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 7:	
+
+							### CONNECTION 4-7 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(-math.pi/2,2),self.genmatrix(math.pi/2,1))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.upperbody[child])
+
+						else:
+							print"Invalid Connection: %d - %d"%(parent_port,child_port)
+                                                                                                                
+					elif parent_port == 5:
+						if child_port == 1:
+
+							### CONNECTION 5-1 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi,1),self.genmatrix(math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 3:
+
+							### CONNECTION 5-3 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize, self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize, -self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi,1))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 5:
+
+							### CONNECTION 5-5 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize, self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize, -self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi,1),self.genmatrix(math.pi,2))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 7:
+
+							### CONNECTION 5-7 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi,1),self.genmatrix(-math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.upperbody[child])
+
+                                                else:
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
+                                                                                                                
+					elif parent_port == 6:
+						if child_port == 2:
+
+							### CONNECTION 6-2 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi/2,3))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 4: 
+
+							### CONNECTION 6-4 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize, -self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize, self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							rot = self.lowerbody[parent].getRotation()
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 6: 
+
+							### CONNECTION 6-6 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize, -self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize, self.cubesize*0.25, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi,2))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 7: 
+
+							### CONNECTION 6-7 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi/2,1),self.genmatrix(-math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.upperbody[child])
+
+                                                else:
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
+                                                                                                                
+					elif parent_port == 7:
+						if child_port == 1: 
+
+							### CONNECTION 7-1 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, self.cubesize*0.75, 0),self.upperbody[parent].getRotation())
+							upper_offset = self.rotate((0, self.cubesize*1.25, 0),self.upperbody[parent].getRotation())
+							rot = self.upperbody[parent].getRotation()
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[parent],self.lowerbody[child])
+
+						elif child_port == 2: 
+
+							### CONNECTION 7-2 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, self.cubesize*0.75, 0),self.upperbody[parent].getRotation())
+							upper_offset = self.rotate((0, self.cubesize*1.25, 0),self.upperbody[parent].getRotation())
+							rot = self.multmatrix(self.upperbody[parent].getRotation(),self.genmatrix(math.pi/2,2))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[parent],self.lowerbody[child])
+
+						elif child_port == 3: 
+
+							### CONNECTION 7-3 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*0.25, self.cubesize, 0),self.upperbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize*0.25, self.cubesize, 0),self.upperbody[parent].getRotation())
+							rot = self.multmatrix(self.upperbody[parent].getRotation(),self.genmatrix(-math.pi/2,3))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[parent],self.lowerbody[child])
+
+						elif child_port == 4: 
+
+							### CONNECTION 7-4 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, self.cubesize, self.cubesize*0.25),self.upperbody[parent].getRotation())
+							upper_offset = self.rotate((0, self.cubesize, -self.cubesize*0.25),self.upperbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi/2,2),self.genmatrix(-math.pi/2,3))
+							rot = self.multmatrix(self.upperbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[parent],self.lowerbody[child])
+
+						elif child_port == 5: 
+
+							### CONNECTION 7-5 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*0.25, self.cubesize, 0),self.upperbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize*0.25, self.cubesize, 0),self.upperbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi,2),self.genmatrix(math.pi/2,3))
+							rot = self.multmatrix(self.upperbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[parent],self.lowerbody[child])
+
+						elif child_port == 6: 
+
+							### CONNECTION 7-6 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, self.cubesize, self.cubesize*0.25),self.upperbody[parent].getRotation())
+							upper_offset = self.rotate((0, self.cubesize, -self.cubesize*0.25),self.upperbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi/2,2),self.genmatrix(math.pi/2,3))
+							rot = self.multmatrix(self.upperbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[parent],self.lowerbody[child])
+
+						elif child_port == 7: 
+
+							### CONNECTION 7-7 ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, self.cubesize*1.25, 0),self.upperbody[parent].getRotation())
+							upper_offset = self.rotate((0, self.cubesize*0.75, 0),self.upperbody[parent].getRotation())
+							rot = self.multmatrix(self.upperbody[parent].getRotation(),self.genmatrix(math.pi,3))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.upperbody[parent],self.upperbody[child])
+
+                                                else:
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
+                                                        
+					elif parent_port == 8:
+						if child_port == 8:
+
+							### CONNECTION 8-8 [aka 1-2 & 2-1] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, -self.cubesize*0.75, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((0, -self.cubesize*1.25, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi/2,2),self.genmatrix(math.pi,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 9:
+
+							### CONNECTION 8-9 [aka 1-4 & 2-3] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, -self.cubesize, self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((0, -self.cubesize, -self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(-math.pi/2,2),self.genmatrix(math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 10:
+
+							### CONNECTION 8-10 [aka 1-6 & 2-5] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((0, -self.cubesize, self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((0, -self.cubesize, -self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi/2,2),self.genmatrix(-math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+                                                else:
+                                                        print("Invalid Connection");
+
+					elif parent_port == 9:
+						if child_port == 8:
+
+							### CONNECTION 9-8 [aka 3-2 & 4-1] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi/2,1),self.genmatrix(-math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 9:
+
+							### CONNECTION 9-9 [aka 3-4 & 4-3] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize, 0, self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize, 0, -self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(-math.pi/2,1),self.genmatrix(math.pi,2))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+						elif child_port == 10:
+
+							### CONNECTION 9-10 [aka 3-6 & 4-5] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((self.cubesize, 0, self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((self.cubesize, 0, -self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(-math.pi/2,1))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
+
+                                                else:
+                                                        print("Invalid Connection");
+
+					elif parent_port == 10:
+						if child_port == 8:
+
+							### CONNECTION 10-8 [aka 6-1 & 5-2] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize*0.75, 0, 0),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize*1.25, 0, 0),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi/2,1),self.genmatrix(math.pi/2,3))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])	
+
+						elif child_port == 9:
+
+							### CONNECTION 10-9 [aka 6-3 & 5-4] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize, 0, -self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize, 0, self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),self.genmatrix(math.pi/2,1))
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])	
+
+						elif child_port == 10:
+
+							### CONNECTION 10-10 [aka 6-5 & 5-6] ###
+							# Find the module positions and rotations relative to the parent position.
+							lower_offset = self.rotate((-self.cubesize, 0, -self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							upper_offset = self.rotate((-self.cubesize, 0, self.cubesize*0.25),self.lowerbody[parent].getRotation())
+							rot = self.multmatrix(self.genmatrix(math.pi/2,1),self.genmatrix(math.pi,2))
+							rot = self.multmatrix(self.lowerbody[parent].getRotation(),rot)
+
+							# Spawn the module and fix it to its parent.
+							self.create_module(parent_pos, lower_offset, upper_offset, rot)
+							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])	
+
+                                                else:
+                                                        print("Invalid Connection %i - %i");
+                                                        
+			# Now that we have spawned one more module and connected it, move on to the next one.
+			idx = idx + 1	
+
+		# WHEW, THE END OF ALL THAT FINALLY!
+		# Build the Geoms and Joints arrays for rendering.
+		geomlist = self.lowerjoint
+		geomlist.extend(self.upperjoint)
+		geomlist.append(self.ground)
+		self._geoms = geomlist
+		self._joints = self.fixed
+		self._joints.extend(self.hinge)
+
+		
+	def create_module(self, parent_pos, lower_offset, upper_offset, rot):
+		"""
+		Spawns a CKBot module at the upper and lower body positions and specified rotation matrix.
+		"""
+
+		# Find the absolute positions of the module given the parent's position.
+		lower_pos = (parent_pos[0]+lower_offset[0],
+                     parent_pos[1]+lower_offset[1],
+                     parent_pos[2]+lower_offset[2])
+		upper_pos = (parent_pos[0]+upper_offset[0],
+                     parent_pos[1]+upper_offset[1],
+                     parent_pos[2]+upper_offset[2])
+		hinge_pos = (0.5*(lower_pos[0]+upper_pos[0]),
+					 0.5*(lower_pos[1]+upper_pos[1]),
+					 0.5*(lower_pos[2]+upper_pos[2]))
+
+		# Create the lower piece of the module.
+		lowerbody = ode.Body(self.world)
+		lowerjoint = ode.GeomBox(space=self.space, lengths=(self.cubesize, self.cubesize*0.5, self.cubesize) )
+		lowerjoint.setBody(lowerbody)
+		lowerjoint.setPosition(lower_pos)
+		lowerjoint.setRotation(rot)
+		lowerM = ode.Mass()
+		lowerM.setBox(self.cubemass,self.cubesize,self.cubesize*0.5,self.cubesize)
+		lowerbody.setMass(lowerM)
+
+		# Create the upper piece of the module.
+		upperbody = ode.Body(self.world)
+		upperjoint = ode.GeomBox(space=self.space, lengths=(self.cubesize, self.cubesize*0.5, self.cubesize) )
+		upperjoint.setBody(upperbody)
+		upperjoint.setPosition(upper_pos)
+		upperjoint.setRotation(rot)
+		upperM = ode.Mass()
+		upperM.setBox(self.cubemass,self.cubesize,self.cubesize*0.5,self.cubesize)
+		upperbody.setMass(upperM)
+
+		# Create the hinge of the module
+		hinge = ode.HingeJoint(self.world)
+		hinge.attach(lowerbody,upperbody)
+		hinge.setAnchor(hinge_pos)
+		hinge.setAxis(self.rotate((1,0,0),rot))
+		hinge.setParam(ode.ParamLoStop,self.hingeminangle)
+		hinge.setParam(ode.ParamHiStop,self.hingemaxangle)
+		hinge.setParam(ode.ParamFMax,self.hingemaxforce)
+
+		# Append all these new pointers to the simulator class.
+		self.lowerbody.append(lowerbody)
+		self.lowerjoint.append(lowerjoint)
+		self.lowerM.append(lowerM)
+		self.upperbody.append(upperbody)
+		self.upperjoint.append(upperjoint)
+		self.upperM.append(upperM)
+		self.hinge.append(hinge)
+
+
+	def create_fixed_joint(self, body1, body2):
+		"""
+		Create a fixed joint between two bodies.
+		"""
+		fixed = ode.FixedJoint(self.world)
+		fixed.attach(body1,body2)
+		fixed.setFixed()
+		self.fixed.append(fixed)
+
+        def loadObstacles(self,obstaclefile):
+            """
+            Loads obstacles from the obstacle text file.
+            """
+
+            # Initiate data structures.
+            data = open(obstaclefile,"r")
+            obs_sizes = [];
+            obs_positions = [];
+            obs_masses = [];
+            reading = "None"
+
+            # Parse the obstacle text file.
+            for line in data:
+                linesplit = line.split()
+                if linesplit != []:
+                    if linesplit[0] != "#":
+                        obs_sizes.append([float(linesplit[0]),float(linesplit[1]),float(linesplit[2])])
+                        obs_positions.append([float(linesplit[3]),float(linesplit[4]),float(linesplit[5])])
+                        obs_masses.append(float(linesplit[6]))      
+
+            # Go through all the obstacles in the list and spawn them.
+            for i in range(len(obs_sizes)):
+
+                obs_size = obs_sizes[i]
+                obs_pos = obs_positions[i]
+                obs_mass = obs_masses[i]
+                        
+                # Create the obstacle.
+                body = ode.Body(self.world)
+                geom = ode.GeomBox(space=self.space, lengths=obs_size )
+                geom.setBody(body)
+                geom.setPosition(obs_pos)
+                M = ode.Mass()
+                M.setBox(obs_mass,obs_size[0],obs_size[1],obs_size[2])
+                body.setMass(M)
+
+                # Append all these new pointers to the simulator class.
+                self._geoms.append(geom)
+		
+	def loadRegionData(self, regionfile):
+		"""
+		Parses a LTLMoP-formatted ".regions" file and creates a data structure to render the region map in the simulator.
+		"""
+
+		data = open(regionfile,"r")
+
+		reading_regions = 0
+		for line in data:
+
+			# Find when the Regions information is found in the text file (as per LTLMoP format)
+			if (line.split().count("Regions:")>0):
+				reading_regions = 1
+			# Once we have found where the region information begins, parse it in the form:
+			# [color info, vertex info] ==> [R, G, B, [x1, y1], [x2, y2], ...] 
+			elif (reading_regions == 1 ):
+				info = line.split()
+				if (len(info)==0):
+					reading_regions = 0
+				# Do not plot the boundary region.
+				elif info[0]!="Boundary":
+					# Polygon-type region -- extract color and all the vertices in the polygon.
+					if info[1]=="poly":
+						region_color = [float(info[6])/255, float(info[7])/255, float(info[8])/255]
+						posx = int(info[2])
+						posy = int(info[3])
+						vertices = []
+						for idx in range(9,len(info),2):
+							vertices.append([posx + int(info[idx]), posy + int(info[idx+1])])
+						temp_info = region_color
+						temp_info.extend(vertices)
+						self.region_data.append(temp_info)
+					elif info[1]=="rect":
+						region_color = [float(info[6])/255, float(info[7])/255, float(info[8])/255]
+						posx = int(info[2])
+						posy = int(info[3])
+						width = int(info[4])
+						height = int(info[5])
+						vertices = []
+						vertices.append([posx, posy])
+						vertices.append([posx, posy + height])
+						vertices.append([posx + width, posy + height])
+						vertices.append([posx + width, posy])
+						temp_info = region_color
+						temp_info.extend(vertices)
+						self.region_data.append(temp_info)
+
+	def loadRobotData(self,filename):
+		"""
+		Loads full robot information from a text file that specifies:
+		1. Configuration Matrix.
+		2. Relative rotation and translation from the origin, in CKBot length units.
+		3. A set of gaits and target gait execution times.
+		"""
+
+		# Clear all previous information
+		self.config = "none"
+		self.connM = []
+		self.basepos = []
+		self.baserot = self.genmatrix(0,1)   # Identity Matrix
+		self.gaits = []
+
+		# Open the text file.
+		data = open(filename,"r")
+
+		# Go through the text file line by line.
+		reading = "none"
+		for line in data:
+			linesplit = line.split()
+
+			# If we are currently reading nothing, then we are looking for the next attribute to read.
+			if reading == "none" and linesplit != []:
+				if linesplit[0] == "ConfigName:":
+					reading = "name"
+				elif linesplit[0] == "ConnMatrix:":
+					reading = "matrix"
+				elif linesplit[0] == "RelativeOffset:":
+					reading = "offset"
+				elif linesplit[0] == "RelativeRotation:":
+					reading = "rotation"
+				elif linesplit[0] == "ForwardVector:":
+					reading = "fwd_vector"
+				elif linesplit[0] == "Gaits:":
+					reading = "gait"
+
+			# If we are currently reading something, the continue to do so until finished.
+
+			# If we are reading the name of the configuration, then it is simply the word that makes the line under "ConfigName:"
+			elif reading == "name":
+				self.config = linesplit[0]
+				reading = "none"
+
+			# If we are reading the connectivity matrix, then read the matrix row by row until we reach whitespace.
+			elif reading == "matrix":
+				if linesplit == []:
+					reading = "none"
+				else:
+					temprow = []
+					for num in linesplit:
+						temprow.append(int(num))
+					self.connM.append(temprow)
+
+			# If we are reading the relative offset, then simply read the three numbers (x, y, z) in 
+			# the line under "RelativeOffset:" and scale by the size of the modules in the simulator.
+			elif reading == "offset":
+				for num in linesplit:
+					self.basepos.append(self.cubesize*float(num))
+				reading = "none"
+
+			# If we are reading the relative rotation, then we must read through all the rotations specified and
+			# create rotation matrices for each rotation and multiply them together in the correct order.
+			elif reading == "rotation":
+				if linesplit == []:
+					reading = "none"
+				else:
+					angle = int(linesplit[0])*(math.pi/180)
+					axis = linesplit[1]
+					if axis == "x":
+						axis_idx = 1
+					elif axis == "y":
+						axis_idx = 2
+					else:
+						axis_idx = 3
+					self.baserot = self.multmatrix(self.genmatrix(angle,axis_idx),self.baserot)
+
+			# Forward vector reading thingy
+			elif reading == "fwd_vector":
+				if linesplit == []:
+					reading = "none"
+				else:
+					sign = linesplit[0]
+					axis = linesplit[1]
+					if sign == "+":
+						coeff = 1
+					else:
+						coeff = -1
+					
+					if axis == "x":
+						self.fwdvec = [coeff*1, 0, 0]
+					elif axis =="y":
+						self.fwdvec = [0, coeff*1, 0]
+					else:
+						self.fwdvec = [0, 0, coeff*1]
+
+			# If we are reading gaits, it is more complicated. We must ensure to read all the gaits specified.
+			# For each gait, we must be able to tell whether the gait is Periodic or Fixed type and 
+			# parse it accordingly.
+
+			elif reading == "gait":
+
+				# Read the Proportional control gain specified in the text file.
+				if linesplit[0] == "Gain":
+					self.gain = float(linesplit[1])
+
+				# Figure out whether the gaits are fixed or periodic
+				if linesplit[0] == "Type":
+					self.gaittype = linesplit[1]
+					if self.gaittype == "Periodic":
+						reading = "periodic_gait"
+					else:
+						reading = "fixed_gait"				  
+
+			# If we are reading periodic gaits, we know our gait table is just 3 lines.
+			# The first line is the set of amplitudes (in degrees*100) of each hinge.
+			# The second line is the set of frequencies (in rad/s) of each hinge.
+			# The third line is the set of phase angles (in degrees*100) of each hinge.
+			elif reading == "periodic_gait" and linesplit != []:
+				if linesplit[0] == "Gait":
+					amplitudes = []
+					frequencies = []
+					phases = []
+					reading = "amplitude"
+
+			elif reading == "amplitude":
+				for elem in linesplit:
+					amplitudes.append( float(elem)*(math.pi/180.0)*(1/100.0) )
+				reading = "frequency"
+
+			elif reading == "frequency":
+				for elem in linesplit:
+					frequencies.append( float(elem) )
+				reading = "phase"
+
+			elif reading == "phase":
+				for elem in linesplit:
+					phases.append( float(elem)*(math.pi/180.0)*(1/100.0) )
+				tempgait = [amplitudes]
+				tempgait.append(frequencies)
+				tempgait.append(phases)
+				self.gaits.append(tempgait)
+				reading = "periodic_gait"
+
+			# If we are reading fixed gaits, the gait table can be an arbitrary number of lines.
+			# For each gait we will read all the steps until we find the last line for the gait 
+			# (which the time that the gait should loop in).
+			elif reading == "fixed_gait" and linesplit != []:
+				if linesplit[0] == "Gait":
+					gaitrows = []
+					gaittime = 0
+					reading = "fixed_gait_rows"
+
+			elif reading == "fixed_gait_rows":
+				if len(linesplit)==1:
+					gaittime = [float(linesplit[0])]
+					gaittime.extend(gaitrows)
+					self.gaits.append(gaittime)
+					reading = "fixed_gait"
+				else:
+					temprow = []
+					for elem in linesplit:
+						temprow.append( float(elem)*(math.pi/180.0)*(1/100.0) )
+					gaitrows.append(temprow)		    
+
+
+	def rotate(self,vec,rot):
+		"""
+		Rotates vector 'vec' using matrix 'mat'
+		"""
+
+		item1 = rot[0]*vec[0] + rot[1]*vec[1] + rot[2]*vec[2]
+		item2 = rot[3]*vec[0] + rot[4]*vec[1] + rot[5]*vec[2]
+		item3 = rot[6]*vec[0] + rot[7]*vec[1] + rot[8]*vec[2]
+		newvec = [item1, item2, item3]
+
+		for i in range(0,3):
+			if newvec[i]<1e-5 and newvec[i]>-1e-5:
+				newvec[i] = 0
+
+		return tuple(newvec)
+
+
+	def genmatrix(self,angle,axis):
+		"""
+		Generates a rotation matrix about the specified axis
+		"""
+
+		if (axis==1):	# X-AXIS
+			rot = (1, 0, 0, 0, math.cos(angle), -math.sin(angle), 0, math.sin(angle), math.cos(angle))
+		elif (axis==2):	# Y-AXIS
+			rot = (math.cos(angle), 0, math.sin(angle), 0, 1, 0, -math.sin(angle), 0, math.cos(angle))
+		elif (axis==3): # Z-AXIS
+			rot = (math.cos(angle), -math.sin(angle), 0, math.sin(angle), math.cos(angle), 0, 0 , 0, 1)
+
+		return rot
+
+
+	def multmatrix(self,M1,M2):
+		"""
+		Multiples two matrices, where each is defined as a 9-element list
+		"""
+
+		M = ( M1[0]*M2[0]+M1[1]*M2[3]+M1[2]*M2[6],
+			  M1[0]*M2[1]+M1[1]*M2[4]+M1[2]*M2[7],
+			  M1[0]*M2[2]+M1[1]*M2[5]+M1[2]*M2[8],
+			  M1[3]*M2[0]+M1[4]*M2[3]+M1[5]*M2[6],
+			  M1[3]*M2[1]+M1[4]*M2[4]+M1[5]*M2[7],
+			  M1[3]*M2[2]+M1[4]*M2[5]+M1[5]*M2[8],
+			  M1[6]*M2[0]+M1[7]*M2[3]+M1[8]*M2[6],
+			  M1[6]*M2[1]+M1[7]*M2[4]+M1[8]*M2[7],
+			  M1[6]*M2[2]+M1[7]*M2[5]+M1[8]*M2[8] )
+		return M
+
+
+	def _initOpenGL(self):
+		"""
+		Initialise the scene.
+		"""
+
+		# Create a window
+		pygame.init()
+		screen = pygame.display.set_mode(self.res, pygame.OPENGL | pygame.DOUBLEBUF)
+		pygame.display.set_caption('CKBot Simulation')
+		pygame.mouse.set_visible(False)
+
+		glViewport(0, 0, self.res[0], self.res[1])
+		glClearColor(0.8, 0.8, 0.9, 0)
+
+		glEnable(GL_DEPTH_TEST)
+		glEnable(GL_LIGHTING)
+		glEnable(GL_NORMALIZE)
+		glShadeModel(GL_FLAT)
+        
+
+	def _extractMatrix(self, geom):
+		"""
+		Return a 4x4 matrix (represented by a 16-element tuple) created by
+		combining the geom's rotation matrix and position.
+		"""
+
+		x, y, z = geom.getPosition()
+		rot = geom.getRotation()
+		return (rot[0], rot[3], rot[6], 0.0,
+				rot[1], rot[4], rot[7], 0.0,
+				rot[2], rot[5], rot[8], 0.0,
+				x, y, z, 1.0)
+
+
+	def _renderGeom(self, geom, color):
+		"""
+		Render either a ode.GeomBox or ode.GeomSphere object.
+		"""
+
+		allowed = [ode.GeomBox, ode.GeomSphere]
+		ok = False
+		for klass in allowed:
+			ok = ok or isinstance(geom, klass)
+			if (not ok):
+				return
+
+		glPushMatrix()
+		glMultMatrixd(self._extractMatrix(geom))
+
+		glMaterialfv(GL_FRONT, GL_SPECULAR, color)
+
+		if (isinstance(geom, ode.GeomBox)):
+			sx, sy, sz = geom.getLengths()
+			glScale(sx, sy, sz)
+			glutInit()
+			glutSolidCube(1)
+		elif (isinstance(geom, ode.GeomSphere)):
+			r = geom.getRadius()
+			glutSolidSphere(r, 20, 20)
+
+		glPopMatrix()
+        
+
+	def _renderGround(self):
+		"""
+		Renders the ground plane.
+		"""
+
+		normal, d = self.ground.getParams()
+		x, y, z = self.lowerjoint[0].getPosition()
+
+		# Draw a quad at the position of the vehicle that extends to the
+		# clipping planes.
+		if (self.region_data==[]):
+
+			glPushMatrix()
+			glTranslate(x, 0.0, z)
+
+			glMaterialfv(GL_FRONT, GL_SPECULAR, (0.0, 1.0, 0.0))
+
+			glBegin(GL_QUADS)
+			glNormal3f(*normal)
+			glVertex3f(-self.clip, d, -self.clip)
+			glNormal3f(*normal)
+			glVertex3f(self.clip, d, -self.clip)
+			glNormal3f(*normal)
+			glVertex3f(self.clip, d, self.clip)
+			glNormal3f(*normal)
+			glVertex3f(-self.clip, d, self.clip)
+			glEnd()
+
+			glPopMatrix()
+
+		# If we have region data, draw the individual regions and color them accordingly.
+		else:
+			for row in self.region_data:
+				glPushMatrix()
+
+				color = (row[0], row[1], row[2])
+				glMaterialfv(GL_FRONT, GL_SPECULAR, color)
+
+				glBegin(GL_POLYGON)
+				for idx in range(3,len(row)):
+					glNormal3f(*normal)
+					glVertex3f(row[idx][0]*self.region_calib[0], d, -row[idx][1]*self.region_calib[1])
+				glEnd()
+
+				glPopMatrix()
+
+
+	def _setCamera(self):
+		"""
+		Position the camera to C{self.cameraDistance} units behind the
+		vehicle's current position and rotated depending on the mouse position.
+		"""
+
+		aspect = float(self.res[0]) / float(self.res[1])
+
+		x, y = pygame.mouse.get_pos()
+		if self.clicking:
+			self._xRot = (y - self.res[1]/2) * self._xCoeff
+			self._yRot = (x - self.res[0]/2) * self._yCoeff
+		if (self._xRot < 0):
+			self._xRot = 0
+
+		glMatrixMode(GL_PROJECTION)
+		glLoadIdentity()
+		glFrustum(-aspect, aspect, -1.0, 1.0, 1.5, self.clip)
+
+		glLightfv(GL_LIGHT0, GL_POSITION, (-5.0, 10.0, 0, 0))
+		glLightfv(GL_LIGHT0,GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
+		glLightfv(GL_LIGHT0,GL_SPECULAR, (1.0, 1.0, 1.0, 1.0))
+		glEnable(GL_LIGHT0)
+
+		glMatrixMode(GL_MODELVIEW)
+		glLoadIdentity()
+
+		# Set the camera angle to view the vehicle
+		glTranslate(0.0, 0.0, -self.cameraDistance)
+		glRotate(self._xRot, 1, 0, 0)
+		glRotate(self._yRot, 0, 1, 0)
+
+		# Set the camera so that the vehicle is drawn in the correct place.
+		if (self._align==1 or self.standalone==0):
+			x, y, z = self.lowerjoint[0].getPosition()
+			self._ax = x
+			self._ay = y
+			self._az = z
+			glTranslate(-self._ax, -self._ay, -self._az)
+
+
+	def render(self):
+		"""
+		Render the current simulation state.
+		"""
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+		self._renderGround()
+
+		self._setCamera()
+		counter = 0;
+		counter = 0;
+		for geom in self._geoms:
+			if (counter == self.current_module) or (counter == self.current_module + self.num_modules):
+				self._renderGeom(geom,(1,0,0))
+			else:
+				self._renderGeom(geom,(0,0,0))
+			counter = counter + 1 
+		glFlush()
+		pygame.display.flip()
+
+
+	def _keyDown(self, key):
+		# Gait commands.
+		# USE Q-W to cycle through modules (backwards and forward respectively)
+		if (key == pygame.K_q and self.current_module < self.num_modules - 1):
+			self.current_module = self.current_module + 1;
+		elif (key == pygame.K_w and self.current_module > 0):
+			self.current_module = self.current_module - 1;
+
+		# USE A-S to move the currently selected joint angle [Large Step]
+		elif (key == pygame.K_a):
+			self.ref_angles[self.current_module] = min([self.ref_angles[self.current_module] + 1000, 9000])
+		elif (key == pygame.K_s):
+			self.ref_angles[self.current_module] = max([self.ref_angles[self.current_module] - 1000, -9000])
+
+		# USE Z-X to move the currently selected joint angle [Small Step]
+		elif (key == pygame.K_z):
+			self.ref_angles[self.current_module] = min([self.ref_angles[self.current_module] + 250, 9000])
+		elif (key == pygame.K_x):
+			self.ref_angles[self.current_module] = max([self.ref_angles[self.current_module] - 250, -9000])		
+			
+		# Reset to zero position by pressing O
+		elif (key == pygame.K_o):
+			print "Resetting Joint Angles"
+			for i in range(self.num_modules):
+				self.ref_angles[i] = 0
+
+		# Gait Recording:
+		# Press R to enable recording a gait.
+		elif (key == pygame.K_r and not self.recording):
+			self.recording = True
+			self.temp_recording = []
+			self.gait_frame = 1
+			print "Recording Gait"
+		# Press C to capture a frame while recording.
+		elif (key == pygame.K_c and self.recording):
+			self.temp_recording.append(copy.deepcopy(self.ref_angles))
+			print "Gait Frame %i Recorded" % self.gait_frame
+			self.gait_frame = self.gait_frame + 1
+		# Press D to save a gait as the next gait in the text file.
+		elif (key == pygame.K_d and self.recording):
+			gaittime = input('In how many seconds should this gait execute? Enter number: ')
+			self.temp_recording.append(gaittime)
+			self.saveGait()
+			print "Gait Saved"
+			self.recording = False
+		# Press E to cancel recording.
+		elif (key == pygame.K_e and self.recording):
+			self.recording = False
+			print "Recording Cancelled\n"
+		
+		elif (key == pygame.K_ESCAPE):
+			self._running = False
+		elif (key == pygame.K_l):
+			self._align = 1.0
+
+		# If running in standalone mode, can press the keys 1-5 to set gaits 1-5.
+		# Yes, only 5 gaits are supported but if you need to add more simply extend the code below!
+		if not self.recording:
+			if (key == pygame.K_0):
+				self.gait = 0
+			elif (key == pygame.K_1):
+				if len(self.gaits) >= 1:
+					self.gait = 1
+			elif (key == pygame.K_2):
+				if len(self.gaits) >= 2:
+					self.gait = 2
+			elif (key == pygame.K_3):
+				if len(self.gaits) >= 3:
+					self.gait = 3
+			elif (key == pygame.K_4):
+				if len(self.gaits) >= 4:
+					self.gait = 4
+			elif (key == pygame.K_5):
+				if len(self.gaits) >= 5:
+					self.gait = 5
+
+
+	def _keyUp(self, key):
+		if (key == pygame.K_w):
+			self._vel = 0.0
+		elif (key == pygame.K_a):
+			self._turn = 0.0
+		elif (key == pygame.K_d):
+			self._turn = 0.0
+		elif (key == pygame.K_s):
+			self._vel = 0.0
+		elif (key == pygame.K_q):
+			self._turn2 = 0.0
+		elif (key == pygame.K_e):
+			self._turn2 = 0.0
+		elif (key == pygame.K_l):
+			self._align = 0.0
+	
+	
+	def doEvents(self):
+		"""
+		Process any input events.
+		"""
+
+		events = pygame.event.get()
+
+		for e in events:
+			if (e.type == pygame.QUIT):
+				self._running = False
+			elif (e.type == pygame.KEYDOWN):
+				self._keyDown(e.key)
+			elif (e.type == pygame.KEYUP):
+				self._keyUp(e.key)
+			elif (e.type == pygame.MOUSEBUTTONDOWN):
+				if e.button == 1:
+					self.clicking = True
+				elif e.button == 4:
+					self.cameraDistance -= 5
+				elif e.button == 5:
+					self.cameraDistance += 5
+			elif (e.type == pygame.MOUSEBUTTONUP):
+				if e.button == 1:
+					self.clicking = False
+
+
+
+	def _nearcb(self, args, geom1, geom2):
+		"""
+		Create contact joints between colliding geoms.
+		"""
+
+		body1, body2 = geom1.getBody(), geom2.getBody()
+		if (body1 is None):
+			body1 = ode.environment
+		if (body2 is None):
+			body2 = ode.environment
+
+		if (ode.areConnected(body1, body2)):
+			return
+
+		contacts = ode.collide(geom1, geom2)
+
+		for c in contacts:
+			c.setBounce(0.1)
+			c.setMu(10000)
+			j = ode.ContactJoint(self.world, self._cjoints, c)
+			j.attach(body1, body2)
+	
+	def saveGait(self):
+		"""
+		Saves a recently recorded gait by adding it to the currently loaded .ckbot file
+		"""
+		
+		# Load the robot file.
+		f = open(self.robotfile, 'a')
+		
+		# Add the new gait number
+		numgaits = len(self.gaits)
+		titlestring = "\n\nGait " + str(numgaits + 1)
+		f.write(titlestring)
+
+		# Now add each row of the gait file
+		for line in self.temp_recording:
+			linestring = "\n"
+			if type(line) == int:	# This deals with single-element lines.
+				linestring = linestring + str(line)
+			else:					# This corresponds to any other line.
+				for elem in line:
+					linestring = linestring + str(elem) + " "
+			f.write(linestring)
+		
+		# Close the file.
+		f.close()
+		
+		# Reload the robot data.
+		self.loadRobotData(self.robotfile)		
+		
+		
+	def setGait(self,gait):
+		"""
+		Set the gait number for simulation
+		"""
+		self.gait = gait
+
+	def rungait(self):
+		"""
+		Runs the gait specified by the object variable "self.gait"
+		"""
+
+		time = self.counter/self.fps
+		gait = self.gaits[self.gait - 1]
+
+		# If the gait is set to zero, use the gait creator reference angles to move.
+		if self.gait == 0:
+			for module_idx in range(len(self.hinge)):
+				true_ang = self.hinge[module_idx].getAngle()
+				ref_ang = self.ref_angles[module_idx]*(math.pi/180.0)/100.0
+				servo_vel = 5.0*(ref_ang-true_ang)
+				self.hinge[module_idx].setParam(ode.ParamVel, servo_vel)
+
+		else:
+			# If the gait is of periodic type, read the rows in the following format.
+			# ROW 1: Amplitudes
+			# ROW 2: Frequencies
+			# ROW 3: Phases
+			if self.gaittype == "Periodic":
+				for module_idx in range(len(self.hinge)):
+					amplitude = gait[0][module_idx]
+					frequency = gait[1][module_idx]
+					phase = gait[2][module_idx]
+
+					true_ang = self.hinge[module_idx].getAngle()
+					ref_ang = amplitude*math.sin(frequency*time + phase)
+					servo_vel = self.gain*(ref_ang-true_ang)
+					self.hinge[module_idx].setParam(ode.ParamVel, servo_vel)
+
+			# If the gait is of fixed type, run the function "gaitangle" to interpolate between
+			# reference hinge angles at the current time.
+			else:
+				for module_idx in range(len(self.hinge)):
+					true_ang = self.hinge[module_idx].getAngle()	    
+					ref_ang = self.gaitangle(gait,time,module_idx)
+					servo_vel = self.gain*(ref_ang-true_ang)
+					self.hinge[module_idx].setParam(ode.ParamVel, servo_vel)
+
+
+	def gaitangle(self,gait,time,module):
+		"""
+		Takes in a gait matrix and returns the reference angle at that point in time.
+		"""
+
+		nummoves = len(gait)-1
+		gaittime = gait[0]
+		singletime = float(gaittime)/(nummoves-1)
+
+		timearray = []
+		for i in range(0,nummoves):
+			if i==0:
+				timearray.append(0)
+			else:
+				timearray.append(timearray[i-1]+singletime)
+		currenttime = (time%gaittime)/singletime
+
+		globalref = gait[int(math.ceil(currenttime))+1][module]
+		globalprev = gait[int(math.floor(currenttime))+1][module]
+
+		if globalref==globalprev:
+			# If the current time coincides with the time of a given gait angle direction, then there is no need to interpolate.
+			localref = globalref
+		else:
+			# Linear interpolation step.
+			interp = (currenttime - timearray[int(math.floor(currenttime))])/(timearray[int(math.ceil(currenttime))] - timearray[int(math.floor(currenttime))])
+			localref = globalprev + interp*(globalref-globalprev)
+
+		return globalref
+
+
+	def run(self):
+		"""
+		Start the demo. This method will block until the demo exits.
+		This method is used if the simulator is run stand-alone.
+		"""
+
+		self.clock = pygame.time.Clock()
+		self._running = True
+		self.doEvents()
+
+		# Receive Locomotion commands for all the hinges from LTLMoP.
+		# Use these commands as reference angles for simple P-controlled servos.	
+		while self._running:
+
+			self.doEvents()
+
+			counter = self.counter
+
+			self.rungait()
+
+			# Simulation Step
+			self.space.collide((), self._nearcb)
+			self.world.step(1/self.fps)
+			self._cjoints.empty()
+			self.render()
+
+			# Limit the FPS.
+			self.clock.tick(self.fps)
+			self.counter = self.counter + 1
+
+
+	def run_once(self):
+		"""
+		Run one simulation step -- used for LTLMoP integration.
+		"""
+
+		self._running = True
+		self.doEvents()
+
+		# Receive Locomotion commands for all the hinges from LTLMoP.
+		# Use these commands as reference angles for simple P-controlled servos.
+		self.rungait()
+
+		# Simulation Step
+		self.space.collide((), self._nearcb)
+		self.world.step(1/self.fps)
+		self._cjoints.empty()
+		self.render()
+
+		# Limit the FPS.
+		self.clock.tick(self.fps)
+		self.counter = self.counter + 1
+		
+
+# Main method for standalone mode.
+if (__name__ == '__main__'):
+	"""
+	Instantiates a simulator in gait creator mode.
+	"""
+
+	print info
+
+	obstaclefile = None
+	robotfile = "config/" + sys.argv[1] + ".ckbot"
+	if len(sys.argv)==3:
+            obstaclefile = "obstacles/" + sys.argv[2] + ".obstacle"
+
+	instance = GaitCreator(robotfile, standalone=0, obstaclefile=obstaclefile)
+	instance.run()

@@ -1,20 +1,25 @@
 Name: # Full name of the robot
-CKBot-Simulated
+CKBot in a sandbox
 
 Sensors: # Available binary sensor propositions
-fire
-person
-hazardous_item
+jazz
+hiphop
+blues
+rap
+country
 
 Actions: # Available binary actuator propositions
-pick_up
-radio
-drop
 snake
-cross
+biped
+plus
+splits
+crawl
+loop
+slinky
 
 MotionControlHandler: # Module with continuous controller for moving between regions
-lib.handlers.motionControl.CKBotSimController
+lib.handlers.motionControl.heatController
 
-DriveHandler:
+DriveHandler: # Module for converting a desired velocity vector to realistic motor commands
 lib.handlers.drive.CKBotSimDrive
+

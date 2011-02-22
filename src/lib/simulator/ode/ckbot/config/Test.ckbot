@@ -5,11 +5,8 @@ Test
 
 # module order (by row): tail, body, left arm, right arm
 ConnMatrix:
-0 5 3 0 0
-7 0 0 3 0
-7 0 0 0 3
-0 7 0 0 0
-0 0 7 0 0
+0 3
+7 0
 
 # This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
 # The y vector in the simulator is normal to the ground and points upwards.
@@ -30,7 +27,7 @@ Type Fixed
 # Gait 1 -- do stuff
 Gait 1
 0 0 0 0 0
-9000 9000 9000 9000 9000
+9000 5000 5000 6000 4000
 0 0 0 0 0
 3
 

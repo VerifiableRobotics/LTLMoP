@@ -17,7 +17,8 @@ RelativeOffset:
 
 # This represents a relative rotation of 90 degrees about the x axis.
 RelativeRotation:
-90 x
+-90 x
+-90 y
 
 # Gain is the Proportional gain for the CKBot hinge servos.
 # This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),

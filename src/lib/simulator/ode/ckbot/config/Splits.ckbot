@@ -1,17 +1,21 @@
 # CKBot Simulator Robot File
-# 9-Module Biped Configuration
+# Taken from 9-Module Biped Configuration
+# TODO: Update CKBotSimDrive.py somehow so that we can use Biped configuration and do splits from that file
 
 ConfigName:
-Quadriped
+Splits
 
 ConnMatrix:
-0 1 0 0 7 0 0 
-6 0 7 0 0 0 0  
-0 1 0 7 0 0 0  
-0 0 1 0 0 0 0  
-6 0 0 0 0 7 0 
-0 0 0 0 1 0 7  
-0 0 0 0 0 1 0 
+0 3 0 0 5 0 0 0 0
+5 0 7 0 0 0 0 0 0
+0 1 0 7 0 0 0 0 0
+0 0 1 0 0 0 0 7 0
+5 0 0 0 0 7 0 0 0
+0 0 0 0 1 0 7 0 0
+0 0 0 0 0 1 0 0 7
+0 0 0 1 0 0 0 0 0
+0 0 0 0 0 0 1 0 0
+
 # This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
 # The y vector in the simulator is normal to the ground and points upwards.
 RelativeOffset:
@@ -21,6 +25,9 @@ RelativeOffset:
 RelativeRotation:
 90 y
 
+ForwardVector:
++ z
+
 # Gain is the Proportional gain for the CKBot hinge servos.
 # This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
 # except for the last row which is the time taken for the entire gait to loop (in seconds)
@@ -28,11 +35,11 @@ Gaits:
 Gain 1
 Type Fixed
 
-# Gait 1 -- Walk?
+# Gait 1 -- Splits
 Gait 1
-0 0 0 0 0 0 0 0 0 0 0
-0 7000 7000 -7000 7000 7000 -7000 -7000 -7000 0 0
-0 0 0 0 0 0 0 0 0 0 0
-0 -7000 -7000 7000 -7000 -7000 7000 7000 7000 0 0
-0 0 0 0 0 0 0 0 0 0 0
-5
+0 0 0 0 0 0 0 0 0
+0 9000 0 0 9000 0 0 0 0 
+0 0 0 0 0 0 0 0 0
+0 -9000 0 0 -9000 0 0 0 0
+0 0 0 0 0 0 0 0 0
+10

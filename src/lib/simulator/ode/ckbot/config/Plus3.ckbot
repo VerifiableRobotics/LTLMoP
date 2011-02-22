@@ -1,0 +1,78 @@
+# CKBot Simulator Robot File
+# 9-Module Plus-Sign Configuration
+ConfigName:
+Plus3
+
+# module order (by row): body, head, R arm, L arm, 1st tail mod, 2nd tail mod
+ConnMatrix:
+0 1 3 5 7 0 0 0 0 0 0 0 0
+1 0 0 0 0 7 0 0 0 0 0 0 0
+1 0 0 0 0 0 7 0 0 0 0 0 0
+1 0 0 0 0 0 0 0 7 0 0 0 0
+1 0 0 0 0 0 0 7 0 0 0 0 0
+0 1 0 0 0 0 0 0 0 7 0 0 0
+0 0 1 0 0 0 0 0 0 0 7 0 0
+0 0 0 0 1 0 0 0 0 0 0 7 0
+0 0 0 1 0 0 0 0 0 0 0 0 7
+0 0 0 0 0 1 0 0 0 0 0 0 0
+0 0 0 0 0 0 1 0 0 0 0 0 0
+0 0 0 0 0 0 0 1 0 0 0 0 0
+0 0 0 0 0 0 0 0 1 0 0 0 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0 0.5 0
+
+# This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
+RelativeRotation:
+90 x
+-90 y
+
+# This represents the forward vector in robot coordinates.
+ForwardVector:
++ y
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+# This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
+# except for the last row which is the time taken for the entire gait to loop (in seconds)
+Gaits:
+Gain 1
+Type Periodic
+
+# Gait 1 --  go crazy
+#Gait 1
+#9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000
+#5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5
+#0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+# Gait 1 -- go forward
+Gait 1
+0 6000 9000 -9000 6000 6000 0 6000 0 6000 0 6000 0
+0 5 0 0 5 5 0 5 0 5 0 5 0
+0 0 6000 6000 -4500 4500 6000 -9000 6000 9000 6000 -13500 6000
+
+# Gait 2 -- go backward
+Gait 2
+0 -6000 9000 -9000 -6000 -6000 0 -6000 0 -6000 0 -6000 0
+0 5 0 0 5 5 0 5 0 5 0 5 0
+0 0 6000 6000 -4500 4500 6000 -9000 6000 9000 6000 -13500 6000
+
+# Gait 3 - go right
+Gait 3
+0 9000 6000 6000 9000 0 6000 0 6000 0 6000 0 6000
+0 0 5 5 0 0 5 0 5 0 5 0 5
+0 6000 4500 0 6000 4500 0 9000 -4500 0 13500 0 -9000
+
+# Gait 4 - go left
+Gait 4
+0 9000 -6000 -6000 9000 0 -6000 0 -6000 0 -6000 0 -6000
+0 0 5 5 0 0 5 0 5 0 5 0 5
+0 6000 4500 0 6000 4500 0 9000 -4500 0 13500 0 -9000
+
+# Gait 5 -- play dead
+Gait 5
+0 -9000 -9000 9000 -9000 0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0 0 0 0 0 0
+0 9000 9000 9000 9000 0 0 0 0 0 0 0 0
+

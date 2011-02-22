@@ -18,7 +18,7 @@ CKBot Simulator for LTLMoP
 ### TODO:
 ### 2. Scale the region file with LTLMoP calibration parameters [currently hard-coded].
 
-class CKBotSim:
+class CKBotRun:
     """
     CKBot Simulator Class
     """
@@ -116,6 +116,12 @@ class CKBotSim:
 	self._ay = 0.0
 	self._az = 0.0
 	self._align = 0.0
+	
+	#pcan usb interface initialization of cluster
+	#from ckbot.logical import Cluster
+	#c = Cluster()
+	#c.populate()
+	
 
     def _loadObjects(self):
         """
@@ -2245,8 +2251,7 @@ if (__name__ == '__main__'):
     print info
 
     ### FOR NOW, SET THE FILENAME HERE
-    for arg in sys.argv:
-        robotfile = "robots/CKBot/" + arg + ".ckbot"
+    robotfile = "robots/CKBot/Slinky.ckbot"
 
-    sim = CKBotSim(robotfile, standalone=0)
+    sim = CKBotRun(robotfile, standalone=0)
     sim.run()
