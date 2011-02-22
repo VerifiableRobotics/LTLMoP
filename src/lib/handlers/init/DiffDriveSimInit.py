@@ -6,7 +6,6 @@ DiffDriveSimInit.py -- Pioneer Simulation Initialization Handler
 """
 
 import os, sys, time
-import CKBotSim
 from numpy import *
 
 from simulator.ode.pioneer import DiffDriveSim

@@ -982,9 +982,9 @@ class CKBotSim:
 					
 					if axis == "x":
 						self.fwdvec = [coeff*1, 0, 0]
-					elif axis =="y":
+					elif axis == "y":
 						self.fwdvec = [0, coeff*1, 0]
-					else:
+					elif axis == "z":
 						self.fwdvec = [0, 0, coeff*1]
 
 			# If we are reading gaits, it is more complicated. We must ensure to read all the gaits specified.
@@ -1411,7 +1411,7 @@ class CKBotSim:
 
 		# Load the new robot data from the new file "name".ckbot.
 		print("==========\nReconfiguring: " + name + "\n==========")
-		robotfile = "robots/CKBot/" + name + ".ckbot"
+		robotfile = "lib/simulator/ode/ckbot/config/" + name + ".ckbot"
 		self.loadRobotData(robotfile)
 
 		# Update the position of the base module (always module 0) as the sum of the current configuration's pose
@@ -1421,7 +1421,8 @@ class CKBotSim:
 		self.basepos = [relpos[0]+self.basepos[0], relpos[1]+self.basepos[1]+0.1, relpos[2]+self.basepos[2]]	
 
 		# Update the orientation of the base module.
-		newangle = self.get2DPose(0)[2]
+		newvec = self.rotate(self.fwdvec,self.baserot)
+		newangle = math.atan2(-newvec[2],newvec[0])
 		rot = self.genmatrix(angle-newangle,2)
 		self.baserot = self.multmatrix(rot,self.baserot)
 

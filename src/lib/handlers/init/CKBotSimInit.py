@@ -7,7 +7,6 @@ CKBot.py -- CKBot Simulation Initialization Handler
 
 import os, sys, time
 from numpy import *
-
 from simulator.ode.ckbot import CKBotSim
 
 class initHandler:

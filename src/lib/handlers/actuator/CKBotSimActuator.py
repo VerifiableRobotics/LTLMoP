@@ -10,9 +10,7 @@ Does nothing more than print the actuator name and state; for testing purposes.
 import time, math
 import sys
 import os
-sys.path.append('./lib/simulator/ode/ckbot/config/')
-sys.path.append('./lib/simulator/ode/ckbot/')
-from CKBotLib import CKBotLib
+#from simulator.ode.ckbot.CKBotLib import CKBotLib
 
 class actuatorHandler:
 
@@ -37,19 +35,19 @@ class actuatorHandler:
 			self.simulator.reconfigure("Hexapod")
 	
 		# Use library if we can		
-		words = name.split("_and_")
+		#words = name.split("_and_")
 		#print "name is " + name
 		#print "desired words are " 
 		#print words
-		libs = CKBotLib()
-		libs.readLibe()
-		config = libs.findGait(words)
-		if (type(config) != type(None)) and (self.simulator.config != config) and (val==True):
-			self.simulator.reconfigure(config)
+		#libs = CKBotLib()
+		#libs.readLibe()
+		#config = libs.findGait(words)
+		#if (type(config) != type(None)) and (self.simulator.config != config) and (val==True):
+		#	self.simulator.reconfigure(config)
 
 		# Make the default configuration Hexapod
 		# After we're done with any gait, switch back to snake
-		elif name!="hoard" and val==False:
+		if name!="hoard" and val==False:
 			self.simulator.reconfigure("Hexapod")
 
 		print "(ACT) Actuator %s is now %s!" % tuple(map(str, (name, val)))

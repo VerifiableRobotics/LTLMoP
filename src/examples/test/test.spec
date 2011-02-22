@@ -29,18 +29,19 @@ Actions: # List of actions and their state (enabled = 1, disabled = 0)
 pick_up,0
 radio,0
 drop,0
-snake,0
-cross,0
+snake,1
+cross,1
 
 Customs: # List of custom propositions
+carrying_item
 
 RegionFile: # Relative path of region description file
 test.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
 fire,0
-person,0
-hazardous_item,0
+person,1
+hazardous_item,1
 
 currentExperimentName:
 Default
@@ -57,9 +58,9 @@ R2=p4
 r3=p3
 
 Spec: # Specification in simple English
-Visit R1
-Visit R2
-Visit r3
-Visit r4
-
+If you are not sensing person then Visit R1
+If you are not sensing person then Visit R2
+If you are not sensing person then Visit r3
+If you are not sensing person then Visit r4
+Do snake if and only if you are sensing person
 
