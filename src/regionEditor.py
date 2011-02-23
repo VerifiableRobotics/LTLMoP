@@ -18,7 +18,7 @@ import wx
 from wx.lib.buttons import GenBitmapButton
 
 from lib.regions import *
-from lib.mapRenderer import drawableRegion
+from lib.mapRenderer import DrawableRegion
 
 ####################################################################
 # TODO:
