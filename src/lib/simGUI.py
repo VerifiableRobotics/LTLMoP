@@ -235,6 +235,15 @@ class SimGUI_Frame(wx.Frame):
 
     def appendLog(self, text, color="BLACK"):
         # for printing everything on the log
+            
+        # annotate any pXXX region names with their human-friendly name
+        # convert to set to avoid infinite explosion
+        for p_reg in set(re.findall(r'\b(p\d+)\b',text)):
+            for rname, subregs in self.proj.regionMapping.iteritems():
+                if p_reg in subregs:
+                    break
+            text = re.sub(r'\b'+p_reg+r'\b', '%s (%s)' % (p_reg, rname), text)
+
         self.text_ctrl_sim_log.BeginTextColour(color)
         self.text_ctrl_sim_log.AppendText("["+time.strftime("%H:%M:%S", time.gmtime())+"] "+text)
         self.text_ctrl_sim_log.EndTextColour()
