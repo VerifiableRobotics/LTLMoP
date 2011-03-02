@@ -261,7 +261,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         else:
             print 'ERROR(16): Could not parse the sentence in line '+ str(lineInd)+' :'
             print line
-            print 'because it is not in a know format'
+            print 'because it is not in a known format'
             print ''
       
 
@@ -561,7 +561,8 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
     actionPastCond = 'the robot activated'+'|'+ 'the robot did not activate'+'|' + \
                      'you activated' + '|' + 'you did not activate' + '|' + \
                      'it activated' + '|' + 'it did not activate' + '|' + \
-                     'activated' + '|' + 'did not activate'
+                     'activated' + '|' + 'did not activate' + '|' + \
+                     'you were activating' + '|' + 'you were not activating'
 
     actionCurrCond = 'the robot is activating'+'|'+ 'the robot is not activating'+'|' + \
                      'you are activating' + '|' + 'you are not activating' + '|' + \
@@ -711,11 +712,11 @@ def replaceLogicOp(formula):
     '''
 
     # Replace logic operations with TLV convention
-    andRE = re.compile(' and ',re.IGNORECASE)
-    orRE = re.compile(' or ',re.IGNORECASE)
-    impliesRE = re.compile(' implies ',re.IGNORECASE)
-    iffRE = re.compile(' iff ',re.IGNORECASE)
-    notRE = re.compile(' not ',re.IGNORECASE)
+    andRE = re.compile('\\band\\b',re.IGNORECASE)
+    orRE = re.compile('\\bor\\b',re.IGNORECASE)
+    impliesRE = re.compile('\\bimplies\\b',re.IGNORECASE)
+    iffRE = re.compile('\\biff\\b',re.IGNORECASE)
+    notRE = re.compile('\\bnot\\b',re.IGNORECASE)
     
     formula = andRE.sub(' & ',formula)
     formula = orRE.sub(' | ',formula)
