@@ -761,9 +761,10 @@ def parseEvent(EventProp,SetEvent,ResetEvent,sensorProp,RobotProp,lineInd):
             print 'ERROR(9): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' in the set event is not recognized\n'
             return ''
         else:
-            # replace every occurrence of the proposition with next(proposition)
-            # it is written this way to prevent nesting of 'next' (as with the .replace method)
-            SetEvent = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',SetEvent)
+            if prop not in RobotProp:
+                # replace every occurrence of the proposition with next(proposition)
+                # it is written this way to prevent nesting of 'next' (as with the .replace method)
+                SetEvent = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',SetEvent)
 
     if ResetEvent.upper()=='FALSE':
         ResetEvent = 'FALSE'
@@ -773,9 +774,10 @@ def parseEvent(EventProp,SetEvent,ResetEvent,sensorProp,RobotProp,lineInd):
                 print 'ERROR(10): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' in the reset event is not recognized\n'
                 return ''
             else:
-                # replace every occurrence of the proposition with next(proposition)
-                # it is written this way to prevent nesting of 'next' (as with the .replace method)
-                ResetEvent = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',ResetEvent)
+                if prop not in RobotProp:
+                    # replace every occurrence of the proposition with next(proposition)
+                    # it is written this way to prevent nesting of 'next' (as with the .replace method)
+                    ResetEvent = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',ResetEvent)
 
     # Checking the event proposition
     if EventProp in sensorProp:
