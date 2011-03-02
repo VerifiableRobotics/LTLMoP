@@ -23,7 +23,7 @@ Closet	rect	1151	259	91	77	0	0	255
 Wall	rect	41	26	137	12	255	0	0
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
-HideNSeek_simbg.png
+hideandseek_simbg.png
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
 boundary	Parking	12	382	12	637	12	637	283	637

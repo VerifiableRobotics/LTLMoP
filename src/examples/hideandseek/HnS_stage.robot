@@ -1,12 +1,15 @@
 Name: # Full name of the robot
-HideNSeek
+Anne
 
 Sensors: # Available binary sensor propositions
-found
-whistle
+see_player
+hear_whistle
+hear_counting
 
 Actions: # Available binary actuator propositions
-
+count
+whistle
+hide
 
 MotionControlHandler: # Module with continuous controller for moving between regions
 handlers.motionControl.heatController
