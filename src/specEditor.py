@@ -277,7 +277,8 @@ class simSetupDialog(wx.Dialog):
 
         # Set up the list of robots
         self.choice_sim_robot.Clear()
-        fileList = os.listdir(os.path.join(os.getcwd(),'robots'))
+        fileList = os.listdir(os.path.join(os.getcwd(),'robots')) + \
+                   os.listdir(self.parent.proj.project_root)
 
         for robotFile in fileList:
             if robotFile.endswith('.robot'):
@@ -536,9 +537,13 @@ class simSetupDialog(wx.Dialog):
             Warn user when the selected robot does not have all sensor and actions needed.
         """
         rdf_name = self.choice_sim_robot.GetStringSelection()
-        if not rdf_name.endswith('.robot'):
-            rdf_name = rdf_name+'.robot' 
-        rdf_data = fileMethods.readFromFile(os.path.join(os.path.join(os.getcwd(),'robots'), rdf_name))
+        #if not rdf_name.endswith('.robot'):
+        #    rdf_name = rdf_name+'.robot' 
+        #rdf_data = fileMethods.readFromFile(os.path.join(os.path.join(os.getcwd(),'robots'), rdf_name))
+        # TODO: Use project.py everywhere, less hackily
+        temp_proj = copy.deepcopy(self.parent.proj)
+        rdf_data = temp_proj.loadRobotFile({'RobotFile':[rdf_name]})
+
         warning = False
         
         # Check sensors 
