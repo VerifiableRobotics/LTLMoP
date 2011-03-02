@@ -1803,14 +1803,14 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Creating automaton...\n", "BLUE")
         wx.Yield()
+
         # Windows uses a different delimiter for the java classpath
         if os.name == "nt":
-            classpath = os.path.join(self.proj.ltlmop_root, "JTLV", "jtlv-prompt1.4.0.jar") + ";" + os.path.join(self.proj.ltlmop_root, "JTLV", "GROne")
+            classpath = os.path.join(self.proj.ltlmop_root, "etc\jtlv", "jtlv-prompt1.4.0.jar") + ";" + os.path.join(self.proj.ltlmop_root, "etc\jtlv", "GROne")
         else:
-            classpath = os.path.join(self.proj.ltlmop_root, "JTLV", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "JTLV", "GROne")
+            classpath = os.path.join(self.proj.ltlmop_root, "etc/jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc/jtlv", "GROne")
 
         cmd = subprocess.Popen(["java", "-ea", "-Xmx128m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-
    
         # TODO: Make this output live
         while cmd.poll():
