@@ -218,7 +218,7 @@ public class GROneGame {
 		// FDSModule res = new FDSModule("strategy");
 
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
-        int a = 0;
+
         while (ini_iterator.hasNext()) {
 
             BDD this_ini = (BDD) ini_iterator.next();
@@ -237,10 +237,7 @@ public class GROneGame {
                 // This initial state is already in the automaton
                 continue;
             }
-            if (a == 1) {
-                break;
-            }
-            a++;
+
             // Otherwise, we need to attach this initial state to the automaton
 
             st_stack.push(this_ini);
@@ -276,7 +273,7 @@ public class GROneGame {
                 /* Find  X index of current state */
                 int p_i = -1;
                 for (int i = 0; i < envJustNum; i++) {
-			System.out.println(p_j + "," + i + "," + p_cy);
+                    //System.out.println(p_j + "," + i + "," + p_cy);
                     if (!p_st.and(x_mem[p_j][i][p_cy]).isZero()) {
                         p_i = i;
                         break;
