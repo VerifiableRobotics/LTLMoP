@@ -405,18 +405,18 @@ def parseSafety(sentence,sensorList,allRobotProp,lineInd):
             formulaInfo['type'] = 'EnvTrans'
             # replace every occurrence of the proposition with next(proposition)
             # it is written this way to prevent nesting of 'next' (as with the .replace method)
-            tempFormula = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',tempFormula)
+            tempFormula = re.sub('(next\('+prop+'\)|\\b'+prop+'\\b)', 'next('+ prop +')',tempFormula)
 
         elif prop in allRobotProp and formulaInfo['type'] == '':
             formulaInfo['type'] = 'SysTrans'
             # replace every occurrence of the proposition with next(proposition)
             # it is written this way to prevent nesting of 'next' (as with the .replace method)
-            tempFormula = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',tempFormula)
+            tempFormula = re.sub('(next\('+prop+'\)|\\b'+prop+'\\b)', 'next('+ prop +')',tempFormula)
 
         else:
             # replace every occurrence of the proposition with next(proposition)
             # it is written this way to prevent nesting of 'next' (as with the .replace method)
-            tempFormula = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',tempFormula)
+            tempFormula = re.sub('(next\('+prop+'\)|\\b'+prop+'\\b)', 'next('+ prop +')',tempFormula)
     
     
     formulaInfo['formula'] = '\t\t\t [](' + tempFormula + ') & \n'
@@ -737,6 +737,7 @@ def replaceRegionName(formula,bitEncode,regionList):
     for nextProp in re.findall('(next\(\w+\))',tempFormula):
         prop = nextProp.replace('next(','')
         prop = prop.replace(')','')
+
         if prop in regionList:
             ind = regionList.index(prop)
             tempFormula = tempFormula.replace(nextProp, bitEncode['next'][ind])
@@ -748,8 +749,9 @@ def replaceRegionName(formula,bitEncode,regionList):
             ind = regionList.index(prop)
             # replace every occurrence of the proposition with the bit encoding
             # it is written this way to prevent partial word replacements (as with the .replace method)
-            tempFormula = re.sub('\s+'+prop, ' '+bitEncode['current'][ind],tempFormula) # if following a space
-            tempFormula = re.sub('\('+prop, '('+bitEncode['current'][ind],tempFormula) # if in ()
+            #tempFormula = re.sub('\s+'+prop, ' '+bitEncode['current'][ind],tempFormula) # if following a space
+            #tempFormula = re.sub('\('+prop, '('+bitEncode['current'][ind],tempFormula) # if in ()
+            tempFormula = re.sub('\\b'+prop+'\\b', bitEncode['current'][ind],tempFormula)
 
             #tempFormula = tempFormula.replace(prop, bitEncode['current'][ind])
     
