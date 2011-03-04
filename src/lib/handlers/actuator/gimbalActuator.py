@@ -16,7 +16,7 @@ import threading
 class actuatorHandler:
     def __init__(self, proj, shared_data):
         self.GIMBAL_PORT = 13337
-        self.GIMBAL_HOST = "10.0.0.195"
+        self.GIMBAL_HOST = "10.0.0.182"
 
         # Open up sockets
         print '(ACT) Connecting to Orca server...'

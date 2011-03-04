@@ -76,9 +76,9 @@ class sensorHandler:
             #print "Packet size: " + str(len(data))
             packet_doubles = pyarray.array('d')
             packet_doubles.fromstring(data)
-            time_stamp = packet_doubles[0] + (1e-6)*packet_doubles[1]
+            time_stamp = packet_doubles[1] + (1e-6)*packet_doubles[2]
         
-        value = packet_doubles[2]
+        value = packet_doubles[0]
         #print "t = " + str(time_stamp) + ", detecting " + str(value)
 
         return value
