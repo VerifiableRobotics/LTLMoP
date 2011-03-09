@@ -99,6 +99,7 @@ class CKBotLib:
 		# If a gait was found, run it in the simulator
 		else:
 			# Use first goodgait if we have more than one gait
+			print goodgaits
 			[config,gait] = goodgaits[0].split("-")
 			print config
 			print gait
@@ -128,5 +129,5 @@ if (__name__ == '__main__'):
 	
 	# Run configuration in CKBot Simulator
 	config = libs.findGait(desired_words)
-	os.system("python simulator/ode/ckbot/CKBotSim.py " + config)
+	#os.system("python lib/simulator/ode/ckbot/CKBotSim.py " + config)
 	

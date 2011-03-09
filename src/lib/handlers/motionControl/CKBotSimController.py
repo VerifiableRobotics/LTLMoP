@@ -92,7 +92,7 @@ class motionControlHandler:
 			
 			# If we are close enough to the center of the region then switch to transition mode.
 			dist = math.sqrt( math.pow(dx,2) + math.pow(dy,2) )
-			if dist < 25:
+			if dist < 15:
 				self.mode = "transition"
 			
 			# Send the velocity command to the drive handler.

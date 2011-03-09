@@ -5,31 +5,40 @@
 
 # "tall" = the robot reaches at least 3 modules high
 Trait: tall
-Biped-walk
+FoldOver-slink
+#Biped-walk
 Slinky-slink
-Loop-roll
+#Loop-roll
 
 # "fast" = the robot moves at least 1 body length in 10 seconds
 Trait: fast
-Biped-walk
-Loop-roll
+#Biped-walk
+#Loop-roll
 Loop-somersault
-#Hexapod-run
+Hexapod-run
+FoldOver-slink
+
+# "narrow" = the robot is no larger than 1 module in 2 of 3 dimensions (x,y,z)
+Trait: narrow
+Snake-crawl
+FoldOver-slink
 
 # "action gait" = the robot location does not vary more than the maximum dimension of the robot
 Trait: action_gait
-Quadriped-move
+#Quadriped-move
+Plus3-foldup
 Biped-splits
 
 # "1D motion" = robot along a line (along 2D ground plane)
 Trait: 1D_motion
 Loop-somersault
-Loop-roll
+#Loop-roll
 Slinky-slink
+FoldOver-slink
 
 # "non-holonomic turning" = robot can turn with a radius
-Trait: non-holonomic_turning
-Biped-walk
+Trait: nonholonomic_turning
+#Biped-walk
 Twist-twist
 Snake-crawl
 Loop-roll

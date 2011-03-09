@@ -20,9 +20,6 @@ class poseHandler:
 
 	plist = self.simulator.get2DPose(0)  
 
-	if self.simulator.config == "Snake":
-	    plist[2] = plist[2] - math.pi/2
-
 	self.pose = array([plist[0],plist[1],plist[2]])  
 	return self.pose
     

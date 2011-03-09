@@ -20,12 +20,12 @@ class CKBotSim:
 	CKBot Simulator Class
 	"""
 
-	fps = 25.0
+	fps = 30.0
 	cameraDistance = 40.0
 	vel = 0.5
 	turn = 0.5
 	turn2 = 0.5
-	clip = 150.0
+	clip = 500.0
 	res = (800, 600)
 
 	def __init__(self,robotfile, standalone=1,obstaclefile=None,regionfile=None,region_calib=None,startingpose=None):
@@ -863,6 +863,25 @@ class CKBotSim:
 				if (len(info)==0):
 					reading_regions = 0
 				# Do not plot the boundary region.
+				elif info[0].lower()=="boundary":
+					if info[1]=="poly":
+						posx = int(info[2])
+						posy = int(info[3])
+						vertices = []
+						for idx in range(9,len(info),2):
+							vertices.append([posx + int(info[idx]), posy + int(info[idx+1])])
+						self.boundary_data = vertices
+					elif info[1]=="rect":
+						posx = int(info[2])
+						posy = int(info[3])
+						width = int(info[4])
+						height = int(info[5])
+						vertices = []
+						vertices.append([posx, posy])
+						vertices.append([posx, posy + height])
+						vertices.append([posx + width, posy + height])
+						vertices.append([posx + width, posy])
+						self.boundary_data = vertices
 				elif info[0].lower()!="boundary":
 					# Polygon-type region -- extract color and all the vertices in the polygon.
 					if info[1]=="poly":
@@ -1201,6 +1220,20 @@ class CKBotSim:
 
 		# If we have region data, draw the individual regions and color them accordingly.
 		else:
+
+			# Render the boundary.
+			glPushMatrix()
+			color = (1, 1, 1)
+			glMaterialfv(GL_FRONT, GL_SPECULAR, color)
+
+			glBegin(GL_POLYGON)
+			for idx in range(len(self.boundary_data)):
+				glNormal3f(*normal)
+				glVertex3f(self.boundary_data[idx][0]*self.region_calib[0], d, -self.boundary_data[idx][1]*self.region_calib[1])
+			glEnd()	
+			glPopMatrix()	
+	
+			# Render the remaining regions.
 			for row in self.region_data:
 				glPushMatrix()
 
@@ -1210,7 +1243,7 @@ class CKBotSim:
 				glBegin(GL_POLYGON)
 				for idx in range(3,len(row)):
 					glNormal3f(*normal)
-					glVertex3f(row[idx][0]*self.region_calib[0], d, -row[idx][1]*self.region_calib[1])
+					glVertex3f(row[idx][0]*self.region_calib[0], 0.01, -row[idx][1]*self.region_calib[1])
 				glEnd()
 
 				glPopMatrix()

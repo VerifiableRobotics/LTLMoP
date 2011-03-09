@@ -44,19 +44,25 @@ class driveHandler:
 
 			# For the 4-Module Snake or 25 module Hexapod
 			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
-			if self.simulator.config=="Snake" or self.simulator.config=="Hexapod":
-				if old_gait!=2 or old_gait!=3:
-					if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
-						gait = 1			# Go Straight
-					elif ((rel_heading>math.pi-math.pi/24 or rel_heading<-math.pi+math.pi/24) and self.simulator.config=="Hexapod"):
-						gait = 4			# Back Up
-					elif (rel_heading<-math.pi/24):
-						gait = 2			# Go Right
-					elif (rel_heading>math.pi/24):
-						gait = 3			# Go Left
-				elif (rel_heading<0.05 and rel_heading>-0.05):
-					gait = 1
+			if self.simulator.config=="Hexapod":
+				if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
+					gait = 1			# Go Straight
+				elif (rel_heading>math.pi-math.pi/24 or rel_heading<-math.pi+math.pi/24):
+					gait = 4			# Back Up
+				elif (rel_heading<-math.pi/24 and rel_heading>-math.pi/2) or (rel_heading > math.pi/2 and rel_heading <math.pi-math.pi/24):
+					gait = 2			# Go Right
+				elif (rel_heading>math.pi/24 and rel_heading<math.pi/2) or (rel_heading<-math.pi/2 and rel_heading>-math.pi+math.pi/24):
+					gait = 3			# Go Left
 
+			# For the 4-Module Snake or 25 module Hexapod
+			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
+			elif self.simulator.config=="Snake":
+				if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
+					gait = 1			# Go Straight
+				elif (rel_heading<-math.pi/24):
+					gait = 2			# Go Right
+				elif (rel_heading>math.pi/24):
+						gait = 3			# Go Left
 
 			elif self.simulator.config=="Plus":
 				if (rel_heading >= -math.pi/4 and rel_heading < math.pi/4):
@@ -72,7 +78,7 @@ class driveHandler:
 				gait = 5			# play dead
 
 			elif self.simulator.config=="FoldOver":
-				gait = 1
+				gait = 2
 
 			elif self.simulator.config=="Slinky":
 				gait = 2			# move forward
