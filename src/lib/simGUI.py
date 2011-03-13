@@ -16,6 +16,7 @@ import wxversion
 import wx, wx.richtext, wx.grid
 import threading
 import project, mapRenderer
+from socket import *
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -67,6 +68,21 @@ class SimGUI_Frame(wx.Frame):
 
         self.button_sim_log_export.Enable(False)
 
+        #??# Set up socket for communication to executor
+        print "(GUI) Starting socket for communication to controller"
+        self.host = 'localhost'
+        self.portTo = 9562
+        self.buf = 1024
+        self.addrTo = (self.host,self.portTo)
+        self.UDPSockTo = socket(AF_INET,SOCK_DGRAM)
+        
+        #??# Set up socket for communication from executor
+        print "(GUI) Starting socket for communication from controller"
+        self.portFrom = 9563
+        self.addrFrom = (self.host,self.portFrom)
+        self.UDPSockFrom = socket(AF_INET,SOCK_DGRAM)
+        self.UDPSockFrom.bind(self.addrFrom)
+
         # Create new thread to communicate with subwindow
         print >>sys.__stdout__, "(GUI) Starting controller listen thread..."
         self.controllerListenThread = threading.Thread(target = self.controllerListen)
@@ -76,7 +92,7 @@ class SimGUI_Frame(wx.Frame):
         self.robotVel = (0,0)
 
         # Let everyone know we're ready
-        print "Hello!"
+        self.UDPSockTo.sendto("Hello!",self.addrTo)
 
     def setMapImage(self, filename):
         # Load and display the map
@@ -99,12 +115,13 @@ class SimGUI_Frame(wx.Frame):
 
         while 1: 
             # Wait for and receive a message from the controller
-            input = sys.stdin.readline()
+            input,self.addrFrom = self.UDPSockFrom.recvfrom(self.buf)
             if input == '':  # EOF indicates that the connection has been destroyed
                 print "Controller listen thread is shutting down."
                 break
 
             input = input.strip()
+            #print >>sys.__stdout__, input
 
             # Update stuff (should put these in rough order of frequency for optimal speed
             if input.startswith("Running at"):
@@ -133,7 +150,8 @@ class SimGUI_Frame(wx.Frame):
                 wx.CallAfter(self.setMapImage, input.split(":")[1])
             else:
                 if self.checkbox_statusLog_other.GetValue():
-                    wx.CallAfter(self.appendLog, input + "\n", color="BLACK") 
+                    if input != "":
+                        wx.CallAfter(self.appendLog, input + "\n", color="BLACK") 
 
     def __set_properties(self):
         # begin wxGlade: SimGUI_Frame.__set_properties
@@ -254,11 +272,11 @@ class SimGUI_Frame(wx.Frame):
         btn_label = self.button_sim_startPause.GetLabel()
         if btn_label == "Start" or btn_label == "Resume":
             self.button_sim_log_export.Enable(False)
-            print "START" # This goes to the controller
+            self.UDPSockTo.sendto("START",self.addrTo) # This goes to the controller
             self.appendLog("%s!\n" % btn_label,'GREEN')
             self.button_sim_startPause.SetLabel("Pause")
         else:
-            print "PAUSE" # This goes to the controller
+            self.UDPSockTo.sendto("PAUSE",self.addrTo) # This goes to the controller
             self.appendLog('Pause...\n','RED')
             self.button_sim_log_export.Enable(True)
             self.button_sim_startPause.SetLabel("Resume")

@@ -20,6 +20,7 @@
 import sys, os, getopt, textwrap
 import threading, subprocess, time
 import fileMethods, regions, fsa, project
+from socket import *
 
 ####################
 # HELPER FUNCTIONS #
@@ -51,9 +52,18 @@ def guiListen():
 
     global guiListenInitialized, runFSA
 
+    # Set up socket for communication from simGUI
+    host = 'localhost'
+    portFrom = 9562
+    buf = 1024
+    addrFrom = (host,portFrom)
+    UDPSockFrom = socket(AF_INET,SOCK_DGRAM)
+    UDPSockFrom.bind(addrFrom)
+
     while 1: 
         # Wait for and receive a message from the subwindow
-        input = fd_gui_output.readline()
+        input,addrFrom = UDPSockFrom.recvfrom(buf)
+
         if input == '':  # EOF indicates that the connection has been destroyed
             print "GUI listen thread is shutting down!"
             break
@@ -165,23 +175,31 @@ def main(argv):
         print "Starting GUI window and listen thread..."
         p_gui = subprocess.Popen(["python",os.path.join(proj.ltlmop_root, "lib", "simGUI.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
-        fd_gui_output = p_gui.stderr
-        fd_gui_input = p_gui.stdin
 
         # Create new thread to communicate with subwindow
         guiListenThread = threading.Thread(target = guiListen)
         guiListenThread.start()
 
+        # Set up socket for communication to simGUI
+        host = 'localhost'
+        portTo = 9563
+        buf = 1024
+        addrTo = (host,portTo)
+        UDPSockTo = socket(AF_INET,SOCK_DGRAM)
         # Block until the GUI listener gets the go-ahead from the subwindow
         while not guiListenInitialized:
             time.sleep(0.05) # We need to sleep to give up the CPU
 
         # Tell GUI to load background image
-        print >>fd_gui_input, "BG:" + proj.getFilenamePrefix() + ".spec"
+        message = "BG:" + proj.getFilenamePrefix() + ".spec"
+        UDPSockTo.sendto(message,addrTo)
 
-        # Forward all messages from here on to the GUI window
-        sys.stdout = fd_gui_input
-    
+        # Redirect all output to the log
+        redir = RedirectText(UDPSockTo, addrTo)
+
+        sys.stdout = redir
+        sys.stderr = redir
+
     #############################
     # Begin automaton execution #
     #############################
@@ -206,7 +224,7 @@ def main(argv):
         print "WARNING: Initial region auto-detection not yet implemented" # TODO: determine initial region
         init_region = 0
 
-    print proj.rfi.regions[init_region].name
+    print "Starting from initial region: " + proj.rfi.regions[init_region].name
     
     ### Have the FSA find a valid initial state
 
@@ -248,11 +266,25 @@ def main(argv):
         # Update GUI, no faster than 20Hz
         if time.time() - last_gui_update_time > 0.05:
             avg_freq = 0.9*avg_freq + 0.1*1/(toc-tic) # IIR filter
-            print "Running at approximately %dHz..." % int(avg_freq)
+            UDPSockTo.sendto("Running at approximately %dHz..." % int(avg_freq),addrTo)
             pose = proj.pose_handler.getPose(cached=True)[0:2]
-            print "POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose)))
+            UDPSockTo.sendto("POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose))),addrTo)
 
             last_gui_update_time = time.time()
+
+class RedirectText:
+    """
+    A class that lets the output of a stream be directed into a socket.
+
+    http://mail.python.org/pipermail/python-list/2007-June/445795.html
+    """
+
+    def __init__(self,s,addrTo):
+        self.s = s
+        self.addrTo = addrTo
+
+    def write(self,string):
+        self.s.sendto(string, self.addrTo)
 
 
 if __name__ == "__main__":
