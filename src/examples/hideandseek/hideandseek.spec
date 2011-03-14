@@ -12,7 +12,6 @@ InitialRegion: # Initial region number
 5
 
 InitialTruths: # List of initially true propositions
-seeker
 
 Lab: # Lab configuration file
 playerstage.lab
@@ -22,6 +21,26 @@ Default
 
 RobotFile: # Relative path of robot description file
 HnS_stage.robot
+
+
+======== EXPERIMENT CONFIG 1 ========
+
+Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
+0.0099201303246,-2.94078060947,-0.00947754453877,2.81949022132
+
+InitialRegion: # Initial region number
+7
+
+InitialTruths: # List of initially true propositions
+
+Lab: # Lab configuration file
+naoReal.lab
+
+Name: # Name of the experiment
+ASL
+
+RobotFile: # Relative path of robot description file
+nao_hns.robot
 
 
 ======== SETTINGS ========
@@ -44,25 +63,25 @@ hear_whistle,1
 hear_counting,1
 
 currentExperimentName:
-Default
+ASL
 
 
 ======== SPECIFICATION ========
 
 RegionMapping:
 
-Classroom1=p14
-Classroom2=p13
-Closet=p12
-Office=p9,p59,p60
-Danger=p61,p62
-Wall=p4
-Gym=p10
-Parking=p7
-Tree=p5
-SchoolWall=p9,p43,p44,p45,p46,p47,p48,p49,p50,p51,p52,p53,p54,p55,p56,p57,p58
-others=p15,p16,p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p37
-between$Tree$and$Wall$=p38,p39,p40,p41,p42
+Classroom1=p12
+Classroom2=p11
+Office=p7
+Closet=p10
+Danger=p9
+Wall=p3
+Gym=p8
+Parking=p6
+Tree=p4
+SchoolWall=p32,p33,p34,p35,p36,p37,p38,p39,p40,p41,p42
+others=p13,p14,p15,p16,p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31
+between$Tree$and$Wall$=p2
 
 Spec: # Specification in simple English
 ### Overview ###
@@ -91,9 +110,6 @@ If you are not activating playing then go to Parking
 If you were not activating playing and you were in Parking then stay there
 
 ### Hider/seeker alternation ###
-#TODO: Why are the following two not equivalent to the sum of all the statements in this section?
-#Do seeker if and only if you were activating seeker or you were activating playing and you are not activating playing and you were not activating seeker
-#Do not seeker if and only if you were not activating seeker or you were activating playing and you are not activating playing and you were activating seeker
 # Toggle the value of seeker at the end of a game
 If you were activating playing and you are not activating playing and you were activating seeker then do not seeker
 If you were activating playing and you are not activating playing and you were not activating seeker then do seeker
@@ -106,7 +122,6 @@ If you were not activating playing and you are activating playing and you were a
 If you were not activating playing and you are activating playing and you were not activating seeker then do not seeker
 
 ### Seeking Behavior ###
-
 Do count if and only if you are activating seeker and you are not activating playing and you are in Parking
 
 If you are activating seeker and you are activating playing then visit Classroom2
@@ -118,7 +133,6 @@ If you are activating seeker and you are activating playing then visit between T
 
 ### Hiding Behavior ###
 If you are not activating seeker and you are activating playing then go to ((between Tree and Wall) or Closet or Office)
-
 Do hide if and only if you are not activating seeker and you are activating playing and you are in ((between Tree and Wall) or Closet or Office)
 
 If you were activating hide then stay there
