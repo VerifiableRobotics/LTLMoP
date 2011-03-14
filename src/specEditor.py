@@ -792,6 +792,11 @@ class SpecEditorFrame(wx.Frame):
         self.proj.regionMapping = {}
         self.parser = None
        
+        # HACK: This is an undocumented hack you can uncomment to help kill stuck copies of speceditor on windows
+        # If in use, requires spec file argument on command line
+        #if sys.argv[-1] != "-dontbreak":
+        #    os.system("taskkill /im python.exe /f && " + " ".join(sys.argv) + " -dontbreak")
+       
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
@@ -1518,7 +1523,7 @@ class SpecEditorFrame(wx.Frame):
             classpath = os.path.join(self.proj.ltlmop_root, "etc/jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc/jtlv", "GROne")
 
         cmd = subprocess.Popen(["java", "-ea", "-Xmx128m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-    
+        
         # TODO: Make this output live
         while cmd.poll():
             wx.Yield()
@@ -1529,7 +1534,7 @@ class SpecEditorFrame(wx.Frame):
             self.appendLog("\t"+line)
             if "Specification is realizable" in line:
                realizable = True
-
+               
         cmd.stdout.close()
         print "\n"
 
@@ -1655,7 +1660,7 @@ class SpecEditorFrame(wx.Frame):
         setupDialog.ShowModal()
 
     def onMenuViewAut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        fileNamePrefix = os.path.join(self.projectPath, self.projectName) 
+        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
 
         if self.projectName is None or self.rfi is None or not os.path.isfile(fileNamePrefix+".aut"):
             wx.MessageBox("Cannot find automaton for viewing.  Please make sure compilation completed successfully.", "Error",
@@ -1695,7 +1700,7 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Let's make sure we have everything!
-
+        
         #This is all copied from Compile -- Vasu
         
         if self.rfi is None:
@@ -2000,7 +2005,7 @@ class SpecEditorFrame(wx.Frame):
                 if (liveSafeRealSys and p2Real):
                         self.appendLog("Player 2 (System) is realizable.\n", "GREEN")
                         output = output + "System is realizable.\n"                  
-                                
+           
         if noTransitionsEnv:
             self.appendLog("Player 1 (Environment) is unsatisfiable. No transitions\n", wx.Colour(0,0,255))
             output = output + "Environment is unsatisfiable. No transitions.\n"
@@ -2016,7 +2021,7 @@ class SpecEditorFrame(wx.Frame):
                 envColor = 0        
             else:
                 self.appendLog("Player 1 (Environment) initial states exist.\n", "GREEN")        
-        
+            
             
         if liveUnsatEnv:
                 self.appendLog("Player 1 (Environment) highlighted goal is unsatisfiable \n", "GREEN")
@@ -2061,10 +2066,10 @@ class SpecEditorFrame(wx.Frame):
                 if (liveSafeRealEnv and p1Real):                
                     self.appendLog("Player 1 (Environment) is realizable.\n", wx.Colour(0,0,255))
                     output = output + "Environment is realizable.\n"   
-                
-       
-       
-
+        
+            
+          
+        
         sensorList = []
         for i, sensor in enumerate(self.list_box_sensors.GetItems()):
             if self.list_box_sensors.IsChecked(i):
