@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import math
+import math, sys
 import Polygon, Polygon.IO, Polygon.Utils, Polygon.Shapes
 
 
@@ -18,7 +18,7 @@ class decomposition():
         """
 
         # Initialization
-        self.background = Polygon.Polygon(((-100,-100),(900,-100),(900,900),(-100,900)))
+        self.background = Polygon.Polygon(((-300,-300),(1500,-300),(1500,1500),(-300,1500)))
         self.P = polygon
         
         if self.P.orientation()[0] > 0:
@@ -33,8 +33,10 @@ class decomposition():
         poly.append(self.P)
         for hole in self.holeList:
             poly.append(hole)
-        #self.drawPoly(poly,'Initial')
+        ##self.drawPoly(poly,'Initial')
         #print self.P
+        #sys.stdout=sys.__stdout__
+        #sys.stderr=sys.__stderr__
         
                 
     def MP5(self):
@@ -81,13 +83,14 @@ class decomposition():
                 findNextPolygon, initialVertex, holeIndex, vertexIndex = self.checkNextPoly(allVertices)
                 
                 if findNextPolygon == False:
+                    #print "FNP: ", initialVertex
                     self.notchVertices.append(initialVertex)
                 elif findNextPolygon == 'intersec':
                     #print "Try to merge hole!"
                     #print
                     self.notchVertices = []
                     self.mergeHole(allVertices,initialVertex,holeIndex,vertexIndex)
-                    # self.drawPoly([self.P],'P')
+                    #self.drawPoly([self.P],'P')
                     
                     #raw_input()
                 else:
@@ -106,7 +109,7 @@ class decomposition():
         
     
             
-        #self.drawPoly(self.listOfConvexPoly,'Result')
+        ##self.drawPoly(self.listOfConvexPoly,'Result')
         return self.listOfConvexPoly
         #print "Mission Complete"
         
@@ -211,7 +214,7 @@ class decomposition():
         
         points = tuple([(vertex.x,vertex.y) for vertex in allVertices])
         self.P = Polygon.Polygon(points)
-        #self.drawPoly([self.P],'P')
+        ##self.drawPoly([self.P],'P')
         #raw_input()                  
         
     def reversePolyOrientation(self,poly):
@@ -269,27 +272,22 @@ class decomposition():
                 return False, None, None
                 
     def checkNextPoly(self,allVertices):
-        initialIndex = self.indexInRange(self.indexOfVertex-1)
-        index1 = self.indexInRange(self.indexOfVertex-1)
-        index2 = self.indexInRange(self.indexOfVertex)
-        index3 = self.indexInRange(self.indexOfVertex+1)
-        
+        initialIndex = (self.indexOfVertex-1)%len(allVertices)
+
+        for i in xrange(initialIndex+1, (initialIndex+1)+len(allVertices)):
+            self.indexOfVertex = i
+            index1 = (self.indexOfVertex-1)%len(allVertices)
+            index2 = (self.indexOfVertex)%len(allVertices)
+            index3 = (self.indexOfVertex+1)%len(allVertices)
             
-        while self.indexOfVertex < initialIndex + self.P.nPoints() -1 \
-        and self.calcAngle(allVertices[index1],allVertices[index2],allVertices[index3]) \
-        and self.calcAngle(allVertices[index2],allVertices[index3],allVertices[self.vertexIndexOfNextPoly[0]]) \
-        and self.calcAngle(allVertices[index3],allVertices[self.vertexIndexOfNextPoly[0]],allVertices[self.vertexIndexOfNextPoly[1]]) \
-        and (not self.checkPointInside(allVertices)):
-            
-            self.vertexIndexOfNextPoly.append(index3)
-            self.startVertex = allVertices[index3]
-            self.indexOfVertex = self.indexOfVertex + 1
-            index1 = self.indexInRange(self.indexOfVertex-1)
-            index2 = self.indexInRange(self.indexOfVertex)
-            index3 = self.indexInRange(self.indexOfVertex+1)
-
-
-
+            if self.calcAngle(allVertices[index1],allVertices[index2],allVertices[index3]) \
+            and self.calcAngle(allVertices[index2],allVertices[index3],allVertices[self.vertexIndexOfNextPoly[0]]) \
+            and self.calcAngle(allVertices[index3],allVertices[self.vertexIndexOfNextPoly[0]],allVertices[self.vertexIndexOfNextPoly[1]]) \
+            and (not self.checkPointInside(allVertices)):
+                self.vertexIndexOfNextPoly.append(index3)
+                self.startVertex = allVertices[index3]
+            else:
+                break
             
             
         if len(self.vertexIndexOfNextPoly) > 2:
@@ -365,7 +363,7 @@ class decomposition():
         False:  There is no vertex inside
         """
         inside = False
-        self.vertexIndexOfNextPoly.append(self.indexInRange(self.indexOfVertex+1))
+        self.vertexIndexOfNextPoly.append((self.indexOfVertex+1)%len(allVertices))
 
         points = tuple([(vertex.x,vertex.y) for vertex in [allVertices[index] for index in self.vertexIndexOfNextPoly]])
         p = Polygon.Polygon(points)
@@ -384,13 +382,6 @@ class decomposition():
         del self.vertexIndexOfNextPoly[-1]
         return inside
                 
-    def indexInRange(self,index):
-        while index  >= self.P.nPoints()-1:
-            index = index - self.P.nPoints()
-        while index <= -self.P.nPoints():
-            index = index + self.P.nPoints()
-        return index
-    
     def findInitialVertex(self,allVertices):
         """
         Find notch vertex to start
@@ -416,7 +407,7 @@ class decomposition():
                 self.indexOfVertex = c
                 self.vertexIndexOfNextPoly.append(b)
                 self.vertexIndexOfNextPoly.append(self.indexOfVertex)
-                #print 'Find Initial Vertex!', allVertices[j].x,allVertices[j].y
+                #print 'Find Initial Vertex!', allVertices[b].x,allVertices[b].y
                 #print
                 #raw_input()
                 break
@@ -478,7 +469,7 @@ class decomposition():
             
     def drawPoly(self,polyList,fileName):
         polyList.insert(0,self.background)
-        Polygon.IO.writeSVG('/home/jim/Desktop/'+fileName+'.svg', polyList)
+        Polygon.IO.writeSVG('/Users/cameron/Desktop/'+fileName+'.svg', polyList)
         polyList.pop(0) # make sure the back ground won't be added to the actual list
 
     
