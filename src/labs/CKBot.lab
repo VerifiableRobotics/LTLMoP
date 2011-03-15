@@ -1,0 +1,17 @@
+Name: # Name for this lab configuration
+CKBot
+
+InitializationHandler: 		# Initializes CKBot runtime
+lib.handlers.init.CKBotInit
+
+PoseHandler:			# Pulls CKBot's pose from Vicon
+lib.handlers.pose.CKBotPose
+
+SensorHandler:
+lib.handlers.sensor.dummySensor
+
+ActuatorHandler:
+lib.handlers.actuator.CKBotActuator
+
+LocomotionCommandHandler:	# Commands joint angles to ODE Simulator
+lib.handlers.locomotionCommand.CKBotLocomotionCommand
