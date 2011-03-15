@@ -24,6 +24,7 @@ class CKBotRun:
 
 		# Load robot data		
 		self.loadRobotData(robotfile)
+		self.gait = 0
 
 		# Initialize the cluster
 		tempc = Cluster()
@@ -192,7 +193,7 @@ class CKBotRun:
 		Runs the gait specified by the object variable "self.gait"
 		"""
 
-		t = time.time()
+		t = time.time() - self.starttime
 		gait = self.gaits[self.gait - 1]
 
 		# If the gait is set to zero, stop moving all hinges.
@@ -274,7 +275,6 @@ class CKBotRun:
 		"""
 
 		self._running = True
-		time.sleep(1)
 
 		# Receive Locomotion commands for all the hinges from LTLMoP.
 		# Use these commands as reference angles for simple P-controlled servos.	

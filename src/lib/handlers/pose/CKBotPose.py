@@ -133,7 +133,7 @@ def getPoseVicon():
 
 if __name__ == '__main__':
     # Test the actuator handler
-    ViconPort = 1111
+    ViconPort = 11111
     shared_data = {'ViconPort':ViconPort}
     pose_handler = poseHandler(None, shared_data)
     

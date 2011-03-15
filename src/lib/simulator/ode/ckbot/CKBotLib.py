@@ -94,15 +94,15 @@ class CKBotLib:
 
 		# If no gaits were found, print "gait not found"
 		if gait_found == 0:
-			print "gait not found"
+			#print "gait not found"
 			return
 		# If a gait was found, run it in the simulator
 		else:
 			# Use first goodgait if we have more than one gait
-			print goodgaits
+			#print goodgaits
 			[config,gait] = goodgaits[0].split("-")
-			print config
-			print gait
+			#print config
+			#print gait
 			return config
 			
 

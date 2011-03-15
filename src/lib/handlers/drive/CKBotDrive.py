@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """
 ================================================
-CKBotSimDrive.py - Simulated CKBot Drive Handler
+CKBotDrive.py - CKBot Drive Handler
 ================================================
 """
-import math
+import math, time
 
 class driveHandler:
 
@@ -14,7 +14,9 @@ class driveHandler:
 	
 		self.gait = 0
 		self.runtime = shared_data['Runtime']
+		self.config = shared_data['Config']
 		self.pose_handler = proj.pose_handler
+
 		try:
 		    self.loco = proj.loco_handler
 		except NameError:
@@ -33,73 +35,27 @@ class driveHandler:
 			rel_heading = rel_heading - 2*math.pi
 		elif (rel_heading < -math.pi):
 			rel_heading = rel_heading + 2*math.pi
-		old_gait = self.gait
 
 		gait = 0
 		# Check for zero (or really low) speed commands to assign no gait.
 		# Only do this for the initial configuration (currently set to Hexapod)
-		if (x==0 and y==0) and (self.runtime.config=="Hexapod"):
+		if (x==0 and y==0):
 			gait = 0			# Do not move
 
 		else:	
 
 			# For the 4-Module Snake or 25 module Hexapod
 			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
-			if self.runtime.config=="Hexapod":
-				if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
-					gait = 1			# Go Straight
-				elif (rel_heading>math.pi-math.pi/24 or rel_heading<-math.pi+math.pi/24):
-					gait = 4			# Back Up
-				elif (rel_heading<-math.pi/24 and rel_heading>-math.pi/2) or (rel_heading > math.pi/2 and rel_heading <math.pi-math.pi/24):
-					gait = 2			# Go Right
-				elif (rel_heading>math.pi/24 and rel_heading<math.pi/2) or (rel_heading<-math.pi/2 and rel_heading>-math.pi+math.pi/24):
-					gait = 3			# Go Left
-
-			# For the 4-Module Snake or 25 module Hexapod
-			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
-			elif self.runtime.config=="Snake":
+			if self.config=="Snake":
 				if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
 					gait = 1			# Go Straight
 				elif (rel_heading<-math.pi/24):
-					gait = 2			# Go Right
+					gait = 3			# Go Right
 				elif (rel_heading>math.pi/24):
-						gait = 3			# Go Left
-
-			elif self.runtime.config=="Plus":
-				if (rel_heading >= -math.pi/4 and rel_heading < math.pi/4):
-					gait = 3 			#  Horizontal forward
-				elif (rel_heading >= math.pi/4 and rel_heading < 3*math.pi/4):
-					gait = 2			#  Vertical backward
-				elif (rel_heading >= 3*math.pi/4 and rel_heading < -3*math.pi/4):
-					gait = 4			#  Horizontal backward
-				else:
-					gait = 1			#  Vertical forward	
-
-			elif self.runtime.config=="Plus3":
-				gait = 5			# play dead
-
-			elif self.runtime.config=="FoldOver":
-				gait = 2
-
-			elif self.runtime.config=="Slinky":
-				gait = 2			# move forward
-
-			elif self.runtime.config=="Splits":
-				gait = 1			# do the splits over and over
-
-			elif self.runtime.config=="Twist":
-				gait = 1
-
-			elif self.runtime.config=="Quadriped":
-				gait = 1
+						gait = 2			# Go Left
 
 			else:
 				gait = 0
-
-		# If there is gait switching, print a message.
-		self.gait = gait
-		#if (old_gait != gait):
-			#print "Activating Gait No." + str(gait)
 
 		self.loco.sendCommand(gait)
 

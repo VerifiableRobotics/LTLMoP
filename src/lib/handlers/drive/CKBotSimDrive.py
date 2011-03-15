@@ -14,6 +14,7 @@ class driveHandler:
 	
 		self.gait = 0
 		self.simulator = shared_data['Simulator']
+		self.config = shared_data['Config']
 		self.pose_handler = proj.pose_handler
 		try:
 		    self.loco = proj.loco_handler
@@ -37,14 +38,14 @@ class driveHandler:
 
 		# Check for zero (or really low) speed commands to assign no gait.
 		# Only do this for the initial configuration (currently set to Hexapod)
-		if (x==0 and y==0) and (self.simulator.config=="Hexapod"):
+		if (x==0 and y==0) and (self.config=="Hexapod"):
 			gait = 0			# Do not move
 
 		else:	
 
 			# For the 4-Module Snake or 25 module Hexapod
 			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
-			if self.simulator.config=="Hexapod":
+			if self.config=="Hexapod":
 				if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
 					gait = 1			# Go Straight
 				elif (rel_heading>math.pi-math.pi/24 or rel_heading<-math.pi+math.pi/24):
@@ -56,7 +57,7 @@ class driveHandler:
 
 			# For the 4-Module Snake or 25 module Hexapod
 			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
-			elif self.simulator.config=="Snake":
+			elif self.config=="Snake":
 				if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
 					gait = 1			# Go Straight
 				elif (rel_heading<-math.pi/24):
@@ -64,7 +65,7 @@ class driveHandler:
 				elif (rel_heading>math.pi/24):
 						gait = 3			# Go Left
 
-			elif self.simulator.config=="Plus":
+			elif self.config=="Plus":
 				if (rel_heading >= -math.pi/4 and rel_heading < math.pi/4):
 					gait = 3 			#  Horizontal forward
 				elif (rel_heading >= math.pi/4 and rel_heading < 3*math.pi/4):
@@ -74,22 +75,22 @@ class driveHandler:
 				else:
 					gait = 1			#  Vertical forward	
 
-			elif self.simulator.config=="Plus3":
+			elif self.config=="Plus3":
 				gait = 5			# play dead
 
-			elif self.simulator.config=="FoldOver":
+			elif self.config=="FoldOver":
 				gait = 2
 
-			elif self.simulator.config=="Slinky":
+			elif self.config=="Slinky":
 				gait = 2			# move forward
 
-			elif self.simulator.config=="Splits":
+			elif self.config=="Splits":
 				gait = 1			# do the splits over and over
 
-			elif self.simulator.config=="Twist":
+			elif self.config=="Twist":
 				gait = 1
 
-			elif self.simulator.config=="Quadriped":
+			elif self.config=="Quadriped":
 				gait = 1
 
 			else:

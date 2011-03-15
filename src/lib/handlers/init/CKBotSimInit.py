@@ -9,6 +9,7 @@ import os, sys, time
 from numpy import *
 from simulator.ode.ckbot import CKBotSim
 from simulator.ode.ckbot import CKBotLib
+from threading import Thread, Lock, Event
 
 class initHandler:
     def __init__(self, proj, calib=False):
@@ -38,11 +39,10 @@ class initHandler:
 
 		# Initiate the CKBot simulator and render it once.
 		self.simulator = CKBotSim.CKBotSim(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/Snake.ckbot"),standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim)
-		self.simulator.gait = 1
-		for i in range(5):
-			self.simulator.run_once()
-		self.simulator.gait = 0
-		self.simulator.run_once()
+		self.config = self.simulator.config		
+		#self.simulator = CKBotSimThread(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/Snake.ckbot"),0,regionfile,region_calib,initial_pose_sim)
+		#self.config = self.simulator.simulator.config
+		#self.simulator.start()
 
 		# Instantiate the CKBot library
 		self.lib = CKBotLib.CKBotLib()
@@ -51,4 +51,44 @@ class initHandler:
         # Return a dictionary of any objects that will need to be shared with
         # other handlers
 
-        return {'Simulator': self.simulator, "Library": self.lib}
+        return {'Simulator': self.simulator, "Library": self.lib, "Config": self.config}
+
+class CKBotSimThread(Thread):
+    def __init__(self, robotfile, standalone, regionfile, region_calib, startingpose):
+		super(CKBotSimThread, self).__init__()
+		self.lock = Lock()
+		self._stop = Event()
+		self.simulator = CKBotSim.CKBotSim(robotfile, standalone=standalone, regionfile=regionfile, region_calib=region_calib, startingpose=startingpose)
+
+		# Run the simulator a few times to avoid crashing in certain cases.
+		self.simulator.gait = 1
+		for i in range(5):
+			self.simulator.run_once()
+		self.simulator.gait = 0
+		self.simulator.run_once()
+
+    def run (self):
+		# Run the simulator.
+		while 1:
+			if self._stop.isSet():
+				break
+			else:
+				self.lock.acquire()
+				self.simulator.run_once()
+				self.lock.release()
+
+    def get2DPose(self,num):
+		pose = []
+		self.lock.acquire()
+		pose = self.simulator.get2DPose(num)
+		self.lock.release()
+		return pose
+
+    def setGait(self, gait):
+        self.lock.acquire()
+        self.simulator.setGait(gait)
+        self.lock.release()
+
+    def stop (self):
+        self._stop.set()
+

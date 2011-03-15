@@ -23,6 +23,7 @@ import lib.parseLP as parseLP
 import lib.mapRenderer as mapRenderer
 from lib.convert import createAnzuFile
 #import lib.recolorLTL as recolorLTL
+from lib.simulator.ode.ckbot import CKBotLib # added by Sarah
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
@@ -124,7 +125,6 @@ class simSetupDialog(wx.Dialog):
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetItems().index(parent.currentExperimentName))
         self.loadSimSetup(self.list_box_experiment_name.GetSelection())
         self.map = {}
-
 
     def __set_properties(self):
         # begin wxGlade: simSetupDialog.__set_properties
@@ -798,11 +798,14 @@ class SpecEditorFrame(wx.Frame):
         self.proj = project.Project()
         self.proj.regionMapping = {}
         self.parser = None
-       
+
         # HACK: This is an undocumented hack you can uncomment to help kill stuck copies of speceditor on windows
         # If in use, requires spec file argument on command line
         #if sys.argv[-1] != "-dontbreak":
         #    os.system("taskkill /im python.exe /f && " + " ".join(sys.argv) + " -dontbreak")
+
+        # Initialize library -- Sarah
+        self.library = CKBotLib.CKBotLib()
        
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
@@ -874,7 +877,7 @@ class SpecEditorFrame(wx.Frame):
         self.Layout()
         self.Centre()
         # end wxGlade
-
+        
         # Make it so that the log window doesn't change height when the window is resized
         # NOTE: May not work on older versions of wxWidgets
         self.window_1.SetSashGravity(1.0)
@@ -1328,7 +1331,7 @@ class SpecEditorFrame(wx.Frame):
         self.fileName = fileName
         self.projectName = os.path.splitext(title)[0]
         self.projectPath = filePath
-
+    
         self.text_ctrl_spec.EmptyUndoBuffer()
     
     def doClose(self, event): # wxGlade: SpecEditorFrame.<event_handler>
@@ -1379,12 +1382,12 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuCut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         #if self.text_ctrl_spec.CanCut():
-        self.text_ctrl_spec.Cut()
+            self.text_ctrl_spec.Cut()
         event.Skip()
 
     def onMenuCopy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         #if self.text_ctrl_spec.CanCopy():
-        self.text_ctrl_spec.Copy()
+            self.text_ctrl_spec.Copy()
         event.Skip()
 
     def onMenuPaste(self, event): # wxGlade: SpecEditorFrame.<event_handler>
@@ -1529,7 +1532,7 @@ class SpecEditorFrame(wx.Frame):
             classpath = os.path.join(self.proj.ltlmop_root, "etc/jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc/jtlv", "GROne")
 
         cmd = subprocess.Popen(["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl", "--safety"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-        
+    
         # TODO: Make this output live
         while cmd.poll():
             wx.Yield()
@@ -1540,7 +1543,7 @@ class SpecEditorFrame(wx.Frame):
             self.appendLog("\t"+line)
             if "Specification is realizable" in line:
                realizable = True
-               
+
         cmd.stdout.close()
         print "\n"
 
@@ -1548,6 +1551,30 @@ class SpecEditorFrame(wx.Frame):
             self.appendLog("Automaton successfully synthesized.\n", "GREEN")
         else:
             self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
+
+		################################################
+		# Add a check for Empty Gaits - added by Sarah #
+		################################################
+        self.appendLog("\nChecking for empty gaits...\n")
+        #print robotPropList
+        err = 0
+        libs = self.library
+        libs.readLibe()
+        for act in robotPropList:
+            act = act.strip("u's.")
+            if act[0] == "T":
+                act = act.strip("T")
+                #print act
+                words = act.split("_and_")
+                #print words
+                config = libs.findGait(words)
+                if type(config) == type(None):
+                    err_message = "WARNING: No config-gait pair for actuator T" + act
+                    self.appendLog(err_message)
+                    err = 1
+        if err == 0:
+            self.appendLog("No empty gaits!")
+
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1666,7 +1693,7 @@ class SpecEditorFrame(wx.Frame):
         setupDialog.ShowModal()
 
     def onMenuViewAut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
+        fileNamePrefix = os.path.join(self.projectPath, self.projectName) 
 
         if self.projectName is None or self.rfi is None or not os.path.isfile(fileNamePrefix+".aut"):
             wx.MessageBox("Cannot find automaton for viewing.  Please make sure compilation completed successfully.", "Error",
@@ -1711,7 +1738,7 @@ class SpecEditorFrame(wx.Frame):
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.onMenuCompile(event)
         #self.onMenuViewAut(event)
-        
+
         fileNamePrefix = os.path.join(self.projectPath, self.projectName)
 
         output = "\nRESULT\n"
@@ -1750,7 +1777,7 @@ class SpecEditorFrame(wx.Frame):
                for l in (dline.strip()).split()[2:]:
                     self.text_ctrl_spec.MarkerSetBackground(self.map['SysGoals'][int(l)],"BLUE")           
                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_LIVE)
-           
+                                
         
           if "EnvInit UNSAT" in dline:
             output = output + "Environment initial condition is unsatisfiable.\n" 
@@ -1767,7 +1794,7 @@ class SpecEditorFrame(wx.Frame):
                for l in (dline.strip()).split()[2:]:
                     self.text_ctrl_spec.MarkerSetAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-            
+        
           if "SysTrans UNREAL" in dline:
                 output = output + "System is unrealizable because the environment can force a safety violation.\n" 
                 #for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerSetBackground(l,"RED")
@@ -1779,7 +1806,7 @@ class SpecEditorFrame(wx.Frame):
                #for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerSetBackground(l,"RED")
                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
             
-        
+                
           if "EnvTrans UNREAL" in dline:
                 output = output + "Environment is unrealizable because the environment can force a safety violation.\n" 
                 for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerADD(l, MARKER_SAFE)
@@ -1788,13 +1815,13 @@ class SpecEditorFrame(wx.Frame):
                for l in (dline.strip()).split()[2:]:
                     self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
-            
+       
         if not realizable:
             self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
             output += "No automaton synthesized.\n"        
-          
+       
         self.appendLog(output)
-        
+
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 

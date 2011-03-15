@@ -1524,8 +1524,8 @@ class CKBotSim:
 				timearray.append(0)
 			else:
 				timearray.append(timearray[i-1]+singletime)
+	
 		currenttime = (time%gaittime)/singletime
-
 		globalref = gait[int(math.ceil(currenttime))+1][module]
 		globalprev = gait[int(math.floor(currenttime))+1][module]
 
@@ -1534,10 +1534,10 @@ class CKBotSim:
 			localref = globalref
 		else:
 			# Linear interpolation step.
-			interp = (currenttime - timearray[int(math.floor(currenttime))])/(timearray[int(math.ceil(currenttime))] - timearray[int(math.floor(currenttime))])
+			interp = (currenttime*singletime - timearray[int(math.floor(currenttime))])/(timearray[int(math.ceil(currenttime))] - timearray[int(math.floor(currenttime))])
 			localref = globalprev + interp*(globalref-globalprev)
 
-		return globalref
+		return localref
 
 
 	def run(self):

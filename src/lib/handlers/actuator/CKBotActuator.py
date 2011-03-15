@@ -15,6 +15,7 @@ class actuatorHandler:
 	def __init__(self, proj, shared_data):
 		self.runtime = shared_data['Runtime']
 		self.library = shared_data['Library']
+		self.config = shared_data['Config']
 
 	def setActuator(self, name, val):
 		"""
@@ -55,6 +56,5 @@ class actuatorHandler:
 		elif (name!="hexapod") and val==False:
 			print "deconfiguring"
 
-		
 
 		print "(ACT) Actuator %s is now %s!" % tuple(map(str, (name, val)))

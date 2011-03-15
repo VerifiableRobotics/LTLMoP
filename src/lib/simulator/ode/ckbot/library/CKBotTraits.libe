@@ -23,8 +23,8 @@ Trait: narrow
 Snake-crawl
 FoldOver-slink
 
-# "action gait" = the robot location does not vary more than the maximum dimension of the robot
-Trait: action_gait
+# "stationary" = the robot location does not vary more than the maximum dimension of the robot
+Trait: stationary
 #Quadriped-move
 Plus3-foldup
 Biped-splits
