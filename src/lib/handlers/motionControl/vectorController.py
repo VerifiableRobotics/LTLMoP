@@ -10,7 +10,7 @@ Uses the vector field algorithm developed by Stephen R. Lindemann to calculate a
 import vectorControllerHelper
 from numpy import *
 from is_inside import *
-import time
+import time, math
 
 class motionControlHandler:
     def __init__(self, proj, shared_data):
@@ -37,6 +37,14 @@ class motionControlHandler:
 
         # Find our current configuration
         pose = self.pose_handler.getPose()
+
+        # Check if Vicon has cut out
+        # TODO: this should probably go in posehandler?
+        if math.isnan(pose[2]):
+            print "WARNING: No Vicon data! Pausing."
+            self.drive_handler.setVelocity(0, 0)  # So let's stop
+            time.sleep(1)
+            return False
 
         # NOTE: Information about region geometry can be found in self.rfi.regions:
         pointArray = [x for x in self.rfi.regions[current_reg].getPoints()]
