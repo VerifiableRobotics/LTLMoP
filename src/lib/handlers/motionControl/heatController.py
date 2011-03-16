@@ -9,6 +9,8 @@ Uses the heat-controller to take a current position, current region, and destina
 
 import heatControllerHelper
 from numpy import *
+from is_inside import *
+import time
 
 class motionControlHandler:
     def __init__(self, proj, shared_data):
@@ -16,6 +18,7 @@ class motionControlHandler:
         self.pose_handler = proj.pose_handler
         self.fwd_coordmap = proj.coordmap_map2lab
         self.rfi = proj.rfi
+        self.last_warning = 0
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
@@ -37,7 +40,30 @@ class motionControlHandler:
 
         self.drive_handler.setVelocity(X[0,0], X[1,0], pose[2])
         
-        return not inside
+        # Transform the region vertices into real coordinates
+        pointArray = [self.fwd_coordmap(x) for x in self.rfi.regions[next_reg].getPoints()]
+        vertices = mat(pointArray).T 
+
+        # Figure out whether we've reached the destination region
+        if is_inside([pose[0], pose[1]], vertices):
+            arrived = True
+        else:
+            arrived = False
+
+        if (arrived != (not inside)) and (time.time()-self.last_warning) > 0.5:
+            print "WARNING: Left current region but not in expected destination region"
+            # Figure out what region we think we stumbled into
+            for r in self.rfi.regions:
+                pointArray = [self.fwd_coordmap(x) for x in r.getPoints()]
+                vertices = mat(pointArray).T 
+
+                if is_inside([pose[0], pose[1]], vertices):
+                    print "I think I'm in " + r.name
+                    print pose
+                    break
+            self.last_warning = time.time()
+
+        return arrived
 
 
     def get_controller(self, current, next, last, cache={}):

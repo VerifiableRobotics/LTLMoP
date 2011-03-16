@@ -10,6 +10,7 @@ Uses the vector field algorithm developed by Stephen R. Lindemann to calculate a
 import vectorControllerHelper
 from numpy import *
 from is_inside import *
+import time
 
 class motionControlHandler:
     def __init__(self, proj, shared_data):
@@ -20,6 +21,7 @@ class motionControlHandler:
         # Get information about regions
         self.rfi = proj.rfi
         self.coordmap_map2lab = proj.coordmap_map2lab
+        self.last_warning = 0
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
@@ -73,10 +75,24 @@ class motionControlHandler:
         # Pass this desired velocity on to the drive handler
         self.drive_handler.setVelocity(V[0], V[1], pose[2])
         
+        departed = not is_inside([pose[0], pose[1]], vertices)
+        pointArray = [x for x in self.rfi.regions[next_reg].getPoints()]
+        pointArray = map(self.coordmap_map2lab, pointArray)
+        vertices = mat(pointArray).T 
         # Figure out whether we've reached the destination region
-        if is_inside([pose[0], pose[1]], vertices):
-            arrived = False
-        else:
-            arrived = True
+        arrived = is_inside([pose[0], pose[1]], vertices)
+
+        if departed and (not arrived) and (time.time()-self.last_warning) > 0.5:
+            #print "WARNING: Left current region but not in expected destination region"
+            # Figure out what region we think we stumbled into
+            for r in self.rfi.regions:
+                pointArray = [self.coordmap_map2lab(x) for x in r.getPoints()]
+                vertices = mat(pointArray).T 
+
+                if is_inside([pose[0], pose[1]], vertices):
+                    #print "I think I'm in " + r.name
+                    #print pose
+                    break
+            self.last_warning = time.time()
 
         return arrived
