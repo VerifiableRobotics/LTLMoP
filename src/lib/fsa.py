@@ -391,9 +391,10 @@ class Automaton:
             else:
                 ### The state changed, but the region didn't
                 self.current_state = self.next_state  # We can transition immediately
+                #print "Now in state " + self.current_state.name
 
-            # Actuate anything that might be necessary
-            self.updateOutputs(self.next_state)
+                # Actuate anything that might be necessary
+                self.updateOutputs(self.next_state)
 
         # Move one step towards the next region (or stay in the same region)
         # TODO: Use the "last" controllers?
@@ -412,3 +413,7 @@ class Automaton:
             print "Crossed border from %s to %s!" % (self.regions[self.current_region].name, self.regions[self.next_region].name)
             self.current_state = self.next_state   
             self.current_region = self.next_region
+            #print "Now in state " + self.current_state.name
+
+            # Actuate anything that might be necessary
+            self.updateOutputs(self.next_state)
