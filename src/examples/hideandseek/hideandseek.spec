@@ -9,7 +9,7 @@ Calibration: # Coordinate transformation between map and experiment: XScale, XOf
 0.012811806809,-8.07774146808,-0.0185568627189,5.91272155958
 
 InitialRegion: # Initial region number
-5
+10
 
 InitialTruths: # List of initially true propositions
 
@@ -26,7 +26,7 @@ HnS_stage.robot
 ======== EXPERIMENT CONFIG 1 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0099201303246,-2.94078060947,-0.00947754453877,2.81949022132
+0.0100832261975,-3.10740369646,-0.0090486321417,2.46124893359
 
 InitialRegion: # Initial region number
 10
@@ -49,6 +49,10 @@ Actions: # List of actions and their state (enabled = 1, disabled = 0)
 count,1
 whistle,1
 hide,1
+say_foundyou,1
+say_imfound,1
+say_hider,1
+say_seeker,1
 
 Customs: # List of custom propositions
 seeker
@@ -137,5 +141,16 @@ Do hide if and only if you are not activating seeker and you are activating play
 
 If you were activating hide then stay there
 Do whistle if and only if you were not activating hide and you are activating hide
+
+### Talking ###
+Do say_imfound if and only if you were not activating seeker and you were activating playing and you are not activating playing
+Do say_foundyou if and only if you were activating seeker and you were activating playing and you are not activating playing
+Do say_hider if and only if you are not activating seeker and you are not activating playing and you are in Parking
+Do say_seeker if and only if you are activating seeker and you are not activating playing and you are in Parking
+
+If you were activating say_imfound then stay there
+If you were activating say_foundyou then stay there
+If you were activating say_hider then stay there
+If you were activating say_seeker then stay there
 
 

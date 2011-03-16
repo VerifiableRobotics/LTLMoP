@@ -76,6 +76,18 @@ class actuatorHandler:
                 self.doCount = True
             else:
                 self.doCount = False
+        elif name.lower() == "say_foundyou":
+            if int(val) == 1:
+                self.ttsProxy.say("I found you! Let's play again.")
+        elif name.lower() == "say_imfound":
+            if int(val) == 1:
+                self.ttsProxy.say("You got me! Let's play again.")
+        elif name.lower() == "say_hider":
+            if int(val) == 1:
+                self.ttsProxy.say("I'm gonna go hide.  Start counting.")
+        elif name.lower() == "say_seeker":
+            if int(val) == 1:
+                self.ttsProxy.say("I am the seeker.  Go hide and say ready.")
         elif name.lower() == "whistle":
             if int(val) == 1:
                 self.audProxy.play(self.whistleId)

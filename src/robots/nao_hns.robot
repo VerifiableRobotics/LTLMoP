@@ -10,6 +10,10 @@ Actions: # Available binary actuator propositions
 count
 whistle
 hide
+say_foundyou
+say_imfound
+say_hider
+say_seeker
 
 MotionControlHandler: # Module with continuous controller for moving between regions
 lib.handlers.motionControl.vectorController
