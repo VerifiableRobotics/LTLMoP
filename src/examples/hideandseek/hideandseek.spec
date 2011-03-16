@@ -29,7 +29,7 @@ Calibration: # Coordinate transformation between map and experiment: XScale, XOf
 0.0099201303246,-2.94078060947,-0.00947754453877,2.81949022132
 
 InitialRegion: # Initial region number
-7
+10
 
 InitialTruths: # List of initially true propositions
 
@@ -77,10 +77,10 @@ Closet=p10
 Danger=p9
 Wall=p3
 Gym=p8
-Parking=p6
+others=p13,p14,p15,p16,p17,p18,p19,p20,p21,p22,p23,p24,p25,p26
 Tree=p4
-SchoolWall=p32,p33,p34,p35,p36,p37,p38,p39,p40,p41,p42
-others=p13,p14,p15,p16,p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31
+SchoolWall=p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p37
+Parking=p6
 between$Tree$and$Wall$=p2
 
 Spec: # Specification in simple English
@@ -104,7 +104,7 @@ Always not Wall
 Always not Tree
 
 ### Game start and end conditions ###
-playing is set on ((seeker and hear_whistle) or (not seeker and hear_counting)) and reset on ((seeker and see_player) or (not seeker and see_player))
+playing is set on ((seeker and Parking and hear_whistle) or (not seeker and Parking and hear_counting)) and reset on ((seeker and see_player) or (not seeker and see_player))
 
 If you are not activating playing then go to Parking
 If you were not activating playing and you were in Parking then stay there
