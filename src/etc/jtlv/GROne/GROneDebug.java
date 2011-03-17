@@ -84,17 +84,17 @@ public class GROneDebug {
 		 
 		 
 		 
-		 if ((sys.initial().and(sys.trans())).isZero()) {
-			 //debugInfo += "Unsat transitions." + "\n";
-			 debugInfo += "SysTrans UNSAT" + "\n";
-			 explainSys = 1;
-		 }	
 		 	
-		 else if (sys.initial().isZero()) {
+		 	
+		 if (sys.initial().isZero()) {
 			 //debugInfo += "Unsat initial conditions." + "\n";
 			 debugInfo += "SysInit UNSAT" + "\n";
 			 explainSys = 1;
 		 
+		 } else if ((sys.initial().and(sys.trans())).isZero()) {
+			 //debugInfo += "Unsat transitions." + "\n";
+			 debugInfo += "SysTrans UNSAT" + "\n";
+			 explainSys = 1;
 		 } else {
 		 	 
 			 for (int i = 0; i < sys.justiceNum(); i++) {
@@ -112,16 +112,14 @@ public class GROneDebug {
 			 			 
 		 }
 		  
-		  if (env.trans().isZero()) {
+		 if (env.initial().isZero()) {
+			  //debugInfo += "REV Unsat initial conditions." + "\n";
+			  debugInfo += "EnvInit UNSAT" + "\n";
+			  explainEnv = 1;	 
+		 } else if ((env.initial().and(env.trans())).isZero()) {
 			  //debugInfo += "REV Unsat transitions." + "\n";
 			  debugInfo += "EnvTrans UNSAT" + "\n";
 			  explainEnv = 1;
-			 }		 
-		  else if (env.initial().isZero()) {
-			  //debugInfo += "REV Unsat initial conditions." + "\n";
-			  debugInfo += "EnvInit UNSAT" + "\n";
-			  explainEnv = 1;
-			  
 		  } else {
 				 	 
 				 for (int i = 0; i < env.justiceNum(); i++) {
