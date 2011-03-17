@@ -1714,8 +1714,10 @@ class SpecEditorFrame(wx.Frame):
 
         output = "\nRESULT\n"
         f = open(fileNamePrefix+".debug","r")
+        realizable = False    
         for dline in f.readlines():
           if "REALIZABLE" in dline:   
+            realizable = True            
             self.appendLog("Automaton successfully synthesized.\n", "GREEN")
             aut = fsa.Automaton(self.parser.proj.rfi.regions, None, None, None) 
             aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
@@ -1731,9 +1733,6 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "GREEN")
                 output += "Synthesized automaton is trivial.\n"
-          else:
-            self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
-            output += "No automaton synthesized.\n"        
           if "SysInit UNSAT" in dline:
            output = output + "System initial condition is unsatisfiable.\n" 
            for l in self.self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
@@ -1788,6 +1787,10 @@ class SpecEditorFrame(wx.Frame):
                     self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
             
+        if not realizable:
+            self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
+            output += "No automaton synthesized.\n"        
+          
         self.appendLog(output)
         
         sys.stdout = sys.__stdout__
