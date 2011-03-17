@@ -44,18 +44,30 @@ class driveHandler:
 
 		else:	
 
-			# For the 4-Module Snake or 25 module Hexapod
 			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
 			if self.config=="Snake":
-				if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
-					gait = 1			# Go Straight
-				elif (rel_heading<-math.pi/24):
-					gait = 3			# Go Right
-				elif (rel_heading>math.pi/24):
+
+				# If you were originally going straight, keep going straight until you deviate by a larger angle.
+				if self.gait == 1:
+					if (rel_heading<-math.pi/6):
+						gait = 3			# Go Right
+					elif (rel_heading>math.pi/6):
 						gait = 2			# Go Left
+					else:
+						gait = 1			# Go Straight
+
+				# Otherwise, if you were not originally going straight, only select to go straight if within a smaller angle.
+				else:
+					if (rel_heading<-math.pi/12):
+						gait = 3			# Go Right
+					elif (rel_heading>math.pi/12):
+						gait = 2			# Go Left
+					else:
+						gait = 1			# Go Straight
 
 			else:
 				gait = 0
 
+		self.gait = gait
 		self.loco.sendCommand(gait)
 

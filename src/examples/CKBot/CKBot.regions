@@ -6,19 +6,26 @@ Background: # Relative path of background image file
 None
 
 CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
-r2	1
-r1	5
+boundary	9
+r2	3
 
 Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
-Boundary	poly	190	113	480	185	160	32	240	0	0	240	0	480	0	480	185	240	185	0	185
-r2	poly	430	113	240	186	255	0	20	0	185	0	0	240	0	240	185	240	186	0	186
-r1	poly	190	111	240	187	0	255	0	0	2	0	0	240	0	240	2	240	187	0	187
+boundary	poly	243	116	397	282	255	0	0	0	0	1	0	59	0	195	0	397	0	397	118	397	150	397	282	195	282	1	282	0	282
+r2	rect	438	116	202	118	255	165	0
+r3	poly	244	116	194	118	255	255	0	0	0	58	0	194	0	194	118	58	118	0	118
+r4	poly	438	234	202	164	160	32	240	0	32	0	0	202	0	202	32	202	164	0	164
+r1	poly	244	234	194	164	0	0	255	0	0	58	0	194	0	194	32	194	164	0	164
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
 CKBot_simbg.png
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
-Boundary	r2	430	113	670	113	670	113	670	298
-Boundary	r1	190	113	190	298	190	298	430	298
-r2	r1	430	113	430	298
+boundary	r2	640	116	640	234	438	116	640	116
+boundary	r3	302	116	438	116	244	116	302	116
+boundary	r4	640	234	640	266	438	398	640	398	640	266	640	398
+boundary	r1	244	398	438	398
+r2	r3	438	116	438	234
+r2	r4	438	234	640	234
+r3	r1	302	234	438	234	244	234	302	234
+r4	r1	438	234	438	266	438	266	438	398
 

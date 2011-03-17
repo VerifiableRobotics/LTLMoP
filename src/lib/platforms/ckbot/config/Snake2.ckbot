@@ -32,20 +32,20 @@ Type Periodic
 
 # Gait 1 -- Move Forward Without Turning
 Gait 1
-3000 3000 3000 100
-12 12 12 0
+3000 3000 3000 0
+25 25 25 0
 0 -9000 -18000 0
 
 # Gait 2 -- Turn Left
 Gait 2
--2000 2000 2000 3500
-10 10 10 10
+2000 2000 2000 3500
+20 20 20 20 
 0 -4500 -9000 4500
 
 # Gait 3 -- Turn Right
 Gait 3
--2000 2000 2000 -3500
-10 10 10 10 
+2000 2000 3000 -3500
+20 20 20 20 
 0 -4500 -9000 4500
 
 # Gait 4 -- Attempt to Move Backward... but it still moves forward =(

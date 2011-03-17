@@ -2,11 +2,12 @@
 
 import pygame
 import math, time, copy, sys
+sys.path.append("../../../../../Downloads/CKBot/trunk")
 from ckbot.logical import Cluster
 
 info = """CKBotSim
 
-CKBot Simulator for LTLMoP
+CKBot Runtime for LTLMoP
 [Sebastian Castro - Cornell University]
 [Autonomous Systems Laboratory - 2010]
 

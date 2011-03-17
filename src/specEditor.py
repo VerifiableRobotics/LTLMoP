@@ -24,6 +24,8 @@ import lib.mapRenderer as mapRenderer
 from lib.convert import createAnzuFile
 #import lib.recolorLTL as recolorLTL
 from lib.simulator.ode.ckbot import CKBotLib # added by Sarah
+import math, re, sys, random, os, subprocess, time
+import numpy
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
@@ -1547,11 +1549,6 @@ class SpecEditorFrame(wx.Frame):
         cmd.stdout.close()
         print "\n"
 
-        if realizable:
-            self.appendLog("Automaton successfully synthesized.\n", "GREEN")
-        else:
-            self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
-
 		################################################
 		# Add a check for Empty Gaits - added by Sarah #
 		################################################
@@ -1560,21 +1557,95 @@ class SpecEditorFrame(wx.Frame):
         err = 0
         libs = self.library
         libs.readLibe()
+		# Check that each individual trait has a corresponding config-gait pair
         for act in robotPropList:
             act = act.strip("u's.")
             if act[0] == "T":
-                act = act.strip("T")
+                act = act.strip("T_")
                 #print act
                 words = act.split("_and_")
                 #print words
                 config = libs.findGait(words)
+                #print config
                 if type(config) == type(None):
-                    err_message = "WARNING: No config-gait pair for actuator T" + act
+                    err_message = "WARNING: No config-gait pair for actuator T_" + act + "\n"
                     self.appendLog(err_message)
                     err = 1
-        if err == 0:
-            self.appendLog("No empty gaits!")
 
+		# Now parse automaton file and make sure no states have empty gaits
+        # Most of this is borrowed from fsa.py
+        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
+        FILE = open(fileNamePrefix+".aut","r")
+        fsa_description = FILE.read()
+        FILE.close()
+  
+        # A magical regex to slurp up a state and its information all at once
+        p = re.compile(r"State (?P<num>\d+) with rank (?P<rank>[\d-]+) -> <(?P<conds>(?:\w+:\d(?:, )?)+)>", re.IGNORECASE|re.MULTILINE)
+        m = p.finditer(fsa_description)
+
+        # Determine what the sensors are so we can figure out what propositions are actuators vs sensors
+        sensors = self.parser.proj.all_sensors
+        errmsgs = set([])
+
+        # Now, for each state we find:
+        for match in m:
+
+            number = match.group('num')
+            rank = match.group('rank')
+
+            # A regex so we can iterate over "PROP = VALUE" terms
+            p2 = re.compile(r"(?P<var>\w+):(?P<val>\d)", re.IGNORECASE|re.MULTILINE)
+            m2 = p2.finditer(match.group('conds'))
+
+            outputs = {} 
+
+            # So, for each of these terms:
+            for new_condition in m2:
+                var = new_condition.group('var')
+                val = new_condition.group('val') 
+
+                # Ignore internal "current goal" propositions
+                if var.startswith('s_'): continue
+                
+                # And then put it in the right place!
+                if (var not in sensors) or (var in robotPropList):
+                    # If it's not a sensor proposition, then it's an output proposition
+                    outputs[var]=val
+            #print outputs
+            traits = set([])
+    
+            # Check that the combination of traits does not provide an empty gait
+            for act,v in outputs.iteritems():
+                if v == "1" and act[0]=="T":
+                    traits.add(act.strip("T_"))
+            #print traits
+            #print len(traits)
+            config = libs.findGait(traits)
+            #print config
+            if len(traits)!=0 and type(config)==type(None):
+                err_message = "WARNING: No config-gait pair for combination of traits: "
+                for t in traits: # do this because traits is a set and cannot append to a string
+                    err_message = err_message + t + ", "
+                err_message = err_message.rstrip(", ") + "\n"
+                errmsgs.add(err_message)
+                #self.appendLog(err_message)
+                err = 1
+        
+        for msg in errmsgs:
+            self.appendLog(msg)
+
+        # If no error, then we are good to go!!
+        if err == 0:
+            self.appendLog("No empty gaits!\n")
+        else:
+            realizable = False
+
+
+        #Is spec realizable?
+        if realizable:
+            self.appendLog("Automaton successfully synthesized.\n", "GREEN")
+        else:
+            self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__

@@ -7,9 +7,13 @@ prey
 poison
 
 Actions: # Available binary actuator propositions
-Tfast_and_1D_motion
-Tlow_and_nonholonomic_turning
-Tstationary
+T_stationary
+T_fast
+T_1D_motion
+T_low
+T_nonholonomic_turning
+T_fast_and_1D_motion
+T_low_and_nonholonomic_turning
 
 MotionControlHandler: # Module with continuous controller for moving between regions
 handlers.motionControl.CKBotSimController

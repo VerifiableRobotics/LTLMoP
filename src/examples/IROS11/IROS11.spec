@@ -46,12 +46,17 @@ CKBotPredatorPrey.robot
 ======== SETTINGS ========
 
 Actions: # List of actions and their state (enabled = 1, disabled = 0)
-Tfast_and_1D_motion,1
-Tlow_and_nonholonomic_turning,1
-Tstationary,1
+T_stationary,1
+T_fast,1
+T_1D_motion,1
+T_low,1
+T_nonholonomic_turning,1
+T_fast_and_1D_motion,0
+T_low_and_nonholonomic_turning,0
 
 Customs: # List of custom propositions
 Prancing
+T_holonomic
 
 RegionFile: # Relative path of region description file
 IROS11.regions
@@ -88,15 +93,17 @@ Spec: # Specification in simple English
 Env starts with false
 Robot starts in Island
 Always not Water and not Water2 and not Water3
-If you were in Tunnel then do not sense predator or prey
-If you were in between Island and Dock then do not sense predator or prey
+#If you are in Tunnel then do not sense prey
+#If you were in between Island and Dock then do not T_stationary
 If you are not sensing predator and you are not sensing prey and you are not sensing poison then visit Meadows
 If you are not sensing predator and you are not sensing prey and you are not sensing poison then visit Dock
 If you are not sensing predator and you are not sensing prey and you are sensing poison then visit Springs
-Do Tlow_and_nonholonomic_turning if and only if you are in Tunnel
-Tfast_and_1D_motion is set on between Island and Dock and reset on Dock
+Do T_low and do T_nonholonomic_turning if and only if you are in Tunnel
+T_fast is set on between Island and Dock and reset on Dock
+T_1D_motion is set on between Island and Dock and reset on Dock
+#Do T_fast and do T_1D_motion if and only if you are on Bridge
 If you are sensing predator then stay there
-If you are sensing prey then do Tstationary
-Do Prancing if and only if you are in Meadows
+If you are sensing prey and you are not in Tunnel and you are not on Bridge then do T_stationary
+Do T_holonomic and T_fast if and only if you are in Meadows
 
 

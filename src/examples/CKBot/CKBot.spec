@@ -9,7 +9,7 @@ Calibration: # Coordinate transformation between map and experiment: XScale, XOf
 0.00391824202523,-1.05182291018,-0.00579735948376,1.16655331908
 
 InitialRegion: # Initial region number
-2
+4
 
 InitialTruths: # List of initially true propositions
 
@@ -44,13 +44,16 @@ Default
 
 RegionMapping:
 
-r1=p2
-r2=p1
-others=
+r4=p2
+others=p1
+r1=p5
+r2=p4
+r3=p3
 
 Spec: # Specification in simple English
 Visit r1
+Visit r4
 Visit r2
-If you are sensing None then stay there
+Visit r3
 
 
