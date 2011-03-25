@@ -4,7 +4,6 @@
 ConfigName:
 Hexapod
 
-# module order (by row): body, head, R arm, L arm, 1st tail mod, 2nd tail mod
 ConnMatrix:
 0 1 0 0 7 0 0 0 0 0 0 0 0 4 6 0 0 0 0 0 0 0 0 0 0
 7 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -32,7 +31,7 @@ ConnMatrix:
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 7 0 0 0
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 7 0 0 
 
-# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# This represents an offset (x, y, z) from the origin of (0, 0.55*Module Dimension, 0)
 # The y vector in the simulator is normal to the ground and points upwards.
 RelativeOffset:
 0 0.55 0

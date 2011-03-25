@@ -1,7 +1,6 @@
 # Categorize Reconfiguration-Gait pairs under words defined:
 #"tall","low","fast","action gait","1D motion","non-holonomic turning",				 
-#"holonomic","handles steps","handles rough surfaces", "handles fire"
-
+#"holonomic","handles steps","handles rough surfaces", "handles fire", "hardware"
 
 # "tall" = the robot reaches at least 3 modules high
 Trait: tall
@@ -21,13 +20,13 @@ FoldOver-slink
 # "narrow" = the robot is no larger than 1 module in 2 of 3 dimensions (x,y,z)
 Trait: narrow
 Snake-crawl
-FoldOver-slink
 
 # "stationary" = the robot location does not vary more than the maximum dimension of the robot
 Trait: stationary
-#Quadriped-move
+TeeStationary-swim
 Plus3-foldup
 Biped-splits
+#Quadriped-move
 
 # "1D motion" = robot along a line (along 2D ground plane)
 Trait: 1D_motion
@@ -42,6 +41,7 @@ Trait: nonholonomic_turning
 Twist-twist
 Snake-crawl
 Loop-roll
+Tee-crawl
 
 # "holonomic" = robot can move in any direction without turn radius
 Trait: holonomic
@@ -52,6 +52,7 @@ Trait: low
 Plus3-crawl
 Twist-twist
 Snake-crawl
+Tee-crawl
 
 # "handles steps" = robot can climb or descend steps
 Trait: handles_steps
@@ -64,5 +65,11 @@ Trait: handles_rough_surfaces
 # "handles fire" = robot can handle fire
 Trait: handles_fire
 Twist-twist
+
+# "hardware" = gait can be realized with current hardware
+Trait: hardware
+Snake-crawl
+Tee-crawl
+TeeStationary-swim
 
 # LEAVE THIS LINE HERE (one enter line below last trait list) for correct parsing

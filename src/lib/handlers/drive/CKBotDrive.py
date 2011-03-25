@@ -45,7 +45,7 @@ class driveHandler:
 		else:	
 
 			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
-			if self.config=="Snake":
+			if self.config=="Snake" or self.config=="Tee":
 
 				# If you were originally going straight, keep going straight until you deviate by a larger angle.
 				if self.gait == 1:
@@ -64,6 +64,9 @@ class driveHandler:
 						gait = 2			# Go Left
 					else:
 						gait = 1			# Go Straight
+
+			elif self.config == "TeeStationary":
+				gait = 1
 
 			else:
 				gait = 0

@@ -702,7 +702,7 @@ class GaitCreator:
 							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
 
                                                 else:
-                                                        print("Invalid Connection");
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
 
 					elif parent_port == 10:
 						if child_port == 8:
@@ -744,7 +744,7 @@ class GaitCreator:
 							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])	
 
                                                 else:
-                                                        print("Invalid Connection %i - %i");
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
                                                         
 			# Now that we have spawned one more module and connected it, move on to the next one.
 			idx = idx + 1	
@@ -1434,7 +1434,6 @@ class GaitCreator:
 					self.clicking = False
 
 
-
 	def _nearcb(self, args, geom1, geom2):
 		"""
 		Create contact joints between colliding geoms.
@@ -1595,29 +1594,6 @@ class GaitCreator:
 			# Limit the FPS.
 			self.clock.tick(self.fps)
 			self.counter = self.counter + 1
-
-
-	def run_once(self):
-		"""
-		Run one simulation step -- used for LTLMoP integration.
-		"""
-
-		self._running = True
-		self.doEvents()
-
-		# Receive Locomotion commands for all the hinges from LTLMoP.
-		# Use these commands as reference angles for simple P-controlled servos.
-		self.rungait()
-
-		# Simulation Step
-		self.space.collide((), self._nearcb)
-		self.world.step(1/self.fps)
-		self._cjoints.empty()
-		self.render()
-
-		# Limit the FPS.
-		self.clock.tick(self.fps)
-		self.counter = self.counter + 1
 		
 
 # Main method for standalone mode.

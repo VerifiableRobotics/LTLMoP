@@ -92,6 +92,8 @@ class CKBotLib:
 						gait_found = 1
 			gait_match = 0
 
+		#print goodgaits
+
 		# If no gaits were found, print "gait not found"
 		if gait_found == 0:
 			#print "gait not found"

@@ -53,7 +53,7 @@ class poseHandler:
 
             # Rotate the Vicon subject's forward vector by the rotation matrix.
             # Then find the angle this vector makes with the x-y plane.
-            fwdvec = array([[0],[0],[1]])                               # Dependent on Vicon subject -- change to config conditional statement.
+            fwdvec = array([[0],[0],[-1]])                               # Dependent on Vicon subject -- change to config conditional statement.
             R = self.rotate(pose[3],pose[4],pose[5])
             vec = R*fwdvec
             angle = atan2(vec[1],vec[0])       

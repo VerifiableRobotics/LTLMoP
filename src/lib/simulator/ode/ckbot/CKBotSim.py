@@ -640,7 +640,7 @@ class CKBotSim:
 							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
 
                                                 else:
-                                                        print("Invalid Connection");
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
 
 					elif parent_port == 9:
 						if child_port == 8:
@@ -682,7 +682,7 @@ class CKBotSim:
 							self.create_fixed_joint(self.lowerbody[parent],self.lowerbody[child])
 
                                                 else:
-                                                        print("Invalid Connection");
+                                                        print"Invalid Connection: %d - %d"%(parent_port,child_port)
 
 					elif parent_port == 10:
 						if child_port == 8:
@@ -1389,7 +1389,6 @@ class CKBotSim:
 					self.clicking = False
 
 
-
 	def _nearcb(self, args, geom1, geom2):
 		"""
 		Create contact joints between colliding geoms.
@@ -1421,9 +1420,11 @@ class CKBotSim:
 		# Find 2-D pose using module num's position and rotation matrix.
 		# NOTE: Due to the definition of the axes, the (x,y) position is actually (x,-z)
 		pose2d = [0,0,0]
+
 		# X and Y values are the average of the lower and upper parts of the base module.
 		pose2d[0] = 0.5*(self.lowerjoint[num].getPosition()[0] + self.upperjoint[num].getPosition()[0])
 		pose2d[1] = -0.5*(self.lowerjoint[num].getPosition()[2] + self.upperjoint[num].getPosition()[2])
+
 		# Find 2D Orientation using the rotation matrix and the x-direction unit vector.
 		# Rotate the vector [1, 0, 0] using the rotation matrix and find the angle to the x-axis using the atan2 function (to cover all 4 quadrants)
 		rot = self.lowerjoint[num].getRotation()
@@ -1592,30 +1593,6 @@ class CKBotSim:
 		# Limit the FPS.
 		self.clock.tick(self.fps)
 		self.counter = self.counter + 1
-
-	def make_stairs(self):
-		"""
-		Attempt to make stairs in the simulation
-		"""
-		# Create the first step 
-		stairs = ode.Body(self.world)
-		step1 = ode.GeomBox(space=self.space, lengths=(30,10,10))
-		step1.setBody(stairs)
-		step1.setPosition((10,5,10))
-		step2 = ode.GeomBox(space=self.space,lengths=(30,10,10))
-		step2.setBody(stairs)
-		step2.setPosition((20,15,10))
-		step1M = ode.Mass()
-		step1M.setBox(1000,10,5,10)
-		stairs.setMass(step1M)
-
-		# Append to simulator class object
-		self.obstacle.append(stairs)
-		self.obstaclepiece.append(step1)
-		self.obstaclepiece.append(step2)
-		self.obstacleM.append(step1M)
-
-		self._geoms.extend(self.obstaclepiece)
 
 
 # Main method for standalone mode.

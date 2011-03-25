@@ -17,7 +17,7 @@ class initHandler:
     def __init__(self, proj, calib=False):
 
 		# Initiate the CKBot runtime thread.
-		self.runtime = CKBotThread(os.path.join(proj.ltlmop_root,"lib/platforms/ckbot/config/Snake2.ckbot"))
+		self.runtime = CKBotThread(os.path.join(proj.ltlmop_root,"lib/platforms/ckbot/config/Tee.ckbot"))
 		self.config = self.runtime.runtime.config
 		self.runtime.start()
 
@@ -44,14 +44,21 @@ class CKBotThread(Thread):
 			if self._stop.isSet():
 				break
 			else:
-				#self.lock.acquire()
+				self.lock.acquire()
 				self.runtime.run_once()
-				#self.lock.release()
+				self.lock.release()
 
+	# Wrapper function for gait setting.
     def setGait(self, gait):
         self.lock.acquire()
         self.runtime.setGait(gait)
         self.lock.release()
+
+	# Wrapper function for reconfiguring.
+    def reconfigure(self, name):
+		self.lock.acquire()
+		self.runtime.reconfigure(name)
+		self.lock.release()
 
     def stop (self):
         self._stop.set()

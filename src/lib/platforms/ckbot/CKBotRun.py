@@ -31,11 +31,15 @@ class CKBotRun:
 		tempc = Cluster()
 		tempc.populate()
 		print tempc
+		self.fullcluster = tempc
 
 		# HARDCODED CONFIG DEFINITIONS:
 		# Snake configuration.
 		if self.config == "Snake":
 			self.cluster = [tempc[199], tempc[143], tempc[216], tempc[197] ]
+		# T configuration.
+		elif self.config == "Tee" or self.config == "TeeStationary":
+			self.cluster = [tempc[199], tempc[143], tempc[216], tempc[197], tempc[145], tempc[196]]
 
 		# Initialize the time
 		self.starttime = time.time()
@@ -282,6 +286,29 @@ class CKBotRun:
 		while self._running:
 			self.rungait()
 
+
+	def reconfigure(self, name):
+		"""
+		Updates the configuration of robots.
+		"""
+		
+		# Zero out all the joint angles
+		for module_idx in range(len(self.connM)):
+			self.cluster[module_idx].set_pos(0)
+
+		# Load the new robot data from the new file "name".ckbot.
+		print("==========\nReconfiguring: " + name + "\n==========")
+		robotfile = "lib/platforms/ckbot/config/" + name + ".ckbot"
+		self.loadRobotData(robotfile)
+
+		# Update the cluster information. This is again hard-coded due to module correspondence.
+		# Snake configuration.
+		tempc = self.fullcluster
+		if name == "Snake":
+			self.cluster = [ tempc[199], tempc[143], tempc[216], tempc[197] ]
+		# T configuration.
+		elif name == "Tee":
+			self.cluster = [ tempc[199], tempc[143], tempc[216], tempc[197], tempc[145], tempc[196] ]
 
 	def run_once(self):
 		"""
