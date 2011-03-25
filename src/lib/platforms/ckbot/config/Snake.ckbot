@@ -1,0 +1,50 @@
+# CKBot Simulator Robot File
+# 4-Module Turning-Head Snake
+
+ConfigName:
+Snake
+
+ConnMatrix:
+0 7 0 0
+1 0 7 0
+0 1 0 7
+0 0 4 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0.0 0.5 0.0
+
+# This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
+RelativeRotation:
+-90 x
+-90 y
+
+# This represents the forward vector in robot coordinates.
+ForwardVector:
++ y
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+# This is a PERIODIC gait: First row is amplitudes, second row is frequency (in rad/s) and third row is phase (in 100*degrees)
+Gaits:
+Gain 1.8
+Type Periodic
+
+# Gait 1 -- Move Forward Without Turning
+Gait 1
+3000 3000 3000 0
+25 25 25 0
+0 -9000 -18000 0
+
+# Gait 2 -- Turn Left
+Gait 2
+2000 2000 2000 3500
+20 20 20 20 
+0 -4500 -9000 4500
+
+# Gait 3 -- Turn Right
+Gait 3
+2000 2000 3000 -3500
+20 20 20 20 
+0 -4500 -9000 4500
+
