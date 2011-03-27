@@ -183,11 +183,17 @@ class Project:
         # Figure out where we should be looking for files, based on the spec file name & location
         self.project_root = os.path.abspath(os.path.dirname(spec_file))
         self.project_basename, ext = os.path.splitext(os.path.basename(spec_file)) 
-        self.ltlmop_root = os.path.abspath(os.path.dirname(sys.argv[0]))
         
-        # Handle the case where we are being called by a subprogram inside the lib/ directory
-        if os.path.basename(self.ltlmop_root) == "lib":
-            self.ltlmop_root = os.path.dirname(self.ltlmop_root)
+        # Climb the tree to find out where we are
+        p = os.path.abspath(sys.argv[0])
+        t = ""
+        while t != "src":
+            (p, t) = os.path.split(p)
+            if p == "":
+                print "I have no idea where I am; this is ridiculous"
+                sys.exit(1)
+
+        self.ltlmop_root = os.path.join(p,"src")
 
         ### Load in the specification file
         if not self.silent: print "Loading specification file %s..." % spec_file
@@ -248,7 +254,6 @@ class Project:
 
     def getBackgroundImagePath(self):
         """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
-        # TODO: Use Thumbnail property in regions file?
         return self.rfi.thumb
         #return self.getFilenamePrefix() + "_simbg.png"
     
