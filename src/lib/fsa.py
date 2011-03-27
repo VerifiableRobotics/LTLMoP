@@ -45,7 +45,7 @@ class Automaton:
     current state of the automaton when being executed. 
     """
 
-    def __init__ (self, regions, sensor_handler, actuator_handler, motion_handler):
+    def __init__ (self, regions, region_mapping, sensor_handler, actuator_handler, motion_handler):
         """
         Creates a new automaton.
 
@@ -56,6 +56,7 @@ class Automaton:
         self.states = []    # A collection of state objects belonging to the automaton
 
         self.regions = regions
+        self.regionMapping = region_mapping
         self.num_bits = int(numpy.ceil(numpy.log2(len(regions))))  # Number of bits necessary to encode all regions
 
         # Store references to the handlers
@@ -229,6 +230,18 @@ class Automaton:
         print "Loaded %d states." % len(self.states)
         #self.dumpStates()
 
+    def getAnnotatedRegionName(self, region_num):
+        # annotate any pXXX region names with their human-friendly name
+        # convert to set to avoid infinite explosion
+        text = self.regions[region_num].name
+        for p_reg in set(re.findall(r'\b(p\d+)\b',text)):
+            for rname, subregs in self.regionMapping.iteritems():
+                if p_reg in subregs:
+                    break
+            text = re.sub(r'\b'+p_reg+r'\b', '%s (%s)' % (p_reg, rname), text)
+
+        return text
+
     def writeDot(self, filename):
         """
         Write a dot file so we can look at the automaton visually.
@@ -248,7 +261,7 @@ class Automaton:
         for state in self.states:
             FILE.write('\ts'+ state.name + ' [style=\"bold\",width=0,height=0, fontsize = 20, label=\"')
             stateRegion = self.regionFromState(state)
-            FILE.write( self.regions[stateRegion].name + ' \\n ')
+            FILE.write( self.getAnnotatedRegionName(stateRegion) + ' \\n ')
             for key in state.outputs.keys():
                 if state.outputs[key] == '1' and not re.match('^bit\d+$',key):
                     # Only propositions that are TRUE and not bitXs are written in the state
@@ -379,6 +392,7 @@ class Automaton:
         if next_states != self.last_next_states:
             # NOTE: The last_next_states comparison is also to make sure we don't
             # choose a different random next-state each time, in the case of multiple choices
+            print len(next_states)
             self.next_state = random.choice(next_states)	
             self.next_region = self.regionFromState(self.next_state)
             self.last_next_states = next_states
@@ -391,7 +405,7 @@ class Automaton:
             else:
                 ### The state changed, but the region didn't
                 self.current_state = self.next_state  # We can transition immediately
-                #print "Now in state " + self.current_state.name
+                print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
 
                 # Actuate anything that might be necessary
                 self.updateOutputs(self.next_state)
@@ -413,7 +427,7 @@ class Automaton:
             print "Crossed border from %s to %s!" % (self.regions[self.current_region].name, self.regions[self.next_region].name)
             self.current_state = self.next_state   
             self.current_region = self.next_region
-            #print "Now in state " + self.current_state.name
+            print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
 
             # Actuate anything that might be necessary
             self.updateOutputs(self.next_state)

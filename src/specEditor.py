@@ -1678,7 +1678,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Generating PDF file from automaton...\n", "BLUE")
 
-        aut = fsa.Automaton(self.parser.proj.rfi.regions, None, None, None) 
+        aut = fsa.Automaton(self.parser.proj.rfi.regions, self.parser.proj.regionMapping, None, None, None) 
 
         aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
         aut.writeDot(fileNamePrefix+".dot")
@@ -1719,7 +1719,7 @@ class SpecEditorFrame(wx.Frame):
           if "REALIZABLE" in dline:   
             realizable = True            
             self.appendLog("Automaton successfully synthesized.\n", "GREEN")
-            aut = fsa.Automaton(self.parser.proj.rfi.regions, None, None, None) 
+            aut = fsa.Automaton(self.parser.proj.rfi.regions, self.parser.proj.regionMapping, None, None, None) 
             aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
             aut.writeDot(fileNamePrefix+".dot")
             f = open(fileNamePrefix+".dot","r")
