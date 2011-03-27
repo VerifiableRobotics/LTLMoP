@@ -429,6 +429,86 @@ public class GROneGame {
 		// return null; // res;
 	}
 
+	public void generate_safety_aut(BDD ini) {
+		Stack<BDD> st_stack = new Stack<BDD>();
+		Stack<RawState> aut = new Stack<RawState>();
+
+        BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
+
+        while (ini_iterator.hasNext()) {
+
+            BDD this_ini = (BDD) ini_iterator.next();
+
+            RawState test_st = new RawState(aut.size(), this_ini, 0);
+
+            int idx = -1;
+            for (RawState cmp_st : aut) {
+                if (cmp_st.equals(test_st, false)) { // search ignoring rank
+                    idx = aut.indexOf(cmp_st);
+                    break;
+                }
+            }
+
+            if (idx != -1) {
+                // This initial state is already in the automaton
+                continue;
+            }
+
+            // Otherwise, we need to attach this initial state to the automaton
+
+            st_stack.push(this_ini);
+
+            // iterating over the stacks.
+            while (!st_stack.isEmpty()) {
+                // making a new entry.
+                BDD p_st = st_stack.pop();
+
+                /* Create a new automaton state for our current state 
+                  (or use a matching one if it already exists) */
+                RawState new_state = new RawState(aut.size(), p_st, 0);
+                int nidx = aut.indexOf(new_state);
+                if (nidx == -1) {
+                    aut.push(new_state);
+                } else {
+                    new_state = aut.elementAt(nidx);
+                }
+
+                BDD next_op = Env.unprime(sys.trans().and(p_st).exist(env.moduleUnprimeVars().union(sys.moduleUnprimeVars())));
+
+                BDDIterator next_iterator = next_op.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
+                while (next_iterator.hasNext()) {
+
+                    BDD this_next = (BDD) next_iterator.next();
+                    //this_next.printSet();
+                    RawState gsucc = new RawState(aut.size(), this_next, 0);
+                    idx = aut.indexOf(gsucc); // the equals doesn't consider
+                                              // the id number.
+                    if (idx == -1) {
+                        st_stack.push(this_next);
+                        aut.add(gsucc);
+                        idx = aut.indexOf(gsucc);
+                    }
+                    new_state.add_succ(aut.elementAt(idx));
+                }
+
+                //System.out.print("------------\n");
+            }
+        }
+
+        /* Print output */
+
+		String res = "";
+		for (RawState state : aut) {
+            if (state.get_rank() != -1) {
+                res += state + "\n";
+            }
+		}
+
+		System.out.print("\n\n");
+		System.out.print(res);
+		// return null; // res;
+	}
+
 	@SuppressWarnings("unused")
 	private class RawState {
 		private int id;

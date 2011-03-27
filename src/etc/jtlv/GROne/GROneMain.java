@@ -60,7 +60,24 @@ public class GROneMain {
 		long t1 = (System.currentTimeMillis() - time);
 		System.out.println("Games time: " + t1);
 		
-		
+        // ** Export safety automaton
+
+        if (args.length == 3 && args[2].equals("--safety")) {
+            System.out.println("Exporting safety constraints automaton...");
+            PrintStream orig_out = System.out;
+            String safety_filename = args[1].replaceAll("\\.[^\\.]+$","_safety.aut");
+            System.setOut(new PrintStream(new File(safety_filename))); // writing the output to a file
+            g.generate_safety_aut(g.getEnvPlayer().initial().and(
+                                  g.getSysPlayer().initial()));
+            System.setOut(orig_out); // restore STDOUT
+            //return;
+        }
+
+        // ** Analysis calls
+
+		GROneDebug.analyze(env,sys);
+		GROneDebug.justiceChecks(env,sys);
+
 		String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
 		GROneDebug.analyze(env,sys,debugFile);
 
