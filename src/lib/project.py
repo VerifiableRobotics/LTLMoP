@@ -243,6 +243,9 @@ class Project:
             act, val = line.split(',')
             if int(val) == 1: 
                 self.all_actuators.append(act)
+
+        # Figure out what the custom propositions are
+        self.all_customs = self.spec_data['SETTINGS']['Customs']
     
     def getFilenamePrefix(self):
         """ Returns the full path of most project files, minus the extension.
