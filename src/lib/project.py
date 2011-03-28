@@ -136,7 +136,8 @@ class Project:
         try:
             regf_name = self.spec_data['SETTINGS']['RegionFile'][0]
             if decomposed:
-                regf_name = regf_name.split(".")[0] + "_decomposed.regions"
+                #regf_name = regf_name.split(".")[0] + "_decomposed.regions"
+                regf_name = self.getFilenamePrefix() + "_decomposed.regions"
         except IndexError, KeyError:
             if not self.silent: print "WARNING: Region file undefined"        
             return
