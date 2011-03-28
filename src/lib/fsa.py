@@ -80,11 +80,14 @@ class Automaton:
         print "ERROR: Can't find state with name %s!" % (name)
         return None
 
-    def dumpStates(self):
+    def dumpStates(self, range=None):
         """
         Print out the contents of the automaton in a human-readable format
         """
-        for state in self.states:
+        if range is None:
+            range = self.states
+
+        for state in range:
             print "Name: ", state.name
             print "Inputs: "
             for key, val in state.inputs.iteritems():
@@ -96,7 +99,7 @@ class Automaton:
             for trans in state.transitions:
                 print trans.name
 
-    def updateOutputs(self, state):
+    def updateOutputs(self):
         """
         Update the values of current outputs in our execution environment to reflect the output
         proposition values associated with the given state
@@ -108,7 +111,7 @@ class Automaton:
 
             new_val = (output_val == "1")
             
-            if new_val != self.current_outputs[key]:
+            if key not in self.current_outputs or new_val != self.current_outputs[key]:
                 # The state of this output proposition has changed!
 
                 print "Output proposition \"%s\" is now %s!" % (key, str(new_val))
@@ -125,11 +128,14 @@ class Automaton:
         Given a state object, look at its 'bitX' outputs to determine the region encoded,
         and return the NUMBER of this region.
         """
-        region = 0
-        for bit in range(self.num_bits):
-            if (int(state.outputs["bit" + str(bit)]) == 1):
-                # bit0 is MSB
-                region += int(2**(self.num_bits-bit-1))
+        try:
+            region = 0
+            for bit in range(self.num_bits):
+                if (int(state.outputs["bit" + str(bit)]) == 1):
+                    # bit0 is MSB
+                    region += int(2**(self.num_bits-bit-1))
+        except KeyError:
+           region = None
 
         return region
 
@@ -156,7 +162,10 @@ class Automaton:
         ###################
 
         # A magical regex to slurp up a state and its information all at once
-        p = re.compile(r"State (?P<num>\d+) with rank (?P<rank>[\d-]+) -> <(?P<conds>(?:\w+:\d(?:, )?)+)>", re.IGNORECASE|re.MULTILINE)
+        p = re.compile(r"State (?P<num>\d+) with rank (?P<rank>[\d\(\),-]+) -> <(?P<conds>(?:\w+:\d(?:, )?)+)>", re.IGNORECASE|re.MULTILINE)
+        self.last_next_states = []
+        self.next_state = None
+        self.next_region = None
         m = p.finditer(fsa_description)
 
         # Now, for each state we find:
@@ -297,7 +306,7 @@ class Automaton:
         if initial:
             state_list = self.states
         else:
-            state_list = self.current_state.transitions + [self.current_state] # Allow for self-transition
+            state_list = self.current_state.transitions
 
         # Take a snapshot of our current sensor readings
         # This is so we don't risk the readings changing in the middle of our state search
@@ -317,7 +326,7 @@ class Automaton:
                     # Ignore "bitX" output propositions
                     if re.match('^bit\d+$', key): continue
 
-                    if self.current_outputs[key] != (value == "1"):
+                    if int(self.current_outputs[key]) != int(value):
                         okay = False
                         break
 
@@ -325,7 +334,7 @@ class Automaton:
 
             # Now check whether our current sensor values match those of the state
             for key, value in state.inputs.iteritems(): 
-                if sensor_state[key] != (value == "1"):                    
+                if int(sensor_state[key]) != int(value):                    
                     okay = False
                     break
 
@@ -392,13 +401,12 @@ class Automaton:
         if next_states != self.last_next_states:
             # NOTE: The last_next_states comparison is also to make sure we don't
             # choose a different random next-state each time, in the case of multiple choices
-            print len(next_states)
             self.next_state = random.choice(next_states)	
             self.next_region = self.regionFromState(self.next_state)
             self.last_next_states = next_states
 
             # See what we, as the system, need to do to get to this new state
-            if self.next_region != self.current_region:
+            if self.next_region is not None and (self.next_region != self.current_region):
                 ### We're going to a new region
                 print "Heading to region %s..." % self.regions[self.next_region].name
                 # In this case, we can't move into the next state until we've physically reached the new region
@@ -408,7 +416,7 @@ class Automaton:
                 print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
 
                 # Actuate anything that might be necessary
-                self.updateOutputs(self.next_state)
+                self.updateOutputs()
 
         # Move one step towards the next region (or stay in the same region)
         # TODO: Use the "last" controllers?
@@ -424,10 +432,11 @@ class Automaton:
             #            return i
             #    return -1
 
-            print "Crossed border from %s to %s!" % (self.regions[self.current_region].name, self.regions[self.next_region].name)
+            if self.next_region is not None:
+                print "Crossed border from %s to %s!" % (self.regions[self.current_region].name, self.regions[self.next_region].name)
             self.current_state = self.next_state   
             self.current_region = self.next_region
             print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
 
             # Actuate anything that might be necessary
-            self.updateOutputs(self.next_state)
+            self.updateOutputs()
