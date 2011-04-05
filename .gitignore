@@ -13,3 +13,8 @@ envBugs.txt
 sysBugs.txt
 .project
 .pydevproject
+*.anzu
+*.debug
+*.dot
+*.rat
+*.class
