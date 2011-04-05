@@ -4,7 +4,7 @@ Cornell ASL Lab
 InitializationHandler:
 
 PoseHandler:
-lib.handlers.pose.orcaPose
+lib.handlers.pose.viconPose
 
 SensorHandler:
 lib.handlers.sensor.colorBallSensor
@@ -15,4 +15,10 @@ lib.handlers.actuator.gimbalActuator
 
 LocomotionCommandHandler:
 lib.handlers.locomotionCommand.orcaLocomotionCommand
+
+ViconHost:
+10.0.0.102
+
+ViconPort:
+800
 

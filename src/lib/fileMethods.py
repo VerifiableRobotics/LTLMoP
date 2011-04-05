@@ -54,7 +54,7 @@ def readFromFile(fileName):
     p_sec = re.compile(r"^=+\s*(?P<title>[^=]+)=+")
 
     # A regex to search for headers
-    p_head = re.compile(r"^(?P<key>\w+):")
+    p_head = re.compile(r"^(?P<key>\w+):\s*(?:#.*)?$")
 
     title = ''
     key = None
