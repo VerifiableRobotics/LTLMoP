@@ -12,7 +12,7 @@
 import re, sys, os, subprocess, time, copy
 import wxversion
 #wxversion.select('2.8')
-import wx, wx.richtext
+import wx, wx.richtext, wx.stc
 from lib.regions import *
 from lib.createJTLVinput import createLTLfile, createSMVfile
 from lib.parseEnglishToLTL import writeSpec
@@ -27,9 +27,6 @@ import lib.recolorLTL as recolorLTL
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
 #   The .wxg file is located in the dev/ directory.   #
 #######################################################
-
-#### CAVEAT TO THE ABOVE: wxglade does not support wx.WANTS_CHARS, so you need to
-#### to manually append this to the style of text_ctrl_spec after code regeneration
 
 class simSetupDialog(wx.Dialog):
     """
@@ -621,7 +618,7 @@ class MapDialog(wx.Dialog):
         x, y = self.panel_2.CalcUnscrolledPosition(event.GetX(), event.GetY())
         for region in self.parent.rfi.regions:
             if region.objectContainsPoint(x, y):
-                self.parent.text_ctrl_spec.WriteText(region.name)
+                self.parent.text_ctrl_spec.AppendText(region.name)
                 #self.EndModal(1)
                 self.Close()
                 break 
@@ -694,7 +691,6 @@ class SpecEditorFrame(wx.Frame):
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Help")
         self.SetMenuBar(self.frame_1_menubar)
         # Menu Bar end
-        self.text_ctrl_spec = wx.richtext.RichTextCtrl(self.window_1_pane_1, -1, "", style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.WANTS_CHARS)
         self.label_1 = wx.StaticText(self.panel_1, -1, "Regions:")
         self.list_box_regions = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
         self.button_map = wx.Button(self.panel_1, -1, "Select from Map...")
@@ -748,6 +744,20 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelToggle, self.checkbox_regionlabel)
         # end wxGlade
 
+		# Create the StyledTextControl for the specification area manually, since wxGlade doesn't support it
+        self.text_ctrl_spec = wx.stc.StyledTextCtrl(self.window_1_pane_1, -1, style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.WANTS_CHARS)
+        self.text_ctrl_spec.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
+        self.window_1_pane_1.GetSizer().Insert(0, self.text_ctrl_spec, 2, wx.EXPAND, 0)
+        self.Layout()
+
+        self.text_ctrl_spec.SetMarginWidth(0, 40)
+        self.text_ctrl_spec.SetMarginType(0, wx.stc.STC_MARGIN_NUMBER)
+        self.text_ctrl_spec.SetMarginType(1, wx.stc.STC_MARGIN_SYMBOL)
+        global MARKER_SYS, MARKER_ENV
+        MARKER_SYS, MARKER_ENV = range(2)
+        self.text_ctrl_spec.MarkerDefine(MARKER_SYS,wx.stc.STC_MARK_ARROW,"white","red") 
+        self.text_ctrl_spec.MarkerDefine(MARKER_ENV,wx.stc.STC_MARK_ARROW,"white","blue") 
+
         # Set up locative phrase map
         self.panel_locmap.SetBackgroundColour(wx.WHITE)   
         self.panel_locmap.Bind(wx.EVT_PAINT, self.drawLocMap)
@@ -781,7 +791,6 @@ class SpecEditorFrame(wx.Frame):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
         self.SetSize((900, 700))
-        self.text_ctrl_spec.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.button_map.Enable(False)
         self.list_box_sensors.SetMinSize((123, 75))
         self.list_box_actions.SetMinSize((123, 75))
@@ -803,7 +812,6 @@ class SpecEditorFrame(wx.Frame):
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_4.Add(self.text_ctrl_spec, 2, wx.EXPAND, 0)
         sizer_5.Add(self.label_1, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
         sizer_5.Add(self.list_box_regions, 2, wx.LEFT|wx.EXPAND, 4)
         sizer_7.Add(self.button_map, 0, wx.TOP, 5)
@@ -849,7 +857,7 @@ class SpecEditorFrame(wx.Frame):
         self.Layout()
         self.Centre()
         # end wxGlade
-        
+
         # Make it so that the log window doesn't change height when the window is resized
         # NOTE: May not work on older versions of wxWidgets
         self.window_1.SetSashGravity(1.0)
@@ -876,7 +884,7 @@ class SpecEditorFrame(wx.Frame):
            and not caller.IsChecked(caller.GetSelection()):
             # Only allow adding of enabled propositions
             return
-        self.text_ctrl_spec.WriteText(caller.GetStringSelection())
+        self.text_ctrl_spec.AppendText(caller.GetStringSelection())
 
         event.Skip()
 
@@ -1132,7 +1140,7 @@ class SpecEditorFrame(wx.Frame):
         else:
             regionMappingData='Null=Null'
         
-        view = self.text_ctrl_spec.GetValue()
+        view = self.text_ctrl_spec.GetText()
         specOnly = ""
         for line in view:
             if (line == "RESULT") : break
@@ -1225,7 +1233,7 @@ class SpecEditorFrame(wx.Frame):
                             "YOffset": 0.0,
                             "InitialTruths": [],
                             "InitialRegion": 0 }]
-        self.text_ctrl_spec.SetValue("")
+        self.text_ctrl_spec.SetText("")
 
         # Null the subprocess values
         self.subprocess[PROCESS_REGED] = None
@@ -1246,26 +1254,28 @@ class SpecEditorFrame(wx.Frame):
 
         for name, content in data.iteritems():
             if name == 'SPECIFICATION' and 'Spec' in content and len(content['Spec']) > 0:
-                for line in content['Spec']: 
+                for i, line in enumerate(content['Spec']): 
                     if recolor == 1:                   
-                        if (line.strip() in recolorLTL.readFromColFile("sysBugs.txt")):
+                        if (line != "" and line.strip() in recolorLTL.readFromColFile("sysBugs.txt")):
                             line = line + "\n"
-                            self.text_ctrl_spec.BeginTextColour(sysColor)
-                            self.text_ctrl_spec.WriteText(line)
-                            self.text_ctrl_spec.EndTextColour()   
-                        elif (line.strip() in recolorLTL.readFromColFile("envBugs.txt")):
+                            #self.text_ctrl_spec.BeginTextColour(sysColor)
+                            self.text_ctrl_spec.AppendText(line)
+                            self.text_ctrl_spec.MarkerAdd(i, MARKER_SYS)
+                            #self.text_ctrl_spec.EndTextColour()   
+                        elif (line != "" and line.strip() in recolorLTL.readFromColFile("envBugs.txt")):
                             line = line + "\n"
-                            self.text_ctrl_spec.BeginTextColour(envColor)
-                            self.text_ctrl_spec.WriteText(line)
-                            self.text_ctrl_spec.EndTextColour()
+                            #self.text_ctrl_spec.BeginTextColour(envColor)
+                            self.text_ctrl_spec.AppendText(line)
+                            self.text_ctrl_spec.MarkerAdd(i, MARKER_ENV)
+                            #self.text_ctrl_spec.EndTextColour()
                         else:  
-                            self.text_ctrl_spec.BeginTextColour(wx.Colour(0,0,0))
+                            #self.text_ctrl_spec.BeginTextColour(wx.Colour(0,0,0))
                             line = line + "\n"
-                            self.text_ctrl_spec.WriteText(line)                                                 
+                            self.text_ctrl_spec.AppendText(line)                                                 
                     else: 
-                        self.text_ctrl_spec.BeginTextColour(wx.Colour(0,0,0))
+                        #self.text_ctrl_spec.BeginTextColour(wx.Colour(0,0,0))
                         line = line + "\n"
-                        self.text_ctrl_spec.WriteText(line)
+                        self.text_ctrl_spec.AppendText(line)
 
             elif name =='SETTINGS':
                 if 'RegionFile' in content and len(content['RegionFile']) > 0:
@@ -1320,6 +1330,8 @@ class SpecEditorFrame(wx.Frame):
         self.fileName = fileName
         self.projectName = os.path.splitext(title)[0]
         self.projectPath = filePath
+
+        self.text_ctrl_spec.EmptyUndoBuffer()
     
     def doClose(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -1368,19 +1380,19 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuCut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        if self.text_ctrl_spec.CanCut():
-            self.text_ctrl_spec.Cut()
+        #if self.text_ctrl_spec.CanCut():
+        self.text_ctrl_spec.Cut()
         event.Skip()
 
     def onMenuCopy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        if self.text_ctrl_spec.CanCopy():
-            self.text_ctrl_spec.Copy()
+        #if self.text_ctrl_spec.CanCopy():
+        self.text_ctrl_spec.Copy()
         event.Skip()
 
     def onMenuPaste(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # FIXME: On Mac, this double pastes-- check on Linux
-        #if self.text_ctrl_spec.CanPaste():
-        #    self.text_ctrl_spec.Paste()
+        if self.text_ctrl_spec.CanPaste():
+            self.text_ctrl_spec.Paste()
         event.Skip()
 
     def onMenuCompile(self, event): # wxGlade: SpecEditorFrame.<event_handler>
@@ -1391,7 +1403,7 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
     
-        if self.text_ctrl_spec.GetValue() == "":
+        if self.text_ctrl_spec.GetText() == "":
             wx.MessageBox("Please write a specification before compiling.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -1430,7 +1442,7 @@ class SpecEditorFrame(wx.Frame):
         rfi = self.parser.proj.rfi
         
         # substitute the regions name in specs
-        text = self.text_ctrl_spec.GetValue()
+        text = self.text_ctrl_spec.GetText()
         for m in re.finditer(r'near (?P<rA>\w+)', text):
             text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(self.parser.newPolysMap['near$'+m.group('rA')+'$'+str(50)])+")", text)
         for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
@@ -1686,7 +1698,7 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
     
-        if self.text_ctrl_spec.GetValue() == "":
+        if self.text_ctrl_spec.GetText() == "":
             wx.MessageBox("Please write a specification before analyzing.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -1725,7 +1737,7 @@ class SpecEditorFrame(wx.Frame):
         rfi = self.parser.proj.rfi
         
         # substitute the regions name in specs
-        text = self.text_ctrl_spec.GetValue()
+        text = self.text_ctrl_spec.GetText()
         for m in re.finditer(r'near (?P<rA>\w+)', text):
             text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(self.parser.newPolysMap['near$'+m.group('rA')+'$'+str(50)])+")", text)
         for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
@@ -2060,7 +2072,7 @@ class SpecEditorFrame(wx.Frame):
         robotPropList.extend(self.list_box_customs.GetItems())
                             
                      
-        recolorLTL.badSpecs(text, self.text_ctrl_spec.GetValue(), sensorList, regionList, robotPropList, sysBugs, envBugs, sysR, envR, sysU, envU)               
+        recolorLTL.badSpecs(text, self.text_ctrl_spec.GetText(), sensorList, regionList, robotPropList, sysBugs, envBugs, sysR, envR, sysU, envU)               
               
                
         if sysColor == 0: s = wx.Colour(0,0,255)
