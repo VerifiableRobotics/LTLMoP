@@ -61,7 +61,7 @@ public class GROneMain {
 		System.out.println("Games time: " + t1);
 		
         // ** Export safety automaton
-
+		
         if (args.length == 3 && args[2].equals("--safety")) {
             System.out.println("Exporting safety constraints automaton...");
             PrintStream orig_out = System.out;
@@ -74,9 +74,6 @@ public class GROneMain {
         }
 
         // ** Analysis calls
-
-		GROneDebug.analyze(env,sys);
-		GROneDebug.justiceChecks(env,sys);
 
 		String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
 		GROneDebug.analyze(env,sys,debugFile);
@@ -91,6 +88,36 @@ public class GROneMain {
 		 System.out.println("The env player can win from states:");
 		 System.out.println("\t" + counter_exmple);
 		 
+		 
+		 
+		 
+		 	
+		 System.out.println("==== Computing counterstrategy =========");
+		 System.out.println("-----------------------------------------");
+		 PrintStream orig_out = System.out;
+		 System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
+		 g.printLosingStrategy(g.envWinningStates().and(g.getEnvPlayer().initial().and(
+	             g.getSysPlayer().initial())));
+		 System.setOut(orig_out); // restore STDOUT
+		 System.out.print("-----------------------------------------\n");
+		 long t2 = (System.currentTimeMillis() - time);
+		 System.out.println("Strategy time: " + t2);
+		 System.out.println("===== Done ==============================");
+			
+		
+	/*	 System.out.println("==== Computing counterstrategy =========");
+		 System.out.println("-----------------------------------------");
+		 orig_out = System.out;
+		 System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
+		 g.printLosingStrategy(g.envWinningStates().and(g.getEnvPlayer().initial().and(
+		             g.getSysPlayer().initial())));
+		 System.setOut(orig_out); // restore STDOUT
+		 System.out.print("-----------------------------------------\n");
+		 t2 = (System.currentTimeMillis() - time);
+		 System.out.println("Strategy time: " + t2);
+		 System.out.println("===== Done ==============================");
+	*/			
+			
          return;     
 		 } 
 

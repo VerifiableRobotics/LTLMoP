@@ -11,6 +11,10 @@ import java.io.FileWriter;
 import java.io.BufferedWriter;
 import edu.wis.jtlv.lib.FixPoint;
 import edu.wis.jtlv.old_lib.games.GameException;
+import edu.wis.jtlv.env.spec.SpecBDD;
+import edu.wis.jtlv.lib.AlgRunnerThread;
+import edu.wis.jtlv.lib.AlgResultI;
+import edu.wis.jtlv.lib.mc.tl.LTLModelCheckAlg;
 
 
 
@@ -83,9 +87,23 @@ public class GROneDebug {
 		 sysUnreal = cox.id().and(all_init);
 		 
 		 
+		 /*String valid = "";
 		 
-		 	
-		 	
+		 try{			 
+			 LTLModelCheckAlg alg = new LTLModelCheckAlg(sys, new SpecBDD(Env.TRUE()));
+			 //AlgRunnerThread thread = new AlgRunnerThread(alg);
+			 //debugInfo+="*** Property is VALID ***";
+			 //AlgResultI res1 = alg.preAlgorithm();
+			 //debugInfo+=res1.resultString();//alg.preAlgorithm();
+			 AlgResultI res = alg.doAlgorithm();			 
+			 debugInfo+=res.resultString();//alg.preAlgorithm();
+			 //debugInfo+="grr\n";
+			 //debugInfo+=thread.getPreResult();
+		 }catch (Exception e){//Catch exception if any
+		      System.err.println("Error: " + e.getMessage());
+		      debugInfo += e.getMessage();
+		 }*/
+
 		 if (sys.initial().isZero()) {
 			 //debugInfo += "Unsat initial conditions." + "\n";
 			 debugInfo += "SysInit UNSAT" + "\n";
@@ -96,6 +114,14 @@ public class GROneDebug {
 			 debugInfo += "SysTrans UNSAT" + "\n";
 			 explainSys = 1;
 		 } else {
+			// String valid = (new LTLValidAlg(sys, (new SpecBDD(Env.TRUE())))).doAlgorithm().resultString();
+			 //debugInfo += "Unsat transitions." + "\n";
+			 //if (valid.equals()) {
+			 //debugInfo += valid;
+			 //explainSys = 1;
+			 //}
+		  
+		 //} else {
 		 	 
 			 for (int i = 0; i < sys.justiceNum(); i++) {
 				 if (sys.justiceAt(i).isZero()) {
