@@ -27,6 +27,10 @@ class initHandler:
             self.memProxy = ALProxy('ALMemory',naoIP,naoPort)
             self.ttsProxy = ALProxy('ALTextToSpeech',naoIP,naoPort)
             self.ledProxy = ALProxy('ALLeds',naoIP,naoPort)
+            self.audioProxy = ALProxy('ALAudioPlayer',naoIP,naoPort)
+            self.srProxy = ALProxy('ALSpeechRecognition',naoIP,naoPort)
+            self.faceProxy = ALProxy('ALFaceDetection',naoIP,naoPort)
+            self.behaviorProxy = ALProxy('ALBehaviorManager',naoIP,naoPort)
         except RuntimeError:
             print "(INIT) ERROR: Cannot connect to one or more of module proxies."
             print "Make sure the Nao is turned on and connected to the network."
@@ -34,4 +38,6 @@ class initHandler:
         
     def getSharedData(self):
         # Return dictionary of module proxies for other handlers to use
-        return {'mov':self.movProxy,'mem':self.memProxy,'tts':self.ttsProxy,'led':self.ledProxy}
+        return {'mov':self.movProxy,'mem':self.memProxy,'tts':self.ttsProxy,
+                'led':self.ledProxy,'aud':self.audioProxy,'stt':self.srProxy,
+                'face':self.faceProxy, 'behavior':self.behaviorProxy}

@@ -62,6 +62,7 @@ class ListeningThread(Thread):
         
     def run (self):
         # Set the socket parameters
+        #host = "10.0.0.147"
         host = "localhost"
         bufsize = 48
         addr = (host, self.port)

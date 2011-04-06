@@ -1,0 +1,36 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+boundary	5
+Parking	1
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+boundary	poly	12	15	1264	622	0	0	0	0	367	0	0	1264	0	1264	622	271	622	0	622
+Tree	poly	69	69	86	78	0	255	0	26	0	58	0	86	22	86	53	60	78	25	78	0	54	0	27
+Danger	poly	393	454	168	173	255	0	0	4	37	86	0	166	41	122	90	168	136	86	173	0	140	50	88
+SchoolWall	poly	544	107	716	516	255	0	0	22	21	359	21	359	229	398	229	396	20	607	20	607	152	698	152	698	229	607	229	535	229	535	334	695	334	695	493	392	493	392	334	353	332	355	490	197	493	197	332	174	332	174	516	716	516	716	128	632	128	632	0	0	0	0	254	200	254	200	229	22	229
+Classroom1	poly	940	127	211	209	255	255	0	0	0	211	0	211	132	211	209	139	209	124	209	2	209
+Parking	rect	12	382	271	255	255	0	255
+Office	rect	741	439	156	161	0	0	255
+Gym	poly	566	128	337	208	255	255	0	0	0	337	0	337	208	178	208	0	208
+Classroom2	poly	936	441	303	159	255	255	0	0	0	143	0	303	0	303	159	0	159
+Closet	rect	1151	259	91	77	0	0	255
+Wall	rect	41	26	137	12	255	0	0
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+hideandseek_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+boundary	Parking	12	382	12	637	12	637	283	637
+SchoolWall	Classroom1	940	127	1151	127	1151	127	1151	259	940	127	942	336	1079	336	1151	336
+SchoolWall	Office	741	439	741	600
+SchoolWall	Gym	566	336	744	336	566	128	903	128	566	128	566	336	903	128	903	336
+SchoolWall	Classroom2	1239	441	1239	600	1079	441	1239	441	936	441	936	600	936	600	1239	600
+SchoolWall	Closet	1242	259	1242	336	1151	336	1242	336	1151	259	1242	259
+Classroom1	Closet	1151	259	1151	336
+
