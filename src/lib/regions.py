@@ -16,6 +16,7 @@
 # TODO: remove wx dependency!!
 # TODO: store regions with absolute coordinates, not x/y-pos + relative!!
 
+import os
 import wx   # Unfortunately necessary for wx.Point(), wx.Size(), and color stuff
 import fileMethods
 import re, random, math
@@ -261,6 +262,9 @@ class RegionFileInterface:
         """
         For file format information, refer to writeFile() above.
         """
+
+        if not os.path.exists(filename):
+            return False
 
         data = fileMethods.readFromFile(filename)
 

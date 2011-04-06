@@ -242,7 +242,7 @@ class Automaton:
         #FILE.write('\tratio = 0.75;\n')
         FILE.write('\tsize = "8.5,11";\n')
         FILE.write('\toverlap = false;\n')
-        FILE.write('\tlayout = hierarchical;\n')
+        #FILE.write('\tlayout = hierarchical;\n')
 
         # Write the states with region and outputs that are true
         for state in self.states:

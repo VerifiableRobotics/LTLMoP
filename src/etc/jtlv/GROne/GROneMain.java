@@ -6,6 +6,8 @@ import edu.wis.jtlv.env.module.SMVModule;
 import edu.wis.jtlv.env.spec.Spec;
 import java.io.File;
 import java.io.PrintStream;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import edu.wis.jtlv.lib.FixPoint;
 
 public class GROneMain {
@@ -58,8 +60,9 @@ public class GROneMain {
 		long t1 = (System.currentTimeMillis() - time);
 		System.out.println("Games time: " + t1);
 		
-		GROneDebug.analyze(env,sys);
-		GROneDebug.justiceChecks(env,sys);
+		
+		String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
+		GROneDebug.analyze(env,sys,debugFile);
 
 		 ///////////////////////////////////////////////
 		 ///////////////////////////////////////////////
@@ -113,6 +116,7 @@ public class GROneMain {
 		// otherwise we can synthesis
 		
 		System.out.println("Specification is realizable...");
+		
 		System.out.println("==== Building an implementation =========");
 		System.out.println("-----------------------------------------");
 		PrintStream orig_out = System.out;

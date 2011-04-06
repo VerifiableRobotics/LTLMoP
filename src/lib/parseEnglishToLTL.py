@@ -33,6 +33,14 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     spec['SysTrans']= ''
     spec['SysGoals']= ''
 
+
+    map = {}
+    map['EnvInit']= []
+    map['EnvTrans']= []
+    map['EnvGoals']= []
+    map['SysInit']= []    
+    map['SysTrans']= []
+    map['SysGoals']= []
     # List of all robot prpositions
     allRobotProp = regionList + robotPropList
 
@@ -70,7 +78,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
     StayFormula = createStayFormula(numBits)
 
-    lineInd = 0
+    lineInd = -1
 
     # iterate over the lines in the file
     for line in text.split("\n"):
@@ -135,6 +143,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 LTLActSubformula = parseInit(ActInit,robotPropList,lineInd)
             
             spec['SysInit']= spec['SysInit'] + LTLRegSubformula + LTLActSubformula
+            map['SysInit'].append(lineInd)
+
 
                 
 
@@ -185,6 +195,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             CondFormulaInfo = parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,lineInd)
 
             spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
+            
+           
+            map[CondFormulaInfo['type']].append(lineInd)
+
 
 
         # An event definition
@@ -199,6 +213,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             EventFormula = parseEvent(EventProp,SetEvent,ResetEvent,sensorList,allRobotProp,lineInd)
 
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
+            map['SysTrans'].append(lineInd)
+
 
 
         # A safety requirement
@@ -210,6 +226,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             formulaInfo = parseSafety(SafetyReq,sensorList,allRobotProp,lineInd)
 
             spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+            map[formulaInfo['type']].append(lineInd)
 
             
         # A 'Go to and stay there' requirement
@@ -238,6 +255,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             # Add the liveness ('go to') to the spec
             spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+            map[formulaInfo['type']].append(lineInd)
+
 
             # add the 'stay there' as a condition (if R then stay there)
             regCond = formulaInfo['formula'].replace('\t\t\t []<>','')
@@ -245,6 +264,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             condStayFormula = '\t\t\t [](' + regCond + ' -> ' + StayFormula + ') & \n'
 
             spec['SysTrans'] = spec['SysTrans'] + condStayFormula
+            map['SysTrans'].append(lineInd)
+
 
 
         # A liveness requirement
@@ -256,7 +277,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             formulaInfo = parseLiveness(LivenessReq,sensorList,allRobotProp,lineInd)
 
             spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
-
+            map[formulaInfo['type']].append(lineInd)
         # Cannot parse
         else:
             print 'ERROR(16): Could not parse the sentence in line '+ str(lineInd)+' :'
@@ -279,6 +300,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
    
     if spec['EnvGoals'] == '':
         spec['EnvGoals'] = '\t\t\t[]<>(TRUE)'
+        
     else:
         # remove last &
         spec['EnvGoals'] = re.sub('& \n$','\n',spec['EnvGoals'])
@@ -316,7 +338,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         print 'They should be removed from the proposition lists\n'
     
 
-    return spec
+    return spec,map
 
 
 def parseInit(sentence,PropList,lineInd):

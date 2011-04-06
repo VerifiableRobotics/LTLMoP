@@ -6,6 +6,9 @@ import edu.wis.jtlv.env.module.SMVModule;
 import edu.wis.jtlv.env.spec.Spec;
 import java.io.File;
 import java.io.PrintStream;
+import java.io.OutputStream;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 import edu.wis.jtlv.lib.FixPoint;
 import edu.wis.jtlv.old_lib.games.GameException;
 
@@ -48,111 +51,166 @@ public class GROneDebug {
 		GROneParser.addReactiveBehavior(sys, sys_conjuncts);
 		//GROneParser.addPureReactiveBehavior(sys, sys_conjuncts);
 		
-		analyze(env, sys);
-		justiceChecks(env, sys);
+		analyze(env, sys, "default.txt");
+		
 	}
 	
-	public static void analyze(SMVModule env, SMVModule sys) {
-		//The output here should really go into a file, to be read from specEditor.py -- Vasu
+	public static void analyze(SMVModule env, SMVModule sys, String filename) {
+		int explainSys=0, explainEnv = 0; //keep track of explanations ot avoid redundancy
 		
 		BDD sys_init = sys.initial();
 		BDD env_init = env.initial();
 		BDD all_init = sys_init.and(env_init);	 
 		 
-		BDD init_cox,init_cox_Rev, init_sl;
+		BDD envUnreal, sysUnreal;
 
-		FixPoint<BDD> iterSl;
+		FixPoint<BDD> iter;
+		
+		String debugInfo = "";
 		
 		
-		 init_sl = Env.FALSE();
-		 for (iterSl = new FixPoint<BDD>(); iterSl.advance(init_sl);) {			 
-			 init_sl = init_sl.or(env.yieldStates(sys, init_sl));
+		 BDD cox = Env.FALSE();
+		 for (iter = new FixPoint<BDD>(); iter.advance(cox);) {			 
+			 cox = cox.or(env.yieldStates(sys, cox));
 		 }
-		 init_cox = init_sl.id().and(all_init);
+		 envUnreal = cox.id().and(all_init);
 
-		 init_sl = Env.FALSE();
-		 for (iterSl = new FixPoint<BDD>(); iterSl.advance(init_sl);) {
-			 init_sl = (init_sl).or((env.yieldStates(sys, init_sl.not())).not());
-		 }
+		 cox = Env.FALSE();
+		 for (iter = new FixPoint<BDD>(); iter.advance(cox);) {
+			 cox = cox.or((env.yieldStates(sys, cox.not())).not());
+		 }	 
+		 
+		 sysUnreal = cox.id().and(all_init);
 		 
 		 
-		 init_cox_Rev = init_sl.id().and(all_init);
-		 
-		 System.out.println("cox Y REV = "+ init_cox_Rev); //TRUE if unsat
-		 
-		 System.out.println("cox Y = "+ init_cox); //TRUE if unsat
 		 
 		 if ((sys.initial().and(sys.trans())).isZero()) {
-			 System.out.println("Unsat transitions.");
+			 //debugInfo += "Unsat transitions." + "\n";
+			 debugInfo += "SysTrans UNSAT" + "\n";
+			 explainSys = 1;
 		 }	
 		 	
 		 else if (sys.initial().isZero()) {
-			 System.out.println("Unsat initial conditions.");
+			 //debugInfo += "Unsat initial conditions." + "\n";
+			 debugInfo += "SysInit UNSAT" + "\n";
+			 explainSys = 1;
 		 
 		 } else {
 		 	 
 			 for (int i = 0; i < sys.justiceNum(); i++) {
-				 if (sys.justiceAt(i).isZero()) 
-					 System.out.println("Unsat goal number " + i);
-				 else if ((sys.trans().and(Env.prime(sys.justiceAt(i))).isZero()) | sys.trans().and(sys.justiceAt(i)).isZero())
-					 System.out.println("Unsat between trans and goal number " + i);
-				
+				 if (sys.justiceAt(i).isZero()) {
+					 //debugInfo += "Unsat goal number " + i + "\n";
+					 debugInfo += "SysGoals UNSAT " + i + "\n";
+					 explainSys = 1;
+				 }
+				 else if ((sys.trans().and(Env.prime(sys.justiceAt(i))).isZero()) | sys.trans().and(sys.justiceAt(i)).isZero()) {
+					 //debugInfo += "Unsat between trans and goal number " + i + "\n";
+				 	 debugInfo += "SysGoalsTrans UNSAT " + i + "\n";	
+				 	explainSys = 1;
+				 }
 			 }
 			 			 
 		 }
 		  
 		  if (env.trans().isZero()) {
-				 System.out.println("REV Unsat transitions.");
+			  //debugInfo += "REV Unsat transitions." + "\n";
+			  debugInfo += "EnvTrans UNSAT" + "\n";
+			  explainEnv = 1;
 			 }		 
 		  else if (env.initial().isZero()) {
-				 System.out.println("REV Unsat initial conditions.");
+			  //debugInfo += "REV Unsat initial conditions." + "\n";
+			  debugInfo += "EnvInit UNSAT" + "\n";
+			  explainEnv = 1;
 			  
 		  } else {
 				 	 
 				 for (int i = 0; i < env.justiceNum(); i++) {
-					 if (env.justiceAt(i).isZero()) 
-						 System.out.println("REV Unsat goal number " + i);
-					 else if ((env.trans().and(Env.prime(env.justiceAt(i))).isZero()) | (env.trans().and(env.justiceAt(i))).isZero()) 
-						 System.out.println("REV Unsat between trans and goal number " + i);
+					 if (env.justiceAt(i).isZero()) {
+						 //debugInfo += "REV Unsat goal number " + i + "\n";
+						 debugInfo += "EnvGoals UNSAT " + i + "\n";
+						 explainEnv = 1;
+					 }
+					 else if ((env.trans().and(Env.prime(env.justiceAt(i))).isZero()) | (env.trans().and(env.justiceAt(i))).isZero()) { 
+						 //debugInfo += "REV Unsat between trans and goal number " + i + "\n";
+						 debugInfo += "EnvGoalsTrans UNSAT " + i + "\n";
+						 explainEnv = 1;
+					 }
 					
 				 }
 				 			 
 		  }
+		  
+		  if (explainSys ==0 && !sysUnreal.equals(Env.FALSE())) {		 
+				 //debugInfo += "cox Y REV = "+ init_cox_Rev + "\n"; //TRUE if unsat
+				 debugInfo += "SysTrans UNREAL"+ "\n"; //TRUE if unsat
+		  		 explainSys = 1;
+		  }
+		  
+		  if (explainEnv ==0 && !envUnreal.equals(Env.FALSE())) {		 
+			  	//debugInfo += "cox Y = "+ init_cox + "\n"; //TRUE if unsat
+				debugInfo += "EnvTrans UNREAL"+ "\n"; //TRUE if unsat
+		  		explainEnv = 1;
+		  }
+		  
+		  
+		  try{
+			    debugInfo += justiceChecks(env,sys,explainSys,explainEnv);
+			    FileWriter fstream = new FileWriter(filename);
+			        BufferedWriter out = new BufferedWriter(fstream);
+			    out.append(debugInfo);
+			    out.close();
+		  }catch (Exception e){//Catch exception if any
+			      System.err.println("Error: " + e.getMessage());
+		  }
 	}
 	
+	public static class NOPPrintStream extends PrintStream
+	{
+	    public NOPPrintStream() { super((OutputStream)null); }
+
+	    public void println(String s) { /* Do nothing */ }
+	    // You may or may not have to override other methods
+	}
 	
-	public static void justiceChecks(SMVModule env, SMVModule sys) throws GameException  {
-		//The output here should really go into a file, to be read from specEditor.py -- Vasu
+	public static String justiceChecks(SMVModule env, SMVModule sys, int explainSys, int explainEnv) throws GameException  {
 		
 		BDD all_init = sys.initial().and( env.initial());
 		BDD counter_exmple;
 		GROneGame g;
 		
 		
-		for (int i = 1; i <= sys.justiceNum(); i++){
+		
+		String debugInfo = "";
+		
+		for (int i = 1; i < sys.justiceNum()-1; i++){
 			 g = new GROneGame(env,sys, i, env.justiceNum());
 			 counter_exmple = g.envWinningStates().and(all_init);
-			 if (!counter_exmple.isZero()&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
-				 System.out.println("sl Y = "+ (i-1));
-				 System.out.println("System is unrealizable because of justice "+ (i-1));
+			 if (explainSys ==0 && !counter_exmple.isZero()&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
+				 //debugInfo += "sl Y = "+ (i-1) + "\n";
+				 //debugInfo += "System is unrealizable because of justice "+ (i-1) + "\n";
+				 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
 				 i = sys.justiceNum() + 1;
 			 }
 		}
 		
 		BDD prev;
 		g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
+		
 		counter_exmple = g.envWinningStates().and(all_init);		 
-		for (int i = env.justiceNum(); i >=1; i--){
+		if (counter_exmple.isZero()) {			
+			debugInfo += "REALIZABLE\n";
+		}	
+		for (int i = env.justiceNum()-1; i >=1; i--){		
 			 prev = counter_exmple;
 			 g = new GROneGame(env,sys, sys.justiceNum(), i);
 			 counter_exmple = g.envWinningStates().and(all_init);
-			 System.out.println(prev);
-			 
-			 if (counter_exmple.isZero() && (!env.justiceAt(i-1).equals(Env.TRUE()))) {// && (!prev.isZero())) {
-				 System.out.println("sl Y REV = "+ (i-1));
-				 System.out.println("Environment is unrealizable because of justice "+ (i-1));
+			 if (explainEnv ==0 && counter_exmple.isZero() && (!env.justiceAt(i-1).equals(Env.TRUE()))) {// && (!prev.isZero())) {
+				 //debugInfo += "sl Y REV = "+ (i-1) + "\n";
+				 //debugInfo += "Environment is unrealizable because of justice "+ (i-1) + "\n";
+				 debugInfo += "EnvGoals UNREAL " + (i) + "\n";				 
 				 i = 0;
 			 } 
-		}		
+		}
+		return debugInfo;
 	}
 }
