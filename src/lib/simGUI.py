@@ -21,11 +21,6 @@ from socket import *
 # begin wxGlade: extracode
 # end wxGlade
 
-# For IPC, we need to pass messages by stderr because stdout is buffered.
-# But we still want to show errors, so we'll point stderr to stdout.
-sys.stdout = sys.__stderr__
-sys.stderr = sys.__stdout__
-
 class SimGUI_Frame(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: SimGUI_Frame.__init__
@@ -53,7 +48,7 @@ class SimGUI_Frame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onSimExport, self.button_sim_log_export)
         self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onResize, self.window_1)
         # end wxGlade
-
+        self.window_1_pane_1.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.mapBitmap = None
 
         self.Bind(wx.EVT_PAINT, self.onPaint)
@@ -147,7 +142,7 @@ class SimGUI_Frame(wx.Frame):
                 if self.checkbox_statusLog_border.GetValue():
                     wx.CallAfter(self.appendLog, input + "\n", color="CYAN") 
             elif input.startswith("BG:"):
-                wx.CallAfter(self.setMapImage, input.split(":")[1])
+                wx.CallAfter(self.setMapImage, input.split(":",1)[1])
             else:
                 if self.checkbox_statusLog_other.GetValue():
                     if input != "":
@@ -226,13 +221,16 @@ class SimGUI_Frame(wx.Frame):
         if self.mapBitmap is None:
             return
 
-        pdc = wx.AutoBufferedPaintDC(self.window_1_pane_1)
-        try:
-            dc = wx.GCDC(pdc)
-        except:
-            dc = pdc
+        if event is None:
+            dc = wx.ClientDC(self.window_1_pane_1)
         else:
-            self.window_1_pane_1.PrepareDC(pdc)
+            pdc = wx.AutoBufferedPaintDC(self.window_1_pane_1)
+            try:
+                dc = wx.GCDC(pdc)
+            except:
+                dc = pdc
+            else:
+                self.window_1_pane_1.PrepareDC(pdc)
 
         self.window_1_pane_1.PrepareDC(dc)
         dc.BeginDrawing()
@@ -250,6 +248,9 @@ class SimGUI_Frame(wx.Frame):
         #            self.robotPos[0] + self.robotVel[0], self.robotPos[1] + self.robotVel[1])
 
         dc.EndDrawing()
+        
+        if event is not None:
+            event.Skip()
 
     def appendLog(self, text, color="BLACK"):
         # for printing everything on the log
