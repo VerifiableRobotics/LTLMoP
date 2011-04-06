@@ -25,11 +25,11 @@ class actuatorHandler:
 
         print "(ACT) connected :)"
 
-        self.command = {'radio': {'ON': [2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        self.command = {'bark': {'ON': [2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     'OFF': [2, 70, 0, 0, 0, 0, 0, 0, 0, 0]},
-                        'pick_up': {'ON': [2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        'start_chase': {'ON': [2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     'OFF': [2, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-                        'drop': {'ON': [2, 70, 0, 0, 0, 0, 0, 0, 0, 0],
+                        'set_free': {'ON': [2, 70, 0, 0, 0, 0, 0, 0, 0, 0],
                                  'OFF': [2, 70, 0, 0, 0, 0, 0, 0, 0, 0]},
                         'extinguish': {'ON': [3, 70, 0, 0, 0, 0, 0, 0, 0, 0],
                                        'OFF': [3, 0, 0, 0, 0, 0, 0, 0, 0, 0]}}
@@ -69,11 +69,11 @@ class actuatorHandler:
             print "(ACT) Unknown actuator '%s'!" % name
             return
 
-        if name == "pick_up" and not int(val):
+        if name == "start_chase" and not int(val):
             return
 
-        # Special case for radio wiggle
-        if name == "radio":
+        # Special case for bark wiggle
+        if name == "bark":
             if int(val):
                 self.doWiggle = True
             else:

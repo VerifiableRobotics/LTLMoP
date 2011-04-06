@@ -1,0 +1,38 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+fence2	3
+hill2	0
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+hill1	poly	714	50	70	168	130	9	9	0	0	64	0	70	168	4	132
+fence2	poly	283	196	229	43	125	125	125	227	0	229	36	6	43	0	2
+valley	poly	844	393	150	157	255	255	0	150	157	71	157	0	16	144	0
+pond	poly	25	50	240	185	32	43	240	240	71	157	185	0	136	0	0	141	0
+hayfield	poly	25	272	197	190	255	187	0	0	190	0	0	197	7
+corral	poly	344	309	163	193	240	111	32	140	3	163	193	0	186	1	0
+woods	poly	842	50	135	157	0	255	0	0	0	135	1	63	157
+hill2	poly	770	366	145	184	130	10	10	0	29	46	0	74	43	145	184	66	184
+fence1	poly	526	284	127	266	125	125	125	0	266	22	0	127	13	94	266
+fence3	poly	119	390	148	160	125	125	125	0	160	87	0	148	34	75	160
+boundary	poly	25	50	969	500	0	0	0	0	412	0	222	0	136	0	0	141	0	689	0	753	0	817	0	952	1	963	343	969	500	890	500	811	500	595	500	501	500	169	500	94	500	0	500
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+demoday_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+hill1	boundary	714	50	778	50
+valley	hill2	844	409	915	550
+valley	boundary	915	550	994	550	988	393	994	550
+pond	boundary	25	50	166	50	25	50	25	186
+hayfield	boundary	25	272	25	462
+woods	boundary	842	50	977	51
+hill2	boundary	836	550	915	550
+fence1	boundary	526	550	620	550
+fence3	boundary	119	550	194	550
+

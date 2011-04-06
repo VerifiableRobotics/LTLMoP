@@ -51,11 +51,11 @@ class sensorHandler:
         self.last_update = 0
         # Initialize off
         # Index for ring buffer
-        self.sensorValues = [{'name': 'person',
+        self.sensorValues = [{'name': 'wolf',
                             'values': [0]*6,
                             'index': 0,
                             'range': [0.5, 1.5]},
-                            {'name': 'hazardous_item',
+                            {'name': 'sheep',
                             'values': [0]*6,
                             'index': 0,
                             'range': [1.5, 2.5]},
@@ -93,7 +93,7 @@ class sensorHandler:
 
         MIN_BLOB_PERIOD = 0.1
 
-        if sensor_name in ['fire', 'person', 'hazardous_item']: # hazard is blue ball, person is red ball, fire is both ball
+        if sensor_name in ['fire', 'wolf', 'sheep']: # hazard is blue ball, wolf is red ball, fire is both ball
             now = time.time()
             if (now - self.last_update) > 0.1:
                 orca_val = self.readFromOrca()
