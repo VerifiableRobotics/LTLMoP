@@ -99,13 +99,16 @@ class Automaton:
             for trans in state.transitions:
                 print trans.name
 
-    def updateOutputs(self):
+    def updateOutputs(self, state=None):
         """
         Update the values of current outputs in our execution environment to reflect the output
         proposition values associated with the given state
         """
 
-        for key, output_val in self.current_state.outputs.iteritems():
+        if state is None:
+            state = self.current_state
+
+        for key, output_val in state.outputs.iteritems():
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', key): continue 
 
@@ -413,7 +416,7 @@ class Automaton:
             else:
                 ### The state changed, but the region didn't
                 self.current_state = self.next_state  # We can transition immediately
-                print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
+                #print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
 
                 # Actuate anything that might be necessary
                 self.updateOutputs()
@@ -436,7 +439,7 @@ class Automaton:
                 print "Crossed border from %s to %s!" % (self.regions[self.current_region].name, self.regions[self.next_region].name)
             self.current_state = self.next_state   
             self.current_region = self.next_region
-            print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
+            #print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
 
             # Actuate anything that might be necessary
             self.updateOutputs()

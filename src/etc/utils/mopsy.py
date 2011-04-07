@@ -166,8 +166,6 @@ class MopsyFrame(wx.Frame):
                 self.current_region += int(2**(self.num_bits-bit-1))
         
         self.dest_region = self.current_region
-        self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
-        self.applySafetyConstraints()
 
         # Create all the sensor/actuator buttons
         self.env_buttons = [] # This will later hold our buttons
@@ -197,8 +195,15 @@ class MopsyFrame(wx.Frame):
             self.history_grid.SetColSize(i,-1)  # Auto-size
         self.history_grid.EnableEditing(False)
 
+        # Put initial condition into log
         self.appendToHistory()
-        #self.mopsy_frame_statusbar.SetStatusText("Currently in step #1.", 0)
+
+        # Start initial environment move
+        # All transitionable states have the same env move, so just use the first
+        self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
+
+        self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
+        self.applySafetyConstraints()
 
     def applySafetyConstraints(self):
         # Determine transitionable regions
@@ -247,6 +252,7 @@ class MopsyFrame(wx.Frame):
                   [self.actuatorStates[s] for s in self.proj.all_actuators] + \
                   [self.actuatorStates[s] for s in self.proj.all_customs] 
         lastrow = self.history_grid.GetNumberRows()-1
+
         for i,v in enumerate(newvals):
             if v == 0:
                 self.history_grid.SetCellValue(lastrow,i,"False")
@@ -433,6 +439,9 @@ class MopsyFrame(wx.Frame):
         self.current_region = self.dest_region
         self.appendToHistory()
         self.env_aut.runIteration()
+        # Make environment move
+        # All transitionable states have the same env move, so just use the first
+        self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
         self.applySafetyConstraints()
         event.Skip()
 
