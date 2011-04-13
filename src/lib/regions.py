@@ -207,6 +207,17 @@ class RegionFileInterface:
 
         return transitionFaces
 
+    def getBoundingBox(self):
+        if self.regions == []:
+            return None
+
+        leftMargin = min([pt.x for region in self.regions for pt in region.getPoints()])
+        topMargin = min([pt.y for region in self.regions for pt in region.getPoints()])
+        rightExtent = max([pt.x for region in self.regions for pt in region.getPoints()]) - leftMargin
+        downExtent = max([pt.y for region in self.regions for pt in region.getPoints()]) - topMargin
+
+        return (leftMargin, topMargin, rightExtent, downExtent)
+
     def writeFile(self, filename):
         """
         File format is described inside the comments variable. 

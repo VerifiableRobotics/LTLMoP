@@ -151,10 +151,7 @@ def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], de
         windowAspect = 1.0*maximumHeight/maximumWidth
 
         # TODO: Assuming the regions don't change, we only really need to calculate this once
-        leftMargin = min([pt.x for region in proj.rfi.regions for pt in region.getPoints()])
-        topMargin = min([pt.y for region in proj.rfi.regions for pt in region.getPoints()])
-        rightExtent = max([pt.x for region in proj.rfi.regions for pt in region.getPoints()]) - leftMargin
-        downExtent = max([pt.y for region in proj.rfi.regions for pt in region.getPoints()]) - topMargin
+        (leftMargin, topMargin, rightExtent, downExtent) = proj.rfi.getBoundingBox()
 
         W = rightExtent + 2*leftMargin
         H = downExtent + 2*topMargin

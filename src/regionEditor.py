@@ -28,7 +28,6 @@ from lib.mapRenderer import DrawableRegion
 #   - profile and optimize, so we run smoothly with large numbers of regions
 #   - allow for snaps to faces
 #   - be more graceful when load fails
-#   - automatic regioning?
 #   - multi-level undo (also allow undo of non-drawing actions)
 #   - all the other todos sprinkled around
 ####################################################################
@@ -1562,6 +1561,14 @@ class DrawingFrame(wx.Frame):
         self.needsAdjacencyRecalc = True
 
         self.doChooseSelectTool()
+
+        # TODO: Assuming the regions don't change, we only really need to calculate this once
+        (leftMargin, topMargin, rightExtent, downExtent) = self.rfi.getBoundingBox()
+
+        W = rightExtent + 2*leftMargin
+        H = downExtent + 2*topMargin
+
+        self.drawPanel.SetVirtualSize((max(PAGE_WIDTH, W), max(PAGE_HEIGHT, H)))
 
         self.drawPanel.Refresh()
         self._adjustMenus()
