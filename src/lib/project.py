@@ -144,7 +144,13 @@ class Project:
 
         if not self.silent: print "Loading region file %s..." % regf_name
         rfi = regions.RegionFileInterface() 
-        rfi.readFile(os.path.join(self.project_root, regf_name))
+
+        if rfi.readFile(os.path.join(self.project_root, regf_name)) == False:
+            if not self.silent:
+                print "ERROR: Could not load region file %s!"  % regf_name
+                if decomposed:
+                    print "Are you sure you compiled your specification?"
+            return
      
         if not self.silent: print "  -> Found definitions for %d regions." % len(rfi.regions)
 
