@@ -265,7 +265,7 @@ class MopsyFrame(wx.Frame):
         self.history_grid.ClearSelection()
         self.history_grid.MakeCellVisible(lastrow,0)
         self.history_grid.ForceRefresh()
-        self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+2), 0)
+        self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+1), 0)
            
 
     def onMapClick(self, event):
@@ -439,9 +439,18 @@ class MopsyFrame(wx.Frame):
         self.current_region = self.dest_region
         self.appendToHistory()
         self.env_aut.runIteration()
-        # Make environment move
+
+        ### Make environment move
+        # If there is no next state, this implies that the system has no possible move (including staying in place)
+        # This indicates a subset of safety unsatisfiability, a condition we handle here separately
+        if len(self.env_aut.current_state.transitions) == 0:
+            self.label_violation.SetLabel("Checkmate: no possible system moves.")
+            self.button_next.Enable(False)
+            return
+
         # All transitionable states have the same env move, so just use the first
         self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
+        self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
         self.applySafetyConstraints()
         event.Skip()
 
