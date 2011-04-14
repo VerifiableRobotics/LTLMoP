@@ -230,11 +230,12 @@ class RegionFileInterface:
                     "Regions": "Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)",
                     "Transitions": "Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)",
                     "Thumbnail": "Relative path of image file that has region shapes overlayed on background image",
-                    "CalibrationPoints": "Vertices to use for map calibration: (vertex_region_name, vertex_index)"}    
+                    "CalibrationPoints": "Vertices to use for map calibration: (vertex_region_name, vertex_index)",
+                    "Obstacles": "Names of regions to treat as obstacles"}    
     
         regionData = []
         for i, region in enumerate(self.regions): 
-            regionData.append("\t".join(map(str, region.getData(withAlignment=False)))) 
+            regionData.append("\t".join(map(str, region.getData(thorough=False)))) 
        
         transitionData = []
         for region1, destinations in enumerate(self.transitions):
@@ -259,11 +260,14 @@ class RegionFileInterface:
 
         calibPointsStr = "\t".join(calibPoints)
 
+        obstacleRegions = [r.name for r in self.regions if r.isObstacle]
+
         data = {"Background": self.background,
                 "Regions": regionData,
                 "Transitions": transitionData,
                 "Thumbnail": os.path.basename(self.thumb),
-                "CalibrationPoints": calibPoints}
+                "CalibrationPoints": calibPoints,
+                "Obstacles": obstacleRegions}
 
         fileMethods.writeToFile(filename, data, comments)
 
@@ -293,7 +297,7 @@ class RegionFileInterface:
         for region in data["Regions"]:
             regionData = region.split("\t");
             newRegion = Region()
-            newRegion.setData(regionData, withAlignment=False)    
+            newRegion.setData(regionData, thorough=False)    
             newRegion.alignmentPoints = [False] * len([x for x in newRegion.getPoints()])
             self.regions.append(newRegion)
 
@@ -317,6 +321,10 @@ class RegionFileInterface:
             for point in data["CalibrationPoints"]:
                 [name, index] = point.split("\t")
                 self.regions[self.indexOfRegionWithName(name)].alignmentPoints[int(index)] = True
+
+        if "Obstacles" in data:
+            for rname in data["Obstacles"]:
+                self.regions[self.indexOfRegionWithName(rname)].isObstacle = True
             
         return True
    
@@ -333,6 +341,7 @@ class Region:
             - 'color'         Color to use for drawing the region
             - 'pointArray'    Polygon points, relative to region position (stored in CW order)
             - 'alignmentPoints'  True/False array indicating for each vertex whether or not to use it as an alignment point
+            - 'isObstacle'  Boolean value indicating whether the region should be treated as an obstacle
 
         NOTE: All coordinates are stored internally with (0,0) at the top left.
               X increases to right, and Y increases downwards.
@@ -353,6 +362,7 @@ class Region:
         self.color             = color
         self.pointArray        = points
         self.alignmentPoints   = [False] * len([x for x in self.getPoints()])
+        self.isObstacle = False
 
     # =================================
     # == Region Manipulation Methods ==
@@ -452,9 +462,9 @@ class Region:
         else:
             return dir_CCW
 
-    def getData(self, withAlignment=True):
+    def getData(self, thorough=True):
         """ Return a copy of the object's internal data.
-            This is used for undo and to save this region to disk.
+            This is used for undo (thorough=True) and to save this region to disk (thorough=False).
         """
 
         if self.type == reg_RECT:
@@ -466,22 +476,27 @@ class Region:
 
         if self.type == reg_POLY:
             for i, pt in enumerate(self.pointArray):
-                if withAlignment:
+                if thorough:
                     expandedPoints.extend([pt.x, pt.y, self.alignmentPoints[i]])
                 else:
                     expandedPoints.extend([pt.x, pt.y])
         elif self.type == reg_RECT:
-            if withAlignment:
+            if thorough:
                 expandedPoints = self.alignmentPoints
+
+        if thorough:
+            obstacleState = [self.isObstacle]
+        else:
+            obstacleState = []
 
         return [self.name, type,
                 self.position.x, self.position.y,
                 self.size.width, self.size.height,
                 self.color.Red(),
                 self.color.Green(),
-                self.color.Blue()] + expandedPoints
+                self.color.Blue()] + obstacleState + expandedPoints
 
-    def setData(self, data, withAlignment=True):
+    def setData(self, data, thorough=True):
         """ Set the object's internal data.
 
             'data' is a copy of the object's saved data, as returned by
@@ -502,19 +517,22 @@ class Region:
                                           blue=int(data[8]))
         if self.type == reg_POLY:
             self.pointArray = []
-            if withAlignment:
+            if thorough:
                 self.alignmentPoints = []
-                for i in range(9, len(data), 3):
+                for i in range(10, len(data), 3):
                     self.pointArray.append(wx.Point(int(data[i]), int(data[i+1])))
                     self.alignmentPoints.append(data[i+2])
             else:
                 for i in range(9, len(data), 2):
                     self.pointArray.append(wx.Point(int(data[i]), int(data[i+1])))
         elif self.type == reg_RECT:
-            if withAlignment:
+            if thorough:
                 self.alignmentPoints = []
-                for i in range(9, len(data), 1):
+                for i in range(10, len(data), 1):
                     self.alignmentPoints.append(data[i])
+
+        if thorough:
+            self.isObstacle = data[9]
 
     def getFaces(self):
         """

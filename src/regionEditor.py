@@ -960,10 +960,8 @@ class DrawingFrame(wx.Frame):
             # If this region is concave, indicate this with hatching
             doHighlight = (obj.name.lower() != "boundary" and obj.getDirection() == dir_CONCAVE)
 
-            if obj in self.selection:
-                obj.draw(dc, pdc, True, highlight=doHighlight)
-            else:
-                obj.draw(dc, pdc, False, highlight=doHighlight)
+            isSelected = (obj in self.selection)
+            obj.draw(dc, pdc, isSelected, highlight=doHighlight, deemphasize=obj.isObstacle)
     
             if drawLabels:
                 # Draw region labels
@@ -972,7 +970,12 @@ class DrawingFrame(wx.Frame):
                 font = wx.Font(12, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.BOLD, False)
                 dc.SetFont(font)
                 
-                textWidth, textHeight = dc.GetTextExtent(obj.name)
+                if obj.isObstacle:
+                    labelText = "(%s)" % obj.name
+                else:
+                    labelText = obj.name
+
+                textWidth, textHeight = dc.GetTextExtent(labelText)
                 
                 # TODO: Better text placement algorithm for concave polygons?
                 dc.SetBrush(wx.Brush(obj.color, wx.SOLID))
@@ -985,7 +988,7 @@ class DrawingFrame(wx.Frame):
                     textX = center.x - textWidth/2
                     textY = center.y - textHeight/2
                 dc.DrawRoundedRectangle(textX - 5, textY - 3, textWidth + 10, textHeight + 6, 3)
-                dc.DrawText(obj.name, textX, textY)
+                dc.DrawText(labelText, textX, textY)
 
             if drawAdjacencies:
                 # Highlight adjacent faces
@@ -994,8 +997,6 @@ class DrawingFrame(wx.Frame):
                     p1 = list(face)[0]
                     p2 = list(face)[1]
                     dc.DrawLine(p1[0], p1[1], p2[0], p2[1])
-    
-
 
     # ==========================
     # == Menu Command Methods ==
@@ -1965,6 +1966,8 @@ class EditRegionDialog(wx.Dialog):
 
         gap = wx.LEFT | wx.TOP | wx.RIGHT
 
+        ##### line 1
+
         self.label1 = wx.StaticText(self, -1, "Name:")
         self.textCtrl = wx.TextCtrl(self, 1001, "", style=wx.TE_PROCESS_ENTER,
                                    validator=TextObjectValidator())
@@ -1976,13 +1979,24 @@ class EditRegionDialog(wx.Dialog):
         line1sizer.Add(self.label1, 0, gap, 5)
         line1sizer.Add(self.textCtrl, 0, gap, 5)
 
+        #### line 2
+
         self.label2 = wx.StaticText(self, -1, "Color:")
 
-        self.colorPicker = wx.ColourPickerCtrl(self, 1002)
+        self.colorPicker = wx.ColourPickerCtrl(self, 1003)
 
         line2sizer = wx.BoxSizer(wx.HORIZONTAL)
         line2sizer.Add(self.label2, 0, gap, 5)
         line2sizer.Add(self.colorPicker, 0, gap, 5)
+
+        #### line 3
+
+        self.checkbox_obstacle = wx.CheckBox(self, 1002, "Treat as obstacle")
+
+        line3sizer = wx.BoxSizer(wx.HORIZONTAL)
+        line3sizer.Add(self.checkbox_obstacle, 0, gap, 5)
+
+        #### line 4
 
         self.okButton     = wx.Button(self, wx.ID_OK,     "OK")
         self.okButton.SetDefault()
@@ -1992,10 +2006,13 @@ class EditRegionDialog(wx.Dialog):
         btnSizer.Add(self.okButton,     0, gap)
         btnSizer.Add(self.cancelButton, 0, gap)
 
+        #### assembly 
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(line1sizer, 1, gap | wx.EXPAND,       5)
         #sizer.Add((10, 10)) # Spacer.
         sizer.Add(line2sizer, 1, gap | wx.ALIGN_CENTRE,       5)
+        sizer.Add(line3sizer, 1, gap | wx.ALIGN_CENTRE,       5)
         #sizer.Add((10, 10)) # Spacer.
         sizer.Add(btnSizer,      0, gap | wx.ALIGN_CENTRE, 5)
         sizer.Add((10, 10)) # Spacer.
@@ -2013,12 +2030,14 @@ class EditRegionDialog(wx.Dialog):
         self.textCtrl.SetValue(obj.name)
         self.textCtrl.SetSelection(0, len(obj.name))
         self.colorPicker.SetColour(obj.color)
+        self.checkbox_obstacle.SetValue(obj.isObstacle)
 
     def dialogToObject(self, obj):
         """ Copy the properties from the dialog box into the given text object.
         """
         obj.name = self.textCtrl.GetValue()
         obj.color = self.colorPicker.GetColour()
+        obj.isObstacle = self.checkbox_obstacle.GetValue()
 
 #----------------------------------------------------------------------------
 
