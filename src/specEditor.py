@@ -755,7 +755,7 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec = wx.stc.StyledTextCtrl(self.window_1_pane_1, -1, style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.WANTS_CHARS)
         self.text_ctrl_spec.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.window_1_pane_1.GetSizer().Insert(0, self.text_ctrl_spec, 2, wx.EXPAND, 0)
-        self.Layout()
+        self.window_1_pane_1.GetSizer().Layout()
 
         self.text_ctrl_spec.SetMarginWidth(0, 40)
         self.text_ctrl_spec.SetMarginType(0, wx.stc.STC_MARGIN_NUMBER)
