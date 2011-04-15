@@ -206,34 +206,40 @@ public class GROneDebug {
 		
 		String debugInfo = "";
 		
-		for (int i = 1; i < sys.justiceNum()-1; i++){
-			 g = new GROneGame(env,sys, i, env.justiceNum());
-			 counter_exmple = g.envWinningStates().and(all_init);
-			 if (explainSys ==0 && !counter_exmple.isZero()&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
-				 //debugInfo += "sl Y = "+ (i-1) + "\n";
-				 //debugInfo += "System is unrealizable because of justice "+ (i-1) + "\n";
-				 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
-				 i = sys.justiceNum() + 1;
-			 }
+		if (!sys.justiceAt(sys.justiceNum() - 1).equals(Env.TRUE())) {
+		
+			for (int i = 1; i <= sys.justiceNum(); i++){
+				 g = new GROneGame(env,sys, i, env.justiceNum());
+				 counter_exmple = g.envWinningStates().and(all_init);
+				 if (explainSys ==0 && !counter_exmple.isZero()) {//&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
+					 //debugInfo += "sl Y = "+ (i-1) + "\n";
+					 //debugInfo += "System is unrealizable because of justice "+ (i-1) + "\n";
+					 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
+					 i = sys.justiceNum() + 1;
+				 }
+			}
 		}
 		
-		BDD prev;
-		g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
-		
-		counter_exmple = g.envWinningStates().and(all_init);		 
-		if (counter_exmple.isZero()) {			
-			debugInfo += "REALIZABLE\n";
-		}	
-		for (int i = env.justiceNum()-1; i >=1; i--){		
-			 prev = counter_exmple;
-			 g = new GROneGame(env,sys, sys.justiceNum(), i);
-			 counter_exmple = g.envWinningStates().and(all_init);
-			 if (explainEnv ==0 && counter_exmple.isZero() && (!env.justiceAt(i-1).equals(Env.TRUE()))) {// && (!prev.isZero())) {
-				 //debugInfo += "sl Y REV = "+ (i-1) + "\n";
-				 //debugInfo += "Environment is unrealizable because of justice "+ (i-1) + "\n";
-				 debugInfo += "EnvGoals UNREAL " + (i) + "\n";				 
-				 i = 0;
-			 } 
+		if (!env.justiceAt(env.justiceNum() - 1).equals(Env.TRUE())) {
+			
+			BDD prev;
+			g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
+			
+			counter_exmple = g.envWinningStates().and(all_init);		 
+			if (counter_exmple.isZero()) {			
+				debugInfo += "REALIZABLE\n";
+			}	
+			for (int i = env.justiceNum()-1; i >=1; i--){		
+				 prev = counter_exmple;
+				 g = new GROneGame(env,sys, sys.justiceNum(), i);
+				 counter_exmple = g.envWinningStates().and(all_init);
+				 if (explainEnv ==0 && counter_exmple.isZero() && (!env.justiceAt(i-1).equals(Env.TRUE()))) {// && (!prev.isZero())) {
+					 //debugInfo += "sl Y REV = "+ (i-1) + "\n";
+					 //debugInfo += "Environment is unrealizable because of justice "+ (i-1) + "\n";
+					 debugInfo += "EnvGoals UNREAL " + (i) + "\n";				 
+					 i = 0;
+				 } 
+			}
 		}
 		return debugInfo;
 	}
