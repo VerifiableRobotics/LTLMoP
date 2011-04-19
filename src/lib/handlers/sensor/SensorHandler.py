@@ -81,6 +81,8 @@ class SensorEditorFrame(wx.Frame):
             
             # Create the new button and add it to the sizer
             self.buttons.append(wx.ToggleButton(self.panel_1, -1, sensor_name))
+            big_font = wx.Font(pointSize=24, family=wx.FONTFAMILY_DEFAULT, style=wx.FONTSTYLE_NORMAL, weight=wx.FONTWEIGHT_NORMAL)
+            self.buttons[-1].SetFont(big_font)
             self.panel_1.GetSizer().Add(self.buttons[-1], 1, wx.EXPAND, 0)
 
             # Set the initial value as appropriate

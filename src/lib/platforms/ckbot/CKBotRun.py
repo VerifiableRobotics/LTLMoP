@@ -39,7 +39,7 @@ class CKBotRun:
 			self.cluster = [tempc[199], tempc[143], tempc[216], tempc[197] ]
 		# T configuration.
 		elif self.config == "Tee" or self.config == "TeeStationary":
-			self.cluster = [tempc[199], tempc[143], tempc[216], tempc[197], tempc[145], tempc[196]]
+			self.cluster = [tempc[199], tempc[143], tempc[216], tempc[197], tempc[145], tempc[218]]
 
 		# Initialize the time
 		self.starttime = time.time()
@@ -224,7 +224,7 @@ class CKBotRun:
 					# Fix for uncalibrated head module
 
 					if module_idx==3:
-						ref_ang = ref_ang - 1400
+						ref_ang = ref_ang - 3000
 		
 					self.cluster[module_idx].set_pos(ref_ang)
 
@@ -238,7 +238,7 @@ class CKBotRun:
 
 					# Fix for uncalibrated head module
 					if self.config=="Snake" and module_idx=="3":
-						ref_ang = ref_ang - 1400
+						ref_ang = ref_ang - 3000
 		
 					self.cluster[module_idx].set_pos(ref_ang)
 
@@ -308,7 +308,9 @@ class CKBotRun:
 			self.cluster = [ tempc[199], tempc[143], tempc[216], tempc[197] ]
 		# T configuration.
 		elif name == "Tee":
-			self.cluster = [ tempc[199], tempc[143], tempc[216], tempc[197], tempc[145], tempc[196] ]
+			self.cluster = [ tempc[199], tempc[143], tempc[216], tempc[197], tempc[145], tempc[218] ]
+
+		self.gait = 0
 
 	def run_once(self):
 		"""

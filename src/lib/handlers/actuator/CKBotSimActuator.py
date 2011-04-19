@@ -27,7 +27,7 @@ class actuatorHandler:
 		elif name[0] == "T" and val==False:
 			self.trueTraits.discard(name.lstrip("T_"))
 
-		print "TRAITSSSS AREEEEE"
+		print "Current trait list:"
 		print self.trueTraits
 
 		#if name=="slinky" and val==True:

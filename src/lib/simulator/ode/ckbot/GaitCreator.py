@@ -30,12 +30,12 @@ class GaitCreator:
 	CKBot Gait Creator Class
 	"""
 
-	fps = 25.0
+	fps = 30.0
 	cameraDistance = 40.0
 	vel = 0.5
 	turn = 0.5
 	turn2 = 0.5
-	clip = 150.0
+	clip = 1000.0
 	res = (800, 600)
 
 	def __init__(self,robotfile, standalone=1,obstaclefile=None,regionfile=None,region_calib=None,startingpose=None):

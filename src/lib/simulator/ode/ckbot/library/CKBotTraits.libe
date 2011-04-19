@@ -23,8 +23,8 @@ Snake-crawl
 
 # "stationary" = the robot location does not vary more than the maximum dimension of the robot
 Trait: stationary
-TeeStationary-swim
 Plus3-foldup
+TeeStationary-panic
 Biped-splits
 #Quadriped-move
 
@@ -70,6 +70,6 @@ Twist-twist
 Trait: hardware
 Snake-crawl
 Tee-crawl
-TeeStationary-swim
+TeeStationary-panic
 
 # LEAVE THIS LINE HERE (one enter line below last trait list) for correct parsing

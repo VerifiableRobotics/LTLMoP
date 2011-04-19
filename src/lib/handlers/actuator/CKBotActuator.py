@@ -16,47 +16,47 @@ class actuatorHandler:
 		self.runtime = shared_data['Runtime']
 		self.library = shared_data['Library']
 		self.config = shared_data['Config']
+		self.traits = []
 
 	def setActuator(self, name, val):
 		"""
 		Sets CKBot configurations.
 		"""	
-
-		#if name=="slinky" and val==True:
-		#	self.simulator.reconfigure("FoldOver")
-
-		#elif name=="snake" and val==True:
-		#	self.simulator.reconfigure("Snake")
-
-		#elif name=="play_dead" and val==True:
-		#	self.simulator.reconfigure("Plus3")
-
-		#elif name=="hexapod" and val==True:
-		#	self.simulator.reconfigure("Hexapod")
-
-		#elif name=="cross" and val==True:
-		#	self.simulator.reconfigure("Plus3")
 	
 		# Use library if actuator name starts with T
-		if name[0] == "T" and val==True:
-			words = name.split("_and_")
-			words[0] = words[0].lstrip('T_')
-			print "name is " + name
-			print "desired words are " 
-			print words
+		if name[0] == "T" and name[1] == "_" and val == True:
+			name = name.lstrip('T_')
+			
+			self.traits.append(name)
+			print "CURRENT TRAITS:"
+			print self.traits
+
 			libs = self.library
 			libs.readLibe()
-			config = libs.findGait(words)
-			if (type(config) != type(None)) and (self.config != config) and (val==True):
-				print "reconfiguring to: " + config
-			# If no gait is found from traits library, then it will just continue with whatever config-gait it's in
-			self.runtime.reconfigure(config)
+			config = libs.findGait(self.traits)
+			if (type(config) != type(None)) and (self.config != config):
+				print "Reconfiguring to: " + config
+				# If no gait is found from traits library, then it will just continue with whatever config-gait it's in
+				self.runtime.reconfigure(config)
 
-		# Make the default configuration Hexapod
-		# After we're done with any gait, switch back to default
-		elif val==False:
-			print "deconfiguring"
-			self.runtime.reconfigure("Tee")
+		elif name[0] == "T" and name[1] == "_" and val==False:
+			name = name.lstrip('T_')
+			
+			self.traits.remove(name)		
+			print "CURRENT TRAITS:"
+			print self.traits
 
+			libs = self.library
+			libs.readLibe()
+			config = libs.findGait(self.traits)
+
+			if (type(config) != type(None)) and (self.config != config):
+				print "Reconfiguring to: " + config
+				self.runtime.reconfigure(config)
+
+			# If there are no gaits available then reconfigure to the default.
+			elif (type(config) == type(None) or self.traits == ["hardware"]):
+				self.runtime.reconfigure("Tee")
+			#self.runtime.reconfigure("Tee")
 
 		print "(ACT) Actuator %s is now %s!" % tuple(map(str, (name, val)))

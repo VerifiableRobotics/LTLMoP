@@ -26,7 +26,7 @@ RobotFile: # Relative path of robot description file
 ======== EXPERIMENT CONFIG 1 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.65,0.0,-0.65,0.0
+0.8,0.0,-0.8,0.0
 
 InitialRegion: # Initial region number
 12
@@ -55,8 +55,6 @@ T_fast_and_1D_motion,0
 T_low_and_nonholonomic_turning,0
 
 Customs: # List of custom propositions
-Prancing
-T_holonomic
 
 RegionFile: # Relative path of region description file
 IROS11.regions
@@ -76,8 +74,8 @@ RegionMapping:
 
 Mountain2=p9
 Mountain=p10
-Bridge=p15
 Field=p13
+Bridge=p15
 Tunnel=p7
 Island=p12
 Water3=p3
@@ -93,17 +91,15 @@ Spec: # Specification in simple English
 Env starts with false
 Robot starts in Island
 Always not Water and not Water2 and not Water3
-#If you are in Tunnel then do not sense prey
-#If you were in between Island and Dock then do not T_stationary
+If you were in Tunnel then do not sense prey
+If you were in between Island and Dock then do not sense prey
 If you are not sensing predator and you are not sensing prey and you are not sensing poison then visit Meadows
 If you are not sensing predator and you are not sensing prey and you are not sensing poison then visit Dock
 If you are not sensing predator and you are not sensing prey and you are sensing poison then visit Springs
 Do T_low and do T_nonholonomic_turning if and only if you are in Tunnel
 T_fast is set on between Island and Dock and reset on Dock
 T_1D_motion is set on between Island and Dock and reset on Dock
-#Do T_fast and do T_1D_motion if and only if you are on Bridge
 If you are sensing predator then stay there
-If you are sensing prey and you are not in Tunnel and you are not on Bridge then do T_stationary
-Do T_holonomic and T_fast if and only if you are in Meadows
+If you are sensing prey and you are in Dock or Field or Meadows or Springs then do T_stationary
 
 

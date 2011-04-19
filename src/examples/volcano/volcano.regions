@@ -6,18 +6,16 @@ Background: # Relative path of background image file
 None
 
 CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
-Boundary	0
-Boundary	2
+Boundary	4
+Boundary	9
 
 Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
 Boundary	poly	106	54	471	285	255	165	0	0	141	0	0	153	0	316	0	471	0	471	141	471	285	316	285	153	285	0	285
 Lava3	poly	106	195	153	144	255	0	0	0	0	153	0	153	117	153	144	0	144
 Lava2	rect	259	312	163	27	255	0	0
-Lava4	poly	422	54	155	141	255	0	0	0	27	0	0	155	0	155	141	0	141
+Springs	poly	422	54	155	141	0	0	255	0	27	0	0	155	0	155	141	0	141
 Lava1	rect	259	54	163	27	255	0	0
-Springs	poly	422	195	155	144	32	76	240	0	117	0	0	155	0	155	144	0	144
-Volcano	rect	259	195	163	117	255	255	255
-Trail	rect	259	81	163	114	255	255	0
+Plateau	poly	422	195	155	144	168	32	240	0	117	0	0	155	0	155	144	0	144
 Plains	poly	106	54	153	141	0	255	0	0	0	153	0	153	27	153	141	0	141
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
@@ -26,21 +24,14 @@ volcano_simbg.png
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
 Boundary	Lava3	106	195	106	339	106	339	259	339
 Boundary	Lava2	259	339	422	339
-Boundary	Lava4	422	54	577	54	577	54	577	195
+Boundary	Springs	422	54	577	54	577	54	577	195
 Boundary	Lava1	259	54	422	54
-Boundary	Springs	577	195	577	339	422	339	577	339
+Boundary	Plateau	577	195	577	339	422	339	577	339
 Boundary	Plains	106	54	259	54	106	54	106	195
 Lava3	Lava2	259	312	259	339
-Lava3	Volcano	259	195	259	312
 Lava3	Plains	106	195	259	195
-Lava2	Springs	422	312	422	339
-Lava2	Volcano	259	312	422	312
-Lava4	Lava1	422	54	422	81
-Lava4	Springs	422	195	577	195
-Lava4	Trail	422	81	422	195
-Lava1	Trail	259	81	422	81
+Lava2	Plateau	422	312	422	339
+Springs	Lava1	422	54	422	81
+Springs	Plateau	422	195	577	195
 Lava1	Plains	259	54	259	81
-Springs	Volcano	422	195	422	312
-Volcano	Trail	259	195	422	195
-Trail	Plains	259	81	259	195
 

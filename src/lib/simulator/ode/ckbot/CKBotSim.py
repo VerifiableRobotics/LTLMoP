@@ -26,7 +26,7 @@ class CKBotSim:
 	turn = 0.5
 	turn2 = 0.5
 	clip = 500.0
-	res = (800, 600)
+	res = (550, 400)
 
 	def __init__(self,robotfile, standalone=1,obstaclefile=None,regionfile=None,region_calib=None,startingpose=None):
 		"""
@@ -1439,6 +1439,8 @@ class CKBotSim:
 		Removes the previous CKBot configuration and spawns a new one as specified in the function arguments.
 		"""
 
+		self.counter = 0
+
 		# Find the previous configuration's 2D orientation.
 		angle = self.get2DPose(0)[2]
 		#rot = self.genmatrix(angle,2)
@@ -1462,7 +1464,6 @@ class CKBotSim:
 
 		# Reload the objects.
 		self._loadObjects()
-
 
 	def setGait(self,gait):
 		"""
