@@ -48,13 +48,10 @@ pioneer_real.robot
 Actions: # List of actions and their state (enabled = 1, disabled = 0)
 pick_up,0
 drop,0
-radio,0
+radio,1
 extinguish,0
 
 Customs: # List of custom propositions
-seeking
-hiding
-counting
 
 RegionFile: # Relative path of region description file
 iros10.regions
@@ -73,21 +70,26 @@ ASL
 RegionMapping:
 
 living=p4
-deck=p7
 porch=p3
+deck=p7
+others=p2,p9,p10
 dining=p6
 bedroom=p8
-others=p2,p9,p10
 kitchen=p5
 
 Spec: # Specification in simple English
 Env starts with false
 Robot starts with false
 Robot starts in deck
+
 Visit porch
+
+if you are sensing fire then do not living
 if you are sensing person then do not kitchen
-if you are sensing person then do not living
-Always not (fire and person)
+always do not radio
+
+always not (fire and person)
+
 Always kitchen or porch or deck or bedroom or dining or living
 
 

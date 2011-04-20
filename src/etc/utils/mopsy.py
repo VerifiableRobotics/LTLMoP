@@ -63,8 +63,10 @@ class EnvDummyActuatorHandler:
                 if btn.GetLabelText() == name:
                     if int(val) == 1:
                         btn.SetBackgroundColour(wx.Colour(0, 255, 0)) 
+                        btn.SetValue(True)
                     else:
                         btn.SetBackgroundColour(wx.Colour(255, 0, 0)) 
+                        btn.SetValue(False)
                     break
         except AttributeError:
             pass # The buttons haven't been created yet
@@ -234,7 +236,7 @@ class MopsyFrame(wx.Frame):
 
         region_constrained_goable_states = [s for s in goable_states if (self.safety_aut.regionFromState(s) == self.dest_region)]
         if region_constrained_goable_states == []:
-            print "Safety violation!"
+            #print "Safety violation!"
             self.label_violation.SetLabel("Current move invalid under system constraints")
             self.button_next.Enable(False)
         else:
@@ -265,7 +267,7 @@ class MopsyFrame(wx.Frame):
         self.history_grid.ClearSelection()
         self.history_grid.MakeCellVisible(lastrow,0)
         self.history_grid.ForceRefresh()
-        self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+1), 0)
+        self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+2), 0)
            
 
     def onMapClick(self, event):
