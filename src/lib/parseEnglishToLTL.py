@@ -607,11 +607,13 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
                      'are activating' + '|' + 'are not activating' + '|' + \
                      'is activating' + '|' + 'is not activating' 
 
+    RiseCond = "|".join(["start of", "beginning of"])
+    FallCond = "|".join(["end of"])
 
     PastCond = regionPastCond + sensorPastCond + actionPastCond
     CurrCond = regionCurrCond + sensorCurrCond + actionCurrCond
     
-    possCond = PastCond + '|' + CurrCond 
+    possCond = "|".join([PastCond, CurrCond, RiseCond, FallCond]) 
 
     condRE = re.compile('('+ possCond + ')',re.IGNORECASE)
     subCond = re.split(condRE,condition)
@@ -631,6 +633,7 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
                 NotFlag = True
             else:
                 NotFlag = False
+            EdgeType = None
         # Determine the type of the formula to follow (past)
         # If past OR the requirement is liveness, then do NOT add 'next'
         elif (subCondition in PastCond) or (subCondition in CurrCond):
@@ -639,6 +642,16 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
                 NotFlag = True
             else:
                 NotFlag = False
+            EdgeType = None
+        # Determine the type of the formula to follow (edge)
+        elif (subCondition in RiseCond):
+            NextFlag = False
+            NotFlag = False
+            EdgeType = "rising"
+        elif (subCondition in FallCond):
+            NextFlag = False
+            NotFlag = False
+            EdgeType = "falling"
         # This is the body of the subcondition
         else:
             # Add a '!' in front if needed
@@ -660,21 +673,47 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
          
             # checking that all propositions are 'legal' (in the list of propositions)
             # and adding 'next' if needed
-            for prop in re.findall('([\w\.]+)',subTempFormula):
+            props = re.findall('([\w\.]+)',subTempFormula)
+
+            for prop in props:
                 if not prop in PropList:
                     print 'ERROR(8): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is not recognized\n'
                     return ''
 
-                if NextFlag and (prop in allRobotProp) and (ReqType == 'EnvTrans') :
-                    print 'Warning: In the sentence in line '+ str(lineInd)+' :'
-                    print prop + ' is a robot proposition and should be in the past form in an environment safety requirement'
-                    print 'The next operator was not added\n'
-                    continue
+            if EdgeType is not None:
+                # make sure edge condition only operates on a stand-alone proposition
+                if len(props) != 1:
+                    print 'ERROR(8): Could not parse the sentence in line '+ str(lineInd)+' because edge condition (' + subCondition + ') contains more than one proposition\n'
+                    return ''
 
-                if NextFlag:
-                    # replace every occurrence of the proposition with next(proposition)
-                    # it is written this way to prevent nesting of 'next' (as with the .replace method)
-                    subTempFormula = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',subTempFormula)
+                prop = props[0]
+
+                # only allow edges in places where they make sense
+                if livenessFlag:
+                    print 'ERROR(8): Could not parse the sentence in line '+ str(lineInd)+' because edge conditions cannot be used in liveness specifications\n'
+                    return ''
+                
+                if (prop in allRobotProp) and (ReqType == 'EnvTrans'):
+                    print 'ERROR(8): Could not parse the sentence in line '+ str(lineInd)+' because ' + prop + ' is a robot proposition and cannot be used in an edge condition in an environment safety requirement\n'
+                    return ''
+
+                if EdgeType == "rising":
+                    subTempFormula = re.sub(prop, "!(%s) & next(%s)" % (prop, prop), subTempFormula)
+                elif EdgeType == "falling":
+                    subTempFormula = re.sub(prop, "(%s) & !next(%s)" % (prop, prop), subTempFormula)
+            else:
+                for prop in props:
+                    if NextFlag and (prop in allRobotProp) and (ReqType == 'EnvTrans') :
+                        print 'Warning: In the sentence in line '+ str(lineInd)+' :'
+                        print prop + ' is a robot proposition and should be in the past form in an environment safety requirement'
+                        print 'The next operator was not added\n'
+                        continue
+
+                    if NextFlag:
+                        # replace every occurrence of the proposition with next(proposition)
+                        # it is written this way to prevent nesting of 'next' (as with the .replace method)
+                        subTempFormula = re.sub('(next\('+prop+'\)|'+prop+')', 'next('+ prop +')',subTempFormula)
+
 
             tempFormula = tempFormula + subTempFormula
 
