@@ -86,7 +86,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         lineInd = lineInd + 1
 
         # If it is an empty line, ignore it
-        if re.search('^(\s*)\n$',line) or line == '':
+        if re.search('^(\s*)$',line):
             continue
             
         # If the sentence is a comment, ignore it
