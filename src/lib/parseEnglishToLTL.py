@@ -73,6 +73,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     SafetyRE = re.compile('(always|always do |do |always sense |sense )',re.IGNORECASE)
     StayRE = re.compile('(stay there|stay)',re.IGNORECASE)
     EventRE = re.compile('(?P<prop>[\w\.]+) is set on (?P<setEvent>.+) and reset on (?P<resetEvent>.+)',re.IGNORECASE)
+    ToggleRE = re.compile('(?P<prop>[\w\.]+) is toggled (when|on) (?P<toggleEvent>.+)',re.IGNORECASE)
 
 
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
@@ -217,6 +218,18 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             map['SysTrans'].append(lineInd)
 
 
+        # A toggle event definition
+        elif ToggleRE.search(line):
+            # get the groups
+            EventParts = ToggleRE.search(line)
+            EventProp = EventParts.group('prop') 
+            ToggleEvent = EventParts.group('toggleEvent') 
+
+            # Formulas defining when the proposition is true and false
+            EventFormula = parseToggle(EventProp,ToggleEvent,sensorList,allRobotProp,lineInd)
+
+            spec['SysTrans'] = spec['SysTrans'] + EventFormula
+            map['SysTrans'].append(lineInd)
 
         # A safety requirement
         elif SafetyRE.search(line):
@@ -669,6 +682,43 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
     
     
     LTLsubformula = '(' + tempFormula + ')'
+
+    return LTLsubformula
+
+def parseToggle(EventProp,ToggleEvent,sensorProp,RobotProp,lineInd):
+    ''' This function creates the LTL formulas encoding when a proposition's value should toggle (T->F, F->T).
+        It takes the proposition, the boolean formula defining the toggle event, the propositions
+        (to check that only 'legal' propositions are used) and 'lineInd' that indicates which line is being processed.
+        Returns the LTL formula as a string.
+    '''
+
+    PropList = sensorProp + RobotProp
+    
+    # Getting the subformula encoding the condition
+    ToggleEvent = parseCond(ToggleEvent,sensorProp,RobotProp,"SysTrans",lineInd)
+    if ToggleEvent == '':
+        # If could not parse the condition, return
+        print 'ERROR(6): Could not parse the condition in line '+ str(lineInd)+'\n'
+        return ''
+
+    # Checking the event proposition
+    if EventProp in sensorProp:
+        print 'ERROR(11): Could not parse the sentence in line '+ str(lineInd)+' because ' + EventProp + ' is a sensor proposition instead of a robot proposition'
+        return ''
+    elif EventProp in RobotProp:
+        pass
+    else:
+        # Not a single valid robot proposition
+        print 'ERROR(12): Could not parse the sentence in line '+ str(lineInd)+' because ' + EventProp + ' is not a valid robot proposition'
+        return ''
+
+    # Everything seems to be OK, lets write the formulas
+    FlipOffFormula = '\t\t\t ([](( (' + EventProp + ') & (' + ToggleEvent + ')) -> !next(' + EventProp + ')) ) & \n'    
+    FlipOnFormula = '\t\t\t ([](( !(' + EventProp + ') & (' + ToggleEvent + ')) -> next(' + EventProp + ')) ) & \n'    
+    HoldOnFormula = '\t\t\t ([](( (' + EventProp + ') & !(' + ToggleEvent + ')) -> next(' + EventProp + ')) ) & \n'    
+    HoldOffFormula = '\t\t\t ([](( !(' + EventProp + ') & !(' + ToggleEvent + ')) -> !next(' + EventProp + ')) ) & \n'    
+    
+    LTLsubformula = FlipOffFormula + FlipOnFormula + HoldOnFormula + HoldOffFormula
 
     return LTLsubformula
 
