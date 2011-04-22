@@ -573,6 +573,7 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
     sensorPastCond = 'the robot sensed'+'|'+ 'the robot did not sense'+'|' + \
                      'you sensed' + '|' + 'you did not sense' + '|' + \
                      'it sensed' + '|' + 'it did not sense' + '|' + \
+                     'you were sensing' + '|' + 'you were not sensing' + '|' + \
                      'sensed' + '|' + 'did not sense' + '|'
   
     sensorCurrCond = 'the robot is sensing'+'|'+ 'the robot is not sensing'+'|' + \
