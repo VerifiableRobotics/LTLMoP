@@ -175,8 +175,45 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             elif LivenessRE.search(Requirement):
                 # remove first words
                 Requirement = LivenessRE.sub(' ',Requirement)
-                # and parse requirement
-                ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
+
+                # check for "stay there" condition
+                if StayRE.search(Requirement):
+                    # remove the 'and stay there'      
+                    Requirement = Requirement.replace(' and stay there','')
+
+                    # parse the liveness requirement
+                    ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
+
+                    # If not SysGoals, then it is an error
+                    if not ReqFormulaInfo['type']=='SysGoals':
+                        print 'ERROR(15): Could not parse the sentence in line '+ str(lineInd)+' :'
+                        print line
+                        print 'because the requirement is not system liveness'
+                        continue
+
+                    if CondType == "IFF":
+                        print 'ERROR(15): Could not parse the sentence in line '+ str(lineInd)+' :'
+                        print line
+                        print 'because IFF cannot be used with "stay there"'
+                        continue
+
+                    # add the 'stay there' as a condition (if R then stay there)
+                    regCond = ReqFormulaInfo['formula'].replace('\t\t\t []<>','')
+                    regCond = regCond.replace('& \n','')
+                    condStayFormula = {}
+                    condStayFormula['formula'] = '\t\t\t [](' + regCond + ' -> ' + StayFormula + ') & \n'
+                    condStayFormula['type'] = 'SysGoals'  # HACK: this is obviously SysTrans, but we don't want to allow any next()s 
+
+                    # Parse the condition and add it to the requirement
+                    CondFormulaInfo = parseConditional(Condition,condStayFormula,CondType,sensorList,allRobotProp,lineInd)
+                    CondFormulaInfo['type'] = 'SysTrans'
+
+                    spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
+                    map[CondFormulaInfo['type']].append(lineInd)
+                else:
+                    # parse requirement normally
+                    ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
+
             elif StayRE.search(Requirement):
                 ReqFormulaInfo = {}
                 # The formula - adding the '\t\t\t []' so it will be added to the conditional
