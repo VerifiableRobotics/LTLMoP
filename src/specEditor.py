@@ -664,6 +664,7 @@ class SpecEditorFrame(wx.Frame):
         global MENU_SIMULATE; MENU_SIMULATE = wx.NewId()
         global MENU_DOTTY; MENU_DOTTY = wx.NewId()
         global MENU_ANALYZE; MENU_ANALYZE = wx.NewId()
+        global MENU_MOPSY; MENU_MOPSY = wx.NewId()
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(wx.ID_NEW, "&New\tCtrl-N", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(wx.ID_OPEN, "&Open...\tCtrl-O", "", wx.ITEM_NORMAL)
@@ -692,6 +693,7 @@ class SpecEditorFrame(wx.Frame):
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Run")
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(MENU_ANALYZE, "&Analyze\tF8", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.Append(MENU_MOPSY, "&Visualize Counterstrategy...\tF10", "", wx.ITEM_NORMAL)
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Debug")
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(wx.ID_ABOUT, "&About Specification Editor...", "", wx.ITEM_NORMAL)
@@ -738,6 +740,7 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuSimulate, id=MENU_SIMULATE)
         self.Bind(wx.EVT_MENU, self.onMenuViewAut, id=MENU_DOTTY)
         self.Bind(wx.EVT_MENU, self.onMenuAnalyze, id=MENU_ANALYZE)
+        self.Bind(wx.EVT_MENU, self.onMenuMopsy, id=MENU_MOPSY)
         self.Bind(wx.EVT_MENU, self.onMenuAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onPropositionDblClick, self.list_box_regions)
         self.Bind(wx.EVT_BUTTON, self.onMapSelect, self.button_map)
@@ -1794,6 +1797,11 @@ class SpecEditorFrame(wx.Frame):
         
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+
+    def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        # TODO: check for failed compilation before allowing this
+        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.fileName])
+        event.Skip()
 
 # end of class SpecEditorFrame
 
