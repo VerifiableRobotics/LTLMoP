@@ -200,6 +200,13 @@ class MopsyFrame(wx.Frame):
         # Put initial condition into log
         self.appendToHistory()
 
+        # Find the appropriate starting state in the sys safety aut
+        init_outputs = [o for o in self.actuatorStates.keys() if (self.actuatorStates[o] == 1)]
+
+        if self.safety_aut.chooseInitialState(self.current_region, init_outputs) is None:
+            print "Counterstrategy initial state not found in system safety automaton. Something's off."
+            return
+
         # Start initial environment move
         # All transitionable states have the same env move, so just use the first
         if (len(self.env_aut.current_state.transitions) >=1 ): 
@@ -210,13 +217,6 @@ class MopsyFrame(wx.Frame):
 
     def applySafetyConstraints(self):
         # Determine transitionable regions
-        #init_outputs = [o for o in self.actuatorStates.keys() if (self.actuatorStates[o] == 1)]
-        init_outputs = [o for o in self.actuatorStates.keys() if (int(self.env_aut.current_state.inputs[o]) == 1)]
-
-        # Find the state corresponding to the last state
-        if self.safety_aut.chooseInitialState(self.current_region, init_outputs) is None:
-            print "Current state is invalid. Something's off"
-            return
 
         goable = []
         goable_states = []
@@ -442,6 +442,13 @@ class MopsyFrame(wx.Frame):
         self.current_region = self.dest_region
         self.appendToHistory()
         self.env_aut.runIteration()
+
+        # Find the new state in the sys safety aut (to check contraints in the next step)
+        init_outputs = [o for o in self.actuatorStates.keys() if (self.actuatorStates[o] == 1)]
+
+        if self.safety_aut.chooseInitialState(self.current_region, init_outputs) is None:
+            print "New state not found in system safety automaton. Something's off."
+            return
 
         ### Make environment move
 
