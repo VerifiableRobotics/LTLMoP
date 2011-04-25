@@ -202,7 +202,8 @@ class MopsyFrame(wx.Frame):
 
         # Start initial environment move
         # All transitionable states have the same env move, so just use the first
-        if (len(self.env_aut.current_state.transitions) >=1 ): self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
+        if (len(self.env_aut.current_state.transitions) >=1 ): 
+            self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
 
         self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
         self.applySafetyConstraints()
@@ -443,17 +444,18 @@ class MopsyFrame(wx.Frame):
         self.env_aut.runIteration()
 
         ### Make environment move
-        # If there is no next state, this implies that the system has no possible move (including staying in place)
-        # This indicates a subset of safety unsatisfiability, a condition we handle here separately
-        if len(self.env_aut.current_state.transitions) == 0:
-            self.label_violation.SetLabel("Checkmate: no possible system moves.")
-            self.button_next.Enable(False)
-            return
 
         # All transitionable states have the same env move, so just use the first
         self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
         self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
         self.applySafetyConstraints()
+
+        # If there is no next state, this implies that the system has no possible move (including staying in place)
+        if len(self.env_aut.current_state.transitions[0].transitions) == 0:
+            self.label_violation.SetLabel("Checkmate: no possible system moves.")
+            for b in self.act_buttons + self.cust_buttons + [self.button_next]:
+                b.Enable(False)
+
         event.Skip()
 
 # end of class MopsyFrame

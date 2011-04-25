@@ -51,6 +51,7 @@ seeking,1
 hiding,0
 
 Customs: # List of custom propositions
+carrying_item
 
 RegionFile: # Relative path of region description file
 hideandseek.regions
@@ -76,7 +77,6 @@ Spec: # Specification in simple English
 Robot starts with seeking
 
 If you activated seeking then do not seeking
-If you were not activating seeking and you sensed been_found then do seeking
-If you were not activating seeking and you sensed been_found then do not seeking
-
+If you were not activating seeking and you are sensing been_found then do seeking
+If you were not activating seeking and you are sensing been_found then do not seeking
 
