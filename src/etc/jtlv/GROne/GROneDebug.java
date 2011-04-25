@@ -220,15 +220,17 @@ public class GROneDebug {
 			}
 		}
 		
+		BDD prev;
+		g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
+			
+		counter_exmple = g.envWinningStates().and(all_init);		 
+		if (counter_exmple.isZero()) {			
+			debugInfo += "REALIZABLE\n";
+		}	
+			
 		if (!env.justiceAt(env.justiceNum() - 1).equals(Env.TRUE())) {
-			
-			BDD prev;
-			g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
-			
-			counter_exmple = g.envWinningStates().and(all_init);		 
-			if (counter_exmple.isZero()) {			
-				debugInfo += "REALIZABLE\n";
-			}	
+				
+				
 			for (int i = env.justiceNum()-1; i >=1; i--){		
 				 prev = counter_exmple;
 				 g = new GROneGame(env,sys, sys.justiceNum(), i);

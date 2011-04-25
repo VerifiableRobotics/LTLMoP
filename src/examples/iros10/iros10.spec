@@ -79,29 +79,19 @@ others=p2,p9,p10
 kitchen=p5
 
 Spec: # Specification in simple English
+# Initial conditions
 Env starts with false
-Robot starts in porch
 Robot starts with false
-If you were in porch then do not person
+Robot starts in porch
+#Assumptions about the environment
 If you were in porch then do not hazardous_item
+# Define robot safety including how to pick up
 Do pick_up if and only if you are sensing hazardous_item and you are not activating carrying_item
-Do drop if and only if you are activating carrying_item and you were in porch
-If you are activating pick_up or you activated pick_up then stay there
-If you are activating drop or you activated drop then stay there
-Do radio if and only if you are sensing person
-If you are activating radio or you activated radio then stay there
-If you activated pick_up then do carrying_item
-If you activated drop and you did not activate pick_up then do not carrying_item
-If you activated carrying_item and you did not activate drop then do carrying_item
-If you did not activate carrying_item and you did not activate pick_up then do not carrying_item
-If you are not activating carrying_item and you are not activating radio then visit dining
-If you are not activating carrying_item and you are not activating radio then visit deck
-#always not living
-always kitchen or porch or deck or bedroom or dining or living
-If you are not activating carrying_item and you are not activating radio then visit living
-If you are not activating carrying_item and you are not activating radio then visit bedroom
-If you are not activating carrying_item and you are not activating radio then visit kitchen
 If you did not activate carrying_item then always not porch
-If you are activating carrying_item and you are not activating radio then visit porch
+# Define when and how to radio
+Do radio if and only if you are sensing person
+If you are activating radio or you were activating radio then stay there
+# Patrol goals
+If you are not activating carrying_item and you are not activating radio then visit dining
 
 

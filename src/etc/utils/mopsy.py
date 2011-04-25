@@ -200,7 +200,7 @@ class MopsyFrame(wx.Frame):
 
         # Start initial environment move
         # All transitionable states have the same env move, so just use the first
-        self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
+        if (len(self.env_aut.current_state.transitions) >=1 ): self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
 
         self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
         self.applySafetyConstraints()

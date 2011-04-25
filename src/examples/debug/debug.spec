@@ -46,9 +46,9 @@ pioneer_real.robot
 ======== SETTINGS ========
 
 Actions: # List of actions and their state (enabled = 1, disabled = 0)
-pick_up,1
+pick_up,0
 drop,1
-radio,1
+radio,0
 extinguish,0
 
 Customs: # List of custom propositions
@@ -58,9 +58,9 @@ RegionFile: # Relative path of region description file
 debug.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-fire,0
-person,1
-hazardous_item,1
+fire,1
+person,0
+hazardous_item,0
 
 currentExperimentName:
 ASL
@@ -80,16 +80,17 @@ kitchen=p6
 
 Spec: # Specification in simple English
 Env starts with false
-Robot starts  with false
-#If you activated drop then do not drop
-#If activated drop then do drop
-#If you did not activate drop then do drop
-Do pick_up if and only if you are sensing hazardous_item
-Do drop if and only if you were in porch
-If you are activating pick_up or you activated pick_up then stay there
-If you are activating drop or you activated drop then stay there
-If you did not activate pick_up then always not porch
-Visit porch
+Robot starts with not drop
+If you activated drop and you are sensing fire then do not drop
+If you activated drop and you are sensing fire then do drop
+If you did not activate drop then do drop
+
+#Do pick_up if and only if you are sensing hazardous_item
+#Do drop if and only if you were in porch
+#If you are activating pick_up or you activated pick_up then stay there
+#If you are activating drop or you activated drop then stay there
+#If you did not activate pick_up then always not porch
+#Visit porch
 #Always person and not person
 
 

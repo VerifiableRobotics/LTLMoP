@@ -725,13 +725,38 @@ public class GROneGame {
                 BDD input = null;
                 int new_i = -1, new_j = -1;
                 // For each env successor
-                if (input == null) {                  	
+                if (input == null) {                 
+                	
+                	
+                	// computing the set of env possible successors.
+	                Vector<BDD> succs = new Vector<BDD>();
+	                BDD all_succs = env.succ(p_st);
+	                for (BDDIterator all_states = all_succs.iterator(env
+	                        .moduleUnprimeVars()); all_states.hasNext();) {
+	                    BDD sin = (BDD) all_states.next();
+	                    succs.add(sin);
+	                }
+	                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
+                    .hasNext();) {
+	                	BDD primed_cur_succ = Env.prime(iter_succ.next());
+	                	if (!(p_st.and(primed_cur_succ).and(sys.yieldStates(env,Env.FALSE())).isZero())) {
+		                	input = primed_cur_succ;
+		                	new_i = rank_i;
+		                	new_j = rank_j;	
+		                	System.out.println("one succ" + primed_cur_succ);               	
+			                   
+		                	break;		                    	
+	                	} 
+                	}
+
+	                
+	                
 		                /* Find Z index of current state */
 		                // find minimal Z_a
 		                int p_a = -1;
 		             // computing the set of env possible successors.
-		                Vector<BDD> succs = new Vector<BDD>();
-		                BDD all_succs = env.succ(p_st);
+		                succs = new Vector<BDD>();
+		                all_succs = env.succ(p_st);
 		                for (BDDIterator all_states = all_succs.iterator(env
 		                        .moduleUnprimeVars()); all_states.hasNext();) {
 		                    BDD sin = (BDD) all_states.next();
@@ -946,8 +971,20 @@ public class GROneGame {
                 }	
 		                
                 // computing the set of system possible successors.
-                Vector<BDD> sys_succs = new Vector<BDD>();
+                Vector<BDD> sys_succs = new Vector<BDD>();               
                 BDD all_sys_succs = sys.succ(p_st.and(input));
+                if (all_sys_succs.equals(Env.FALSE())) {
+                	RawCState gsucc = new RawCState(aut.size(), Env.unprime(input), new_j, new_i, input);
+                    idx = aut.indexOf(gsucc); // the equals doesn't consider
+                                              // the id number.
+                    if (idx == -1) {                       
+                        aut.add(gsucc);
+                        idx = aut.indexOf(gsucc);
+                    }
+                    new_state.add_succ(aut.elementAt(idx));
+                	continue;                	
+                }               	
+                
                 for (BDDIterator all_sys_states = all_sys_succs.iterator(sys
                         .moduleUnprimeVars()); all_sys_states.hasNext();) {
                     BDD sin = (BDD) all_sys_states.next();
@@ -1281,12 +1318,7 @@ public class GROneGame {
 		// return null; // res;
 	}*/
 	
-	public BDD controlStatesX(Module controller, Module responder, BDD to, BDD x) {
-		BDDVarSet responder_prime = responder.modulePrimeVars();
-		BDDVarSet this_prime = controller.modulePrimeVars();
-		BDD exy = Env.prime(to).and(responder.trans()).forAll(responder_prime);
-		return controller.trans().and(exy).and(x);
-	}
+
 		
 	@SuppressWarnings("unused")
 	private class RawState {
@@ -1487,7 +1519,7 @@ public class GROneGame {
 			String res = "State " + id + " with rank (" + rank_i + "," + rank_j + ") -> " 
 				+ state.toStringWithDomains(Env.stringer) + "\n";
 			if (succ.isEmpty()) {
-				res += "\tWith no successors.";
+				res += "\tWith no successors.";				
 			} else {
 				RawCState[] all_succ = new RawCState[succ.size()];
 				succ.toArray(all_succ);
