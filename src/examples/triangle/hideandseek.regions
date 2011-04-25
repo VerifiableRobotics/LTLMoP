@@ -1,0 +1,22 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+boundary	poly	188	114	379	210	0	255	0	0	15	223	0	379	15	337	206	208	198	33	210
+r2	poly	396	114	171	206	0	0	255	15	0	171	15	129	206	0	198
+r1	poly	188	114	223	210	0	255	0	223	0	208	198	33	210	0	15
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+hideandseek_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+boundary	r2	396	312	525	320	525	320	567	129	411	114	567	129
+boundary	r1	221	324	396	312	188	129	221	324	188	129	411	114
+r2	r1	396	312	411	114
+
