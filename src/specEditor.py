@@ -1801,7 +1801,6 @@ class SpecEditorFrame(wx.Frame):
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # TODO: check for failed compilation before allowing this
         subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.fileName])
-        event.Skip()
 
 # end of class SpecEditorFrame
 
