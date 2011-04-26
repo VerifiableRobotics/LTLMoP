@@ -714,7 +714,21 @@ public class GROneGame {
 		                	new_i = rank_i;
 		                	new_j = rank_j;	
 		                	break;		                    	
-	                	} else if (!(Env.unprime(primed_cur_succ).and(sys.yieldStates(env,Env.FALSE())).isZero())) {
+	                	} 
+                	}
+	                
+	             // computing the set of env possible successors.
+	                succs = new Vector<BDD>();
+	                all_succs = env.succ(p_st);
+	                for (BDDIterator all_states = all_succs.iterator(env
+	                        .moduleUnprimeVars()); all_states.hasNext();) {
+	                    BDD sin = (BDD) all_states.next();
+	                    succs.add(sin);
+	                }
+	                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
+                    .hasNext();) {
+	                	BDD primed_cur_succ = Env.prime(iter_succ.next());
+	                	if (input == null && !(Env.unprime(primed_cur_succ).and(sys.yieldStates(env,Env.FALSE())).isZero())) {
 		                	input = primed_cur_succ;
 		                	new_i = rank_i;
 		                	new_j = rank_j;	
