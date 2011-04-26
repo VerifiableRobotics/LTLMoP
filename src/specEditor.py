@@ -1710,7 +1710,7 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.onMenuCompile(event)
-        self.onMenuViewAut(event)
+        #self.onMenuViewAut(event)
         
         fileNamePrefix = os.path.join(self.projectPath, self.projectName)
 
