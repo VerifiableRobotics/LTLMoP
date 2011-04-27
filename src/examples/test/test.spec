@@ -26,22 +26,23 @@ CKBotSim.robot
 ======== SETTINGS ========
 
 Actions: # List of actions and their state (enabled = 1, disabled = 0)
-pick_up,0
-radio,0
-drop,0
-snake,1
-cross,1
+T_stationary,1
+T_fast,1
+T_1D_motion,1
+T_low,1
+T_nonholonomic_turning,1
+T_fast_and_1D_motion,1
+T_low_and_nonholonomic_turning,1
 
 Customs: # List of custom propositions
-carrying_item
 
 RegionFile: # Relative path of region description file
 test.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-fire,0
-person,1
-hazardous_item,1
+predator,1
+prey,1
+poison,1
 
 currentExperimentName:
 Default
@@ -51,17 +52,14 @@ Default
 
 RegionMapping:
 
-r4=p2
-r3=p3
-R1=p5
-R2=p4
-others=p6,p7,p8,p9
+R1=p2
+R2=p1
+others=
 
 Spec: # Specification in simple English
-If you are not sensing person then Visit R1
-If you are not sensing person then Visit R2
-If you are not sensing person then Visit r3
-If you are not sensing person then Visit r4
-Do snake if and only if you are sensing person
+Visit R1
+Visit R2
+If you are sensing predator then do T_fast
+If you are in R2 then do T_1D_motion
 
 

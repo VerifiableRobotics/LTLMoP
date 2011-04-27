@@ -26,9 +26,9 @@ class CKBotSim:
 	turn = 0.5
 	turn2 = 0.5
 	clip = 500.0
-	res = (550, 400)
+	res = (800, 600)
 
-	def __init__(self,robotfile, standalone=1,obstaclefile=None,regionfile=None,region_calib=None,startingpose=None):
+	def __init__(self,robotfile, standalone=1,obstaclefile=None,regionfile=None,region_calib=None,startingpose=None,heightmap=None):
 		"""
 		Initialize the simulator.
 		"""
@@ -125,6 +125,10 @@ class CKBotSim:
 		# Create Obstacles
 		if (obstaclefile!=None):
 		    self.loadObstacles(obstaclefile)
+
+		# Create region heights if they are specified.
+		if (heightmap!=None):
+			self.loadRegionHeights(heightmap)
 
 	def _loadObjects(self):
 		"""
@@ -842,7 +846,44 @@ class CKBotSim:
 
                 # Append all these new pointers to the simulator class.
                 self._geoms.append(geom)
-		
+	
+	def loadRegionHeights(self, heightmap):
+
+	    self.heightObstacles = []
+	    self.heightColors = []
+            
+	    # Go through all the regions in the list and spawn the height obstacles.
+            for i in range(len(heightmap)):
+
+		# Unpack data.
+		rd = self.region_data[i]
+		x_vals = []
+		z_vals = []
+		for j in range(3,len(rd)):
+		    x_vals.append(rd[j][0]*self.region_calib[0])
+		    z_vals.append(-rd[j][1]*self.region_calib[1])
+		height = heightmap[i]*self.cubesize
+	
+		# Create the height obstacle for any non-zero height.			
+		if height > 0:
+
+		        size = [max(x_vals)-min(x_vals),height,max(z_vals)-min(z_vals)]
+		        pos = [0.5*(max(x_vals)+min(x_vals)), height*0.5, 0.5*(max(z_vals)+min(z_vals))]
+		        mass = 500
+		                
+		        # Create the obstacle.
+		        body = ode.Body(self.world)
+		        geom = ode.GeomBox(space=self.space, lengths=size )
+		        geom.setBody(body)
+		        geom.setPosition(pos)
+		        M = ode.Mass()
+		        M.setBox(mass,size[0],size[1],size[2])
+		        body.setMass(M)
+
+		        # Append all these new pointers to the simulator class.
+		        self.heightObstacles.append(geom)
+			self.heightColors.append((rd[0],rd[1],rd[2]))
+	
 	def loadRegionData(self, regionfile):
 		"""
 		Parses a LTLMoP-formatted ".regions" file and creates a data structure to render the region map in the simulator.
@@ -894,6 +935,7 @@ class CKBotSim:
 						temp_info = region_color
 						temp_info.extend(vertices)
 						self.region_data.append(temp_info)
+
 					elif info[1]=="rect":
 						region_color = [float(info[6])/255.0, float(info[7])/255.0, float(info[8])/255.0]
 						posx = int(info[2])
@@ -1299,9 +1341,14 @@ class CKBotSim:
 		self._renderGround()
 
 		self._setCamera()
-		counter = 1;
+
 		for geom in self._geoms:
 			self._renderGeom(geom,(0,0,0))
+
+		i = 0
+		for geom in self.heightObstacles:
+			self._renderGeom(geom,self.heightColors[i])
+			i = i + 1
 
 		glFlush()
 		pygame.display.flip()
@@ -1609,5 +1656,9 @@ if (__name__ == '__main__'):
 	if len(sys.argv)==3:
             obstaclefile = "../obstacles/" + sys.argv[2] + ".obstacle"
 
-	sim = CKBotSim(robotfile, standalone=0, obstaclefile=obstaclefile)
+	heightmap = [0.5, 1.0, 1.5, 2.0]
+	regioncalib = [-0.3,0.3]
+	startingpose = [regioncalib[0]*(175+75), 15, -regioncalib[1]*(100+65)]
+
+	sim = CKBotSim(robotfile, standalone=0, obstaclefile=obstaclefile,regionfile="../../../../examples/stairs/stairs.regions",region_calib=regioncalib,startingpose=startingpose,heightmap = heightmap)
 	sim.run()
