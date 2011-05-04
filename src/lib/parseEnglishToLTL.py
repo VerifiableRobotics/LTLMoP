@@ -110,6 +110,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # parse the rest and return it to spec['EnvInit']
             LTLsubformula = parseInit(EnvInit,sensorList,lineInd)
             spec['EnvInit']= spec['EnvInit'] + LTLsubformula
+            map['EnvInit'].append(lineInd)
             
         # If the sentence describes the initial state of the robot
         elif SysInitRE.search(line):
