@@ -27,19 +27,10 @@ class CKBotRun:
 		self.loadRobotData(robotfile)
 		self.gait = 0
 
-		# Initialize the cluster
-		tempc = Cluster()
-		tempc.populate()
-		print tempc
-		self.fullcluster = tempc
-
-		# HARDCODED CONFIG DEFINITIONS:
-		# Snake configuration.
-		if self.config == "Snake":
-			self.cluster = [tempc[199], tempc[143], tempc[216], tempc[197] ]
-		# T configuration.
-		elif self.config == "Tee" or self.config == "TeeStationary":
-			self.cluster = [tempc[199], tempc[143], tempc[216], tempc[197], tempc[145], tempc[218]]
+		# Initialize the cluster and get the module ID correspondence
+		self.cluster = Cluster()
+		self.cluster.populate()
+		self.getKeyOrders(self.config)
 
 		# Initialize the time
 		self.starttime = time.time()
@@ -183,8 +174,21 @@ class CKBotRun:
 						temprow.append( float(elem)*(math.pi/180.0)*(1/100.0) )
 					gaitrows.append(temprow)		    
 
+	def getKeyOrders(self,config):
+		"""
+		Get the Key Orders from the KeyOrders.txt file for Module ID correspondence.
+		"""
 
+		f = open("KeyOrders.txt",'r')
 
+		self.key_orders = []
+		for line in f:
+			linesplit = line.split()
+			if linesplit != []:
+				if linesplit[0] == self.config:
+					for idx in range(1,len(linesplit)):
+						self.key_orders.append(int(linesplit[idx]))
+		print self.key_orders
 
 	def setGait(self,gait):
 		"""
@@ -226,7 +230,7 @@ class CKBotRun:
 					if module_idx==3:
 						ref_ang = ref_ang - 3000
 		
-					self.cluster[module_idx].set_pos(ref_ang)
+					self.cluster[self.key_orders[module_idx]].set_pos(ref_ang)
 
 			# If the gait is of fixed type, run the function "gaitangle" to interpolate between
 			# reference hinge angles at the current time.
@@ -240,7 +244,7 @@ class CKBotRun:
 					if self.config=="Snake" and module_idx=="3":
 						ref_ang = ref_ang - 3000
 		
-					self.cluster[module_idx].set_pos(ref_ang)
+					self.cluster[self.key_orders[module_idx]].set_pos(ref_ang)
 
 	def gaitangle(self,gait,time,module):
 		"""
@@ -301,14 +305,8 @@ class CKBotRun:
 		robotfile = "lib/platforms/ckbot/config/" + name + ".ckbot"
 		self.loadRobotData(robotfile)
 
-		# Update the cluster information. This is again hard-coded due to module correspondence.
-		# Snake configuration.
-		tempc = self.fullcluster
-		if name == "Snake":
-			self.cluster = [ tempc[199], tempc[143], tempc[216], tempc[197] ]
-		# T configuration.
-		elif name == "Tee":
-			self.cluster = [ tempc[199], tempc[143], tempc[216], tempc[197], tempc[145], tempc[218] ]
+		# Update the module ID correspondence
+		self.getKeyOrders(self.config)
 
 		self.gait = 0
 
