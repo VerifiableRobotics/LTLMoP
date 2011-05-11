@@ -58,6 +58,7 @@ def guiListen():
     buf = 1024
     addrFrom = (host,portFrom)
     UDPSockFrom = socket(AF_INET,SOCK_DGRAM)
+    UDPSockFrom.setsockopt(SOL_SOCKET,SO_REUSEADDR,1) 
     UDPSockFrom.bind(addrFrom)
 
     while 1: 

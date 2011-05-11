@@ -76,6 +76,7 @@ class SimGUI_Frame(wx.Frame):
         self.portFrom = 9563
         self.addrFrom = (self.host,self.portFrom)
         self.UDPSockFrom = socket(AF_INET,SOCK_DGRAM)
+        self.UDPSockFrom.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.UDPSockFrom.bind(self.addrFrom)
 
         # Create new thread to communicate with subwindow

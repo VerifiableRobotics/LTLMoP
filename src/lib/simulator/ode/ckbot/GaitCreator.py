@@ -1354,8 +1354,16 @@ class GaitCreator:
 			self.gait_frame = self.gait_frame + 1
 		# Press D to save a gait as the next gait in the text file.
 		elif (key == pygame.K_d and self.recording):
+			# Determine gait time
 			gaittime = input('In how many seconds should this gait execute? Enter number: ')
 			self.temp_recording.append(gaittime)
+			# Determine gait name
+			self.gaitname = raw_input('Name this gait: ')
+			# Get gait traits
+			self.traits = raw_input("Enter gaits separate by a comma and a space (e.g. fast, tall): ")
+			# Update Library
+			self.updateLibe()
+			# Save Gait File
 			self.saveGait()
 			print "Gait Saved"
 			self.recording = False	
@@ -1463,10 +1471,19 @@ class GaitCreator:
 		
 		# Load the robot file.
 		f = open(self.robotfile, 'a')
+
+		# Add new gait name
+		gaitname = self.gaitname
+		namestring = '\n\n# Gait name: ' + gaitname
+		f.write(namestring)
+
+		# Add traits
+		traitsstring = '\n# Traits: ' + self.traits
+		f.write(traitsstring)
 		
 		# Add the new gait number
 		numgaits = len(self.gaits)
-		titlestring = "\n\nGait " + str(numgaits + 1)
+		titlestring = "\nGait " + str(numgaits + 1)
 		f.write(titlestring)
 
 		# Now add each row of the gait file
@@ -1484,6 +1501,59 @@ class GaitCreator:
 		
 		# Reload the robot data.
 		self.loadRobotData(self.robotfile)		
+
+	def updateLibe(self):
+		"""
+		Update CKBotTraits.libe with the new gait and traits
+		"""
+		gaitname = self.gaitname
+		traits = self.traits.split(", ")
+		traitPreexists = []
+		while len(traitPreexists) < len(traits):
+			traitPreexists.append(0)
+		config = sys.argv[1]
+
+		# Rename file to have a ~ at the end
+		libFile = 'library/CKBotTraits.libe'
+		os.rename(libFile,libFile+'~')
+
+		# Load the robot file.
+		destination= open(libFile, 'w' )
+		source= open(libFile+'~', 'r' )
+
+		# Append config-gait pair to trait list if it already exists
+		for line in source:
+			if not ('# LEAVE THIS LINE HERE (one enter line below last trait list) for correct parsing' in line):
+				destination.write(line)
+				if 'Trait: ' in line:
+					idx = 0
+					for trait in traits:
+						if trait in line:
+							destination.write( config + '-' + gaitname + '\n' )
+							traitPreexists[idx] = 1
+						idx = idx + 1
+
+
+		# Make a new trait list in the library if it doesn't already exist
+		idx = 0
+		for trait in traits:
+			if traitPreexists[idx] == 0:
+				print "New trait! Please write a short definition for trait " + trait + ":"
+				newdefn = raw_input()
+				# Make a new trait list
+				destination.write('# \"' + trait + '\" = ' + newdefn + '\n')
+				destination.write('Trait: ' + trait + '\n')
+				destination.write(config + '-' + gaitname + '\n')	
+				traitPreexists[idx] = 1			
+			idx = idx + 1
+
+		# Write last two lines of library
+		destination.write('\n' )
+		destination.write('# LEAVE THIS LINE HERE (one enter line below last trait list) for correct parsing')
+
+		# Close the file.
+		source.close()
+		destination.close()
 		
 		
 	def setGait(self,gait):

@@ -7,7 +7,7 @@ dummySensor.py - Dummy Sensor Handler
 Displays a silly little window for faking sensor values by clicking on buttons.
 """
 
-import threading, subprocess, os, time
+import threading, subprocess, os, time, socket
 
 class sensorHandler:
     def __init__(self, proj, shared_data):
@@ -34,7 +34,7 @@ class sensorHandler:
         # Block until the sensor listener gets the go-ahead from the subwindow
         while not self.sensorListenInitialized:
             time.sleep(0.05) # Yield cpu
-
+        #time.sleep(0.01)
         # Tell the subwindow what buttons to create/enable
         for sensor in proj.all_sensors:
             if sensor in proj.initial_sensors:
@@ -63,10 +63,18 @@ class sensorHandler:
         """
         Processes messages from the sensor handler subwindow, and updates our cache appropriately
         """
+        host = 'localhost'
+        port = 23459
+        buf = 1024
+        addr = (host,port)
+
+        UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        UDPSock.bind(addr)
 
         while 1: 
             # Wait for and receive a message from the subwindow
-            input = self.fd_sensorHandler.readline()
+            input,addrFrom = UDPSock.recvfrom(1024)
             if input == '':  # EOF indicates that the connection has been destroyed
                 print "(SENS) Sensor handler listen thread is shutting down."
                 break

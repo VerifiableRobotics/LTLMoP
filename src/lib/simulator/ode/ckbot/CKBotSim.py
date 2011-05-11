@@ -127,8 +127,9 @@ class CKBotSim:
 		    self.loadObstacles(obstaclefile)
 
 		# Create region heights if they are specified.
-		if (heightmap!=None):
-			self.loadRegionHeights(heightmap)
+		self.heightmap = heightmap
+		if (self.heightmap!=None):
+			self.loadRegionHeights(self.heightmap)
 
 	def _loadObjects(self):
 		"""
@@ -1345,10 +1346,11 @@ class CKBotSim:
 		for geom in self._geoms:
 			self._renderGeom(geom,(0,0,0))
 
-		i = 0
-		for geom in self.heightObstacles:
-			self._renderGeom(geom,self.heightColors[i])
-			i = i + 1
+		if (self.heightmap != None):
+			i = 0
+			for geom in self.heightObstacles:
+				self._renderGeom(geom,self.heightColors[i])
+				i = i + 1
 
 		glFlush()
 		pygame.display.flip()
@@ -1656,9 +1658,10 @@ if (__name__ == '__main__'):
 	if len(sys.argv)==3:
             obstaclefile = "../obstacles/" + sys.argv[2] + ".obstacle"
 
-	heightmap = [0.5, 1.0, 1.5, 2.0]
-	regioncalib = [-0.3,0.3]
-	startingpose = [regioncalib[0]*(175+75), 15, -regioncalib[1]*(100+65)]
+	heightmap = [0.25, 0.25, 0.25, 0.25, 0]
+	regioncalib = [1.0,-1.0]
+	startingpose = [regioncalib[0]*(250), 0, -regioncalib[1]*(250)]
 
-	sim = CKBotSim(robotfile, standalone=0, obstaclefile=obstaclefile,regionfile="../../../../examples/stairs/stairs.regions",region_calib=regioncalib,startingpose=startingpose,heightmap = heightmap)
+	sim = CKBotSim(robotfile, standalone=0, obstaclefile=obstaclefile,regionfile="../../../../examples/looptest/looptest.regions",region_calib=regioncalib,startingpose=startingpose,heightmap = heightmap)
+	#sim = CKBotSim(robotfile, standalone=0)
 	sim.run()
