@@ -1,0 +1,76 @@
+[INPUT_VARIABLES]
+e.person;
+e.hazardous_item;
+
+
+[OUTPUT_VARIABLES]
+s.snake;
+s.cross;
+s.carrying_item;
+
+
+[ENV_INITIAL]
+			TRUE ;
+
+
+[ENV_TRANSITIONS]
+			G(TRUE) ;
+
+
+[ENV_FAIRNESS]
+			G(F(TRUE));
+
+[SYS_INITIAL]
+			( (s.bit0=0 * s.bit1=0 * s.bit2=0) 
+				 + (s.bit0=0 * s.bit1=0 * s.bit2=1)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=0)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=1)
+				 + (s.bit0=1 * s.bit1=0 * s.bit2=0)
+				 + (s.bit0=1 * s.bit1=0 * s.bit2=1)
+				 + (s.bit0=1 * s.bit1=1 * s.bit2=0)
+				 + (s.bit0=1 * s.bit1=1 * s.bit2=1)
+			) ;
+
+
+[SYS_TRANSITIONS]
+			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=0)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=1)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=0)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=1)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0))) 			 G( ((s.bit0=1 * s.bit1=0 * s.bit2=0)) -> ( ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1))) 			 G( ((s.bit0=1 * s.bit1=0 * s.bit2=1)) -> ( ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0))) 			 G( ((s.bit0=1 * s.bit1=1 * s.bit2=0)) -> ( ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1))) 			 G( ((s.bit0=1 * s.bit1=1 * s.bit2=1)) -> ( ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0))) 			 G((( X(e.person=1) ) ) <-> ( X(s.snake=1)) ) ;
+
+
+[SYS_FAIRNESS]
+G(F((!( e.person=1 ) ) -> (  ((s.bit0=1 * s.bit1=0 * s.bit2=1))) ) ;
+			 G(F((!( e.person=1 ) ) -> (  ((s.bit0=1 * s.bit1=0 * s.bit2=0))) ) ;
+			 G(F((!( e.person=1 ) ) -> (  ((s.bit0=0 * s.bit1=0 * s.bit2=1))) ) ;
+			 G(F((!( e.person=1 ) ) -> (  ((s.bit0=0 * s.bit1=0 * s.bit2=0))) ));
+

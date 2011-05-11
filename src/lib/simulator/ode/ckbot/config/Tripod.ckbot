@@ -1,0 +1,62 @@
+# CKBot Simulator Robot File
+# 6-Module T-Shape Configuration
+
+ConfigName:
+Tripod
+
+ConnMatrix:
+0 7 0 9 0 10 0
+1 0 7 0 0 0 0
+0 1 0 0 0 0 0
+8 0 0 0 7 0 0
+0 0 0 2 0 0 0 
+8 0 0 0 0 0 7
+0 0 0 0 0 2 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0.0 0.5 0.0
+
+# This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
+RelativeRotation:
+-90 x
+-90 y
+
+# This represents the forward vector in robot coordinates.
+ForwardVector:
+- y
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+Gaits:
+Gain 5
+Type Fixed
+
+# Gait 1 -- Move Forward
+Gait 1
+0 0 0 0 0 0 0
+2000 3000 4000 0 0 0 0 
+2000 3000 4000 -4000 -4000 -4000 4000 
+2000 3000 4000 4000 -4000 4000 4000 
+-3000 -4000 -3000 4000 -4000 4000 4000 
+-3000 -4000 -3000 0 0 0 0 
+0 0 0 0 0 0 0 
+5
+
+# Gait 2 -- Turn Left
+Gait 2
+0 0 0 0 0 0 0 
+0 0 0 -4000 -3000 4000 3000 
+3000 3000 3000 -4000 -3000 4000 3000 
+3000 3000 3000 0 0 0 0 
+0 0 0 0 0 0 0 
+5
+
+# Gait 2 -- Turn Right
+Gait 2
+0 0 0 0 0 0 0 
+0 0 0 4000 -3000 -4000 3000 
+3000 3000 3000 4000 -3000 -4000 3000 
+3000 3000 3000 0 0 0 0 
+0 0 0 0 0 0 0 
+5

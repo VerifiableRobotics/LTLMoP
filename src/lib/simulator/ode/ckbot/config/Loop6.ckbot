@@ -1,0 +1,59 @@
+# CKBot Simulator Robot File
+# 6-Module Loop Configuration
+ConfigName:
+Loop6
+
+# module order (by row): tail, body, left arm, right arm
+ConnMatrix:
+0 7 0 0 0 0 0
+1 0 7 0 0 0 0
+0 1 0 7 0 0 0
+0 0 1 0 7 0 0
+0 0 0 1 0 7 0
+0 0 0 0 1 0 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0 2.5 0
+
+# This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
+RelativeRotation:
+-90 x
+-90 y
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+# This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
+# except for the last row which is the time taken for the entire gait to loop (in seconds)
+Gaits:
+Gain 5
+Type Fixed
+
+# Gait 1 -- loop direction 1
+Gait 1
+6000 4000 8000 6000 4000 8000
+8000 6000 4000 8000 6000 4000
+4000 8000 6000 4000 8000 6000
+6000 4000 8000 6000 4000 8000
+4
+
+# Gait 2 -- loop direction 2
+Gait 2
+6000 8000 4000 6000 8000 4000
+4000 6000 8000 4000 6000 8000
+8000 4000 6000 8000 4000 6000
+6000 8000 4000 6000 8000 4000
+4
+
+# Gait 3 -- snake
+Gait 3
+0 500 1000 500 0 -500
+500 1000 500 0 -500 -1000
+1000 500 0 -500 -1000 -500
+500 0 -500 -1000 -500 0
+0 -500 -1000 -500 0 500
+-500 -1000 -500 0 500 1000
+-1000 -500 0 500 1000 500
+-500 0 500 1000 500 0
+0 500 1000 500 0 -500
+3
