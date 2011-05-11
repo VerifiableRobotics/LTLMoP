@@ -131,5 +131,6 @@ if (__name__ == '__main__'):
 	
 	# Run configuration in CKBot Simulator
 	config = libs.findGait(desired_words)
+	print config
 	#os.system("python lib/simulator/ode/ckbot/CKBotSim.py " + config)
 	

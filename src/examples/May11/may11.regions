@@ -1,0 +1,52 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+boundary	poly	65	22	661	492	32	240	93	0	344	0	96	0	0	171	0	510	0	661	0	661	96	661	492	637	492	552	492	173	492	0	492
+Enemy_Base	rect	65	22	171	96	255	51	0
+Mountains	poly	65	118	171	248	154	149	142	0	0	171	0	171	247	171	248	0	248
+Jungle	rect	236	22	339	96	5	136	56
+WAR_ZONE	poly	236	118	340	247	240	37	32	0	0	339	0	340	0	340	247	2	247	0	247
+Tunnel	poly	617	118	85	396	146	0	255	0	247	0	1	0	0	85	0	85	1	85	396	0	396
+Bunker	poly	575	22	151	96	0	196	255	0	0	151	0	151	96	127	96	42	96	1	96	0	96
+Wall2	poly	702	118	24	396	127	84	126	0	1	0	0	24	0	24	396	0	396
+Wall1	poly	576	118	41	247	91	45	91	0	0	41	0	41	1	41	247	0	247
+Trench	poly	238	365	379	149	255	255	0	0	1	0	0	338	0	379	0	379	149	0	149
+Supply_Depot	poly	65	366	173	148	0	199	255	0	0	171	0	173	0	173	148	0	148
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+may11_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+boundary	Enemy_Base	65	22	65	118	65	22	236	22
+boundary	Mountains	65	118	65	366
+boundary	Jungle	236	22	575	22
+boundary	Tunnel	617	514	702	514
+boundary	Bunker	575	22	726	22	726	22	726	118
+boundary	Wall2	726	118	726	514	702	514	726	514
+boundary	Trench	238	514	617	514
+boundary	Supply_Depot	65	514	238	514	65	366	65	514
+Enemy_Base	Mountains	65	118	236	118
+Enemy_Base	Jungle	236	22	236	118
+Mountains	WAR_ZONE	236	118	236	365
+Mountains	Supply_Depot	65	366	236	366
+Jungle	WAR_ZONE	236	118	575	118
+Jungle	Bunker	575	22	575	118
+WAR_ZONE	Bunker	575	118	576	118
+WAR_ZONE	Wall1	576	118	576	365
+WAR_ZONE	Trench	238	365	576	365
+Tunnel	Bunker	617	118	702	118
+Tunnel	Wall2	702	118	702	119	702	119	702	514
+Tunnel	Wall1	617	118	617	119	617	119	617	365
+Tunnel	Trench	617	365	617	514
+Bunker	Wall2	702	118	726	118
+Bunker	Wall1	576	118	617	118
+Wall1	Trench	576	365	617	365
+Trench	Supply_Depot	238	366	238	514
+
