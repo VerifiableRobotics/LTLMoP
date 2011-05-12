@@ -80,7 +80,7 @@ class GaitCreator:
 		self.cubemass = 10.0
 		self.hingemaxangle = 1.6
 		self.hingeminangle = -1.6
-		self.hingemaxforce = 1000000
+		self.hingemaxforce = 2500000
 
 		# Control parameters.
 		self.gait = 0

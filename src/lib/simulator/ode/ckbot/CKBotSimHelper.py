@@ -51,9 +51,9 @@ def reconfigure(sim, name):
 	# Load the new robot data from the new file "name".ckbot.
 	# Assumes we are running either from the same directory as simulator or from src/.
 	print("==========\nReconfiguring: " + name + "\n==========")
-	if sim.standalone == 1: # ran as main
+	if sim.standalone == 1: 					# ran as main
 		robotfile = "config/" + name + ".ckbot"
-	else:
+	else:										# ran from LTLMoP
 		robotfile = "lib/simulator/ode/ckbot/config/" + name + ".ckbot"
 	loadRobotData(sim, robotfile)
 

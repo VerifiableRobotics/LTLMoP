@@ -1,12 +1,17 @@
 [INPUT_VARIABLES]
-e.person;
-e.hazardous_item;
+e.predator;
+e.prey;
+e.poison;
 
 
 [OUTPUT_VARIABLES]
-s.snake;
-s.cross;
-s.carrying_item;
+s.T_stationary;
+s.T_fast;
+s.T_1D_motion;
+s.T_low;
+s.T_nonholonomic_turning;
+s.T_fast_and_1D_motion;
+s.T_low_and_nonholonomic_turning;
 
 
 [ENV_INITIAL]
@@ -21,56 +26,18 @@ s.carrying_item;
 			G(F(TRUE));
 
 [SYS_INITIAL]
-			( (s.bit0=0 * s.bit1=0 * s.bit2=0) 
-				 + (s.bit0=0 * s.bit1=0 * s.bit2=1)
-				 + (s.bit0=0 * s.bit1=1 * s.bit2=0)
-				 + (s.bit0=0 * s.bit1=1 * s.bit2=1)
-				 + (s.bit0=1 * s.bit1=0 * s.bit2=0)
-				 + (s.bit0=1 * s.bit1=0 * s.bit2=1)
-				 + (s.bit0=1 * s.bit1=1 * s.bit2=0)
-				 + (s.bit0=1 * s.bit1=1 * s.bit2=1)
+			( (s.bit0=0) 
+				 + (s.bit0=1)
 			) ;
 
 
 [SYS_TRANSITIONS]
-			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=0)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0)))
-									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0))) 
-									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0))) 
-									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=1)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1)))
-									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0))) 
-									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=0)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0)))
-									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0))) 
-									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=1)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1)))
-									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1))) 
-									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0))) 
-									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0))) 			 G( ((s.bit0=1 * s.bit1=0 * s.bit2=0)) -> ( ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0)))
-									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0))) 
-									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0))) 
-									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1))) 			 G( ((s.bit0=1 * s.bit1=0 * s.bit2=1)) -> ( ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=1)))
-									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1))) 
-									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0))) 
-									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0))) 			 G( ((s.bit0=1 * s.bit1=1 * s.bit2=0)) -> ( ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0)))
-									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0))) 
-									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1))) 
-									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1))) 
-									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1))) 			 G( ((s.bit0=1 * s.bit1=1 * s.bit2=1)) -> ( ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=1)))
-									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0))) 
-									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0))) 
-									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0))) 
-									+ ((X(s.bit0=1) * X(s.bit1=1) * X(s.bit2=0))) 			 G((( X(e.person=1) ) ) <-> ( X(s.snake=1)) ) ;
+			 G( ((s.bit0=0)) -> ( ((X(s.bit0=0)))
+									+ ((X(s.bit0=1))) 			 G( ((s.bit0=1)) -> ( ((X(s.bit0=1)))
+									+ ((X(s.bit0=0))) 			 G((( X(e.predator=1) ) ) <-> ( X(s.T_fast=1)  *  X(s.T_1D_motion=1)) ) ;
 
 
 [SYS_FAIRNESS]
-G(F((!( e.person=1 ) ) -> (  ((s.bit0=1 * s.bit1=0 * s.bit2=1))) ) ;
-			 G(F((!( e.person=1 ) ) -> (  ((s.bit0=1 * s.bit1=0 * s.bit2=0))) ) ;
-			 G(F((!( e.person=1 ) ) -> (  ((s.bit0=0 * s.bit1=0 * s.bit2=1))) ) ;
-			 G(F((!( e.person=1 ) ) -> (  ((s.bit0=0 * s.bit1=0 * s.bit2=0))) ));
+G(F( ((s.bit0=0))) ;
+			 G(F( ((s.bit0=1))));
 

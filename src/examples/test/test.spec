@@ -59,7 +59,6 @@ others=
 Spec: # Specification in simple English
 Visit R1
 Visit R2
-If you are sensing predator then do T_fast
-If you are in R2 then do T_1D_motion
+Do T_fast and T_1D_motion if and only if you are sensing predator
 
 

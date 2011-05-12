@@ -365,10 +365,10 @@ class CKBotSim:
 				if len(self.gaits) >= 5:
 					self.gait = 5
 					
-			# Reconfiguration.
-			elif (key == pygame.K_r):
-					config = raw_input("Enter Configuration Name: ")
-					reconfigure(self, config)
+		# Reconfiguration.
+		elif (key == pygame.K_r):
+				config = raw_input("Enter Configuration Name: ")
+				reconfigure(self, config)
 
 
 	def _keyUp(self, key):
@@ -497,8 +497,9 @@ if (__name__ == '__main__'):
 
 	print info
 
+	curdir = os.getcwd()
+	
 	obstaclefile = None
-	robotfile = "config/" + sys.argv[1] + ".ckbot"
 	if len(sys.argv)==3:
             obstaclefile = "../obstacles/" + sys.argv[2] + ".obstacle"
 
@@ -506,6 +507,14 @@ if (__name__ == '__main__'):
 	regioncalib = [1.0,-1.0]
 	startingpose = [regioncalib[0]*(250), 0, -regioncalib[1]*(250)]
 
-	sim = CKBotSim(robotfile, standalone=1, obstaclefile=obstaclefile,regionfile="../../../../examples/looptest/looptest.regions",region_calib=regioncalib,startingpose=startingpose,heightmap = heightmap)
-	#sim = CKBotSim(robotfile, standalone=1)
+	# Running from ckbot directory.
+	if ("simulator" in curdir) and ("ode" in curdir) and ("ckbot" in curdir):
+		robotfile = "config/" + sys.argv[1] + ".ckbot"
+		sim = CKBotSim(robotfile, standalone=1, obstaclefile=obstaclefile,regionfile="../../../../examples/looptest/looptest.regions",region_calib=regioncalib,startingpose=startingpose,heightmap = heightmap)
+	
+	# Running from src.
+	else:
+		robotfile = "lib/simulator/ode/ckbot/config/" + sys.argv[1] + ".ckbot"
+		sim = CKBotSim(robotfile, standalone=0)
+		
 	sim.run()

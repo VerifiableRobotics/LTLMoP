@@ -5,6 +5,7 @@ CKBotSimDrive.py - Simulated CKBot Drive Handler
 ================================================
 """
 import math
+from simulator.ode.ckbot import CKBotSimHelper
 
 class driveHandler:
 
@@ -35,14 +36,12 @@ class driveHandler:
 			rel_heading = rel_heading + 2*math.pi
 		old_gait = self.gait
 
-		# Check for zero (or really low) speed commands to assign no gait.
-		# Only do this for the initial configuration (currently set to Hexapod)
+		# Check for zero speed commands to assign no gait.
 		if (x==0 and y==0) and self.simulator.config!="Plus3":
 			gait = 0			# Do not move
 
 		else:	
 
-			# For the 4-Module Snake or 25 module Hexapod
 			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
 			if self.simulator.config=="Hexapod":
 				# If you were originally going straight, keep going straight until you deviate by a larger angle.
@@ -76,7 +75,9 @@ class driveHandler:
 					gait = 2			# Go Right
 				elif (rel_heading>math.pi/24):
 					gait = 3			# Go Left
-
+				CKBotSimHelper.reconfigure(self.simulator, "Hexapod")
+					
+					
 			elif self.simulator.config=="Plus":
 				if (rel_heading >= -math.pi/4 and rel_heading < math.pi/4):
 					gait = 3 			#  Horizontal forward

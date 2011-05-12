@@ -7,9 +7,8 @@ CKBotSimActuator.py - CKBotSimulator Actuator [Reconfiguration] Handler
 Does nothing more than print the actuator name and state; for testing purposes.
 """
 
-import time, math
-import sys
-import os
+import time, math, sys, os
+from simulator.ode.ckbot import CKBotSimHelper
 
 class actuatorHandler:
 
@@ -22,6 +21,9 @@ class actuatorHandler:
 		"""
 		Sets CKBot configurations.
 		"""	
+		
+		print name + " is set to " + val
+		
 		if name[0]== "T" and val==True:
 			self.trueTraits.add(name.lstrip("T_"))
 		elif name[0] == "T" and val==False:
@@ -52,7 +54,7 @@ class actuatorHandler:
 			config = libs.findGait(self.trueTraits)
 			if (type(config) != type(None)) and (self.simulator.config != config) and (val==True):
 				print "reconfiguring to:" + config
-				self.simulator.reconfigure(config)
+				CKBotSimHelper.reconfigure(self.simulator, config)
 
 #		# Use library if actuator name starts with T
 #		if name[0] == "T" and val==True:
@@ -71,7 +73,7 @@ class actuatorHandler:
 		# After we're done with any gait, switch back to default
 		elif (name!="hexapod") and val==False:
 			print "deconfiguring"
-			self.simulator.reconfigure("Hexapod")
+			CKBotSimHelper.reconfigure(self.simulator, "Hexapod")
 
 		
 
