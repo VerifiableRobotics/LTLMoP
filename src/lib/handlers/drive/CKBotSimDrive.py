@@ -91,6 +91,9 @@ class driveHandler:
 			elif self.simulator.config=="Plus3":
 				gait = 5			# play dead
 
+			elif self.simulator.config=="Loop10":
+				gait = 1			# somersault forward
+
 			elif self.simulator.config=="FoldOver":
 				gait = 2
 

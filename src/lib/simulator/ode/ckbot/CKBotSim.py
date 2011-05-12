@@ -365,8 +365,8 @@ class CKBotSim:
 				if len(self.gaits) >= 5:
 					self.gait = 5
 					
-		# Reconfiguration.
-		elif (key == pygame.K_r):
+			# Reconfiguration.
+			elif (key == pygame.K_r):
 				config = raw_input("Enter Configuration Name: ")
 				reconfigure(self, config)
 

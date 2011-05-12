@@ -11,7 +11,6 @@ Slinky-slink
 # "fast" = the robot moves at least 1 body length in 10 seconds
 Trait: fast
 #Biped-walk
-Loop-somersault
 Hexapod-run
 Loop10-roll
 FoldOver-slink
@@ -30,7 +29,6 @@ Biped-splits
 
 # "1D motion" = robot along a line (along 2D ground plane)
 Trait: 1D_motion
-Loop-somersault
 Slinky-slink
 Loop10-roll
 FoldOver-slink
