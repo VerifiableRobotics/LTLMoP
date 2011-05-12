@@ -74,8 +74,8 @@ RegionMapping:
 
 Mountain2=p9
 Mountain=p10
-Field=p13
 Bridge=p15
+Field=p13
 Tunnel=p7
 Island=p12
 Water3=p3

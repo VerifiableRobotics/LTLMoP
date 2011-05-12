@@ -55,11 +55,11 @@ RegionMapping:
 Mountains=p8
 Enemy_Base=p10
 Tunnel=p5
-others=p1
+WAR_ZONE=p4
 Wall1=p3
 Wall2=p2
 Jungle=p9
-WAR_ZONE=p4
+others=p1
 Bunker=p11
 Trench=p6
 Supply_Depot=p7
@@ -69,7 +69,8 @@ Env starts with false
 Robot starts in Supply_Depot
 Always not Wall1 and not Wall2 and not Mountains
 Visit Bunker if not supply
-Do T_fast and do T_1D_motion if and only if you are in Trench
-Do T_low and do T_narrow and do T_nonholonomic_turning if and only if you are in Tunnel
+#Do T_fast and do T_1D_motion if and only if you are in Trench
+#Do T_low and do T_narrow and do T_nonholonomic_turning if and only if you are in Tunnel
 Do T_low and do T_nonholonomic_turning if and only if you are in Jungle
+
 
