@@ -36,7 +36,7 @@ class actuatorHandler:
 		#	self.simulator.reconfigure("FoldOver")
 
 		#elif name=="snake" and val==True:
-		#	self.simulator.reconfigure("Snake")
+		#	CKBotSimHelper.reconfigure(self.simulator,"Snake")
 
 		#elif name=="play_dead" and val==True:
 		#	self.simulator.reconfigure("Plus3")
@@ -50,11 +50,10 @@ class actuatorHandler:
 		libs = self.library
 		libs.readLibe()
 
-		if name[0] == "T" and val==True:
-			config = libs.findGait(self.trueTraits)
-			if (type(config) != type(None)) and (self.simulator.config != config) and (val==True):
-				print "reconfiguring to:" + config
-				CKBotSimHelper.reconfigure(self.simulator, config)
+		config = libs.findGait(self.trueTraits)
+		if (type(config) != type(None)) and (self.simulator.config != config):
+			print "reconfiguring to:" + config
+			CKBotSimHelper.reconfigure(self.simulator, config)
 
 #		# Use library if actuator name starts with T
 #		if name[0] == "T" and val==True:
@@ -71,9 +70,9 @@ class actuatorHandler:
 
 		# Make the default configuration Hexapod
 		# After we're done with any gait, switch back to default
-		elif (name!="hexapod") and val==False:
+		elif (type(config) == type(None)) and (self.simulator.config != "Snake"):
 			print "deconfiguring"
-			CKBotSimHelper.reconfigure(self.simulator, "Hexapod")
+			CKBotSimHelper.reconfigure(self.simulator, "Snake")
 
 		
 

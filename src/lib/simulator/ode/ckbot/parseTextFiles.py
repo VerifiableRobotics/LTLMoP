@@ -12,6 +12,7 @@ from OpenGL.GLUT import *
 import math, time, copy, sys
 
 from matrixFunctions import *
+from loadModules import *
 
 # ROBOT (.ckbot) FILES
 def loadRobotData(sim, filename):
@@ -271,7 +272,7 @@ def loadRegionHeights(sim, heightmap):
 
 			size = [max(x_vals)-min(x_vals),height,max(z_vals)-min(z_vals)]
 			pos = [0.5*(max(x_vals)+min(x_vals)), height*0.5, 0.5*(max(z_vals)+min(z_vals))]
-			mass = 500
+			mass = 50000
 					
 			# Create the obstacle.
 			body = ode.Body(sim.world)
@@ -281,6 +282,9 @@ def loadRegionHeights(sim, heightmap):
 			M = ode.Mass()
 			M.setBox(mass,size[0],size[1],size[2])
 			body.setMass(M)
+
+			# Fix the obstacle to the environment.
+			create_fixed_joint(sim, body)
 
 			# Append all these new pointers to the simulator class.
 			sim.heightObstacles.append(geom)

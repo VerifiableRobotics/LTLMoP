@@ -25,7 +25,7 @@ RelativeRotation:
 
 # This represents the forward vector in robot coordinates.
 ForwardVector:
-+ y
+- y
 
 # Gain is the Proportional gain for the CKBot hinge servos.
 Gaits:
@@ -41,7 +41,7 @@ Gait 1
 -3000 4000 -3000 -4000 -4000 -4000 4000 
 -3000 0 -3000 0 0 0 0 
 0 0 0 0 0 0 0 
-5
+3
 
 # Gait 2 -- Turn Right
 Gait 2
@@ -50,7 +50,7 @@ Gait 2
 3000 3000 3000 -4000 -3000 4000 3000 
 3000 3000 3000 0 0 0 0 
 0 0 0 0 0 0 0 
-5
+3
 
 # Gait 2 -- Turn Left
 Gait 2
@@ -59,7 +59,7 @@ Gait 2
 3000 3000 3000 4000 -3000 -4000 3000 
 3000 3000 3000 0 0 0 0 
 0 0 0 0 0 0 0 
-5
+3
 
 # Gait name: Tripod
 # Traits: low, nonholonomic_turning

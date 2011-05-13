@@ -13,6 +13,8 @@ T_1D_motion
 T_low
 T_nonholonomic_turning
 T_narrow
+T_legged
+T_large
 
 MotionControlHandler: # Module with continuous controller for moving between regions
 handlers.motionControl.CKBotSimController

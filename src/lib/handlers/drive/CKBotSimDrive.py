@@ -75,8 +75,23 @@ class driveHandler:
 					gait = 2			# Go Right
 				elif (rel_heading>math.pi/24):
 					gait = 3			# Go Left
-				CKBotSimHelper.reconfigure(self.simulator, "Hexapod")
-					
+
+			elif self.simulator.config=="Tripod":
+				if old_gait == 1:
+					if (rel_heading<math.pi/6 and rel_heading>-math.pi/6):    
+						gait = 1			# Go Straight
+					elif (rel_heading<-math.pi/6):
+						gait = 3			# Go Right
+					elif (rel_heading>math.pi/6):
+						gait = 2			# Go Left
+				else:
+					if (rel_heading<math.pi/24 and rel_heading>-math.pi/24):    
+						gait = 1			# Go Straight
+					elif (rel_heading<-math.pi/24):
+						gait = 3			# Go Right
+					elif (rel_heading>math.pi/24):
+						gait = 2			# Go Left
+
 					
 			elif self.simulator.config=="Plus":
 				if (rel_heading >= -math.pi/4 and rel_heading < math.pi/4):

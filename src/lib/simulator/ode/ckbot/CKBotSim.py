@@ -30,7 +30,7 @@ class CKBotSim:
 	vel = 0.5
 	turn = 0.5
 	turn2 = 0.5
-	clip = 500.0
+	clip = 1000.0
 	res = (800, 600)
 
 	def __init__(self, robotfile, standalone=0,obstaclefile=None,regionfile=None,region_calib=None,startingpose=None,heightmap=None):

@@ -681,7 +681,7 @@ def create_module(sim, parent_pos, lower_offset, upper_offset, rot):
 	sim.hinge.append(hinge)
 
 
-def create_fixed_joint(sim, body1, body2):
+def create_fixed_joint(sim, body1, body2=ode.environment):
 	"""
 	Create a fixed joint between two bodies.
 	"""

@@ -41,6 +41,7 @@ Twist-twist
 Snake-crawl
 Loop-roll
 Tee-crawl
+Hexapod-run
 
 # "holonomic" = robot can move in any direction without turn radius
 Trait: holonomic
@@ -76,5 +77,14 @@ TeeStationary-panic
 # "long" = more than 5 modules long
 Trait: long
 FoldOver-wave
+
+# "legged" = has legs
+Trait: legged
+Tripod-crawl
+Hexapod-run
+
+# "large" = has more than 10 modules
+Trait: large
+Hexapod-run
 
 # LEAVE THIS LINE HERE (one enter line below last trait list) for correct parsing

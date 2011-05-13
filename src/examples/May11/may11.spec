@@ -6,21 +6,21 @@
 ======== EXPERIMENT CONFIG 0 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-1.0,0.0,1.0,0.0
+0.8,0.0,-0.8,0.0
 
 InitialRegion: # Initial region number
-0
+5
 
 InitialTruths: # List of initially true propositions
 
 Lab: # Lab configuration file
-
+CKBotSim.lab
 
 Name: # Name of the experiment
 Default
 
 RobotFile: # Relative path of robot description file
-
+CKBotMay11.robot
 
 
 ======== SETTINGS ========
@@ -31,8 +31,9 @@ T_fast,1
 T_1D_motion,1
 T_low,1
 T_nonholonomic_turning,1
-T_fast_and_1D_motion,0
-T_low_and_nonholonomic_turning,0
+T_narrow,1
+T_legged,1
+T_large,1
 
 Customs: # List of custom propositions
 
@@ -52,25 +53,31 @@ Default
 
 RegionMapping:
 
-Mountains=p8
+Wall1=p2
 Enemy_Base=p10
-Tunnel=p5
-WAR_ZONE=p4
-Wall1=p3
-Wall2=p2
-Jungle=p9
-others=p1
+Mountains=p7
+Tunnel=p4
+others=
+Trench=p5
+Wall2=p1
+Jungle=p8
 Bunker=p11
-Trench=p6
-Supply_Depot=p7
+WAR_ZONE=p3
+Gate=p9
+Supply_Depot=p6
 
 Spec: # Specification in simple English
 Env starts with false
 Robot starts in Supply_Depot
 Always not Wall1 and not Wall2 and not Mountains
-Visit Bunker if not supply
-#Do T_fast and do T_1D_motion if and only if you are in Trench
-#Do T_low and do T_narrow and do T_nonholonomic_turning if and only if you are in Tunnel
-Do T_low and do T_nonholonomic_turning if and only if you are in Jungle
+If you are not sensing supply and you are not sensing infiltrate then visit Bunker
+If you are sensing supply and you are not sensing infiltrate then visit Supply_Depot
+If you are sensing infiltrate then visit Enemy_Base
+Do not WAR_ZONE unless you are sensing invincible
+If you are sensing supply and you are in Supply_Depot then visit Bunker
+If you are sensing infiltrate and you are in Enemy_Base then visit Bunker
+Do T_fast and do T_1D_motion if and only if you are in Trench
+Do T_legged and T_large if and only if you are in WAR_ZONE or Enemy_Base or Supply_Depot
+Do T_low and do T_legged if and only if you are in Jungle
 
 

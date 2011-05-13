@@ -22,4 +22,5 @@ class poseHandler:
 		
 		plist = CKBotSimHelper.get2DPose(self.simulator, 0)  
 		self.pose = array([plist[0],plist[1],plist[2]])  
+
 		return self.pose

@@ -38,7 +38,7 @@ class initHandler:
 		initial_pose_sim = [initial_pose[0], 0, -initial_pose[1]]
 
 		# Initiate the CKBot simulator and render it once.
-		self.simulator = CKBotSim.CKBotSim(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/Snake.ckbot"),standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim)
+		self.simulator = CKBotSim.CKBotSim(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/Snake.ckbot"),standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim,heightmap=[0,0,5,0,7,0,0,0,0,0,3])
 		#self.config = self.simulator.config		
 		#self.simulator = CKBotSimThread(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/Snake.ckbot"),0,regionfile,region_calib,initial_pose_sim)
 		#self.config = self.simulator.simulator.config

@@ -13,6 +13,7 @@ class motionControlHandler:
 		# Get references to handlers we'll need to communicate with.
 		self.drive_handler = proj.drive_handler
 		self.pose_handler = proj.pose_handler
+		self.simulator = shared_data['Simulator']
 		
 		# Other useful definitions.
 		self.vx = 0
@@ -92,7 +93,7 @@ class motionControlHandler:
 			
 			# If we are close enough to the center of the region then switch to transition mode.
 			dist = math.sqrt( math.pow(dx,2) + math.pow(dy,2) )
-			if dist < 15:
+			if dist < 15 or (self.simulator.config=="Loop10" and (dx < 5 or dy < 5)):
 				self.mode = "transition"
 			
 			# Send the velocity command to the drive handler.
