@@ -5,13 +5,13 @@ ConfigName:
 Tripod
 
 ConnMatrix:
-0 7 0 9 0 10 0
+0 7 0 4 0 6 0
 1 0 7 0 0 0 0
 0 1 0 0 0 0 0
-8 0 0 0 7 0 0
-0 0 0 2 0 0 0 
-8 0 0 0 0 0 7
-0 0 0 0 0 2 0
+7 0 0 0 2 0 0
+0 0 0 7 0 0 0 
+7 0 0 0 0 0 2
+0 0 0 0 0 7 0
 
 # This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
 # The y vector in the simulator is normal to the ground and points upwards.
@@ -36,14 +36,14 @@ Type Fixed
 Gait 1
 0 0 0 0 0 0 0
 2000 3000 4000 0 0 0 0 
-2000 3000 4000 -4000 -4000 -4000 4000 
-2000 3000 -1000 4000 -4000 4000 4000 
--3000 4000 -3000 4000 -4000 4000 4000 
+2000 3000 4000 4000 -4000 4000 4000 
+2000 3000 -1000 -4000 -4000 -4000 4000 
+-3000 4000 -3000 -4000 -4000 -4000 4000 
 -3000 0 -3000 0 0 0 0 
 0 0 0 0 0 0 0 
 5
 
-# Gait 2 -- Turn Left
+# Gait 2 -- Turn Right
 Gait 2
 0 0 0 0 0 0 0 
 0 0 0 -4000 -3000 4000 3000 
@@ -52,7 +52,7 @@ Gait 2
 0 0 0 0 0 0 0 
 5
 
-# Gait 2 -- Turn Right
+# Gait 2 -- Turn Left
 Gait 2
 0 0 0 0 0 0 0 
 0 0 0 4000 -3000 -4000 3000 
