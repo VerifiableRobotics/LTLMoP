@@ -36,9 +36,15 @@ class initHandler:
 		# Convert this initial (x,y) pose to (x,y,z) pose in the simulator.
 		# The convention is (x,y) => (x,0,-y) as the simulator's y is normal to the ground.
 		initial_pose_sim = [initial_pose[0], 0, -initial_pose[1]]
-
+		
+		# Define the region height map.
+		heightmap = [0,0,5,0,7,0,0,0,0,0,3]
+		
+		# Define the default gait.
+		self.default_gait = "Snake"
+		
 		# Initiate the CKBot simulator and render it once.
-		self.simulator = CKBotSim.CKBotSim(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/Snake.ckbot"),standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim,heightmap=[0,0,5,0,7,0,0,0,0,0,3])
+		self.simulator = CKBotSim.CKBotSim(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/" + self.default_gait + ".ckbot"),standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim,heightmap=heightmap)
 		#self.config = self.simulator.config		
 		#self.simulator = CKBotSimThread(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/Snake.ckbot"),0,regionfile,region_calib,initial_pose_sim)
 		#self.config = self.simulator.simulator.config
@@ -51,7 +57,10 @@ class initHandler:
         # Return a dictionary of any objects that will need to be shared with
         # other handlers
 
-        return {'Simulator': self.simulator, "Library": self.lib, "Config": self.simulator.config}
+        return {'Simulator': self.simulator,
+			    "Library": self.lib,
+				"Config": self.simulator.config,
+				"Default_Gait": self.default_gait}
 
 class CKBotSimThread(Thread):
     def __init__(self, robotfile, standalone, regionfile, region_calib, startingpose):
