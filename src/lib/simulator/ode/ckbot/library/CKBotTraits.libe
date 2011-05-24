@@ -4,13 +4,12 @@
 
 # "tall" = the robot reaches at least 3 modules high
 Trait: tall
-#Biped-walk
+Biped-splits
 Slinky-slink
 #Loop-roll
 
 # "fast" = the robot moves at least 1 body length in 10 seconds
 Trait: fast
-#Biped-walk
 Hexapod-run
 Loop10-roll
 FoldOver-slink
@@ -82,6 +81,7 @@ FoldOver-wave
 Trait: legged
 Tripod-crawl
 Hexapod-run
+Biped-splits
 
 # "large" = has more than 10 modules
 Trait: large

@@ -14,7 +14,7 @@ class actuatorHandler:
 
 	def __init__(self, proj, shared_data):
 		self.simulator = shared_data['Simulator']
-		self.default_gait = shared_data['Default_Gait']
+		self.default_config = shared_data['Default_Config']
 		self.library = shared_data['Library']
 		self.trueTraits = set([])
 
@@ -53,7 +53,7 @@ class actuatorHandler:
 
 		config = libs.findGait(self.trueTraits)
 		if (type(config) != type(None)) and (self.simulator.config != config):
-			print "reconfiguring to:" + config
+			print "Reconfiguring to:" + config
 			CKBotSimHelper.reconfigure(self.simulator, config)
 
 #		# Use library if actuator name starts with T
@@ -71,9 +71,9 @@ class actuatorHandler:
 
 		# Make the default configuration Hexapod
 		# After we're done with any gait, switch back to default
-		elif (type(config) == type(None)) and (self.simulator.config != self.default_gait):
-			print "deconfiguring"
-			CKBotSimHelper.reconfigure(self.simulator, self.default_gait)
+		elif (type(config) == type(None)) and (self.simulator.config != self.default_config):
+			print "Reconfiguring to default configuration."
+			CKBotSimHelper.reconfigure(self.simulator, self.default_config)
 
 		
 

@@ -3,7 +3,7 @@
 # Run from ~/Desktop/ltlmop-google OR ~/Downloads/ltlmop-asl
 # python robots/CKBot/CKBotLib.py
 
-import os
+import sys, os
 
 class CKBotLib:
 
@@ -36,7 +36,11 @@ class CKBotLib:
 		Parse library file
 		"""
 
-		f = open('lib/simulator/ode/ckbot/library/CKBotTraits.libe','r')
+		curdir = os.getcwd()
+		if ("simulator" in curdir) and ("ode" in curdir) and ("ckbot" in curdir):
+			f = open('library/CKBotTraits.libe','r')
+		else:
+			f = open('lib/simulator/ode/ckbot/library/CKBotTraits.libe','r')
 
 		reading_trait = 0
 		gait_number = 0
@@ -116,11 +120,13 @@ class Gait:
                 self.words = words
 
 if (__name__ == '__main__'):
+
 	# Test list		 
 	libs = CKBotLib()
 	libs.readLibe()
 	print "These are available definitions:"
 	print libs.words
+	print "\n"
 
 	# Get user input
 	desired_gait = raw_input('Enter gait specifications: ')
@@ -131,6 +137,12 @@ if (__name__ == '__main__'):
 	
 	# Run configuration in CKBot Simulator
 	config = libs.findGait(desired_words)
-	print config
-	#os.system("python lib/simulator/ode/ckbot/CKBotSim.py " + config)
+	if config != None:
+		print "Valid configuration: " + config + "\n"
+
+		os.system("python CKBotSim.py " + config)
+		#os.system("python lib/simulator/ode/ckbot/CKBotSim.py " + config)
+
+	else:
+		print "No configuration found for the specified trait set.\n"
 	

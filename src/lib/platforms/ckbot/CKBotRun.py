@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import pygame
-import math, time, copy, sys
+import math, time, copy, sys, os
 sys.path.append("../../../../../Downloads/CKBot/trunk")
 from ckbot.logical import Cluster
 
@@ -179,7 +179,12 @@ class CKBotRun:
 		Get the Key Orders from the KeyOrders.txt file for Module ID correspondence.
 		"""
 
-		f = open("KeyOrders.txt",'r')
+		curdir = os.getcwd()
+		if ("platforms" in curdir) and ("ckbot" in curdir):
+			f = open("KeyOrders.txt",'r')
+		else:
+			f = open('lib/platforms/ckbot/KeyOrders.txt','r')
+
 
 		self.key_orders = []
 		for line in f:
@@ -223,7 +228,7 @@ class CKBotRun:
 
 					ref_ang = amplitude*math.sin(frequency*t*0.25 + phase)
 
-					ref_ang = ref_ang*(18000.0/math.pi)
+					ref_ang = ref_ang*(0.5*18000.0/math.pi)
 
 					# Fix for uncalibrated head module
 
@@ -238,7 +243,7 @@ class CKBotRun:
 				for module_idx in range(len(self.connM)):   
 					ref_ang = self.gaitangle(gait,t,module_idx)
 	
-					ref_ang = ref_ang*(18000.0/math.pi)
+					ref_ang = ref_ang*(0.5*18000.0/math.pi)
 
 					# Fix for uncalibrated head module
 					if self.config=="Snake" and module_idx=="3":

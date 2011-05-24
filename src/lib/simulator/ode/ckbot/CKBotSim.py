@@ -503,14 +503,18 @@ if (__name__ == '__main__'):
 	if len(sys.argv)==3:
             obstaclefile = "../obstacles/" + sys.argv[2] + ".obstacle"
 
-	heightmap = [0.25, 0.25, 0.25, 0.25, 0]
+	# Arguments to fill out
+	#regionfile = "../../../../examples/looptest/looptest.regions"
+	#heightmap = [0.25, 0.25, 0.25, 0.25, 0]
 	regioncalib = [1.0,-1.0]
 	startingpose = [regioncalib[0]*(250), 0, -regioncalib[1]*(250)]
+	regionfile = None
+	heightmap = None
 
 	# Running from ckbot directory.
 	if ("simulator" in curdir) and ("ode" in curdir) and ("ckbot" in curdir):
 		robotfile = "config/" + sys.argv[1] + ".ckbot"
-		sim = CKBotSim(robotfile, standalone=1, obstaclefile=obstaclefile,regionfile="../../../../examples/looptest/looptest.regions",region_calib=regioncalib,startingpose=startingpose,heightmap = heightmap)
+		sim = CKBotSim(robotfile, standalone=1, obstaclefile=obstaclefile,regionfile=regionfile,region_calib=regioncalib,startingpose=startingpose,heightmap = heightmap)
 	
 	# Running from src.
 	else:

@@ -40,11 +40,11 @@ class initHandler:
 		# Define the region height map.
 		heightmap = [0,0,5,0,7,0,0,0,0,0,3]
 		
-		# Define the default gait.
-		self.default_gait = "Snake"
+		# Define the default configuration.
+		self.default_config = "Snake"
 		
 		# Initiate the CKBot simulator and render it once.
-		self.simulator = CKBotSim.CKBotSim(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/" + self.default_gait + ".ckbot"),standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim,heightmap=heightmap)
+		self.simulator = CKBotSim.CKBotSim(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/" + self.default_config + ".ckbot"),standalone=0, regionfile = regionfile,region_calib = region_calib, startingpose=initial_pose_sim,heightmap=heightmap)
 		#self.config = self.simulator.config		
 		#self.simulator = CKBotSimThread(os.path.join(proj.ltlmop_root,"lib/simulator/ode/ckbot/config/Snake.ckbot"),0,regionfile,region_calib,initial_pose_sim)
 		#self.config = self.simulator.simulator.config
@@ -60,7 +60,7 @@ class initHandler:
         return {'Simulator': self.simulator,
 			    "Library": self.lib,
 				"Config": self.simulator.config,
-				"Default_Gait": self.default_gait}
+				"Default_Config": self.default_config}
 
 class CKBotSimThread(Thread):
     def __init__(self, robotfile, standalone, regionfile, region_calib, startingpose):
