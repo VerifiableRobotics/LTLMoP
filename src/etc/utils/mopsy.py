@@ -4,8 +4,10 @@
 
 import wx
 import wx.grid
+import wx.lib.buttons
 import sys, os, re, copy
 import numpy
+
 # Climb the tree to find out where we are
 p = os.path.abspath(sys.argv[0])
 t = ""
@@ -291,7 +293,7 @@ class MopsyFrame(wx.Frame):
     def populateToggleButtons(self, target_sizer, button_container, items):
         for item_name, item_val in items.iteritems():
             # Create the new button and add it to the sizer
-            button_container.append(wx.ToggleButton(self.window_1_pane_2, -1, item_name))
+            button_container.append(wx.lib.buttons.GenToggleButton(self.window_1_pane_2, -1, item_name))
             target_sizer.Add(button_container[-1], 1, wx.EXPAND, 0)
 
             # Set the initial value as appropriate
@@ -306,7 +308,8 @@ class MopsyFrame(wx.Frame):
             self.Refresh()
 
             # Bind to event handler
-            self.Bind(wx.EVT_TOGGLEBUTTON, self.sensorToggle, button_container[-1])
+            #self.Bind(wx.EVT_TOGGLEBUTTON, self.sensorToggle, button_container[-1])
+            self.Bind(wx.EVT_BUTTON, self.sensorToggle, button_container[-1])
 
     def sensorToggle(self, event):
         btn = event.GetEventObject()
