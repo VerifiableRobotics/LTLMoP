@@ -1778,6 +1778,12 @@ class SpecEditorFrame(wx.Frame):
                for l in (dline.strip()).split()[2:]:
                     self.text_ctrl_spec.MarkerSetBackground(self.map['SysGoals'][int(l)],"BLUE")           
                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_LIVE)
+          if "SysInitTrans UNSAT" in dline:
+               output = output + "System initial condition inconsistent with transition relation. \n"
+               for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
+               for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+           
+        
            
         
           if "EnvInit UNSAT" in dline:
@@ -1795,6 +1801,12 @@ class SpecEditorFrame(wx.Frame):
                for l in (dline.strip()).split()[2:]:
                     self.text_ctrl_spec.MarkerSetAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+          if "EnvInitTrans UNSAT" in dline:
+               output = output + "Environment initial condition inconsistent with transition relation. \n"
+               for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
+               for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+           
+        
             
           if "SysTrans UNREAL" in dline:
                 output = output + "System is unrealizable because the environment can force a safety violation.\n" 
