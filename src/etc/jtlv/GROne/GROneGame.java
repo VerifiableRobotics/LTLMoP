@@ -32,6 +32,7 @@ public class GROneGame {
 	int sysJustNum, envJustNum;
 	private BDD player1_winning;
 	private BDD player2_winning;
+	private boolean autBDDTrue;
 
 	// p2_winning in GRGAmes are !p1_winning
 
@@ -132,6 +133,9 @@ public class GROneGame {
 					BDD start = ((sys.justiceAt(j).not()).or((env.yieldStates(sys, z.not())).not()))
 					//BDD start = ((sys.justiceAt(j).not()).or(sys.yieldStates(sys, z)))
 							.and((env.yieldStates(sys, y.not())).not());					
+					System.out.println("(env.yieldStates(sys, y.not())).not() = " + (env.yieldStates(sys, y.not())).not());		
+					System.out.println("(env.yieldStates(sys, z.not())).not() = " + (env.yieldStates(sys, z.not())).not());		
+					System.out.println("start = " + start);		
 					for (int i = 0; i < envJustNum; i++) {
 						x = Env.FALSE();
 						c=0;
@@ -139,6 +143,7 @@ public class GROneGame {
 							x = x.id().or((env.justiceAt(i).or(((env.yieldStates(sys, x.not())).not()))).and(start));
 							//x = x.id().or((env.justiceAt(i).or(env.yieldStates(sys, x))).and(start));
 							x2_mem[j][i][a][c] = x.id();
+							System.out.println("X ["+ j + ", " + i + ", " + a + ", " + c + "] = " + x2_mem[j][i][a][c]);
 							c++;
 						}
 						
@@ -150,12 +155,13 @@ public class GROneGame {
 				}
 
 				y2_mem[j][a] = y.id();	
+				System.out.println("Y ["+ j + ", " + a + "] = " + y2_mem[j][a]);
 				z = x.id().or(y);				
 			}
 			
 			
 			z2_mem[a] = z.id();
-			System.out.println("Z = "+z2_mem[a]);
+			System.out.println("Z ["+ a + "] = " + z2_mem[a]);
 			a++;
 			if (a % 50 == 0) {
 				z2_mem = extend_size(z2_mem, a);
@@ -359,6 +365,7 @@ public class GROneGame {
 	 */
 	public void calculate_strategy(int kind, BDD ini) {
 		int strategy_kind = kind;
+		BDD autBDD = Env.TRUE();
 		Stack<BDD> st_stack = new Stack<BDD>();
 		Stack<Integer> j_stack = new Stack<Integer>();
 		Stack<RawState> aut = new Stack<RawState>();
@@ -436,6 +443,7 @@ public class GROneGame {
                     succs.add(sin);
                 }
 
+                BDD candidate = Env.FALSE();
                 // For each env successor, find a strategy successor
                 for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
                         .hasNext();) {
@@ -445,7 +453,7 @@ public class GROneGame {
                                     .exist(
                                             env.moduleUnprimeVars().union(
                                                     sys.moduleUnprimeVars())));
-                    BDD candidate = Env.FALSE();
+                    candidate = Env.FALSE();
                     int jcand = p_j;
 
                     int local_kind = strategy_kind;
@@ -522,6 +530,7 @@ public class GROneGame {
                         idx = aut.indexOf(gsucc);
                     }
                     new_state.add_succ(aut.elementAt(idx));
+                    autBDD = autBDD.and((p_st.imp(Env.prime(candidate))));                    
                 }
             }
         }
@@ -573,6 +582,12 @@ public class GROneGame {
 		System.out.print("\n\n");
 		System.out.print(res);
 		// return null; // res;
+		System.out.print("\n\n");
+		System.out.println("autBDD = " + Env.prime(autBDD));
+		System.out.println("trans = " + sys.trans().and(env.trans()));
+		//autBDDTrue = autBDD.support().intersect(sys.moduleUnprimeVars()).isEmpty();
+		autBDDTrue = (autBDD.and(sys.trans().and(env.trans()))).equals(sys.trans().and(env.trans()));
+		System.out.println("autBDD support = " + autBDDTrue);
 	}
 	
 	public void generate_safety_aut(BDD ini) {
@@ -655,7 +670,7 @@ public class GROneGame {
 		// return null; // res;
 	}
 
-	public void calculate_counterstrategy(BDD ini) {		
+	public void calculate_countertrace(BDD ini) {		
 		Stack<BDD> st_stack = new Stack<BDD>();
 		Stack<Integer> i_stack = new Stack<Integer>();
 		Stack<Integer> j_stack = new Stack<Integer>();	
@@ -709,12 +724,7 @@ public class GROneGame {
 	                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
                     .hasNext();) {
 	                	BDD primed_cur_succ = Env.prime(iter_succ.next());
-	                	if (!(p_st.and(primed_cur_succ).and(sys.yieldStates(env,Env.FALSE())).isZero())) {
-		                	input = primed_cur_succ;
-		                	new_i = rank_i;
-		                	new_j = rank_j;	
-		                	break;		                    	
-	                	} else if (!(Env.unprime(primed_cur_succ).and(sys.yieldStates(env,Env.FALSE())).isZero())) {
+	                	if (!(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE()))).isZero())) {
 		                	input = primed_cur_succ;
 		                	new_i = rank_i;
 		                	new_j = rank_j;	
@@ -728,113 +738,86 @@ public class GROneGame {
 		                // find minimal Z_a
 		                int p_a = -1;
 		             // computing the set of env possible successors.
-		                succs = new Vector<BDD>();
-		                all_succs = env.succ(p_st);
-		                for (BDDIterator all_states = all_succs.iterator(env
-		                        .moduleUnprimeVars()); all_states.hasNext();) {
-		                    BDD sin = (BDD) all_states.next();
-		                    succs.add(sin);
-		                }
-		                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
-                        .hasNext();) {
-		                	BDD primed_cur_succ = Env.prime(iter_succ.next());
-		                	
-		//                	System.out.println("one succ" + primed_cur_succ);               	
-		                    
-		                	//BDD primed_cur_succ = iter_succ.next();
-		                	
-		                	if (!p_st.and(z2_mem[0])
-		                    		.and(primed_cur_succ.and((sys.yieldStates(env,(Env.FALSE()))))).isZero()) {
-		                        p_a = 0;
-		                    }
-                    
-			                for (int az = 1; az < z2_mem.length; az++) {
-			                	if (!p_st.and(z2_mem[az])
-			                    		.and(primed_cur_succ.and((sys.yieldStates(env,((z2_mem[az-1])))))).isZero()) {
-			                        p_a = az;
-			                        az = z2_mem.length;
-			                    }
-			                }
-			                //assert p_a >= 1 : "Couldn't find p_a >= 2";
-			                if (input == null && p_a >=0) {
-			                	System.out.println("found p_a " + p_a + primed_cur_succ);
-			                	input = primed_cur_succ;
-			                	new_i = rank_i;
-			                	new_j = -1;		
-			                	break;
-			                }
-			                
-		                }
+		             
 		                
+		                	
+		                for (int az = 1; az < z2_mem.length; az++) {
+			                	   succs = new Vector<BDD>();
+					                all_succs = env.succ(p_st);
+					                for (BDDIterator all_states = all_succs.iterator(env
+					                        .moduleUnprimeVars()); all_states.hasNext();) {
+					                    BDD sin = (BDD) all_states.next();
+					                    succs.add(sin);
+					                }
+					                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ.hasNext();) {
+					                	BDD primed_cur_succ = Env.prime(iter_succ.next());
+					                	if (!p_st.and(z2_mem[az])
+				                    		.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[az-1])))))).isZero()) {
+					                        p_a = az;					                       
+					                    }
+					                	if (input == null && p_a >=0) {
+						                	input = primed_cur_succ;
+						                	new_i = rank_i;
+						                	new_j = -1;	
+						                	break;
+						                }
+			                	}
+			                }
+                
+			              
 		                /* Find  Y index of current state */
 		                
-		             // computing the set of env possible successors.
-		                succs = new Vector<BDD>();
-		                all_succs = env.succ(p_st);
-		                for (BDDIterator all_states = all_succs.iterator(env
-		                        .moduleUnprimeVars()); all_states.hasNext();) {
-		                    BDD sin = (BDD) all_states.next();
-		                    succs.add(sin);
-		                }
-		                
-		                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
-                        .hasNext();) {
-		                	BDD primed_cur_succ = Env.prime(iter_succ.next()); 
-		//                	System.out.println("two succ" + primed_cur_succ); 
-                    
+		            
 			                int p_j = -1;
 			                for (int az = 0; az < z2_mem.length; az++) {
 			                	for (int j = 0; j < sysJustNum; j++) {  
-			                		if (az == 0){
-		/*	                			System.out.println("p_st" + p_st); 
-			                			System.out.println("p_st.and(z2_mem[az])" + p_st.and(z2_mem[az])); 
-			                			System.out.println("primed_cur_succ" + primed_cur_succ); 
-			                			System.out.println("sys.yieldStates(env,(y2_mem[j][az]))" + sys.yieldStates(env,(y2_mem[j][az])));			                			
-			                			System.out.println("primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az])))" + primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az])))); 
-			                			System.out.println("p_st.and(z2_mem[az]).and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))" + p_st.and(z2_mem[az]).and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))); 
-			                			System.out.println("sys.yieldStates(env,Env.FALSE())).not()" + sys.yieldStates(env,Env.FALSE()).not());
-		*/		                    	if (!(p_st.and(z2_mem[az])
-				                    			.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
-				                    			//.and(primed_cur_succ.and((env.yieldStates(sys,(y2_mem[j][az]).not())).not()))
-				                    			.and(sys.yieldStates(env,Env.FALSE()).not()).isZero())) {
-				                    			//.and((env.yieldStates(sys,Env.TRUE()))).isZero())) {
-				                    		p_j = j;
-				                    		az = z2_mem.length;
-				                    		j = sysJustNum;
-					                        
+			                		 // computing the set of env possible successors.
+					                succs = new Vector<BDD>();
+					                all_succs = env.succ(p_st);
+					                for (BDDIterator all_states = all_succs.iterator(env
+					                        .moduleUnprimeVars()); all_states.hasNext();) {
+					                    BDD sin = (BDD) all_states.next();
+					                    succs.add(sin);
+					                }
+					                
+					                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
+			                        .hasNext();) {
+					                	BDD primed_cur_succ = Env.prime(iter_succ.next()); 
+					                 
+				                		if (az == 0){
+					                    	if (!(p_st.and(z2_mem[az])
+					                    			.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
+					                    			//.and(primed_cur_succ.and((env.yieldStates(sys,(y2_mem[j][az]).not())).not()))
+					                    			.and(sys.yieldStates(env,(z2_mem[az])).not()).isZero())) {
+					                    			//.and((env.yieldStates(sys,Env.TRUE()))).isZero())) {
+					                    		p_j = j;
+					                    		break;
+						                        
+						                    }
+					                    } else {
+					                    	if (!(p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
+					                    			.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
+					                    			.and((sys.yieldStates(env,(z2_mem[az-1]))).not()).isZero())) {
+					                    			
+						                        p_j = j;
+						                        break;
+						                        
+						                    }
 					                    }
-				                    } else {
-				                    	if (!(p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
-				                    			.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
-				                    			//.and(primed_cur_succ.and((env.yieldStates(sys,(y2_mem[j][az]).not())).not()))
-				                    			.and((sys.yieldStates(env,(z2_mem[az-1]))).not()).isZero())) {
-				                    			//.and((env.yieldStates(sys,(z2_mem[az-1]).not())))).isZero()) {
-			                    			
-					                        p_j = j;
-					                        az = z2_mem.length;
-					                        j = sysJustNum;
-					                        
-					                    }
-				                    }
-				                        
+				                		 if ((input == null || input.equals(primed_cur_succ)) && p_j >= 0 && rank_j == -1) {
+				      	                	input = primed_cur_succ;
+				                          	new_i = rank_i;
+				                          	new_j = p_j;
+				                			break;
+				                		 }
+				                					                
 			                	}
 			                }
-			                //assert p_j >= 0 : "Couldn't find p_j >= 1";
-		/*	                System.out.println("p_j = "+ p_j);
-			                System.out.println("input = "+ input);
-			                System.out.println("rank_j = "+ rank_j);
-		*/                	
-			                if ((input == null || input.equals(primed_cur_succ)) && p_j >= 0 && rank_j == -1) {
-		//	                	System.out.println("found p_j");
-			                	input = primed_cur_succ;
-			                	new_i = rank_i;
-			                	new_j = p_j;
-			                	break;
-			                }
-			                
 		                }
 			                
-		             // computing the set of env possible successors.
+		            int p_i = -1;
+		            for (int az = 0; az < z2_mem.length; az++) {    
+		            	 // computing the set of env possible successors.
 		                succs = new Vector<BDD>();
 		                all_succs = env.succ(p_st);
 		                for (BDDIterator all_states = all_succs.iterator(env
@@ -846,36 +829,26 @@ public class GROneGame {
 		                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
                         .hasNext();) {
 		                	BDD primed_cur_succ = Env.prime(iter_succ.next());  
-		  //              	System.out.println("three succ" + primed_cur_succ); 
-		                	int p_i = -1;
-		                	for (int az = 0; az < z2_mem.length; az++) {                        
+		                	
 		                	  if (az == 0){
 			                    	if (rank_j != -1 && !(p_st.and(z2_mem[az])
-			                    			//.and(primed_cur_succ.and((env.yieldStates(sys,y2_mem[rank_j][az].not())).not())
 			                    			.and(primed_cur_succ.and(sys.yieldStates(env,y2_mem[rank_j][az])))
-			                    			//.and(env.yieldStates(sys,Env.TRUE()))).isZero()) {
-			                    			.and((sys.yieldStates(env,Env.FALSE())).not())).isZero()) {
+			                    			.and((sys.yieldStates(env,(z2_mem[az]))).not())).isZero()) {
 			                    		p_i = az;
 				                        break;
 				                    }
 			                    } else {
 
-			                    	//assert false : z2_mem[az-1].not();
-		                	  		//BDD z_not1 = z2_mem[az-1];
-			                    	//BDD z_not = env.yieldStates(sys,z_not1);
 			                    	if (rank_j != -1 && 
 			                    			!(p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
-			                    			//.and(primed_cur_succ.and((env.yieldStates(sys,(y2_mem[rank_j][az]).not())).not()))
 			                    			.and(primed_cur_succ.and((sys.yieldStates(env,y2_mem[rank_j][az]))))
-			                    			//.and((env.yieldStates(sys,z2_mem[az-1])).not()).isZero())) {
 			                    			.and((sys.yieldStates(env,z2_mem[az-1])).not())).isZero()) {
 			                    		p_i = az;
-			                    		az = z2_mem.length;
 				                    }
 			                    }
 		                	  if (input == null && p_i >= 0) {
 			                	  if (rank_j != -1 && !p_st.and(env.justiceAt(rank_i)).isZero()) {
-		//	                		  System.out.println("found p_i");
+			                		  //System.out.println("found p_i");
 			                		  input = primed_cur_succ;
 			                		  new_i = (rank_i + 1) % env.justiceNum();
 			                		  new_j = rank_j;
@@ -885,65 +858,58 @@ public class GROneGame {
 		                	  }
 		                	}
 		                }
-		                //assert p_i >= 0 : "Couldn't find p_i";
-		                
-		             // computing the set of env possible successors.
-		                succs = new Vector<BDD>();
-		                all_succs = env.succ(p_st);
-		                for (BDDIterator all_states = all_succs.iterator(env
-		                        .moduleUnprimeVars()); all_states.hasNext();) {
-		                    BDD sin = (BDD) all_states.next();
-		                    succs.add(sin);
-		                }
-		                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
-                        .hasNext();) {
-		                	BDD primed_cur_succ = Env.prime(iter_succ.next()); 
-		     //           	System.out.println("four succ" + primed_cur_succ); 
+		               
                 			int p_x = -1;
 			                for (int az = 0; az < z2_mem.length; az++) {
 			                	if (rank_i != -1 && rank_j != -1) {
 				                	for (int c = 1; c < x2_mem[rank_j][rank_i][az].length; c++)
 				                	{
-				                	  if (az == 0){
-					                    	if (!(p_st.and(z2_mem[az])
+				                		// computing the set of env possible successors.
+						                succs = new Vector<BDD>();
+						                all_succs = env.succ(p_st);
+						                for (BDDIterator all_states = all_succs.iterator(env
+						                        .moduleUnprimeVars()); all_states.hasNext();) {
+						                    BDD sin = (BDD) all_states.next();
+						                    succs.add(sin);
+						                }
+						                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
+				                        .hasNext();) {
+						                	BDD primed_cur_succ = Env.prime(iter_succ.next()); 
+						                	if (az == 0){
+						                		if (!(p_st.and(z2_mem[az])
 					                    			.and(x2_mem[rank_j][rank_i][az][c])
 					                    			.and(x2_mem[rank_j][rank_i][az][c-1].not())
-					                    			//.and(primed_cur_succ.and((env.yieldStates(sys,(x2_mem[az][rank_j][rank_i][c-1]).not())).not()))
 					                    			.and(primed_cur_succ.and((sys.yieldStates(env,x2_mem[rank_j][rank_i][az][c-1])))
-					                    					//.and((env.yieldStates(sys,Env.TRUE())))).isZero())) {
-					                    					.and(sys.yieldStates(env,Env.FALSE()).not()))).isZero()) {
+					                    					.and(sys.yieldStates(env,z2_mem[az]).not()))).isZero()) {
 					                    		
-					                    		p_x = az;
-					                    		az = z2_mem.length;
-						                        break;
-						                    }
-					                    } else {
-					                    	if (!(p_st.and(z2_mem[az])
-					                    			.and(x2_mem[rank_j][rank_i][az][c])
-					                    			.and(x2_mem[rank_j][rank_i][az][c-1].not())
-					                    			.and(primed_cur_succ.and((sys.yieldStates(env,x2_mem[rank_j][rank_i][az][c-1])))
-					                    			//.and(primed_cur_succ.and((env.yieldStates(sys,(x2_mem[rank_j][rank_i][az][c-1]).not())).not()))
-				                    					.and((sys.yieldStates(env,z2_mem[az-1])).not()))).isZero()) {
-					                    				//.and((env.yieldStates(sys,(z2_mem[az-1]).not())))).isZero())) {
-					                    	
-						                    	p_x = az;
-						                    	az = z2_mem.length;
-						                        break;
-						                    }
-					                    }
+						                    		p_x = az;
+							                        break;
+							                    }
+						                	} else {
+						                    	if (!(p_st.and(z2_mem[az])
+						                    			.and(x2_mem[rank_j][rank_i][az][c])
+						                    			.and(x2_mem[rank_j][rank_i][az][c-1].not())
+						                    			.and(primed_cur_succ.and((sys.yieldStates(env,x2_mem[rank_j][rank_i][az][c-1])))
+						                    				.and((sys.yieldStates(env,z2_mem[az-1])).not()))).isZero()) {
+						                    				
+							                    	p_x = az;
+							                        break;
+							                    }
+						                	}
+						                	if (input == null && p_x >= 0) {
+							                	if (rank_j != -1) {
+								                	//System.out.println("found p_x");
+							                		input = primed_cur_succ;
+									                new_i = rank_i;
+									                new_j = rank_j;
+									                break;
+							                	}	
+							                	
+							                }		
 				                	}
 			                	}
 			                }
-			                if (input == null && p_x >= 0) {
-			                	if (rank_j != -1) {
-			//	                	System.out.println("found p_x");
-			                		input = primed_cur_succ;
-					                		  new_i = rank_i;
-					                		  new_j = rank_j;
-					                		  break;
-			                	}	
-			                	
-			                }		
+			                
 		                }	
                 }
                 
@@ -977,13 +943,7 @@ public class GROneGame {
                 for (Iterator<BDD> iter_succ = sys_succs.iterator(); iter_succ
                         .hasNext();) {
                     BDD sys_succ = iter_succ.next().and(Env.unprime(input));
-                    /*BDD next_op = Env.unprime(sys.trans().and(p_st).and(primed_cur_succ)
-                            .exist(
-                                    env.moduleUnprimeVars().union(
-                                            sys.moduleUnprimeVars())));
-            BDD candidate = Env.FALSE();
-            int jcand = p_j;*/
-
+                  
                     
                     RawCState gsucc = new RawCState(aut.size(), sys_succ, new_j, new_i, input);
                     idx = aut.indexOf(gsucc); // the equals doesn't consider
@@ -998,7 +958,7 @@ public class GROneGame {
                     new_state.add_succ(aut.elementAt(idx));
                 }
             }
-        //}       
+            
 
 
         String res = "";
@@ -1007,71 +967,40 @@ public class GROneGame {
                 res += state + "\n";
             }
 		}
-
 		System.out.print("\n\n");
 		System.out.print(res);
 		// return null; // res;
 	}
 	
-	/*public void calculate_countertrace(BDD ini) {		
+	/*public boolean multistep_unsat(BDD ini) {		
 		Stack<BDD> st_stack = new Stack<BDD>();
 		Stack<Integer> i_stack = new Stack<Integer>();
 		Stack<Integer> j_stack = new Stack<Integer>();	
-		/*Stack<Integer> i_new_stack = new Stack<Integer>();
-		Stack<Integer> j_new_stack = new Stack<Integer>();			
-		*/
-	/*	//Stack<BDD> in_stack = new Stack<BDD>();		
 		Stack<RawCState> aut = new Stack<RawCState>();
-		// FDSModule res = new FDSModule("strategy");
-
+		BDD autBDD = Env.TRUE();
+		BDD traceBDD = Env.TRUE();
+		
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
         int a = 0;
-        //while (ini_iterator.hasNext()) {
-
-            BDD this_ini = (BDD) ini_iterator.next();
-
-        //    RawCState test_st = new RawCState(aut.size(), this_ini, 0, -1, Env.FALSE());
-
-   /*         int idx = -1;
-        /*    for (RawCState cmp_st : aut) {
-                if (cmp_st.equals(test_st, false)) { // search ignoring rank
-                    idx = aut.indexOf(cmp_st);
-                    break;
-                }
-            }
-
-            if (idx != -1) {
-                // This initial state is already in the automaton
-                continue;
-            }
-            if (a == 1) {
-                break;
-            }
-            a++;*/
-            // Otherwise, we need to attach this initial state to the automaton
-
-       /*     st_stack.push(this_ini);
-            i_stack.push(new Integer(0)); // TODO: is there a better default j?
-            j_stack.push(new Integer(-1)); // TODO: is there a better default j?
-            //i_stack_new.push(new Integer(0)); // TODO: is there a better default j?
-            //j_stack_new.push(new Integer(0)); // TODO: is there a better default j?
-            //in_stack.push(Env.FALSE());
-            this_ini.printSet();
+        BDD this_ini = (BDD) ini_iterator.next();
+            
+        int idx = -1;
+        st_stack.push(this_ini);
+        i_stack.push(new Integer(0)); // TODO: is there a better default j?
+        j_stack.push(new Integer(-1)); // TODO: is there a better default j?
+        this_ini.printSet();
 
             // iterating over the stacks.
-            while (!st_stack.isEmpty()) {
+        while (!st_stack.isEmpty()) {
                 // making a new entry.
                 BDD p_st = st_stack.pop();
                 int rank_i = i_stack.pop().intValue();
                 int rank_j = j_stack.pop().intValue();
-                //int p_i_n = i_stack_new.pop().intValue();
-                //int p_j_n = j_stack_new.pop().intValue();
-                //BDD p_in = in_stack.pop();
                 
 
                 /* Create a new automaton state for our current state 
                   (or use a matching one if it already exists) */
-       /*         RawCState new_state = new RawCState(aut.size(), p_st, rank_i, rank_j, Env.FALSE());
+            /*    RawCState new_state = new RawCState(aut.size(), p_st, rank_j, rank_i, Env.FALSE());
                 int nidx = aut.indexOf(new_state);
                 if (nidx == -1) {
                     aut.push(new_state);
@@ -1080,223 +1009,405 @@ public class GROneGame {
                 }
                 
                 
-             // computing the set of env possible successors.
-                Vector<BDD> succs = new Vector<BDD>();
-                BDD all_succs = env.succ(p_st);
-                for (BDDIterator all_states = all_succs.iterator(env
-                        .moduleUnprimeVars()); all_states.hasNext();) {
-                    BDD sin = (BDD) all_states.next();
-                    succs.add(sin);
-                }
-                
-                BDD input = Env.FALSE();
+             
+                BDD primed_cur_succ = Env.prime(env.succ(p_st));
+            	BDD input = Env.FALSE();
+            	BDD trace = Env.FALSE();
+            	
                 int new_i = -1, new_j = -1;
                 // For each env successor
-                //while (input.isZero()) {                
+                
+                		if (((primed_cur_succ).and(sys.yieldStates(env,Env.FALSE()))).support().intersect(env.modulePrimeVars().union(env.moduleUnprimeVars())).isEmpty()) {
+                			System.out.println("empty"); 
+                    		input = input.or(primed_cur_succ);
+		                	new_i = rank_i;
+		                	new_j = rank_j;			                		                    	
+	                	} 
 		                /* Find Z index of current state */
 		                // find minimal Z_a
-		/*                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
-                        .hasNext();) {
-		                	int p_a = -1;
-			                
-		                	//BDD primed_cur_succ = Env.prime(iter_succ.next());
-		                	BDD primed_cur_succ = iter_succ.next();
-                    
-			                for (int az = 1; az < z2_mem.length; az++) {
-			                    if (!p_st.and(z2_mem[az])
-			                    		.and((env.yieldStates(sys,(primed_cur_succ.and(z2_mem[az-1])).not())).not()).isZero()) {
-			                        p_a = az;
-			                        break;
-			                    }
-			                }
-			                //assert p_a >= 1 : "Couldn't find p_a >= 2";
-			                if (p_a >=1) {
-			                	input = input.or(primed_cur_succ);
-			                	new_i = rank_i;
-			                	new_j = -1;		                	
-			                }
+		    /*            int p_a = -1;
+		             // computing the set of env possible successors.
+		                for (int az = 1; az < z2_mem.length; az++) {
+					            	if (p_st.and(z2_mem[az])
+				                    		.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[az-1])))))).support().intersect(env.modulePrimeVars().union(env.moduleUnprimeVars())).isEmpty()) {
+					                        p_a = az;					                       
+					                    }
+					                	if (input == null && p_a >=0) {
+						                	input = input.or(primed_cur_succ);
+						                	new_i = rank_i;
+						                	new_j = -1;							            
+						                }					               
 		                }
+                
+			          /* Find  Y index of current state */
 		                
-		                /* Find  Y index of current state */
-		                
-		                
-		 /*               for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
-                        .hasNext();) {
-		                	BDD primed_cur_succ = Env.prime(iter_succ.next());  
-                    
+		   /*        
 			                int p_j = -1;
 			                for (int az = 0; az < z2_mem.length; az++) {
-			                	for (int j = 0; j < y2_mem[az].length; j++) {                        
-				                    if (az == 0){
-				                    	if (!p_st.and(z2_mem[az])
-				                    			//.and(primed_cur_succ.and((env.yieldStates(sys,(y2_mem[az][j]).not())).not()))
-				                    			.and(primed_cur_succ.and(env.controlStates(sys,(y2_mem[az][j]))))
-				                    			//.and(env.yieldStates(sys,Env.TRUE())).isZero()) {
-				                    			.and((env.controlStates(sys,Env.FALSE())).not()).isZero()) {
-				                    		p_j = j;
-					                        break;
+			                	for (int j = 0; j < sysJustNum; j++) {  
+			               
+				                		if (az == 0){
+					                    	if ((p_st.and(z2_mem[az])
+					                    			.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
+					                    			.and(sys.yieldStates(env,(z2_mem[az])).not()).support().intersect(env.modulePrimeVars().union(env.moduleUnprimeVars())).isEmpty())) { 
+					                    		p_j = j;
+					                    		break;
+						                        
+						                    }
+					                    } else {
+					                    	if ((p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
+					                    			.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
+					                    			.and((sys.yieldStates(env,(z2_mem[az-1]))).not()).support().intersect(env.modulePrimeVars().union(env.moduleUnprimeVars())).isEmpty())) {					                    			
+						                        p_j = j;
+						                        break;
+						                        
+						                    }
 					                    }
-				                    } else {
-				                    	if (!p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
-				                    			//.and(primed_cur_succ.and((env.yieldStates(sys,(y2_mem[az][j]).not())).not()))
-				                    			.and(primed_cur_succ.and(env.controlStates(sys,(y2_mem[az][j]))))
-				                    			//.and((env.yieldStates(sys,(z2_mem[az-1]).not()))).isZero()) {
-				                    			.and((env.controlStates(sys,(z2_mem[az-1]).not())).not()).isZero()) {
-					                        p_j = j;
-					                        break;
-					                    }
-				                    }
-				                        
+					                    if ((input == null || input.equals(primed_cur_succ)) && p_j >= 0 && rank_j == -1) {
+				                			input = input.or(primed_cur_succ);
+				                          	new_i = rank_i;
+				                          	new_j = p_j;
+				                			break;
+				                		 }
+				                					                
 			                	}
 			                }
 			                //assert p_j >= 0 : "Couldn't find p_j >= 1";
-			                if (p_j >= 0) {
-			                	input = input.or(primed_cur_succ);
-			                	new_i = rank_i;
-			                	new_j = p_j;
-			                }
+			               
 		                }
 			                
-		                
-		                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
-                        .hasNext();) {
-		                	BDD primed_cur_succ = Env.prime(iter_succ.next());  
-		                	int p_i = -1;
-		                	for (int az = 0; az < z2_mem.length; az++) {                        
-		                	  if (az == 0){
-			                    	if (rank_j != -1 && !p_st.and(z2_mem[az])
-			                    			//.and(primed_cur_succ.and(env.yieldStates(sys,y2_mem[az][rank_j].not())).not())
-			                    			.and(primed_cur_succ.and(env.controlStates(sys,y2_mem[az][rank_j])))
-			                    			//.and(env.yieldStates(sys,Env.TRUE())).isZero()) {
-			                    			.and((env.controlStates(sys,Env.FALSE())).not()).isZero()) {
+		            int p_i = -1;
+		            for (int az = 0; az < z2_mem.length; az++) {    
+		              	  if (az == 0){
+			                    	if (rank_j != -1 && (p_st.and(z2_mem[az])
+			                    			.and(primed_cur_succ.and(sys.yieldStates(env,y2_mem[rank_j][az])))
+			                    			.and((sys.yieldStates(env,(z2_mem[az]))).not())).support().intersect(env.modulePrimeVars().union(env.moduleUnprimeVars())).isEmpty()) {
 			                    		p_i = az;
-				                        break;
+				          
 				                    }
 			                    } else {
 
-			                    	//assert false : z2_mem[az-1].not();
-		                	  		//BDD z_not1 = z2_mem[az-1];
-			                    	//BDD z_not = env.yieldStates(sys,z_not1);
 			                    	if (rank_j != -1 && 
-			                    			!p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
-			                    			.and(primed_cur_succ.and((env.controlStates(sys,y2_mem[az][rank_j]))))
-			                    			//.and(primed_cur_succ.and((env.yieldStates(sys,y2_mem[az][rank_j].not())).not()))
-			                    			.and(env.yieldStates(sys,z2_mem[az-1].not())).isZero()) {
-			                    			//.and((env.controlStates(sys,z2_mem[az-1])).not()).isZero()) {
+			                    			(p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
+			                    			.and(primed_cur_succ.and((sys.yieldStates(env,y2_mem[rank_j][az]))))
+			                    			.and((sys.yieldStates(env,z2_mem[az-1])).not())).support().intersect(env.modulePrimeVars().union(env.moduleUnprimeVars())).isEmpty()) {
 			                    		p_i = az;
-				                        break;
 				                    }
 			                    }
-		                	  if (p_i >= 0) {
-			                	  if (rank_j != -1 && !p_st.and(env.justiceAt(rank_i)).isZero()) {
+		                	  if (input == null && p_i >= 0) {
+			                	  if (rank_j != -1 && p_st.and(env.justiceAt(rank_i)).isZero()) {
 			                		  input = input.or(primed_cur_succ);
 			                		  new_i = (rank_i + 1) % env.justiceNum();
 			                		  new_j = rank_j;
+			                	
 			                	  }
+			                	  
 		                	  }
-		                	}
-		                }
-		                //assert p_i >= 0 : "Couldn't find p_i";
-		                
-		                for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
-                        .hasNext();) {
-		                	BDD primed_cur_succ = Env.prime(iter_succ.next());  
+		            }
+		              
                 			int p_x = -1;
 			                for (int az = 0; az < z2_mem.length; az++) {
 			                	if (rank_i != -1 && rank_j != -1) {
-				                	for (int c = 1; c < x2_mem[az][rank_j][rank_i].length; c++)
+				                	for (int c = 1; c < x2_mem[rank_j][rank_i][az].length; c++)
 				                	{
-				                	  if (az == 0){
-					                    	if (!p_st.and(z2_mem[az])
-					                    			.and(x2_mem[az][rank_j][rank_i][c])
-					                    			.and(x2_mem[az][rank_j][rank_i][c-1].not())
-					                    			.and(primed_cur_succ.and(env.controlStates(sys,x2_mem[az][rank_j][rank_i][c-1]))
-					                    					.and((env.controlStates(sys,Env.FALSE())).not())).isZero()) {
-					                    		p_x = az;
-						                        break;
-						                    }
-					                    } else {
-					                    	if (!p_st.and(z2_mem[az])
-					                    			.and(x2_mem[az][rank_j][rank_i][c])
-					                    			.and(x2_mem[az][rank_j][rank_i][c-1].not())
-					                    			.and(primed_cur_succ.and(env.controlStates(sys,x2_mem[az][rank_j][rank_i][c-1]))
-					                    					.and((env.controlStates(sys,z2_mem[az-1])).not())).isZero()) {
-						                    	p_x = az;
-						                        break;
-						                    }
-					                    }
-				                	}
+				                    	if (az == 0){
+						                		if ((p_st.and(z2_mem[az])
+					                    			.and(x2_mem[rank_j][rank_i][az][c])
+					                    			.and(x2_mem[rank_j][rank_i][az][c-1].not())
+					                    			.and(primed_cur_succ.and((sys.yieldStates(env,x2_mem[rank_j][rank_i][az][c-1])))
+					                    					.and(sys.yieldStates(env,z2_mem[az]).not()))).support().intersect(env.modulePrimeVars().union(env.moduleUnprimeVars())).isEmpty()) {
+					                    		
+						                    		p_x = az;
+							      
+							                    }
+						                	} else {
+						                    	if ((p_st.and(z2_mem[az])
+						                    			.and(x2_mem[rank_j][rank_i][az][c])
+						                    			.and(x2_mem[rank_j][rank_i][az][c-1].not())
+						                    			.and(primed_cur_succ.and((sys.yieldStates(env,x2_mem[rank_j][rank_i][az][c-1])))
+						                    				.and((sys.yieldStates(env,z2_mem[az-1])).not()))).support().intersect(env.modulePrimeVars().union(env.moduleUnprimeVars())).isEmpty()) {
+						                    				
+							                    	p_x = az;
+							                  
+							                    }
+						                	}
+						                	if (input == null && p_x >= 0) {
+							                	if (rank_j != -1) {
+							                		input = input.or(primed_cur_succ);
+									                new_i = rank_i;
+									                new_j = rank_j;
+									          
+							                	}	
+							                	
+							                }		
 			                	}
 			                }
-			                if (p_x >= 0) {
-			                	if (rank_j != -1) {
-			                		input = input.or(primed_cur_succ);
-					                		  new_i = rank_i;
-					                		  new_j = rank_j;
-			                	}			
-			                }		
-		                //}	
-                }	
-		        if (!input.equals(all_succs)) System.out.println("Not Unsat!");
-		        //else{
-		                
-	                
-	                
-	                
-	                for (BDDIterator iter_input = input.iterator(env.moduleUnprimeVars()); iter_input.hasNext();) {
-              
-	                	BDD in = (BDD) iter_input.next();
-	                	// computing the set of system possible successors.
-		                Vector<BDD> sys_succs = new Vector<BDD>();
-		                BDD all_sys_succs = sys.succ(p_st.and(in));
-		                for (BDDIterator all_sys_states = all_sys_succs.iterator(sys
-		                        .moduleUnprimeVars()); all_sys_states.hasNext();) {
-		                    BDD sin = (BDD) all_sys_states.next();
-		                    sys_succs.add(sin);
-		                }
-		                
-		                // For each system successor, find a strategy successor
-		                for (Iterator<BDD> iter_succ = sys_succs.iterator(); iter_succ
-		                        .hasNext();) {
-		                	
-		                    BDD sys_succ = iter_succ.next().and(in);
-		                    /*BDD next_op = Env.unprime(sys.trans().and(p_st).and(primed_cur_succ)
-		                            .exist(
-		                                    env.moduleUnprimeVars().union(
-		                                            sys.moduleUnprimeVars())));
-		            BDD candidate = Env.FALSE();
-		            int jcand = p_j;*/
-		/*
-		                    
-		                    RawCState gsucc = new RawCState(aut.size(), sys_succ, new_i, new_j, in);
-		                    idx = aut.indexOf(gsucc); // the equals doesn't consider
-		                                              // the id number.
-		                    if (idx == -1) {
-		                        st_stack.push(sys_succ);
-		                        i_stack.push(new_i);
-		                        j_stack.push(new_j);
-		                        aut.add(gsucc);
-		                        idx = aut.indexOf(gsucc);
-		                    }
-		                    new_state.add_succ(aut.elementAt(idx));
-		                }
-	                }
-	            //}
+			                
+		              
+                }
+                
+          	autBDD = autBDD.and(p_st.imp(input));
+          	System.out.println("autBDD = " + autBDD);
+     		   
+          	for (BDDIterator inputIter = input.iterator(env
+                    .modulePrimeVars()); inputIter.hasNext();) {
+                BDD inputOne = (BDD) inputIter.next();
+                           
+                // computing the set of system possible successors.
+                Vector<BDD> sys_succs = new Vector<BDD>();               
+                BDD all_sys_succs = sys.succ(p_st.and(inputOne));
+                if (all_sys_succs.equals(Env.FALSE())) {
+                	RawCState gsucc = new RawCState(aut.size(), Env.unprime(inputOne), new_j, new_i, inputOne);
+                    idx = aut.indexOf(gsucc); // the equals doesn't consider
+                                              // the id number.
+                    if (idx == -1) {                       
+                        aut.add(gsucc);
+                        idx = aut.indexOf(gsucc);
+                    }
+                    new_state.add_succ(aut.elementAt(idx));
+                	continue;                	
+                }               	
+                
+                for (BDDIterator all_sys_states = all_sys_succs.iterator(sys
+                        .moduleUnprimeVars()); all_sys_states.hasNext();) {
+                    BDD sin = (BDD) all_sys_states.next();
+                    sys_succs.add(sin);
+                }
+                
+                
+
+                // For each system successor, find a strategy successor
+                for (Iterator<BDD> iter_succ = sys_succs.iterator(); iter_succ
+                        .hasNext();) {
+                    BDD sys_succ = iter_succ.next().and(Env.unprime(inputOne));
+                   
+                    RawCState gsucc = new RawCState(aut.size(), sys_succ, new_j, new_i, inputOne);
+                    idx = aut.indexOf(gsucc); // the equals doesn't consider
+                                              // the id number.
+                    if (idx == -1) {
+                        st_stack.push(sys_succ);
+                        i_stack.push(new_i);
+                        j_stack.push(new_j);
+                        aut.add(gsucc);
+                        idx = aut.indexOf(gsucc);
+                    }
+                    new_state.add_succ(aut.elementAt(idx));
+                }
             }
-        //}       
-
-
-        String res = "";
-		for (RawCState state : aut) {
-            if (state.get_rank_i() != -1) {
-                res += state + "\n";
-            }
-		}
-
-		System.out.print("\n\n");
-		System.out.print(res);
-		// return null; // res;
+        }       
+        
+        System.out.println(autBDD + " AND " + env.trans());
+    	
+        System.out.println("support = " + autBDD.support().intersect(sys.moduleUnprimeVars()).isEmpty());
+    		
+        return autBDD.equals(env.trans());
 	}*/
+	
+
+		
+	public void calculate_counterstrategy(BDD ini) {
+		calculate_counterstrategy(ini, true);
+	}
+		
+		
+	public boolean calculate_counterstrategy(BDD ini, boolean det) {
+		Stack<BDD> st_stack = new Stack<BDD>();
+		Stack<Integer> i_stack = new Stack<Integer>();
+		Stack<Integer> j_stack = new Stack<Integer>();	
+		Stack<RawCState> aut = new Stack<RawCState>();
+		BDD autBDD = sys.trans().and(env.trans());
+		
+        BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
+        int a = 0;
+        BDD this_ini = (BDD) ini_iterator.next();
+            
+        int idx = -1;
+        st_stack.push(this_ini);
+        i_stack.push(new Integer(0)); // TODO: is there a better default j?
+        j_stack.push(new Integer(-1)); // TODO: is there a better default j?
+        this_ini.printSet();
+        
+        
+            // iterating over the stacks.
+        while (!st_stack.isEmpty()) {
+                // making a new entry.
+                BDD p_st = st_stack.pop();
+                int rank_i = i_stack.pop().intValue();
+                int rank_j = j_stack.pop().intValue();
+                
+                /* Create a new automaton state for our current state 
+   	         	(or use a matching one if it already exists) */
+                RawCState new_state = new RawCState(aut.size(), p_st, rank_j, rank_i, Env.FALSE());
+			    int nidx = aut.indexOf(new_state);
+			    if (nidx == -1) {
+			    	aut.push(new_state);
+			    } else {
+			    	new_state = aut.elementAt(nidx);
+			    }
+                
+
+                BDD primed_cur_succ = Env.prime(env.succ(p_st));
+                BDD input = Env.FALSE();
+                
+                int new_i = -1, new_j = -1;
+                
+                while(input.isZero()) {
+	                input = p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())));                
+		        	if (!input.isZero()) {
+	                	new_i = rank_i;		        
+			        	new_j = rank_j;
+			        	continue;
+			        }
+		        	
+		        	for (int az = 1; az < z2_mem.length; az++) {	
+			        	input = p_st.and(z2_mem[az])
+			        		.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[az-1]))))));
+			        	if (!input.isZero()) {				                    		
+			        		new_i = rank_i;
+			        		new_j = -1;				
+			        		break;
+			        	}					                
+	                }
+		        	if (!input.isZero()) continue;
+	                
+		        	for (int az = 0; az < z2_mem.length; az++) {
+		        		for (int j = 0; j < sysJustNum; j++) {  
+		        			if (az == 0)
+		        				input = p_st.and(z2_mem[az])
+		        					.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
+		        					.and(sys.yieldStates(env,(z2_mem[az])).not());	 
+		        			else
+		        				input = p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
+	        					.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
+	        					.and((sys.yieldStates(env,(z2_mem[az-1]))).not());		        			
+		        			if (!input.isZero()) {
+		        				new_i = rank_i;
+		        				new_j = j;
+		        				break;
+		        			}		                
+		        		}
+		        		if (rank_j != -1) break;
+		        	}
+		        	if (!input.isZero()) continue;
+	                
+		        	if (rank_j != -1 && p_st.and(env.justiceAt(rank_i)).isZero()) {
+		        		new_i = (rank_i + 1) % env.justiceNum();
+		        		new_j = rank_j;		                	
+		        		for (int az = 0; az < z2_mem.length; az++) {    
+		        			if (az == 0) 
+		        				input = (p_st.and(z2_mem[az])
+		        						.and(primed_cur_succ.and(sys.yieldStates(env,y2_mem[rank_j][az])))
+		        						.and((sys.yieldStates(env,(z2_mem[az]))).not()));		        				
+		        			else 
+		        				input = (p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
+		        						.and(primed_cur_succ.and((sys.yieldStates(env,y2_mem[rank_j][az]))))
+		        						.and((sys.yieldStates(env,z2_mem[az-1])).not()));
+		        			if (!input.isZero()) break;
+		        		}
+		        	}
+		        	
+		        	if (!input.isZero()) continue;
+		        	for (int az = 0; az < z2_mem.length; az++) {
+		        		if (rank_i != -1 && rank_j != -1) {
+		        			for (int c = 1; c < x2_mem[rank_j][rank_i][az].length; c++) {
+		        				if (az == 0) 
+		        					input = ((p_st.and(z2_mem[az])
+		        							.and(x2_mem[rank_j][rank_i][az][c])
+		        							.and(x2_mem[rank_j][rank_i][az][c-1].not())
+		        							.and(primed_cur_succ.and((sys.yieldStates(env,x2_mem[rank_j][rank_i][az][c-1])))
+		        									.and(sys.yieldStates(env,z2_mem[az]).not()))));	
+		        				else 
+		        					input = ((p_st.and(z2_mem[az])
+		        							.and(x2_mem[rank_j][rank_i][az][c])
+		        							.and(x2_mem[rank_j][rank_i][az][c-1].not())
+		        							.and(primed_cur_succ.and((sys.yieldStates(env,x2_mem[rank_j][rank_i][az][c-1])))
+		        									.and((sys.yieldStates(env,z2_mem[az-1])).not()))));		        				
+		        				if (!input.isZero()) {
+		        					new_i = rank_i;
+		        					new_j = rank_j;
+		        					break;				                					
+		        					
+		        				}
+		        			}
+		        		}
+		        	}
+		        	
+		        	assert (!input.isZero()) : "No successor was found";
+                }
+		        	
+		        addState(new_state, input, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
+		        autBDD = autBDD.and(p_st.imp(input));
+		       
+		        
+        }
+                
+        String res = "";
+        for (RawCState state : aut) {
+        	if (state.get_rank_i() != -1) {
+        		res += state + "\n";
+        	}	
+        }	
+        System.out.print("\n\n");
+        System.out.print(res);
+        System.out.println("sys.trans = " + autBDD.equals(sys.trans().and(env.trans())));
+    	return autBDD.equals(sys.trans().and(env.trans()));
+        
+	}
+                
+          	
+          	
+     public void addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
+    	   for (BDDIterator inputIter = input.iterator(env
+                    .modulePrimeVars()); inputIter.hasNext();) {
+                BDD inputOne = (BDD) inputIter.next();
+                           
+                // computing the set of system possible successors.
+                Vector<BDD> sys_succs = new Vector<BDD>();               
+                BDD all_sys_succs = sys.succ(new_state.get_state().and(inputOne));
+                int idx = -1;
+                
+                if (all_sys_succs.equals(Env.FALSE())) {
+                	RawCState gsucc = new RawCState(aut.size(), Env.unprime(inputOne), new_j, new_i, inputOne);
+                    idx = aut.indexOf(gsucc); // the equals doesn't consider
+                                              // the id number.
+                    if (idx == -1) {                       
+                        aut.add(gsucc);
+                        idx = aut.indexOf(gsucc);
+                    }
+                    new_state.add_succ(aut.elementAt(idx));
+                	continue;                	
+                }               	
+                
+                for (BDDIterator all_sys_states = all_sys_succs.iterator(sys
+                        .moduleUnprimeVars()); all_sys_states.hasNext();) {
+                    BDD sin = (BDD) all_sys_states.next();
+                    sys_succs.add(sin);
+                }
+                
+                
+
+                // For each system successor, find a strategy successor
+                for (Iterator<BDD> iter_succ = sys_succs.iterator(); iter_succ
+                        .hasNext();) {
+                    BDD sys_succ = iter_succ.next().and(Env.unprime(inputOne));
+                   
+                    RawCState gsucc = new RawCState(aut.size(), sys_succ, new_j, new_i, inputOne);
+                    idx = aut.indexOf(gsucc); // the equals doesn't consider
+                                              // the id number.
+                    if (idx == -1) {
+                        st_stack.push(sys_succ);
+                        i_stack.push(new_i);
+                        j_stack.push(new_j);
+                        aut.add(gsucc);
+                        idx = aut.indexOf(gsucc);
+                    }
+                    new_state.add_succ(aut.elementAt(idx));
+                }
+                if (det) break;
+            }
+        }       
+        
+        
 	
 
 		

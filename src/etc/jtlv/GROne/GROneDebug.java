@@ -67,12 +67,13 @@ public class GROneDebug {
 		BDD all_init = sys_init.and(env_init);	 
 		 
 		BDD envUnreal, sysUnreal;
+		BDD envUnsat, sysUnsat;
 
 		FixPoint<BDD> iter;
 		
 		String debugInfo = "";
 		
-		
+			
 		 BDD cox = Env.FALSE();
 		 for (iter = new FixPoint<BDD>(); iter.advance(cox);) {			 
 			 cox = cox.or(env.yieldStates(sys, cox));
@@ -82,6 +83,8 @@ public class GROneDebug {
 		 cox = Env.FALSE();
 		 for (iter = new FixPoint<BDD>(); iter.advance(cox);) {
 			 cox = cox.or((env.yieldStates(sys, cox.not())).not());
+			 //cox = cox.or(sys.yieldStates(env, cox));
+			 
 		 }	 
 		 
 		 sysUnreal = cox.id().and(all_init);
@@ -163,6 +166,91 @@ public class GROneDebug {
 				 }
 				 			 
 		  }
+		 
+		 GROneGame g = null;
+		 
+		 try { 
+			  	g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
+		  }	catch (Exception e){//Catch exception if any
+				System.err.println("Error: " + e.getMessage());
+		  }
+		  if (g.calculate_counterstrategy(g.getSysPlayer().initial().and(g.getSysPlayer().initial()), false)) { 			 
+			 debugInfo += "SysInitTrans UNSAT " + "\n";
+			 explainSys = 1;
+		 }
+	/*	 GROneGame g = null;
+		 try {
+			  	g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
+			  	BDD counter_exmple = g.envWinningStates().and(all_init);
+				 if (counter_exmple.isZero()) g.printWinningStrategy(g.getEnvPlayer().initial().and(
+		               g.getSysPlayer().initial()));
+		  }	catch (Exception e){//Catch exception if any
+				System.err.println("Error: " + e.getMessage());
+		  }
+		  
+		  if (g.autBDDTrue()) { 
+				 //debugInfo += "REV Unsat between trans and goal number " + i + "\n";
+				 debugInfo += "EnvInitTrans UNSAT " + "\n";
+				 explainEnv = 1;
+		  }
+		  
+		  try {
+			  	g = new GROneGame(sys,env, env.justiceNum(), sys.justiceNum());
+			  	BDD counter_exmple = g.envWinningStates().and(all_init);
+				 if (counter_exmple.isZero()) g.printWinningStrategy(g.getEnvPlayer().initial().and(
+		               g.getSysPlayer().initial()));
+		  }	catch (Exception e){//Catch exception if any
+				System.err.println("Error: " + e.getMessage());
+		  }
+		  
+		  if (g.autBDDTrue()) { 
+				 //debugInfo += "REV Unsat between trans and goal number " + i + "\n";
+				 debugInfo += "SysInitTrans UNSAT " + "\n";
+				 explainSys = 1;
+		  }
+	 */
+		 
+	/*	 BDD cox2 = Env.FALSE();
+		 for (iter = new FixPoint<BDD>(); iter.advance(cox2);) {			 
+			 cox2 = cox2.or(env.yieldStates(env, cox2));
+		 }
+		 envUnsat = cox2.id().and(all_init);
+
+		 cox2 = Env.FALSE();
+		 for (iter = new FixPoint<BDD>(); iter.advance(cox2);) {
+			 cox2 = cox2.or((sys.yieldStates(sys, cox2.not())).not());
+		 }	 
+		 sysUnsat = cox2.id().and(all_init);
+		 
+		 if (explainSys ==0 && !sysUnsat.equals(Env.FALSE())) {		 
+			 //debugInfo += "cox Y REV = "+ init_cox_Rev + "\n"; //TRUE if unsat
+			 debugInfo += "SysInitTrans UNSAT"+ "\n"; //TRUE if unsat
+	  		 explainSys = 1;
+		 }
+	  
+		 if (explainEnv ==0 && !envUnsat.equals(Env.FALSE())) {		 
+		  	//debugInfo += "cox Y = "+ init_cox + "\n"; //TRUE if unsat
+			debugInfo += "EnvInitTrans UNSAT"+ "\n"; //TRUE if unsat
+	  		explainEnv = 1;
+	  	 }
+	*/	  
+		 
+		 
+		 
+	/*	  PrintStream orig_out = System.out;			  
+			
+		  try {
+			  	GROneGame gRev = new GROneGame(sys,env, env.justiceNum(), sys.justiceNum());
+			  	System.setOut(new PrintStream(new File("new.txt"))); // writing the output to a file
+				gRev.printWinningStrategy(gRev.getEnvPlayer().initial().and(
+		               gRev.getSysPlayer().initial()));
+		  }	catch (Exception e){//Catch exception if any
+				System.err.println("Error: " + e.getMessage());
+			}
+			System.setOut(orig_out); // restore STDOUT
+		  
+	*/		
+		 
 		  
 		  if (explainSys ==0 && !sysUnreal.equals(Env.FALSE())) {		 
 				 //debugInfo += "cox Y REV = "+ init_cox_Rev + "\n"; //TRUE if unsat
