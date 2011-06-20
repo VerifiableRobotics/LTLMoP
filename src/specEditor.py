@@ -1776,7 +1776,7 @@ class SpecEditorFrame(wx.Frame):
           if "SysGoalsTrans UNSAT" in dline:
                output = output + "System highlighted goal(s) inconsistent with transition relation. \n"
                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerSetBackground(self.map['SysGoals'][int(l)],"BLUE")           
+                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],"BLUE")           
                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_LIVE)
           if "SysInitTrans UNSAT" in dline:
                output = output + "System initial condition inconsistent with transition relation. \n"
@@ -1795,11 +1795,11 @@ class SpecEditorFrame(wx.Frame):
           if "EnvGoals UNSAT" in dline:
                output = output + "Environment highlighted goal(s) unsatisfiable \n"
                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvTrans'][int(l)],MARKER_LIVE)
+                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)
           if "EnvGoalsTrans UNSAT" in dline:
                output = output + "Environment highlighted goal(s) inconsistent with transition relation. \n"
                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerSetAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
+                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
           if "EnvInitTrans UNSAT" in dline:
                output = output + "Environment initial condition inconsistent with transition relation. \n"

@@ -82,83 +82,50 @@ public class GROneDebug {
 
 		 cox = Env.FALSE();
 		 for (iter = new FixPoint<BDD>(); iter.advance(cox);) {
-			 cox = cox.or((env.yieldStates(sys, cox.not())).not());
-			 //cox = cox.or(sys.yieldStates(env, cox));
-			 
+			 cox = cox.or((env.yieldStates(sys, cox.not())).not());			 
 		 }	 
 		 
 		 sysUnreal = cox.id().and(all_init);
 		 
 		 
-		 /*String valid = "";
 		 
-		 try{			 
-			 LTLModelCheckAlg alg = new LTLModelCheckAlg(sys, new SpecBDD(Env.TRUE()));
-			 //AlgRunnerThread thread = new AlgRunnerThread(alg);
-			 //debugInfo+="*** Property is VALID ***";
-			 //AlgResultI res1 = alg.preAlgorithm();
-			 //debugInfo+=res1.resultString();//alg.preAlgorithm();
-			 AlgResultI res = alg.doAlgorithm();			 
-			 debugInfo+=res.resultString();//alg.preAlgorithm();
-			 //debugInfo+="grr\n";
-			 //debugInfo+=thread.getPreResult();
-		 }catch (Exception e){//Catch exception if any
-		      System.err.println("Error: " + e.getMessage());
-		      debugInfo += e.getMessage();
-		 }*/
-
 		 if (sys.initial().isZero()) {
-			 //debugInfo += "Unsat initial conditions." + "\n";
 			 debugInfo += "SysInit UNSAT" + "\n";
 			 explainSys = 1;
 		 
 		 } else if ((sys.initial().and(sys.trans())).isZero()) {
-			 //debugInfo += "Unsat transitions." + "\n";
 			 debugInfo += "SysTrans UNSAT" + "\n";
 			 explainSys = 1;
 		 } else {
-			// String valid = (new LTLValidAlg(sys, (new SpecBDD(Env.TRUE())))).doAlgorithm().resultString();
-			 //debugInfo += "Unsat transitions." + "\n";
-			 //if (valid.equals()) {
-			 //debugInfo += valid;
-			 //explainSys = 1;
-			 //}
-		  
-		 //} else {
+		
 		 	 
 			 for (int i = 0; i < sys.justiceNum(); i++) {
 				 if (sys.justiceAt(i).isZero()) {
-					 //debugInfo += "Unsat goal number " + i + "\n";
 					 debugInfo += "SysGoals UNSAT " + i + "\n";
 					 explainSys = 1;
 				 }
 				 else if ((sys.trans().and(Env.prime(sys.justiceAt(i))).isZero()) | sys.trans().and(sys.justiceAt(i)).isZero()) {
-					 //debugInfo += "Unsat between trans and goal number " + i + "\n";
-				 	 debugInfo += "SysGoalsTrans UNSAT " + i + "\n";	
-				 	explainSys = 1;
+					 debugInfo += "SysGoalsTrans UNSAT " + i + "\n";	
+				 	 explainSys = 1;
 				 }
 			 }
 			 			 
 		 }
 		  
 		 if (env.initial().isZero()) {
-			  //debugInfo += "REV Unsat initial conditions." + "\n";
 			  debugInfo += "EnvInit UNSAT" + "\n";
 			  explainEnv = 1;	 
 		 } else if ((env.initial().and(env.trans())).isZero()) {
-			  //debugInfo += "REV Unsat transitions." + "\n";
 			  debugInfo += "EnvTrans UNSAT" + "\n";
 			  explainEnv = 1;
 		  } else {
 				 	 
 				 for (int i = 0; i < env.justiceNum(); i++) {
 					 if (env.justiceAt(i).isZero()) {
-						 //debugInfo += "REV Unsat goal number " + i + "\n";
 						 debugInfo += "EnvGoals UNSAT " + i + "\n";
 						 explainEnv = 1;
 					 }
 					 else if ((env.trans().and(Env.prime(env.justiceAt(i))).isZero()) | (env.trans().and(env.justiceAt(i))).isZero()) { 
-						 //debugInfo += "REV Unsat between trans and goal number " + i + "\n";
 						 debugInfo += "EnvGoalsTrans UNSAT " + i + "\n";
 						 explainEnv = 1;
 					 }
@@ -170,97 +137,40 @@ public class GROneDebug {
 		 GROneGame g = null;
 		 
 		 try { 
-			  	g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
+			  	g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());		
 		  }	catch (Exception e){//Catch exception if any
-				System.err.println("Error: " + e.getMessage());
+					System.err.println("Error: " + e.getMessage());
 		  }
-		  if (g.calculate_counterstrategy(g.getSysPlayer().initial().and(g.getSysPlayer().initial()), false)) { 			 
-			 debugInfo += "SysInitTrans UNSAT " + "\n";
-			 explainSys = 1;
-		 }
-	/*	 GROneGame g = null;
-		 try {
-			  	g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
-			  	BDD counter_exmple = g.envWinningStates().and(all_init);
-				 if (counter_exmple.isZero()) g.printWinningStrategy(g.getEnvPlayer().initial().and(
-		               g.getSysPlayer().initial()));
-		  }	catch (Exception e){//Catch exception if any
-				System.err.println("Error: " + e.getMessage());
-		  }
-		  
-		  if (g.autBDDTrue()) { 
-				 //debugInfo += "REV Unsat between trans and goal number " + i + "\n";
-				 debugInfo += "EnvInitTrans UNSAT " + "\n";
-				 explainEnv = 1;
-		  }
-		  
-		  try {
-			  	g = new GROneGame(sys,env, env.justiceNum(), sys.justiceNum());
-			  	BDD counter_exmple = g.envWinningStates().and(all_init);
-				 if (counter_exmple.isZero()) g.printWinningStrategy(g.getEnvPlayer().initial().and(
-		               g.getSysPlayer().initial()));
-		  }	catch (Exception e){//Catch exception if any
-				System.err.println("Error: " + e.getMessage());
-		  }
-		  
-		  if (g.autBDDTrue()) { 
-				 //debugInfo += "REV Unsat between trans and goal number " + i + "\n";
-				 debugInfo += "SysInitTrans UNSAT " + "\n";
-				 explainSys = 1;
-		  }
-	 */
 		 
-	/*	 BDD cox2 = Env.FALSE();
-		 for (iter = new FixPoint<BDD>(); iter.advance(cox2);) {			 
-			 cox2 = cox2.or(env.yieldStates(env, cox2));
-		 }
-		 envUnsat = cox2.id().and(all_init);
+		  BDD counter_example = g.envWinningStates().and(all_init);
+		  try { 
+			  if (!counter_example.isZero()) {
+				//checking for multi-step unsatisfiability between sys transitions and initial condition					 
+				 if (g.calculate_counterstrategy(g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), false, false)) { 			 
+					 debugInfo += "SysInitTrans UNSAT " + "\n";
+					 explainSys = 1;
+				 }
+			  } else {		  
+				//checking for multi-step unsatisfiability between env transitions and initial condition
+				  if (g.calculate_strategy(1, g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), false)) { 
+						 debugInfo += "EnvInitTrans UNSAT " + "\n";
+						 explainEnv = 1;
+				  }
+			  }
+		  }	catch (Exception e){//Catch exception if any
+				System.err.println("Error: " + e.getMessage());
+	  }
+		  
+		  
 
-		 cox2 = Env.FALSE();
-		 for (iter = new FixPoint<BDD>(); iter.advance(cox2);) {
-			 cox2 = cox2.or((sys.yieldStates(sys, cox2.not())).not());
-		 }	 
-		 sysUnsat = cox2.id().and(all_init);
-		 
-		 if (explainSys ==0 && !sysUnsat.equals(Env.FALSE())) {		 
-			 //debugInfo += "cox Y REV = "+ init_cox_Rev + "\n"; //TRUE if unsat
-			 debugInfo += "SysInitTrans UNSAT"+ "\n"; //TRUE if unsat
-	  		 explainSys = 1;
-		 }
-	  
-		 if (explainEnv ==0 && !envUnsat.equals(Env.FALSE())) {		 
-		  	//debugInfo += "cox Y = "+ init_cox + "\n"; //TRUE if unsat
-			debugInfo += "EnvInitTrans UNSAT"+ "\n"; //TRUE if unsat
-	  		explainEnv = 1;
-	  	 }
-	*/	  
-		 
-		 
-		 
-	/*	  PrintStream orig_out = System.out;			  
-			
-		  try {
-			  	GROneGame gRev = new GROneGame(sys,env, env.justiceNum(), sys.justiceNum());
-			  	System.setOut(new PrintStream(new File("new.txt"))); // writing the output to a file
-				gRev.printWinningStrategy(gRev.getEnvPlayer().initial().and(
-		               gRev.getSysPlayer().initial()));
-		  }	catch (Exception e){//Catch exception if any
-				System.err.println("Error: " + e.getMessage());
-			}
-			System.setOut(orig_out); // restore STDOUT
-		  
-	*/		
-		 
-		  
+	
 		  if (explainSys ==0 && !sysUnreal.equals(Env.FALSE())) {		 
-				 //debugInfo += "cox Y REV = "+ init_cox_Rev + "\n"; //TRUE if unsat
 				 debugInfo += "SysTrans UNREAL"+ "\n"; //TRUE if unsat
 		  		 explainSys = 1;
 		  }
 		  
 		  if (explainEnv ==0 && !envUnreal.equals(Env.FALSE())) {		 
-			  	//debugInfo += "cox Y = "+ init_cox + "\n"; //TRUE if unsat
-				debugInfo += "EnvTrans UNREAL"+ "\n"; //TRUE if unsat
+			  	debugInfo += "EnvTrans UNREAL"+ "\n"; //TRUE if unsat
 		  		explainEnv = 1;
 		  }
 		  
@@ -299,10 +209,16 @@ public class GROneDebug {
 			for (int i = 1; i <= sys.justiceNum(); i++){
 				 g = new GROneGame(env,sys, i, env.justiceNum());
 				 counter_exmple = g.envWinningStates().and(all_init);
-				 if (explainSys ==0 && !counter_exmple.isZero()) {//&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
-					 //debugInfo += "sl Y = "+ (i-1) + "\n";
-					 //debugInfo += "System is unrealizable because of justice "+ (i-1) + "\n";
-					 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
+				 if (explainSys ==0 && !counter_exmple.isZero()) {
+					//checking for multi-step unsatisfiability between sys transitions and goals
+					 if (g.calculate_counterstrategy(g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), true, false)) {
+						 debugInfo += "SysGoalsTrans UNSAT " + (i-1) + "\n";
+						 explainSys = 1;
+					 } else {//&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
+						//if we get here, the sys is unrealizable because of the current goal
+						 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
+						 explainSys = 1;		
+					 }
 					 i = sys.justiceNum() + 1;
 				 }
 			}
@@ -318,16 +234,24 @@ public class GROneDebug {
 			
 		if (!env.justiceAt(env.justiceNum() - 1).equals(Env.TRUE())) {
 				
-				
-			for (int i = env.justiceNum()-1; i >=1; i--){		
+			//checking for unrealizable environment justice 	
+			for (int i = env.justiceNum(); i >=1; i--){		
 				 prev = counter_exmple;
-				 g = new GROneGame(env,sys, sys.justiceNum(), i);
+				 g = new GROneGame(env,sys, 0, i);
 				 counter_exmple = g.envWinningStates().and(all_init);
-				 if (explainEnv ==0 && counter_exmple.isZero() && (!env.justiceAt(i-1).equals(Env.TRUE()))) {// && (!prev.isZero())) {
-					 //debugInfo += "sl Y REV = "+ (i-1) + "\n";
-					 //debugInfo += "Environment is unrealizable because of justice "+ (i-1) + "\n";
-					 debugInfo += "EnvGoals UNREAL " + (i) + "\n";				 
-					 i = 0;
+				 if (explainEnv ==0) {
+					 if (g.calculate_strategy(3, g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), false)) { 
+						 //checking for multi-step unsatisfiability between env transitions and goals
+						 debugInfo += "EnvGoalsTrans UNSAT " + (i-1) + "\n";
+						 explainEnv = 1;
+						 i = 0;
+					 //} else if (counter_exmple.isZero() && !env.justiceAt(i-1).equals(Env.TRUE())) {// && (!prev.isZero())) {
+					 } else if (counter_exmple.isZero() && i > 1) {
+						 //if we get here, the env is unrealizable because of the current goal
+						 debugInfo += "EnvGoals UNREAL " + (i-1) + "\n";	
+						 explainEnv = 1;
+						 i = 0;
+					 }
 				 } 
 			}
 		}
