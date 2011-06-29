@@ -135,9 +135,6 @@ public class GROneGame {
 					BDD start = ((sys.justiceAt(j).not()).or((env.yieldStates(sys, z.not())).not()))
 					//BDD start = ((sys.justiceAt(j).not()).or(sys.yieldStates(sys, z)))
 							.and((env.yieldStates(sys, y.not())).not());					
-					System.out.println("(env.yieldStates(sys, y.not())).not() = " + (env.yieldStates(sys, y.not())).not());		
-					System.out.println("(env.yieldStates(sys, z.not())).not() = " + (env.yieldStates(sys, z.not())).not());		
-					System.out.println("start = " + start);		
 					for (int i = 0; i < envJustNum; i++) {
 						x = Env.FALSE();
 						c=0;
@@ -475,7 +472,7 @@ public class GROneGame {
                                 BDD opt = next_op.and(z_mem[next_p_j]);
                                 if (!opt.isZero()) {
                                     candidate = opt;
-                                    System.out.println("1");
+                                    //System.out.println("1");
                                     jcand = next_p_j;
                                 }
                             }
@@ -496,7 +493,7 @@ public class GROneGame {
                                 BDD opt = next_op.and(y_mem[p_j][look_r]);
                                 if ((look_r != p_cy) && (!opt.isZero())) {
                                     candidate = opt;  
-                                    System.out.println("2");
+                                    //System.out.println("2");
                                 }
                             }
                         }
@@ -510,7 +507,7 @@ public class GROneGame {
                                 BDD opt = next_op.and(x_mem[p_j][p_i][p_cy]);
                                 if (!opt.isZero()) {
                                     candidate = opt;
-                                    System.out.println("3");
+                                    //System.out.println("3");
                                 }
                             }
                         }
@@ -598,17 +595,20 @@ public class GROneGame {
 
         /* Print output */
 
-		String res = "";
-		for (RawState state : aut) {
-            if (state.get_rank() != -1) {
-                res += state + "\n";
-            }
+		if (det) {
+			String res = "";
+		
+			for (RawState state : aut) {
+	            if (state.get_rank() != -1) {
+	                res += state + "\n";
+	            }
+			}
+	
+			System.out.print("\n\n");
+			System.out.print(res);
+			// return null; // res;
+			System.out.print("\n\n");
 		}
-
-		System.out.print("\n\n");
-		System.out.print(res);
-		// return null; // res;
-		System.out.print("\n\n");
 		if (strategy_kind == 3) return result; else return false;
 	}
 	
@@ -851,14 +851,17 @@ public class GROneGame {
 	        }
         }
                 
-        String res = "";
-        for (RawCState state : aut) {
-        	if (state.get_rank_i() != -1) {
-        		res += state + "\n";
-        	}	
-        }	
-        System.out.print("\n\n");
-        System.out.print(res);
+        if (det) {
+        	String res = "";
+        
+	        for (RawCState state : aut) {
+	        	if (state.get_rank_i() != -1) {
+	        		res += state + "\n";
+	        	}	
+	        }	
+	        System.out.print("\n\n");
+	        System.out.print(res);
+        }
         return result;
         
 	}
