@@ -217,7 +217,7 @@ public class GROneDebug {
 						 explainSys = 1;
 					 } else {//&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
 						//if we get here, the sys is unrealizable because of the current goal
-						 debugInfo += "SysGoals UNREAL " + (i) + "\n";
+						 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
 						 explainSys = 1;		
 					 }
 					 i = sys.justiceNum() + 1;
