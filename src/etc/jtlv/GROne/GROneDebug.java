@@ -204,8 +204,9 @@ public class GROneDebug {
 		
 		String debugInfo = "";
 		
-		if (!sys.justiceAt(sys.justiceNum() - 1).equals(Env.TRUE())) {
 		
+		
+		if (!sys.justiceAt(0).equals(Env.TRUE())) {
 			for (int i = 1; i <= sys.justiceNum(); i++){
 				 g = new GROneGame(env,sys, i, env.justiceNum());
 				 counter_exmple = g.envWinningStates().and(all_init);
@@ -216,7 +217,7 @@ public class GROneDebug {
 						 explainSys = 1;
 					 } else {//&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
 						//if we get here, the sys is unrealizable because of the current goal
-						 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
+						 debugInfo += "SysGoals UNREAL " + (i) + "\n";
 						 explainSys = 1;		
 					 }
 					 i = sys.justiceNum() + 1;
@@ -237,7 +238,7 @@ public class GROneDebug {
 			//checking for unrealizable environment justice 	
 			for (int i = env.justiceNum(); i >=1; i--){		
 				 prev = counter_exmple;
-				 g = new GROneGame(env,sys, 0, i);
+				 g = new GROneGame(env,sys, sys.justiceNum(), i);
 				 counter_exmple = g.envWinningStates().and(all_init);
 				 if (explainEnv ==0) {
 					 if (g.calculate_strategy(3, g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), false)) { 

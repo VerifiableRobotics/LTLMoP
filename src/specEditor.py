@@ -1776,8 +1776,8 @@ class SpecEditorFrame(wx.Frame):
           if "SysGoalsTrans UNSAT" in dline:
                output = output + "System highlighted goal(s) inconsistent with transition relation. \n"
                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],"BLUE")           
-               for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_LIVE)
+                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
+               for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
           if "SysInitTrans UNSAT" in dline:
                output = output + "System initial condition inconsistent with transition relation. \n"
                for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
