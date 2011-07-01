@@ -395,7 +395,7 @@ class GaitCreator:
 			# Get gait traits
 			self.traits = raw_input("Enter gaits separate by a comma and a space (e.g. fast, tall): ")
 			# Update Library
-			self.updateLibe()
+			# self.updateLibe()
 			# Save Gait File
 			self.saveGait()
 			print "Gait Saved"
@@ -516,7 +516,7 @@ class GaitCreator:
 		
 		# Add the new gait number
 		numgaits = len(self.gaits)
-		titlestring = "\nGait " + str(numgaits + 1)
+		titlestring = "\nGait " + str(numgaits + 1) + ":\nType Fixed"
 		f.write(titlestring)
 
 		# Now add each row of the gait file
@@ -533,7 +533,7 @@ class GaitCreator:
 		f.close()
 		
 		# Reload the robot data.
-		self.loadRobotData(self.robotfile)		
+		loadRobotData(self, self.robotfile)		
 
 	def updateLibe(self):
 		"""
@@ -575,7 +575,7 @@ class GaitCreator:
 				newdefn = raw_input()
 				# Make a new trait list
 				destination.write('# \"' + trait + '\" = ' + newdefn + '\n')
-				destination.write('Trait: ' + trait + '\n')
+				destination.s('Trait: ' + trait + '\n')
 				destination.write(config + '-' + gaitname + '\n')	
 				traitPreexists[idx] = 1			
 			idx = idx + 1

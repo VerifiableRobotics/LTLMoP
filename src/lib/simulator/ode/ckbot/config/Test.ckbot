@@ -11,7 +11,7 @@ ConnMatrix:
 # This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
 # The y vector in the simulator is normal to the ground and points upwards.
 RelativeOffset:
-0 5 0
+0 0.5 0
 
 # This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
 RelativeRotation:
@@ -22,13 +22,24 @@ RelativeRotation:
 # except for the last row which is the time taken for the entire gait to loop (in seconds)
 Gaits:
 Gain 5
-Type Fixed
 
-# Gait 1 -- do stuff
-Gait 1
+Gait 1:
+Type Fixed
 0 0
 9000 9000
 0 0
--9000 -9000
+2
+
+Gait 2:
+Type Fixed
 0 0
-5
+0 1000
+1000 1000
+0 0
+25
+
+Gait 3:
+Type Periodic
+5000 5000
+5 5 
+0 0

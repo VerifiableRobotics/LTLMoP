@@ -4,22 +4,26 @@
 
 # "tall" = the robot reaches at least 3 modules high
 Trait: tall
+Test-Random
 Biped-splits
 Slinky-slink
 #Loop-roll
 
 # "fast" = the robot moves at least 1 body length in 10 seconds
 Trait: fast
+Test-Random
 Hexapod-run
 Loop10-roll
 FoldOver-slink
 
 # "narrow" = the robot is no larger than 1 module in 2 of 3 dimensions (x,y,z)
 Trait: narrow
+Test-Random
 Snake-crawl
 
 # "stationary" = the robot location does not vary more than the maximum dimension of the robot
 Trait: stationary
+Test-Random
 FoldOver-wave
 Plus3-foldup
 TeeStationary-panic
@@ -28,12 +32,14 @@ Biped-splits
 
 # "1D motion" = robot along a line (along 2D ground plane)
 Trait: 1D_motion
+Test-Random
 Slinky-slink
 Loop10-roll
 FoldOver-slink
 
 # "non-holonomic turning" = robot can turn with a radius
 Trait: nonholonomic_turning
+Test-Random
 Tripod-crawl
 #Biped-walk
 Twist-twist
@@ -44,10 +50,12 @@ Hexapod-run
 
 # "holonomic" = robot can move in any direction without turn radius
 Trait: holonomic
+Test-Random
 Plus3-crawl
 
 # "low" = robot height does not exceed 1.3 modules
 Trait: low
+Test-Random
 Tripod-crawl
 FoldOver-wave
 Plus3-crawl
@@ -57,34 +65,42 @@ Tee-crawl
 
 # "handles steps" = robot can climb or descend steps
 Trait: handles_steps
+Test-Random
 Slinky-slink
 
 # "handles rough surfaces" = robot can handle rough terrain (rocks, pebbles, sand, etc.)
 Trait: handles_rough_surfaces
+Test-Random
 #Hexapod-run
 
 # "handles fire" = robot can handle fire
 Trait: handles_fire
+Test-Random
 Twist-twist
 
 # "hardware" = gait can be realized with current hardware
 Trait: hardware
+Test-Random
 Snake-crawl
 Tee-crawl
 TeeStationary-panic
 
 # "long" = more than 5 modules long
 Trait: long
+Test-Random
 FoldOver-wave
 
 # "legged" = has legs
 Trait: legged
+Test-Random
 Tripod-crawl
 Hexapod-run
 Biped-splits
 
 # "large" = has more than 10 modules
 Trait: large
+Test-Random
 Hexapod-run
+
 
 # LEAVE THIS LINE HERE (one enter line below last trait list) for correct parsing

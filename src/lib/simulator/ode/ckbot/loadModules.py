@@ -63,7 +63,7 @@ def loadModuleObjects(sim):
 
 				# Create a fixed joint based on the connection type.
 				### First, keep track of the parent module's position.
-				print "Creating connection: \n Modules   %d - %d \n Ports     %d - %d \n" %(parent,child,parent_port,child_port)
+				#print "Creating connection: \n Modules   %d - %d \n Ports     %d - %d \n" %(parent,child,parent_port,child_port)
 				parent_low_pos = sim.lowerbody[parent].getPosition()
 				parent_up_pos = sim.upperbody[parent].getPosition()
 				parent_pos = (0.5*(parent_low_pos[0]+parent_up_pos[0]),

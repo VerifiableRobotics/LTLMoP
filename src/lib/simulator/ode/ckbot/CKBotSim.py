@@ -38,23 +38,6 @@ class CKBotSim:
 		Initialize the simulator.
 		"""
 
-		# Setting standalone to 1 allows for manual key input.
-		# Setting standalone to 0 (LTLMoP mode) causes the camera to automatically follow the spawned robot)
-		if standalone==1:
-			self.standalone = 1
-		else:
-			self.standalone = 0   
-		self.clock = pygame.time.Clock()
-
-		# If regionfile=0, render the ground as default solid green terrain.
-		# Otherwise, load the regions file specified and draw the region colors on the ground.
-		self.region_data = []
-
-		# Load a region file if it has been specified on instantiation.
-		if (regionfile!=None):
-			loadRegionData(self, regionfile)
-			self.region_calib = region_calib
-
 		# Simulation world parameters.
 		self._initOpenGL()
 		self.world = ode.World()
@@ -74,6 +57,33 @@ class CKBotSim:
 		self.gait = 0
 		self.gain = 0.75
 		self.counter = 0
+		
+		# Setting standalone to 1 allows for manual key input.
+		# Setting standalone to 0 (LTLMoP mode) causes the camera to automatically follow the spawned robot)
+		if standalone==1:
+			self.standalone = 1
+		else:
+			self.standalone = 0   
+		self.clock = pygame.time.Clock()
+
+		# If regionfile=0, render the ground as default solid green terrain.
+		# Otherwise, load the regions file specified and draw the region colors on the ground.
+		self.region_data = []
+		self.region_names = []
+
+		# Load a region file if it has been specified on instantiation.
+		if (regionfile!=None):
+			loadRegionData(self, regionfile)
+			self.region_calib = region_calib
+		
+		# Make obstacles if they exist.
+		if (obstaclefile!=None):
+		    loadObstacles(self, obstaclefile)
+
+		# Create region heights if they are specified.
+		self.heightmap = heightmap
+		if (self.heightmap!=None):
+			loadRegionHeights(self, self.heightmap)
 
 		# Define Modular Arrays
 		self.body = []
@@ -124,15 +134,6 @@ class CKBotSim:
 		self._az = 0.0
 		self._align = 1.0
 		self.clicking = False
-		
-		# Make obstacles if they exist.
-		if (obstaclefile!=None):
-		    loadObstacles(self, obstaclefile)
-
-		# Create region heights if they are specified.
-		self.heightmap = heightmap
-		if (self.heightmap!=None):
-			loadRegionHeights(self, self.heightmap)
 
 
 	def _initOpenGL(self):
@@ -208,6 +209,7 @@ class CKBotSim:
 
 		# Draw a quad at the position of the vehicle that extends to the
 		# clipping planes.
+
 		if (self.region_data==[]):
 
 			glPushMatrix()
@@ -227,6 +229,24 @@ class CKBotSim:
 			glEnd()
 
 			glPopMatrix()
+			
+			# Render squares on the ground in order to observe motion of the robot.
+			for i in range(-10,11,2):
+				for j in range(-10,11,2):
+					glPushMatrix()
+					color = (0, 0, 0.5)
+					glMaterialfv(GL_FRONT, GL_SPECULAR, color)
+					glBegin(GL_POLYGON)
+					glNormal3f(*normal)
+					glVertex3f(-10 + 20*i, 0.1, -10 + 20*j)
+					glNormal3f(*normal)
+					glVertex3f(-10 + 20*i, 0.1, 10 + 20*j)
+					glNormal3f(*normal)
+					glVertex3f(10 + 20*i, 0.1, 10 + 20*j)
+					glNormal3f(*normal)
+					glVertex3f(10 + 20*i, 0.1, -10 + 20*j)
+					glEnd()
+					glPopMatrix()
 
 		# If we have region data, draw the individual regions and color them accordingly.
 		else:
@@ -257,7 +277,6 @@ class CKBotSim:
 				glEnd()
 
 				glPopMatrix()
-
 
 	def _setCamera(self):
 		"""
@@ -454,7 +473,7 @@ class CKBotSim:
 			counter = self.counter
 
 			rungait(self)
-
+			
 			# Simulation Step
 			self.space.collide((), self._nearcb)
 			self.world.step(1/self.fps)
@@ -504,12 +523,13 @@ if (__name__ == '__main__'):
             obstaclefile = "../obstacles/" + sys.argv[2] + ".obstacle"
 
 	# Arguments to fill out
-	#regionfile = "../../../../examples/looptest/looptest.regions"
-	#heightmap = [0.25, 0.25, 0.25, 0.25, 0]
+	regionfile = "../../../../examples/looptest/looptest.regions"
+	heightmap = [["r1",3.0,3.0,"none"],["r3",0.0,3.0,"+x"],["r5",0.0,3.0,"-x"],["r4",0.0,3.0,"+y"],["r2",0.0,3.0,"-y"]]
 	regioncalib = [1.0,-1.0]
-	startingpose = [regioncalib[0]*(250), 0, -regioncalib[1]*(250)]
-	regionfile = None
-	heightmap = None
+	startingpose = [regioncalib[0]*(250), 20, -regioncalib[1]*(250)]
+	#startingpose = [0, 0, 0]
+	#regionfile = None
+	#heightmap = None
 
 	# Running from ckbot directory.
 	if ("simulator" in curdir) and ("ode" in curdir) and ("ckbot" in curdir):
@@ -520,5 +540,11 @@ if (__name__ == '__main__'):
 	else:
 		robotfile = "lib/simulator/ode/ckbot/config/" + sys.argv[1] + ".ckbot"
 		sim = CKBotSim(robotfile, standalone=0)
+		
+	#Ramp Test: Use for revamping obstacles. i.e. use no bodies/masses
+	#geom = ode.GeomBox(space=sim.space, lengths=[10,10,10] )
+	#geom.setPosition([50, 0, 0])
+	#geom.setRotation(genmatrix(math.pi/4.0,1))
+	#sim._geoms.append(geom)
 		
 	sim.run()

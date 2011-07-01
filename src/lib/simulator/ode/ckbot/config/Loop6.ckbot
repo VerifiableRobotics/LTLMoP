@@ -27,10 +27,10 @@ RelativeRotation:
 # except for the last row which is the time taken for the entire gait to loop (in seconds)
 Gaits:
 Gain 5
-Type Fixed
 
 # Gait 1 -- loop direction 1
 Gait 1
+Type Fixed
 6000 4000 8000 6000 4000 8000
 8000 6000 4000 8000 6000 4000
 4000 8000 6000 4000 8000 6000
@@ -39,6 +39,7 @@ Gait 1
 
 # Gait 2 -- loop direction 2
 Gait 2
+Type Fixed
 6000 8000 4000 6000 8000 4000
 4000 6000 8000 4000 6000 8000
 8000 4000 6000 8000 4000 6000
@@ -47,6 +48,7 @@ Gait 2
 
 # Gait 3 -- snake
 Gait 3
+Type Fixed
 0 500 1000 500 0 -500
 500 1000 500 0 -500 -1000
 1000 500 0 -500 -1000 -500

@@ -116,32 +116,35 @@ def loadRobotData(sim, filename):
 		# For each gait, we must be able to tell whether the gait is Periodic or Fixed type and 
 		# parse it accordingly.
 
-		elif reading == "gait":
+		elif reading == "gait" and linesplit != []:
 
 			# Read the Proportional control gain specified in the text file.
 			if linesplit[0] == "Gain":
 				sim.gain = float(linesplit[1])
 
-			# Figure out whether the gaits are fixed or periodic
+			if linesplit[0] == "Gait":
+				reading = "gaittype"
+			
+		elif reading == "gaittype":
 			if linesplit[0] == "Type":
-				sim.gaittype = linesplit[1]
-				if sim.gaittype == "Periodic":
+				gaittype = linesplit[1]
+				if gaittype == "Periodic":
 					reading = "periodic_gait"
-				else:
-					reading = "fixed_gait"				  
+				elif gaittype == "Fixed":
+					reading = "fixed_gait"	
+					gaitrows = []
+					gaittime = 0					
 
 		# If we are reading periodic gaits, we know our gait table is just 3 lines.
 		# The first line is the set of amplitudes (in degrees*100) of each hinge.
 		# The second line is the set of frequencies (in rad/s) of each hinge.
 		# The third line is the set of phase angles (in degrees*100) of each hinge.
-		elif reading == "periodic_gait" and linesplit != []:
-			if linesplit[0] == "Gait":
-				amplitudes = []
-				frequencies = []
-				phases = []
-				reading = "amplitude"
+					
+		elif reading == "periodic_gait":
+			amplitudes = []
+			frequencies = []
+			phases = []
 
-		elif reading == "amplitude":
 			for elem in linesplit:
 				amplitudes.append( float(elem)*(math.pi/180.0)*(1/100.0) )
 			reading = "frequency"
@@ -154,27 +157,25 @@ def loadRobotData(sim, filename):
 		elif reading == "phase":
 			for elem in linesplit:
 				phases.append( float(elem)*(math.pi/180.0)*(1/100.0) )
-			tempgait = [amplitudes]
+			tempgait = ["periodic"]
+			tempgait.append(amplitudes)
 			tempgait.append(frequencies)
 			tempgait.append(phases)
 			sim.gaits.append(tempgait)
-			reading = "periodic_gait"
+			reading = "gait"
 
 		# If we are reading fixed gaits, the gait table can be an arbitrary number of lines.
 		# For each gait we will read all the steps until we find the last line for the gait 
 		# (which the time that the gait should loop in).
 		elif reading == "fixed_gait" and linesplit != []:
-			if linesplit[0] == "Gait":
-				gaitrows = []
-				gaittime = 0
-				reading = "fixed_gait_rows"
 
-		elif reading == "fixed_gait_rows":
 			if len(linesplit)==1:
 				gaittime = [float(linesplit[0])]
-				gaittime.extend(gaitrows)
-				sim.gaits.append(gaittime)
-				reading = "fixed_gait"
+				tempgait = ["fixed"]
+				tempgait.extend(gaittime)
+				tempgait.extend(gaitrows)
+				sim.gaits.append(tempgait)
+				reading = "gait"
 			else:
 				temprow = []
 				for elem in linesplit:
@@ -231,9 +232,6 @@ def loadRegionData(sim, regionfile):
 						vertices = []
 						for idx in range(9,len(info),2):
 							vertices.append([posx + int(info[idx]), posy + int(info[idx+1])])
-						temp_info = region_color
-						temp_info.extend(vertices)
-						sim.region_data.append(temp_info)
 
 					elif info[1]=="rect":
 						region_color = [float(info[6])/255.0, float(info[7])/255.0, float(info[8])/255.0]
@@ -246,50 +244,81 @@ def loadRegionData(sim, regionfile):
 						vertices.append([posx, posy + height])
 						vertices.append([posx + width, posy + height])
 						vertices.append([posx + width, posy])
-						temp_info = region_color
-						temp_info.extend(vertices)
-						sim.region_data.append(temp_info)
+						
+					temp_info = region_color
+					temp_info.extend(vertices)
+					sim.region_data.append(temp_info)
+					sim.region_names.append(info[0].lower())
 
 def loadRegionHeights(sim, heightmap):
 
 	sim.heightObstacles = []
 	sim.heightColors = []
-		
-	# Go through all the regions in the list and spawn the height obstacles.
-	for i in range(len(heightmap)):
-
-		# Unpack data.
-		rd = sim.region_data[i]
-		x_vals = []
-		z_vals = []
-		for j in range(3,len(rd)):
-			x_vals.append(rd[j][0]*sim.region_calib[0])
-			z_vals.append(-rd[j][1]*sim.region_calib[1])
-		height = heightmap[i]*sim.cubesize
-
-		# Create the height obstacle for any non-zero height.			
-		if height > 0:
-
-			size = [max(x_vals)-min(x_vals),height,max(z_vals)-min(z_vals)]
-			pos = [0.5*(max(x_vals)+min(x_vals)), height*0.5, 0.5*(max(z_vals)+min(z_vals))]
-			mass = 50000
-					
-			# Create the obstacle.
-			body = ode.Body(sim.world)
-			geom = ode.GeomBox(space=sim.space, lengths=size )
-			geom.setBody(body)
-			geom.setPosition(pos)
-			M = ode.Mass()
-			M.setBox(mass,size[0],size[1],size[2])
-			body.setMass(M)
-
-			# Fix the obstacle to the environment.
-			create_fixed_joint(sim, body)
-
-			# Append all these new pointers to the simulator class.
-			sim.heightObstacles.append(geom)
-			sim.heightColors.append((rd[0],rd[1],rd[2]))
+	SLOPE_THICKNESS = 0.5
 	
+	# Heightmap format:
+	#   INDEX 0 : Region Name
+	#	INDEX 1 : Lower Height (in terms of module size)
+	#	INDEX 2 : Upper Height (in terms of module size)
+	#   INDEX 3 : Slope Direction (+/- x, +/- y, none)
+		
+	# Find each region in the heightmap by its name
+	for i in range(len(heightmap)):
+	
+		region_name = heightmap[i][0]
+		lowerheight = heightmap[i][1]
+		upperheight = heightmap[i][2]
+		slope_direction = heightmap[i][3]
+	
+		for j in range(len(sim.region_names)):
+			if sim.region_names[j] == region_name.lower():
+	
+				# Unpack data.
+				rd = sim.region_data[j]
+				x_vals = []
+				z_vals = []
+				for k in range(3,len(rd)):
+					x_vals.append(rd[k][0]*sim.region_calib[0])
+					z_vals.append(-rd[k][1]*sim.region_calib[1])
+
+				# If there is no slope direction, create a box.
+				if (slope_direction.lower() == "none" or lowerheight == upperheight):
+
+					size = [max(x_vals)-min(x_vals), lowerheight*sim.cubesize, max(z_vals)-min(z_vals)]
+					pos = [0.5*(max(x_vals)+min(x_vals)), lowerheight*0.5*sim.cubesize, 0.5*(max(z_vals)+min(z_vals))]
+							
+					# Create the obstacle.
+					geom = ode.GeomBox(space=sim.space, lengths=size )
+					geom.setPosition(pos)
+					
+				# If there is a slope, create a rotated plate.
+				else:
+				
+					if slope_direction == "+x" or slope_direction == "-x":
+						cos_slope = (max(x_vals)-min(x_vals))/math.sqrt( math.pow(max(x_vals)-min(x_vals),2) + math.pow((upperheight-lowerheight)*sim.cubesize,2) )
+						size = [ (max(x_vals)-min(x_vals))/cos_slope, SLOPE_THICKNESS*sim.cubesize, max(z_vals)-min(z_vals) ]
+					elif slope_direction == "+y" or slope_direction == "-y":
+						cos_slope = (max(z_vals)-min(z_vals))/math.sqrt( math.pow(max(z_vals)-min(z_vals),2) + math.pow((upperheight-lowerheight)*sim.cubesize,2) )
+						size = [ max(x_vals)-min(x_vals), SLOPE_THICKNESS*sim.cubesize, (max(z_vals)-min(z_vals))/cos_slope ]
+					pos = [0.5*(max(x_vals)+min(x_vals)), (upperheight*0.5 + lowerheight*0.5 - SLOPE_THICKNESS*0.5*cos_slope)*sim.cubesize,0.5*(max(z_vals)+min(z_vals))]
+
+					# Create the obstacle.
+					geom = ode.GeomBox(space=sim.space, lengths=size )
+					geom.setPosition(pos)
+					
+					if slope_direction == "+x":
+						geom.setRotation(genmatrix(math.acos(cos_slope),3))
+					elif (slope_direction == "-x"):
+						geom.setRotation(genmatrix(-math.acos(cos_slope),3))
+					elif (slope_direction == "+y"):
+						geom.setRotation(genmatrix(math.acos(cos_slope),1))
+					elif (slope_direction == "-y"):
+						geom.setRotation(genmatrix(-math.acos(cos_slope),1))	
+					
+				# Append all these new pointers to the simulator class.
+				sim.heightObstacles.append(geom)
+				sim.heightColors.append((rd[0],rd[1],rd[2]))
+
 	
 # OBSTACLE FILES
 def loadObstacles(sim,obstaclefile):

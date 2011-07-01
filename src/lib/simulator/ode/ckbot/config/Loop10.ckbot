@@ -35,10 +35,10 @@ ForwardVector:
 # except for the last row which is the time taken for the entire gait to loop (in seconds)
 Gaits:
 Gain 10
-Type Fixed
 
 # Gait 1 -- loop direction 1
 Gait 1
+Type Fixed
 3600 6500 3600 3600 700 3600 6500 3600 3600 700
 6500 3600 3600 700 3600 6500 3600 3600 700 3600
 3600 3600 700 3600 6500 3600 3600 700 3600 6500 
@@ -49,6 +49,7 @@ Gait 1
 
 # Gait 1 -- loop direction 2
 Gait 2
+Type Fixed
 3600 700 3600 3600 6500 3600 700 3600 3600 6500
 6500 3600 700 3600 3600 6500 3600 700 3600 3600
 3600 6500 3600 700 3600 3600 6500 3600 700 3600 

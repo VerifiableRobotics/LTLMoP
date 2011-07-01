@@ -35,7 +35,20 @@ def get2DPose(sim, num):
 	pose2d[2] = math.atan2(-rotvec[2],rotvec[0]) 
 
 	return pose2d
+	
 
+def get2DPoseAndHeight(sim, num):
+	"""
+	Get the 2D Pose (x, y, yaw) of module 'num' and its height (z) above the ground.
+	"""
+
+	# The height above the ground, by simulator convention, is the Y value.
+	pose2d = get2DPose(sim,num)
+	height = 0.5*(sim.lowerjoint[num].getPosition()[1] + sim.upperjoint[num].getPosition()[1])
+	pose2d.append(height)
+	
+	return pose2d
+	
 
 def reconfigure(sim, name):
 	"""
@@ -84,16 +97,15 @@ def rungait(sim, ref_angles = None):
 	"""
 	Runs the gait specified by the object variable "gait"
 	"""
-
+	
 	time = sim.counter/sim.fps
-	gait = sim.gaits[sim.gait - 1]
 
 	# If the gait is set to zero, use the gait creator reference angles to move.
 	if sim.gait == 0 and ref_angles == None:
 		for module_idx in range(len(sim.hinge)):
 			sim.hinge[module_idx].setParam(ode.ParamVel, 0)
 		
-	elif sim.gait == 0 and ref_angles != None:
+	elif ref_angles != None:
 		for module_idx in range(len(sim.hinge)):
 			true_ang = sim.hinge[module_idx].getAngle()
 			ref_ang = ref_angles[module_idx]*(math.pi/180.0)/100.0
@@ -101,15 +113,18 @@ def rungait(sim, ref_angles = None):
 			sim.hinge[module_idx].setParam(ode.ParamVel, servo_vel)
 
 	else:
+		gait = sim.gaits[sim.gait - 1]
+		gaittype = gait[0]
+		
 		# If the gait is of periodic type, read the rows in the following format.
 		# ROW 1: Amplitudes
 		# ROW 2: Frequencies
 		# ROW 3: Phases
-		if sim.gaittype == "Periodic":
+		if gaittype == "periodic":
 			for module_idx in range(len(sim.hinge)):
-				amplitude = gait[0][module_idx]
-				frequency = gait[1][module_idx]
-				phase = gait[2][module_idx]
+				amplitude = gait[1][module_idx]
+				frequency = gait[2][module_idx]
+				phase = gait[3][module_idx]
 
 				true_ang = sim.hinge[module_idx].getAngle()
 				ref_ang = amplitude*math.sin(frequency*time + phase)
@@ -118,7 +133,7 @@ def rungait(sim, ref_angles = None):
 
 		# If the gait is of fixed type, run the function "gaitangle" to interpolate between
 		# reference hinge angles at the current time.
-		else:
+		elif gaittype == "fixed":
 			for module_idx in range(len(sim.hinge)):
 				true_ang = sim.hinge[module_idx].getAngle()	    
 				ref_ang = gaitangle(sim,gait,time,module_idx)
@@ -131,8 +146,8 @@ def gaitangle(sim, gait, time, module):
 	Takes in a gait matrix and returns the reference angle at that point in time.
 	"""
 
-	nummoves = len(gait)-1
-	gaittime = gait[0]
+	nummoves = len(gait)-2
+	gaittime = gait[1]
 	singletime = float(gaittime)/(nummoves-1)
 
 	timearray = []
@@ -143,8 +158,8 @@ def gaitangle(sim, gait, time, module):
 			timearray.append(timearray[i-1]+singletime)
 
 	currenttime = (time%gaittime)/singletime
-	globalref = gait[int(math.ceil(currenttime))+1][module]
-	globalprev = gait[int(math.floor(currenttime))+1][module]
+	globalref = gait[int(math.ceil(currenttime))+2][module]
+	globalprev = gait[int(math.floor(currenttime))+2][module]
 
 	if globalref==globalprev:
 		# If the current time coincides with the time of a given gait angle direction, then there is no need to interpolate.
@@ -155,3 +170,26 @@ def gaitangle(sim, gait, time, module):
 		localref = globalprev + interp*(globalref-globalprev)
 
 	return localref
+
+	
+			
+def set_periodic_gait_from_GA(sim, gene):
+	"""
+	Uses the GA state representation to set the robot's gait.
+	Refer to "GA_Main.py" for information on this.
+	"""
+		
+	amplitudes = []
+	frequencies = []
+	phases = []
+	
+	for i in range(0,len(gene),4):
+		amplitudes.append( (10*gene[i] + 5*gene[i+1])*math.pi/180.0 )
+		frequencies.append( gene[i+2] )
+		phases.append( gene[i+3]*36.0*math.pi/180.0 )
+	
+	sim.gaits = [["periodic", amplitudes, frequencies, phases]]
+	sim.gait = 1
+	sim.gain = 1
+
+	return sim.gaits

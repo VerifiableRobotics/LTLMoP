@@ -21,7 +21,7 @@ RelativeOffset:
 # This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
 RelativeRotation:
 -90 x
--90 y
+90 y
 
 # This represents the forward vector in robot coordinates.
 ForwardVector:
@@ -30,10 +30,10 @@ ForwardVector:
 # Gain is the Proportional gain for the CKBot hinge servos.
 Gaits:
 Gain 5
-Type Fixed
 
 # Gait 1 -- Move Forward
 Gait 1
+Type Fixed
 0 0 0 0 0 0 0
 2000 3000 4000 0 0 0 0 
 2000 3000 4000 4000 -4000 4000 4000 
@@ -45,6 +45,7 @@ Gait 1
 
 # Gait 2 -- Turn Right
 Gait 2
+Type Fixed
 0 0 0 0 0 0 0 
 0 0 0 -4000 -3000 4000 3000 
 3000 3000 3000 -4000 -3000 4000 3000 
@@ -53,16 +54,11 @@ Gait 2
 3
 
 # Gait 2 -- Turn Left
-Gait 2
+Gait 3
+Type Fixed
 0 0 0 0 0 0 0 
 0 0 0 4000 -3000 -4000 3000 
 3000 3000 3000 4000 -3000 -4000 3000 
 3000 3000 3000 0 0 0 0 
 0 0 0 0 0 0 0 
 3
-
-# Gait name: Tripod
-# Traits: low, nonholonomic_turning
-Gait 4
-0 0 0 0 0 0 0 
-0

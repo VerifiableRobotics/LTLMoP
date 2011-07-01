@@ -22,6 +22,10 @@ RelativeRotation:
 90 x
 -90 y
 
+# This represents the forward vector in robot coordinates.
+ForwardVector:
++ y
+
 # Gain is the Proportional gain for the CKBot hinge servos.
 # This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
 # except for the last row which is the time taken for the entire gait to loop (in seconds)

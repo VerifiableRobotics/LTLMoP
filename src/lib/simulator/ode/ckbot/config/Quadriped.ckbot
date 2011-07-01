@@ -39,10 +39,10 @@ ForwardVector:
 # except for the last row which is the time taken for the entire gait to loop (in seconds)
 Gaits:
 Gain 1
-Type Periodic
 
 # Gait 1 --  test
 Gait 1
+Type Periodic
 0 0 0 9000 9000 9000 9000 9000 9000 9000 9000 9000 9000 0 0 0 0 0
 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
