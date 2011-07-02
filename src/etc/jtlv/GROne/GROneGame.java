@@ -59,6 +59,8 @@ public class GROneGame {
 		z2_mem = new BDD[50];	
 		this.player2_winning = this.calculate_win();	
 		this.player1_winning = this.calculate_loss();
+		//this.player1_winning = this.player2_winning.not();
+
 	}
 	
 	
@@ -713,7 +715,7 @@ public class GROneGame {
         while (ini_iterator.hasNext()) {       
 	        int a = 0;
 	        BDD this_ini = (BDD) ini_iterator.next();
-	            
+	       	            
 	        int idx = -1;
 	        st_stack.push(this_ini);
 	        i_stack.push(new Integer(0)); // TODO: is there a better default j?
@@ -723,7 +725,7 @@ public class GROneGame {
 	        
 	        // iterating over the stacks.
 	        while (!st_stack.isEmpty()) {
-	                // making a new entry.
+	        		// making a new entry.
 	                BDD p_st = st_stack.pop();
 	                int rank_i = i_stack.pop().intValue();
 	                int rank_j = j_stack.pop().intValue();
@@ -767,7 +769,8 @@ public class GROneGame {
 			        	//if we are only looking for unsatisfiability, we only allow transitions 
 			        	//into a lower iterate of Z, i.e. \rho_1
 		        		if (!enable_234) {
-		        			assert (!input.isZero()) : "No successor was found";
+		        			if (input.isZero()) System.out.println("No successor was found");
+			        		result = false;
 			        		continue;
 			        	}
 			        	if (!input.isZero()) continue;
@@ -846,10 +849,13 @@ public class GROneGame {
 			        autBDD = autBDD.and(p_st.imp(input)); 
 			        //result is true if for every state, all environment actions take us into a lower iterate of Z
 			        //this means the environment can do anything to prevent the system from achieving some goal.
-	        		result = result & (input.equals(env.trans().and(sys.trans())));
+	        		result = result & (input.equals(p_st));
+	        		
 	        		
 	        }
+    		
         }
+        
                 
         if (det) {
         	String res = "";

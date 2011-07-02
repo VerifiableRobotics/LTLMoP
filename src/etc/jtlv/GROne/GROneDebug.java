@@ -200,31 +200,7 @@ public class GROneDebug {
 		BDD counter_exmple;
 		GROneGame g;
 		
-		
-		
 		String debugInfo = "";
-		
-		
-		
-		if (!sys.justiceAt(0).equals(Env.TRUE())) {
-			for (int i = 1; i <= sys.justiceNum(); i++){
-				 g = new GROneGame(env,sys, i, env.justiceNum());
-				 counter_exmple = g.envWinningStates().and(all_init);
-				 if (explainSys ==0 && !counter_exmple.isZero()) {
-					//checking for multi-step unsatisfiability between sys transitions and goals
-					 if (g.calculate_counterstrategy(g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), true, false)) {
-						 debugInfo += "SysGoalsTrans UNSAT " + (i-1) + "\n";
-						 explainSys = 1;
-					 } else {//&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
-						//if we get here, the sys is unrealizable because of the current goal
-						 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
-						 explainSys = 1;		
-					 }
-					 i = sys.justiceNum() + 1;
-				 }
-			}
-		}
-		
 		BDD prev;
 		g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
 			
@@ -241,7 +217,7 @@ public class GROneDebug {
 				 g = new GROneGame(env,sys, sys.justiceNum(), i);
 				 counter_exmple = g.envWinningStates().and(all_init);
 				 if (explainEnv ==0) {
-					 if (g.calculate_strategy(3, g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), false)) { 
+					 if (g.calculate_strategy(3, all_init, false)) { 
 						 //checking for multi-step unsatisfiability between env transitions and goals
 						 debugInfo += "EnvGoalsTrans UNSAT " + (i-1) + "\n";
 						 explainEnv = 1;
@@ -254,6 +230,34 @@ public class GROneDebug {
 						 i = 0;
 					 }
 				 } 
+			}
+		}
+		
+		try {
+			while (env.justiceNum() > 0) {
+				env.popLastJustice();
+			}
+			env.addJustice(Env.TRUE());
+		}	catch (Exception e){//Catch exception if any
+			System.err.println("Error: " + e.getMessage());
+		}
+		
+		if (!sys.justiceAt(0).equals(Env.TRUE())) {
+			for (int i = 1; i <= sys.justiceNum(); i++){
+				 g = new GROneGame(env,sys, i, 1);
+				 counter_exmple = g.envWinningStates().and(all_init);
+				 if (explainSys ==0 && !counter_exmple.isZero()) {
+					//checking for multi-step unsatisfiability between sys transitions and goals
+					 if (g.calculate_counterstrategy(all_init, true, false)) {
+						 debugInfo += "SysGoalsTrans UNSAT " + (i-1) + "\n";
+						 explainSys = 1;
+					 } else {//&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
+						//if we get here, the sys is unrealizable because of the current goal
+						 debugInfo += "SysGoals UNREAL " + (i-1) + "\n";
+						 explainSys = 1;		
+					 }
+					 i = sys.justiceNum() + 1;
+				 }
 			}
 		}
 		return debugInfo;
