@@ -50,7 +50,7 @@ class CKBotSim:
 
 		# Control parameters.
 		self.gait = 0
-		self.gain = 0.75
+		self.gain = 1.5
 		self.counter = 0
 
 		# Define Modular Arrays

@@ -173,7 +173,7 @@ def gaitangle(sim, gait, time, module):
 
 	
 			
-def set_periodic_gait_from_GA(sim, gene):
+def set_periodic_gait_from_GA(sim, gene, gain):
 	"""
 	Uses the GA state representation to set the robot's gait.
 	Refer to "GA_Main.py" for information on this.
@@ -190,6 +190,6 @@ def set_periodic_gait_from_GA(sim, gene):
 	
 	sim.gaits = [["periodic", amplitudes, frequencies, phases]]
 	sim.gait = 1
-	sim.gain = 1
+	sim.gain = gain
 
 	return sim.gaits

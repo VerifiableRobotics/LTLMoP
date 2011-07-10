@@ -70,22 +70,22 @@ def trait_score(instance, trait):
 		else:
 			score = 0
 			
-	# HOLONOMIC: Score is high if the robot changes in angle and its base module does not move much.
-	elif trait == "HolonomicLeft":
+	# TURN IN PLACE: Score is high if the robot changes in angle and its base module does not move much.
+	elif trait == "TurnInPlaceLeft":
 		initial_data = data[0][0]
 		final_data = data[len(data)-1][0]
 		distance_score = pow(1.0/(pow(final_data[0]-initial_data[0],2) + pow(final_data[1]-initial_data[1],2)),0.5)
-		score = distance_score*trait_score(instance, "NonholonomicTurningLeft")
+		score = distance_score*trait_score(instance, "TurnLeft")
 
-	elif trait == "HolonomicRight":
+	elif trait == "TurnInPlaceRight":
 		initial_data = data[0][0]
 		final_data = data[len(data)-1][0]
 		distance_score = pow(1.0/(pow(final_data[0]-initial_data[0],2) + pow(final_data[1]-initial_data[1],2)),0.5)
-		score = distance_score*trait_score(instance, "NonholonomicTurningRight")
+		score = distance_score*trait_score(instance, "TurnRight")
 	
 	
-	# NONHOLONOMIC_TURNING: Score is high if the robot changes in angle. Base module translation has no effect
-	elif trait == "NonholonomicTurningLeft":
+	# TURN: Score is high if the robot changes in angle. Base module translation has no effect
+	elif trait == "TurnLeft":
 		changes = []
 		for i in range(10,len(data),10):
 			changes.append(data[i][0][2]-data[i-10][0][2])
@@ -93,7 +93,7 @@ def trait_score(instance, trait):
 		if score < 0:
 			score = 0
 	
-	elif trait == "NonholonomicTurningRight":
+	elif trait == "TurnRight":
 		changes = []
 		for i in range(10,len(data),10):
 			changes.append(data[i][0][2]-data[i-10][0][2])

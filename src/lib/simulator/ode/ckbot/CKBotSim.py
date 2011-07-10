@@ -55,7 +55,7 @@ class CKBotSim:
 
 		# Control parameters.
 		self.gait = 0
-		self.gain = 0.75
+		self.gain = 1.5
 		self.counter = 0
 		
 		# Setting standalone to 1 allows for manual key input.
@@ -247,6 +247,20 @@ class CKBotSim:
 					glVertex3f(10 + 20*i, 0.1, -10 + 20*j)
 					glEnd()
 					glPopMatrix()
+					
+			# Render a triangle in the x direction
+			glPushMatrix()
+			color = (0.5, 0, 0)
+			glMaterialfv(GL_FRONT, GL_SPECULAR, color)
+			glBegin(GL_POLYGON)			
+			glNormal3f(*normal)
+			glVertex3f(10, 0.1, 10)
+			glNormal3f(*normal)
+			glVertex3f(10, 0.1, -10)
+			glNormal3f(*normal)
+			glVertex3f(25, 0.1, 0)
+			glEnd()
+			glPopMatrix()
 
 		# If we have region data, draw the individual regions and color them accordingly.
 		else:
@@ -523,13 +537,13 @@ if (__name__ == '__main__'):
             obstaclefile = "../obstacles/" + sys.argv[2] + ".obstacle"
 
 	# Arguments to fill out
-	regionfile = "../../../../examples/looptest/looptest.regions"
-	heightmap = [["r1",3.0,3.0,"none"],["r3",0.0,3.0,"+x"],["r5",0.0,3.0,"-x"],["r4",0.0,3.0,"+y"],["r2",0.0,3.0,"-y"]]
+	#regionfile = "../../../../examples/looptest/looptest.regions"
+	#heightmap = [["r1",3.0,3.0,"none"],["r3",0.0,3.0,"+x"],["r5",0.0,3.0,"-x"],["r4",0.0,3.0,"+y"],["r2",0.0,3.0,"-y"]]
 	regioncalib = [1.0,-1.0]
-	startingpose = [regioncalib[0]*(250), 20, -regioncalib[1]*(250)]
-	#startingpose = [0, 0, 0]
-	#regionfile = None
-	#heightmap = None
+	#startingpose = [regioncalib[0]*(250), 20, -regioncalib[1]*(250)]
+	startingpose = [0, 0, 0]
+	regionfile = None
+	heightmap = None
 
 	# Running from ckbot directory.
 	if ("simulator" in curdir) and ("ode" in curdir) and ("ckbot" in curdir):

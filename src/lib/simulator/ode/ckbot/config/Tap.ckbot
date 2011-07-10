@@ -1,0 +1,48 @@
+# CKBot Simulator Robot File
+ConfigName:
+Tap
+
+# module order (by row): tail, body, left arm, right arm
+ConnMatrix:
+0 7 0 0 4 0 6 0
+2 0 7 0 0 0 0 0 
+0 2 0 7 0 0 0 0
+0 0 2 0 0 0 0 0 
+7 0 0 0 0 3 0 0
+0 0 0 0 1 0 0 0 
+7 0 0 0 0 0 0 5
+0 0 0 0 0 0 1 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0 1.5 0
+
+# This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
+RelativeRotation:
+-90 z
+90 x
+
+# This represents the forward vector in robot coordinates.
+ForwardVector:
++ y
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+# This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
+# except for the last row which is the time taken for the entire gait to loop (in seconds)
+Gaits:
+Gain 1.5
+
+# Forward
+Gait 1:
+Type Periodic
+5500 499 6500 3000 1999 5000 2500 3500
+5 1 5 4 0 0 0 0
+0 18000 25200 3600 14400 18000 18000 18000
+
+# Turn Left
+Gait 2:
+Type Periodic
+4500 4500 3999 5500 6000 3500 2500 5
+6 2 8 6 6 6 1 0
+3600 21600 25200 0 0 0 21600 0

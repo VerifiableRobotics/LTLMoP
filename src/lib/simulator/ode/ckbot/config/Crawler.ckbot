@@ -1,0 +1,56 @@
+# CKBot Simulator Robot File
+ConfigName:
+Crawler
+
+# module order (by row): tail, body, left arm, right arm
+ConnMatrix:
+0 7 0 0 0 1 0 0 0
+1 0 7 3 5 0 0 0 0
+0 1 0 0 0 0 0 0 0
+0 1 0 0 0 0 0 0 0
+0 1 0 0 0 0 0 0 0
+1 0 0 0 0 0 7 5 3
+0 0 0 0 0 1 0 0 0
+0 0 0 0 0 1 0 0 0
+0 0 0 0 0 1 0 0 0
+
+# This represents an offset (x, y, z) from the origin of (0, 0.5*Module Dimension, 0)
+# The y vector in the simulator is normal to the ground and points upwards.
+RelativeOffset:
+0 0.5 0
+
+# This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
+RelativeRotation:
+-90 z
+90 x
+
+# This represents the forward vector in robot coordinates.
+ForwardVector:
++ y
+
+# Gain is the Proportional gain for the CKBot hinge servos.
+# This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
+# except for the last row which is the time taken for the entire gait to loop (in seconds)
+Gaits:
+Gain 1.5
+
+# Forward Gait
+Gait 1:
+Type Periodic
+6500 5000 999 0 0 4500 499 3000 5000
+6 6 3 2 4 6 4 0 0
+3600 3600 0 0 25200 7200 7200 7200 21600
+
+# Left
+Gait 2:
+Type Periodic
+6000 5500 5000 3500 5000 3500 3000 6500 999
+8 8 8 8 1 6 3 8 3
+10800 25200 7200 7200 10800 21600 21600 7200 25200
+
+# Right
+Gait 3:
+Type Periodic
+6000 5500 5000 3500 5000 3500 3000 6500 999
+8 8 8 8 1 6 3 8 3
+10800 25200 7200 7200 10800 21600 21600 7200 25200

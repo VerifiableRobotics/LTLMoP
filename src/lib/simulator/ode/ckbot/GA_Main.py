@@ -10,18 +10,37 @@ from CKBotSimHelper import *
 if (__name__ == '__main__'):
 
 	# Important Parameters to define for GA.
-	POPULATION_SIZE = 30
-	GENERATIONS = 20
+	POPULATION_SIZE = 40
+	GENERATIONS = 25
 	SIMULATION_STEPS = 350
 	CROSSOVER_RATE = 0.65
 	MUTATION_RATE = 0.15
 
+	filename = raw_input("\nEnter the desired file name ('none' for no saving): ")
+	if filename != "none":
+		# FILE 1: Gene and score informations.
+		f_gene = open("GA_Data/"+filename+".genes", 'w')
+		# FILE 2: Pose information for post-processing.
+		f_pose = open("GA_DATA/"+filename+".poses", 'w')
+	
 	# Look at the arguments passed in. The first argument is the configuration file and all the others
 	# correspond to the traits that will define the fitness function.
 	robotfile = "config/" + sys.argv[1] + ".ckbot"
 	traits = []
 	for i in range(2,len(sys.argv)):
 		traits.append(sys.argv[i])
+	
+	# Write the traits and other information to the text file.
+	if filename != "none":
+		trait_string = ""
+		for i in range(len(traits)):
+			if i == len(traits) - 1:
+				trait_string = trait_string + traits[i]
+			else:
+				trait_string = trait_string + traits[i] + ", "
+		f_gene.write(trait_string+"\n")
+		f_gene.write(str(POPULATION_SIZE) + "\n")
+		f_gene.write(str(GENERATIONS) + "\n")
 		
 	# STATE REPRESENTATION NOTES [PERIODIC GAIT GA]
 	
@@ -41,17 +60,20 @@ if (__name__ == '__main__'):
 	# Initialize a population.
 	sim = CKBotSimEngine.CKBotSim(robotfile)
 	num_modules = len(sim.connM)
-	populations = []
+	population = []
 	scorelist = []
 	poselist = []
 	
-	temp_population = []
+	best_score = 0
+	best_gene = None
+	best_generation = 0
+	best_member = 0
+	
 	for i in range(POPULATION_SIZE):
 		temprow = []
 		for j in range(num_modules):
 			temprow.extend([random.randint(7), random.randint(2), random.randint(10), random.randint(8)])
-		temp_population.append(temprow)
-	populations.append(temp_population)
+		population.append(temprow)
 		
 	##############	
 	# MAIN LOOP: #
@@ -60,14 +82,38 @@ if (__name__ == '__main__'):
 	
 		# Run each population member and score it.
 		scores = []
-		poses = []
 		for i in range(POPULATION_SIZE):
+			gene = population[i]
 			instance = CKBotSimEngine.CKBotSim(robotfile)
-			set_periodic_gait_from_GA(instance, populations[idx][i])
+			set_periodic_gait_from_GA(instance, gene, instance.gain)
 			instance.run(SIMULATION_STEPS)
-			scores.append(fitness_function(instance, traits))
-			poses.append(instance.pose_info)
+			fitness = fitness_function(instance, traits)
+			scores.append(fitness)
+			poses = instance.pose_info
 			
+			# Write all the information to text files for post_processing.
+			if filename != "none":
+			
+				# Write gene/fitness information.
+				str_out = ""
+				for j in range(len(gene)):
+					str_out = str_out + str(gene[j]) + " "
+				f_gene.write(str_out+"\n")
+				f_gene.write(str(fitness)+"\n")
+				
+				# Write pose information
+				for j in range(len(poses)):
+					temppose = poses[j][0]	# Each "temppose" is a single pose for the base module.
+					f_pose.write(str(temppose[0]) + "\n" + str(temppose[1]) + "\n" + str(temppose[2]) + "\n" + str(temppose[3]) + "\n")
+			
+		# Update to see if we can find a new best gene.
+		for i in range(POPULATION_SIZE):
+			if scores[i] > best_score:
+				best_score = copy.deepcopy(scores[i])
+				best_gene = population[i]
+				best_generation = idx
+				best_member = i
+				
 		# Do this every step but the last one.
 		if idx != GENERATIONS - 1:
 		
@@ -91,14 +137,14 @@ if (__name__ == '__main__'):
 						chosen = True
 					else:
 						counter = counter + 1
-				new_member = populations[idx][counter]
+				new_member = population[counter]
 				
 				# STEP 2: CROSSOVER
 				# 2a. If there is crossover, pick a second member that isn't the same as the first
 				if (random.random) > CROSSOVER_RATE:
 					new_scores = deepcopy(scores)
 					new_scores.pop(counter)
-					new_population = deepcopy(populations[idx])
+					new_population = deepcopy(population)
 					new_population.pop(counter)
 					
 					new_selection_array = [new_scores[0]]
@@ -174,35 +220,21 @@ if (__name__ == '__main__'):
 					
 				# STEP 4: Add to the new generation.
 				new_members.append(new_member)
-			
-			populations.append(new_members)
-		scorelist.append(deepcopy(scores))
-		poselist.append(deepcopy(poses))
+		
+			population = new_members
 		
 		print "GENERATION " + str(idx+1)
 		print "Maximum Score: " + str(max(scores))
 		print "Average Score: " + str(mean(scores))
 	
-	# Find the best gait as per the scores assigned.
-	best_row = 0
-	best_column = 0
-	max_score = 0
-	gene = []
-	for i in range(len(populations)):
-		temprow = populations[i]
-		for j in range(len(temprow)):
-			if scorelist[i][j] > max_score:
-				gene = populations[i][j]
-				max_score = scorelist[i][j]
-				best_row = i
-				best_column = j
-	print "\nBest Score: " + str(max_score)
-	print "Generation: " + str(best_row) + "\n"
-	
-	s = CKBotSim.CKBotSim(robotfile, standalone=1)
-	best_gait = set_periodic_gait_from_GA(s, gene)
+	# Print the best score and generation it occured in.
+	print "\nBest Score: " + str(best_score)
+	print "Generation: " + str(best_generation) + "\n"
 	
 	# Print the best gait for copying to a .ckbot file.
+	s = CKBotSim.CKBotSim(robotfile, standalone=1)
+	best_gait = set_periodic_gait_from_GA(s, best_gene, s.gain)	
+	
 	print "Best Gait (Copy to .ckbot file):\n"
 	print "Type Periodic"
 	counter = 0
@@ -215,49 +247,20 @@ if (__name__ == '__main__'):
 			str_out = str_out + str(int(elem)) + " "
 		counter = counter + 1
 		print str_out
-	
-	# Write all the information to text files for post_processing.
-	
-	# FILE 1: Gene and score informations.
-	filename = raw_input("\nEnter the desired file name ('none' for no saving): ")
-	
-	if filename != "none":
-		f = open("GA_Data/"+filename+".genes", 'w')
-		
-		trait_string = ""
-		for i in range(len(traits)):
-			if i == len(traits) - 1:
-				trait_string = trait_string + traits[i]
-			else:
-				trait_string = trait_string + traits[i] + ", "
-		f.write(trait_string+"\n")
-		
-		f.write(str(POPULATION_SIZE)+"\n")
-		for i in range(len(populations)):
-			temprow = populations[i]
-			for j in range(len(temprow)):
-				gene = temprow[j]
-				str_out = ""
-				for k in range(len(gene)):
-					str_out = str_out + str(gene[k]) + " "
-				f.write(str_out+"\n")
-				f.write(str(scorelist[i][j])+"\n")
 				
-		f.close()
+	if filename != "none":
+		# Finish writing
+		f_gene.close()
 		
-		# FILE 2: Pose information for post-processing.
-		f = open("GA_DATA/"+filename+".poses", 'w')
-		
-		f.write(str(SIMULATION_STEPS+1)+"\n")
-		f.write(str(best_row)+"\n"+str(best_column)+"\n")
-		for i in range(len(poselist)):
-			temprow = poselist[i]				# Each "temprow" is all the poses for a generation.
-			for j in range(len(temprow)):
-				tempposes = temprow[j]			# Each "tempposes" is all the poses for a single member.
-				for k in range(len(tempposes)):
-					temppose = tempposes[k][0]	# Each "temppose" is a single pose for the base module.
-					f.write(str(temppose[0]) + "\n" + str(temppose[1]) + "\n" + str(temppose[2]) + "\n" + str(temppose[3]) + "\n")
-			
-		f.close()
-		
-	s.run()
+		f_pose.write(str(SIMULATION_STEPS+1)+"\n")
+		f_pose.write(str(best_generation)+"\n"+str(best_member)+"\n")
+		f_pose.close()
+
+	# Finally, simulate the best gait.
+	selected = False
+	while not selected:
+		option = raw_input("\nWould you like to simulate the best gait? (Y/N): ")
+		if option.lower() == "y" or option.lower() == "n":
+			selected = True
+	if option.lower() == "y":
+		s.run()
