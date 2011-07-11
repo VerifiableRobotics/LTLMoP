@@ -10,12 +10,16 @@ from CKBotSimHelper import *
 if (__name__ == '__main__'):
 
 	# Important Parameters to define for GA.
-	POPULATION_SIZE = 40
-	GENERATIONS = 25
+	POPULATION_SIZE = 10
+	GENERATIONS = 10
 	SIMULATION_STEPS = 350
 	CROSSOVER_RATE = 0.65
 	MUTATION_RATE = 0.15
 
+	# Rigid modules array to reduce the search space.
+	# TODO: Make this more user-friendly to enter?
+	rigid_modules = [0, 1, 2, 3, 4, 5, 6]
+	
 	filename = raw_input("\nEnter the desired file name ('none' for no saving): ")
 	if filename != "none":
 		# FILE 1: Gene and score informations.
@@ -64,6 +68,12 @@ if (__name__ == '__main__'):
 	scorelist = []
 	poselist = []
 	
+	# Use the list of rigid modules to make a list of free modules.
+	free_modules = range(num_modules)
+	for elem in rigid_modules:
+		free_modules.remove(elem)
+	
+	# Initialize output parameters for post-processing
 	best_score = 0
 	best_gene = None
 	best_generation = 0
@@ -71,7 +81,7 @@ if (__name__ == '__main__'):
 	
 	for i in range(POPULATION_SIZE):
 		temprow = []
-		for j in range(num_modules):
+		for j in range(len(free_modules)):
 			temprow.extend([random.randint(7), random.randint(2), random.randint(10), random.randint(8)])
 		population.append(temprow)
 		
@@ -85,7 +95,7 @@ if (__name__ == '__main__'):
 		for i in range(POPULATION_SIZE):
 			gene = population[i]
 			instance = CKBotSimEngine.CKBotSim(robotfile)
-			set_periodic_gait_from_GA(instance, gene, instance.gain)
+			set_periodic_gait_from_GA(instance, gene, instance.gain, free_modules)
 			instance.run(SIMULATION_STEPS)
 			fitness = fitness_function(instance, traits)
 			scores.append(fitness)
@@ -114,6 +124,7 @@ if (__name__ == '__main__'):
 				best_generation = idx
 				best_member = i
 				
+		### RESAMPLING STEP ###
 		# Do this every step but the last one.
 		if idx != GENERATIONS - 1:
 		
@@ -233,7 +244,7 @@ if (__name__ == '__main__'):
 	
 	# Print the best gait for copying to a .ckbot file.
 	s = CKBotSim.CKBotSim(robotfile, standalone=1)
-	best_gait = set_periodic_gait_from_GA(s, best_gene, s.gain)	
+	best_gait = set_periodic_gait_from_GA(s, best_gene, s.gain, free_modules)	
 	
 	print "Best Gait (Copy to .ckbot file):\n"
 	print "Type Periodic"
