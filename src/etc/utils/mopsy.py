@@ -250,6 +250,12 @@ class MopsyFrame(wx.Frame):
 
         self.onResize() # Force map redraw
 
+        # If there is no next state, this implies that the system has no possible move (including staying in place)
+        if len(self.env_aut.current_state.transitions[0].transitions) == 0:
+            self.label_violation.SetLabel("Checkmate: no possible system moves.")
+            for b in self.act_buttons + self.cust_buttons + [self.button_next]:
+                b.Enable(False)
+
     def appendToHistory(self):
         self.history_grid.AppendRows(1)
         newvals = [self.sensorStates[s] for s in self.proj.all_sensors] + \
@@ -459,12 +465,6 @@ class MopsyFrame(wx.Frame):
         self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
         self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
         self.applySafetyConstraints()
-
-        # If there is no next state, this implies that the system has no possible move (including staying in place)
-        if len(self.env_aut.current_state.transitions[0].transitions) == 0:
-            self.label_violation.SetLabel("Checkmate: no possible system moves.")
-            for b in self.act_buttons + self.cust_buttons + [self.button_next]:
-                b.Enable(False)
 
         event.Skip()
 
