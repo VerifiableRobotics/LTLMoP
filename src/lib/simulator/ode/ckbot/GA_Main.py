@@ -10,22 +10,22 @@ from CKBotSimHelper import *
 if (__name__ == '__main__'):
 
 	# Important Parameters to define for GA.
-	POPULATION_SIZE = 10
-	GENERATIONS = 10
+	POPULATION_SIZE = 30
+	GENERATIONS = 30
 	SIMULATION_STEPS = 350
-	CROSSOVER_RATE = 0.65
+	CROSSOVER_RATE = 0.5
 	MUTATION_RATE = 0.15
 
 	# Rigid modules array to reduce the search space.
 	# TODO: Make this more user-friendly to enter?
-	rigid_modules = [0, 1, 2, 3, 4, 5, 6]
+	rigid_modules = [0]
 	
 	filename = raw_input("\nEnter the desired file name ('none' for no saving): ")
 	if filename != "none":
 		# FILE 1: Gene and score informations.
 		f_gene = open("GA_Data/"+filename+".genes", 'w')
 		# FILE 2: Pose information for post-processing.
-		f_pose = open("GA_DATA/"+filename+".poses", 'w')
+		f_pose = open("GA_Data/"+filename+".poses", 'w')
 	
 	# Look at the arguments passed in. The first argument is the configuration file and all the others
 	# correspond to the traits that will define the fitness function.
@@ -128,6 +128,12 @@ if (__name__ == '__main__'):
 		# Do this every step but the last one.
 		if idx != GENERATIONS - 1:
 		
+			# Ensure there are no negative scores because this messes up the weighting.
+			minscore = min(scores)
+			if minscore < 0:
+				for elem in scores:
+					elem = elem - minscore
+					
 			# Create new population by roulette selection based on scores.
 			# We also have crossover and mutation rates to keep track of.
 			new_members = []
@@ -154,9 +160,13 @@ if (__name__ == '__main__'):
 				# 2a. If there is crossover, pick a second member that isn't the same as the first
 				if (random.random) > CROSSOVER_RATE:
 					new_scores = deepcopy(scores)
-					new_scores.pop(counter)
 					new_population = deepcopy(population)
-					new_population.pop(counter)
+					len_p = len(new_population)
+					for j in range(len_p):
+						if new_population[len_p - 1 - j] == new_member and len(new_population)>1:
+							new_scores.pop(len_p - 1 - j)
+							new_population.pop(len_p - 1 - j)
+							
 					
 					new_selection_array = [new_scores[0]]
 					for j in range(1,len(new_scores)):
@@ -242,12 +252,14 @@ if (__name__ == '__main__'):
 	print "\nBest Score: " + str(best_score)
 	print "Generation: " + str(best_generation) + "\n"
 	
-	# Print the best gait for copying to a .ckbot file.
+	# Print (and write) the best gait for copying to a .ckbot file.
 	s = CKBotSim.CKBotSim(robotfile, standalone=1)
 	best_gait = set_periodic_gait_from_GA(s, best_gene, s.gain, free_modules)	
 	
+	f_gait = open("GA_Data/"+filename+".gait", 'w')
 	print "Best Gait (Copy to .ckbot file):\n"
 	print "Type Periodic"
+	f_gait.write("Type Periodic\n")
 	counter = 0
 	for row in best_gait[0][1:4]:
 		str_out = ""
@@ -258,6 +270,8 @@ if (__name__ == '__main__'):
 			str_out = str_out + str(int(elem)) + " "
 		counter = counter + 1
 		print str_out
+		f_gait.write(str_out + "\n")
+	f_gait.close()
 				
 	if filename != "none":
 		# Finish writing

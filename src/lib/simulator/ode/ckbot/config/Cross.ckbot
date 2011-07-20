@@ -19,7 +19,6 @@ ConnMatrix:
 RelativeOffset:
 0 0.5 0
 
-# This represents a relative rotation of -90 degrees about the x axis, then -90 about the y axis.
 RelativeRotation:
 -90 z
 90 x
@@ -41,9 +40,9 @@ Type Periodic
 9 8 3 9 0 9 3 5 3
 21600 25200 18000 0 0 14400 3600 7200 0
 
-# Turn Left
+# Turn Left in Place: From GA
 Gait 2:
 Type Periodic
-6000 5500 5000 3500 5000 3500 3000 6500 999
-8 8 8 8 1 6 3 8 3
-10800 25200 7200 7200 10800 21600 21600 7200 25200
+5000 3500 1500 5000 4500 6000 2500 5000 3500 
+6 1 2 3 0 6 1 9 1 
+14400 18000 3600 7200 18000 25200 14400 3600 14400 

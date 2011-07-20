@@ -29,7 +29,7 @@ ForwardVector:
 
 # Gain is the Proportional gain for the CKBot hinge servos.
 Gaits:
-Gain 1.5
+Gain 2
 
 # Gait 1 -- Move Forward
 Gait 1
@@ -66,6 +66,13 @@ Type Fixed
 # Gait 4 -- Fast Forward (from GA)
 Gait 4
 Type Periodic
-6500 6500 1999 0 2500 499 999
-9 8 0 6 0 6 1
-7200 0 10800 0 7200 0 18000
+6500 6500 5500 499 499 0 1500 
+5 5 9 8 8 9 6 
+0 7200 21600 3600 21600 14400 0 
+
+# Gait 5 -- Fast Forward with 0 module rigid (Interesting!)
+Gait 5
+Type Periodic
+0 2500 999 3000 0 3000 0
+0 6 6 6 9 6 6
+0 25200 0 10800 25200 10800 21600

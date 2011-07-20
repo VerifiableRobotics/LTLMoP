@@ -57,9 +57,9 @@ Type Periodic
 6 6 6 0
 18000 9000 0 0
 
-# Gait 5
+# Gait 5 -- turn right and be tall
 Gait 5
 Type Periodic
-3500 6000 6000 6000
-9 0 9 9
-0 25200 21600 10800
+3500 6500 4500 1500
+0 0 6 6
+25200 25200 7200 3600
