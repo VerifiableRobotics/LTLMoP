@@ -38,7 +38,7 @@ class initHandler:
 		initial_pose_sim = [initial_pose[0], 0, -initial_pose[1]]
 		
 		# Define the region height map.
-		heightmap = [0,0,5,0,7,0,0,0,0,0,3]
+		heightmap = [["Mountain1",0.0,1.0,"+x"],["Mountain2",1.0,1.0,"none"],["Mountain3",0.0,1.0,"-x"],["Cliff",0.0,1.0,"+y"]]
 		
 		# Define the default configuration.
 		self.default_config = "Snake"

@@ -15,6 +15,7 @@ class driveHandler:
 	
 		self.gait = 0
 		self.simulator = shared_data['Simulator']
+		self.config = shared_data['Config']
 		self.pose_handler = proj.pose_handler
 		try:
 		    self.loco = proj.loco_handler
@@ -23,6 +24,7 @@ class driveHandler:
 		    exit(-1)
 
     def setVelocity(self, x, y, theta=0):
+	
         # TODO: Given x and y velocities figure out which gait should be selected. For the case of the Snake robot, for example, we choose between left, right and forward gaits here.
 
 		# First get the current pose of the robot.
@@ -37,8 +39,10 @@ class driveHandler:
 		old_gait = self.gait
 
 		# Check for zero speed commands to assign no gait.
-		if (x==0 and y==0) and self.simulator.config!="Plus3":
+		#if (x==0 and y==0) and self.simulator.config!="Plus3":
+		if self.simulator.config == "Plus3":
 			gait = 0			# Do not move
+			#print "we aint here"
 
 		else:	
 
@@ -75,6 +79,7 @@ class driveHandler:
 					gait = 2			# Go Right
 				elif (rel_heading>math.pi/24):
 					gait = 3			# Go Left
+				
 
 			elif self.simulator.config=="Tripod":
 				if old_gait == 1:

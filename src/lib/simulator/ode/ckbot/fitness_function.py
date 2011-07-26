@@ -38,7 +38,7 @@ def trait_score(instance, trait):
 		angles = []
 		for i in range(len(data)):
 			angles.append( data[i][0][2] )
-		score = 1.0/std(angles)
+		score = 1.0/math.pow(std(angles),2)
 	
 	# FORWARD: Score is high if there is motion in the X direction and not much in the Y direction
 	elif trait == "Forward":

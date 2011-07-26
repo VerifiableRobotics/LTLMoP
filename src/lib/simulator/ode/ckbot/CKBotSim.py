@@ -25,7 +25,7 @@ class CKBotSim:
 	CKBot Simulator Class
 	"""
 
-	fps = 30.0
+	fps = 15.0
 	cameraDistance = 40.0
 	vel = 0.5
 	turn = 0.5
@@ -495,7 +495,7 @@ class CKBotSim:
 			self.render()
 
 			# Limit the FPS.
-			self.clock.tick(self.fps)
+			#self.clock.tick(self.fps)
 			self.counter = self.counter + 1
 			
 

@@ -32,10 +32,10 @@ ForwardVector:
 # except for the last row which is the time taken for the entire gait to loop (in seconds)
 Gaits:
 Gain 1
-Type Fixed
 
 # Gait 1 -- Walk?
 Gait 1
+Type Fixed
 0 0 0 0 0 0 0 0 0
 0 7000 7000 -7000 7000 7000 -7000 -7000 -7000
 0 0 0 0 0 0 0 0 0
@@ -45,6 +45,7 @@ Gait 1
 
 # Gait 2 -- Split
 Gait 2
+Type Fixed
 0 0 0 0 0 0 0 0 0
 0 9000 0 0 9000 0 0 0 0 
 0 0 0 0 0 0 0 0 0

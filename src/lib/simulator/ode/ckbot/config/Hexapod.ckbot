@@ -49,7 +49,7 @@ ForwardVector:
 # This is a FIXED gait -- every row is a set of joint angles (in 100*degrees),
 # except for the last row which is the time taken for the entire gait to loop (in seconds)
 Gaits:
-Gain 1.5
+Gain 2.5
 
 # GO STRAIGHT
 Gait 1

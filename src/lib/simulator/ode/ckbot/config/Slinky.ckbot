@@ -25,11 +25,11 @@ RelativeRotation:
 # except for the last row which is the time taken for the entire gait to loop (in seconds)
 Gaits:
 Gain 2.0
-Type Fixed
 
 
 # Gait 1 -- slinky back and forth
 Gait 1
+Type Fixed
 0 0 0 0
 0 8000 8000 0
 0 9000 9000 3000
@@ -47,6 +47,7 @@ Gait 1
 
 # Gait 2 -- slinky forward
 Gait 2
+Type Fixed
 0 0 0 0
 0 8000 8000 0
 0 9000 9000 3000
@@ -64,6 +65,7 @@ Gait 2
 
 # Gait 3 -- slinky backward
 Gait 3
+Type Fixed
 0 0 0 0
 0 8000 8000 0
 3000 9000 9000 0

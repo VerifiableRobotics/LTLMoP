@@ -11,7 +11,7 @@ if (__name__ == '__main__'):
 
 	# Important Parameters to define for GA.
 	POPULATION_SIZE = 30
-	GENERATIONS = 30
+	GENERATIONS = 20
 	SIMULATION_STEPS = 350
 	CROSSOVER_RATE = 0.5
 	MUTATION_RATE = 0.15
