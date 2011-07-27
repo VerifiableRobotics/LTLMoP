@@ -6,6 +6,8 @@ Background: # Relative path of background image file
 None
 
 CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+cabin	3
+pear_tree	3
 
 Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
 lower_river	poly	311	367	187	241	0	40	255	94	0	162	125	187	241	79	239	55	120	14	82	0	0

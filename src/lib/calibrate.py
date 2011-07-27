@@ -90,7 +90,7 @@ class CalibrateFrame(wx.Frame):
             else:
                 file_pts = hstack([file_pts, new_pt])
 
-        if file_pts.shape[1] < 2:
+        if file_pts is None or file_pts.shape[1] < 2:
             wx.MessageBox("Please choose at least two points in Region Editor for calibration.  Quitting.", "Error", wx.OK)
             sys.exit(0)
 
