@@ -13,5 +13,6 @@ class locomotionCommandHandler:
     def sendCommand(self, cmd):
 
         # Command the robot based on the gait given by the drive handler.
-	    self.runtime.setGait(cmd)
+	self.runtime.setGait(cmd)
+	self.runtime.run_once()
 

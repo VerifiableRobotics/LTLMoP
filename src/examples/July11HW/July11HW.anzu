@@ -1,0 +1,135 @@
+[INPUT_VARIABLES]
+e.air_raid;
+e.distress_signal;
+
+
+[OUTPUT_VARIABLES]
+s.carrying_person;
+s.taking_cover;
+s.T_narrow;
+s.T_low;
+s.T_legged;
+s.T_hardware;
+
+
+[ENV_INITIAL]
+			 e.air_raid=0 ;
+			 e.distress_signal=0 ;
+
+
+[ENV_TRANSITIONS]
+			G(TRUE) ;
+
+
+[ENV_FAIRNESS]
+			G(F(TRUE));
+
+[SYS_INITIAL]
+			( (s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=0) 
+				 + (s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1)
+				 + (s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=1 * s.bit4=0)
+				 + (s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=1 * s.bit4=1)
+				 + (s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=0 * s.bit4=0)
+				 + (s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=0 * s.bit4=1)
+				 + (s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=1 * s.bit4=0)
+				 + (s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=1 * s.bit4=1)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=0 * s.bit3=0 * s.bit4=0)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=0 * s.bit3=0 * s.bit4=1)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=0 * s.bit3=1 * s.bit4=0)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=0 * s.bit3=1 * s.bit4=1)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=1 * s.bit3=0 * s.bit4=0)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=1 * s.bit3=0 * s.bit4=1)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=1 * s.bit3=1 * s.bit4=0)
+				 + (s.bit0=0 * s.bit1=1 * s.bit2=1 * s.bit3=1 * s.bit4=1)
+				 + (s.bit0=1 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=0)
+				 + (s.bit0=1 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1)
+			) ;
+			 ( ((s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1))) ;
+
+
+[SYS_TRANSITIONS]
+			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=0)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=1 * s.bit4=0)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=1 * s.bit4=1)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=0 * s.bit4=0)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=0 * s.bit4=1)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=1 * s.bit4=0)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0))) 			 G( ((s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=1 * s.bit4=1)) -> ( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=0 * s.bit3=0 * s.bit4=0)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=0 * s.bit3=0 * s.bit4=1)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=0 * s.bit3=1 * s.bit4=0)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=0 * s.bit3=1 * s.bit4=1)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=1 * s.bit3=0 * s.bit4=0)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=1 * s.bit3=0 * s.bit4=1)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=1 * s.bit3=1 * s.bit4=0)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 			 G( ((s.bit0=0 * s.bit1=1 * s.bit2=1 * s.bit3=1 * s.bit4=1)) -> ( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0))) 			 G( ((s.bit0=1 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=0)) -> ( ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1))) 			 G( ((s.bit0=1 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1)) -> ( ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1)))
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=0) * X(s.bit4=1))) 
+									+ ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0))) 
+									+ ((X(s.bit0=1) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0))) 			 G(  !  ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0)))  *   !  ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=0)))  *   !  ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=1)))  *   !  ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=1) * X(s.bit3=1) * X(s.bit4=0)))) ;
+			 G( X(s.T_hardware=1)) ;
+			 (G(( (((s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=0 * s.bit4=1))) * (((!s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1)))) -> X(s.carrying_person=1)) ) ;
+			 (G(  (((s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1))) -> X(s.carrying_person=0)) ) ;
+			 (G(( (s.carrying_person=1) * (((!s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1)))) -> X(s.carrying_person=1)) ) ;
+			 (G(( (s.carrying_person=0) * (((!s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=0 * s.bit4=1)))) -> X(s.carrying_person=0)) ) ;
+			 G((( X(s.carrying_person=1) )  +  ( s.carrying_person=1 ) ) -> (  !  ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0)))) ) ;
+			 G((( ((X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=0) * X(s.bit4=1)))  +  ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) ) ) -> (  !  X(s.taking_cover=1)) ) ;
+			 G((( ((X(s.bit0=0) * X(s.bit1=0) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=1))  +  (X(s.bit0=0) * X(s.bit1=1) * X(s.bit2=0) * X(s.bit3=1) * X(s.bit4=0))) ) ) <-> ( X(s.T_narrow=1)) ) ;
+			 G((( X(e.air_raid=1) )  *  !( X(s.T_narrow=1) )  *  !( s.T_narrow=1 ) ) <-> ( X(s.taking_cover=1)) ) ;
+			 G((( X(s.taking_cover=1) ) ) <-> ( X(s.T_low=1)) ) ;
+			 G((( X(s.taking_cover=1) ) ) <-> ( X(s.T_legged=1)) ) ;
+
+
+[SYS_FAIRNESS]
+G(F((( e.distress_signal=1 ) ) -> (  ((s.bit0=0 * s.bit1=0 * s.bit2=1 * s.bit3=0 * s.bit4=1))) ) ;
+			 G(F((( s.carrying_person=1 )  +  ( s.carrying_person=1 ) ) -> (  ((s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=1))) ) ;
+			 G(F((!( e.distress_signal=1 )  *  !( s.carrying_person=1 ) ) -> (  ((s.bit0=0 * s.bit1=0 * s.bit2=0 * s.bit3=0 * s.bit4=0))) ));
+

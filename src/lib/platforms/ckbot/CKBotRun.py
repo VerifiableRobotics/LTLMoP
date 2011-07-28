@@ -23,13 +23,14 @@ class CKBotRun:
 		Initialize the simulator.
 		"""
 
+		# Initialize the Cluster
+		self.cluster = Cluster()
+
 		# Load robot data		
 		self.loadRobotData(robotfile)
 		self.gait = 0
 
-		# Initialize the cluster and get the module ID correspondence
-		self.cluster = Cluster()
-		self.cluster.populate()
+		# Get the module ID correspondence
 		self.getKeyOrders(self.config)
 
 		# Initialize the time
@@ -48,6 +49,7 @@ class CKBotRun:
 		self.config = "none"
 		self.connM = []
 		self.gaits = []
+		self.cluster.populate()
 
 		# Open the text file.
 		data = open(filename,"r")
@@ -229,11 +231,6 @@ class CKBotRun:
 					ref_ang = amplitude*math.sin(frequency*t*0.25 + phase)
 
 					ref_ang = ref_ang*(0.5*18000.0/math.pi)
-
-					# Fix for uncalibrated head module
-
-					if module_idx==3:
-						ref_ang = ref_ang - 3000
 		
 					self.cluster[self.key_orders[module_idx]].set_pos(ref_ang)
 
@@ -244,10 +241,6 @@ class CKBotRun:
 					ref_ang = self.gaitangle(gait,t,module_idx)
 	
 					ref_ang = ref_ang*(0.5*18000.0/math.pi)
-
-					# Fix for uncalibrated head module
-					if self.config=="Snake" and module_idx=="3":
-						ref_ang = ref_ang - 3000
 		
 					self.cluster[self.key_orders[module_idx]].set_pos(ref_ang)
 
@@ -302,15 +295,17 @@ class CKBotRun:
 		"""
 		
 		# Zero out all the joint angles
-		for module_idx in range(len(self.connM)):
-			self.cluster[module_idx].set_pos(0)
+		#for module_idx in range(len(self.connM)):
+		#	self.cluster[module_idx].set_pos(0)
 
 		# Load the new robot data from the new file "name".ckbot.
 		print("==========\nReconfiguring: " + name + "\n==========")
 		robotfile = "lib/platforms/ckbot/config/" + name + ".ckbot"
-		self.loadRobotData(robotfile)
 
-		# Update the module ID correspondence
+		x = raw_input("Type 'OK' when robot is reconfigured (in the command line): ")
+
+		# Load new data and update the module ID correspondence
+		self.loadRobotData(robotfile)
 		self.getKeyOrders(self.config)
 
 		self.gait = 0

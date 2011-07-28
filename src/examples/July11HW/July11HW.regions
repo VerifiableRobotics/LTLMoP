@@ -6,6 +6,8 @@ Background: # Relative path of background image file
 None
 
 CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+Rescue_Point	2
+Safehouse	1
 
 Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
 Rescue_Point	poly	537	58	94	91	255	80	0	0	0	5	0	94	0	94	91	0	91
@@ -22,7 +24,7 @@ Watchtower	poly	33	58	93	97	255	0	0	0	0	93	0	93	22	93	97	0	97
 Boundary	poly	33	58	598	342	0	0	0	0	259	0	230	0	219	0	97	0	0	93	0	254	0	255	0	315	0	400	0	452	0	504	0	509	0	598	0	598	91	598	109	598	259	598	342	453	342	256	342	255	342	127	342	99	342	0	342
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
-July11_simbg.png
+July11HW_simbg.png
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
 Rescue_Point	Boundary	542	58	631	58	537	58	542	58	631	58	631	149

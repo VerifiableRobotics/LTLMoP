@@ -56,7 +56,7 @@ class actuatorHandler:
 
 			# If there are no gaits available then reconfigure to the default.
 			elif (type(config) == type(None) or self.traits == ["hardware"]):
-				self.runtime.reconfigure("Tee")
+				self.runtime.reconfigure("Snake")
 			#self.runtime.reconfigure("Tee")
 
 		print "(ACT) Actuator %s is now %s!" % tuple(map(str, (name, val)))

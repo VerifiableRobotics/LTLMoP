@@ -15,6 +15,7 @@ class driveHandler:
 		self.gait = 0
 		self.runtime = shared_data['Runtime']
 		self.config = shared_data['Config']
+		self.shared_data = shared_data
 		self.pose_handler = proj.pose_handler
 
 		try:
@@ -27,8 +28,9 @@ class driveHandler:
         # TODO: Given x and y velocities figure out which gait should be selected. For the case of the Snake robot, for example, we choose between left, right and forward gaits here.
 
 		# First get the current pose of the robot.
-		pose = self.pose_handler.getPose()
-		robotangle = pose[2]
+		robotangle = self.shared_data['Angle']
+		#print robotangle*180.0/math.pi
+
 		velangle = math.atan2(y,x)
 		rel_heading = velangle-robotangle
 		if (rel_heading > math.pi):
@@ -45,7 +47,7 @@ class driveHandler:
 		else:	
 
 			# If there is a non-zero speed command, select among forwards, left or right turn gaits.
-			if self.config=="Snake" or self.config=="Tee":
+			if self.config=="Snake" or self.config=="Tee" or self.config=="Tripod":
 
 				# If you were originally going straight, keep going straight until you deviate by a larger angle.
 				if self.gait == 1:
@@ -71,6 +73,6 @@ class driveHandler:
 			else:
 				gait = 0
 
-		self.gait = gait
 		self.loco.sendCommand(gait)
+		self.gait = gait
 

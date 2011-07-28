@@ -16,10 +16,16 @@ from threading import Thread, Lock, Event
 class initHandler:
     def __init__(self, proj, calib=False):
 
+		# Define the default configuration.
+		default_config = "Snake"
+
 		# Initiate the CKBot runtime thread.
-		self.runtime = CKBotThread(os.path.join(proj.ltlmop_root,"lib/platforms/ckbot/config/Tee.ckbot"))
-		self.config = self.runtime.runtime.config
-		self.runtime.start()
+		#self.runtime = CKBotThread(os.path.join(proj.ltlmop_root,"lib/platforms/ckbot/config/" + default_config + ".ckbot"))
+		#self.config = self.runtime.runtime.config
+		#self.runtime.start()
+
+		self.runtime = CKBotRun.CKBotRun(os.path.join(proj.ltlmop_root,"lib/platforms/ckbot/config/" + default_config + ".ckbot"))
+		self.config = self.runtime.config
 
 		# Instantiate the CKBot library
 		self.lib = CKBotLib.CKBotLib()
@@ -28,7 +34,7 @@ class initHandler:
         # Return a dictionary of any objects that will need to be shared with
         # other handlers
 
-        return {'Runtime': self.runtime, "Library": self.lib, "Config": self.config}
+        return {'Runtime': self.runtime, "Library": self.lib, "Config": self.config, "Angle": 0.0}
 
 class CKBotThread(Thread):
     def __init__(self, robotfile):
@@ -57,6 +63,7 @@ class CKBotThread(Thread):
 	# Wrapper function for reconfiguring.
     def reconfigure(self, name):
 		self.lock.acquire()
+
 		self.runtime.reconfigure(name)
 		self.lock.release()
 

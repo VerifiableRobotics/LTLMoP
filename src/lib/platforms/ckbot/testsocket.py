@@ -12,7 +12,7 @@ def rotate(yaw, pitch, roll):
 
 if (__name__ == '__main__'):
     UDPsock = socket(AF_INET, SOCK_DGRAM)
-    UDPsock.bind(("10.0.0.109",11111))
+    UDPsock.bind(("0.0.0.0", 11111))
 
     while 1:
         bytedata, addr = UDPsock.recvfrom(48)
@@ -20,7 +20,7 @@ if (__name__ == '__main__'):
         print data
 
         # Rotate the Vicon subject's forward vector by the rotation matrix.
-        fwdvec = array([[0],[0],[-1]])               # Dependent on Vicon subject. 
+        fwdvec = array([[0],[-1],[0]])               # Dependent on Vicon subject. 
         R = rotate(data[3],data[4],data[5])
         vec = R*fwdvec
 

@@ -22,6 +22,7 @@ class poseHandler:
         try:
             # Get vicon connection settings from robot configuration file
             ViconPort = int(proj.robot_data['ViconPort'][0])    # Vicon listener port (number)
+	    self.shared_data = shared_data
             # Note that this number must be the same as is used when running ViconBroadcaster.exe
         except KeyError, ValueError:
             print "(POSE) ERROR: Cannot find Vicon connection setting ('ViconPort') in robot file."
@@ -53,7 +54,7 @@ class poseHandler:
 
             # Rotate the Vicon subject's forward vector by the rotation matrix.
             # Then find the angle this vector makes with the x-y plane.
-            fwdvec = array([[0],[0],[-1]])                               # Dependent on Vicon subject -- change to config conditional statement.
+            fwdvec = array([[0],[-1],[0]])                               # Dependent on Vicon subject -- change to config conditional statement.
             R = self.rotate(pose[3],pose[4],pose[5])
             vec = R*fwdvec
             angle = atan2(vec[1],vec[0])       
@@ -64,7 +65,8 @@ class poseHandler:
         pos_x = totpose[0]/5
         pos_y = totpose[1]/5
         theta = totpose[2]/5
-        
+	self.shared_data['Angle'] = theta
+
         return array([pos_x, pos_y, theta])
 
 class ListeningThread(Thread):
@@ -77,7 +79,7 @@ class ListeningThread(Thread):
         
     def run (self):
         # Set the socket parameters
-        host = "10.0.0.109"
+        host = "0.0.0.0"
         bufsize = 48
         addr = (host, self.port)
 

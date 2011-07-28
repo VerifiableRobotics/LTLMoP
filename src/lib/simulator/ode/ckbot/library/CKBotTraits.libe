@@ -71,8 +71,7 @@ Twist-twist
 # "hardware" = gait can be realized with current hardware
 Trait: hardware
 Snake-crawl
-Tee-crawl
-TeeStationary-panic
+Tripod-crawl
 
 # "long" = more than 5 modules long
 Trait: long
