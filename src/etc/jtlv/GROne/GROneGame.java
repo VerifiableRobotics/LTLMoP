@@ -366,6 +366,8 @@ public class GROneGame {
 	public void calculate_strategy(int kind, BDD ini) {
 		calculate_strategy(kind, ini, true);
 	}
+	
+	
 		
 	public boolean calculate_strategy(int kind, BDD ini, boolean det) {
 		int strategy_kind = kind;
@@ -469,14 +471,30 @@ public class GROneGame {
                         if ((local_kind == 3) | (local_kind == 7)
                                 | (local_kind == 10) | (local_kind == 13)
                                 | (local_kind == 18) | (local_kind == 21)) {
-                            int next_p_j = (p_j + 1) % sys.justiceNum();
                             if (!p_st.and(sys.justiceAt(p_j)).isZero()) {
-                                BDD opt = next_op.and(z_mem[next_p_j]);
-                                if (!opt.isZero()) {
-                                    candidate = opt;
-                                    //System.out.println("1");
-                                    jcand = next_p_j;
-                                }
+								int next_p_j = (p_j + 1) % sysJustNum;                            
+								//Look for the next unsatisfied goal
+								while (!p_st.and(sys.justiceAt(next_p_j)).isZero() && next_p_j!=p_j)
+								{
+									next_p_j = (next_p_j + 1) % sysJustNum;		
+								}
+								if (next_p_j!=p_j)
+								{								
+									int look_r = 0;
+									while ((next_op.and(y_mem[next_p_j][look_r]).isZero())) {
+										look_r++;
+									}
+										
+									BDD opt = next_op.and(y_mem[next_p_j][look_r]);
+									if (!opt.isZero()) {
+										candidate = opt;
+										//System.out.println("1");
+										jcand = next_p_j;
+									}
+								} else {
+									candidate = p_st;										
+									jcand = p_j;
+								}
                             }
                         }                       
                         // b - second successor option in the strategy.
