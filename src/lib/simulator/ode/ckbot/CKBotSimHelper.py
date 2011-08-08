@@ -187,10 +187,10 @@ def set_periodic_gait_from_GA(sim, gene, gain, free_modules):
 	counter = 0
 	for i in range(num_modules):
 		if i in free_modules:
-			amplitudes.append( (10*gene[counter] + 5*gene[counter+1])*math.pi/180.0 )
-			frequencies.append( gene[counter+2] )
-			phases.append( gene[counter+3]*36.0*math.pi/180.0 )
-			counter = counter + 4
+			amplitudes.append( (gene[counter])*math.pi/180.0 )
+			frequencies.append( 2*gene[counter+1] )
+			phases.append( gene[counter+2]*36.0*math.pi/180.0 )
+			counter = counter + 3
 		else:
 			amplitudes.append(0)
 			frequencies.append(0)

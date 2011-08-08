@@ -10,15 +10,15 @@ from CKBotSimHelper import *
 if (__name__ == '__main__'):
 
 	# Important Parameters to define for GA.
-	POPULATION_SIZE = 30
-	GENERATIONS = 20
+	POPULATION_SIZE = 25
+	GENERATIONS = 30
 	SIMULATION_STEPS = 350
 	CROSSOVER_RATE = 0.5
 	MUTATION_RATE = 0.15
 
 	# Rigid modules array to reduce the search space.
 	# TODO: Make this more user-friendly to enter?
-	rigid_modules = [0]
+	rigid_modules = []
 	
 	filename = raw_input("\nEnter the desired file name ('none' for no saving): ")
 	if filename != "none":
@@ -49,11 +49,10 @@ if (__name__ == '__main__'):
 	# STATE REPRESENTATION NOTES [PERIODIC GAIT GA]
 	
 	# For each module, the piece of the genome is as follows:
-	#	XXYZ, where "XX" is the amplitude, "Y" is the frequency and "Z" is the phase.
+	#	XYZ, where "X" is the amplitude, "Y" is the frequency and "Z" is the phase.
 	
-	#   AMPLITUDE: 00 = 0 degrees to 61 = 65 degrees
-	#		The first number is 10 degrees and the second number is 5 degrees.
-	#		To reduce the state space, the second number will only be 0 or 1 (where 1 = 5 degrees)
+	#   AMPLITUDE: 00 = 0 degrees to 75 = 75 degrees
+	#		The amplitude is in degrees.
 	
 	#	FREQUENCY: 0 = 0 rad/s to 9 = 9 rad/s
 	#		Since frequencies are relative then any multiplier can just be added later.
@@ -82,7 +81,7 @@ if (__name__ == '__main__'):
 	for i in range(POPULATION_SIZE):
 		temprow = []
 		for j in range(len(free_modules)):
-			temprow.extend([random.randint(7), random.randint(2), random.randint(10), random.randint(8)])
+			temprow.extend([5*random.randint(0,13), random.randint(0,5), random.randint(0,7)])
 		population.append(temprow)
 		
 	##############	
@@ -205,28 +204,21 @@ if (__name__ == '__main__'):
 				if (random.random) > MUTATION_RATE:
 					mutation_index = random.randint(len(new_member))
 					
-					# If we pick a value to mutate corresponding to the first amplitude value, we only go from 0 to 6.
-					if mod(mutation_index,4) == 0:
+					# If we pick a value to mutate corresponding to the first amplitude value, we only go from 0 to 7.
+					if mod(mutation_index,3) == 0:
 						mutated = False
 						while not mutated:
-							randnum = random.randint(7)
+							randnum = 5*random.randint(0,13)
 							if randnum != new_member[mutation_index]:
 								mutated = True
 								new_member[mutation_index] = randnum	
 								
-					# If we pick a value to mutate corresponding to the second amplitude value, only toggle between 0 and 5.
-					# Do this only if the amplitude is not 90, since 95 is not a valid value.
-					elif mod(mutation_index,4) == 1:
-						if new_member[mutation_index] == 0:
-							new_member[mutation_index] = 1
-						else:
-							new_member[mutation_index] = 0
 													
 					# If we pick a value to mutate corresponding to the phase value, we only go from 0 to 7.
-					elif mod(mutation_index,4) == 3:
+					elif mod(mutation_index,3) == 2:
 						mutated = False
 						while not mutated:
-							randnum = random.randint(8)
+							randnum = random.randint(0,7)
 							if randnum != new_member[mutation_index]:
 								mutated = True
 								new_member[mutation_index] = randnum				
@@ -234,7 +226,7 @@ if (__name__ == '__main__'):
 					else:
 						mutated = False
 						while not mutated:
-							randnum = random.randint(10)
+							randnum = random.randint(0,5)
 							if randnum != new_member[mutation_index]:
 								mutated = True
 								new_member[mutation_index] = randnum

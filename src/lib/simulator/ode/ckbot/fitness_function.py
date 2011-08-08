@@ -50,7 +50,7 @@ def trait_score(instance, trait):
 			y_data.append( data[i][0][1] )
 		max_y = max(y_data)
 		min_y = min(y_data)
-		score = (final_x - initial_x)/(max(max_y, abs(min_y) - initial_y))
+		score = (final_x - initial_x)/max(max_y, abs(min_y) - initial_y, 0.5)
 	
 	# BACKWARD: Score is high if there is motion in the -X direction and not much in the Y direction
 	elif trait == "Backward":
