@@ -59,20 +59,6 @@
     </signal>
     <signal>
       <name>
-        s.T_narrow
-      </name>
-      <kind>
-        S
-      </kind>
-      <type>
-        boolean
-      </type>
-      <notes>
-         
-      </notes>
-    </signal>
-    <signal>
-      <name>
         s.T_low
       </name>
       <kind>
@@ -171,7 +157,7 @@
         sys init 1
       </name>
       <property>
-        (((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=0&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1)))
+        (((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=1&amp;&amp;s.bit3=0&amp;&amp;s.bit4=0)))
       </property>
       <kind>
         G
@@ -219,193 +205,6 @@
     </requirement>
     <requirement>
       <name>
-        sys tran 1
-      </name>
-      <property>
-        G((X(s.T_hardware=1)))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 2
-      </name>
-      <property>
-        (G(((((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=1&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1)))&amp;&amp;(((!s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=0&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1))))-&gt;(X(s.carrying_person=1))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 3
-      </name>
-      <property>
-        (G((((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=0&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1)))-&gt;(X(s.carrying_person=0))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 4
-      </name>
-      <property>
-        (G(((s.carrying_person=1)&amp;&amp;(((!s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=0&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1))))-&gt;(X(s.carrying_person=1))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 5
-      </name>
-      <property>
-        (G(((s.carrying_person=0)&amp;&amp;(((!s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=1&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1))))-&gt;(X(s.carrying_person=0))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 6
-      </name>
-      <property>
-        G((((X(s.carrying_person=1)))||(s.carrying_person=1))-&gt;(!(((X(s.bit0=0))&amp;&amp;(X(s.bit1=0))&amp;&amp;(X(s.bit2=0))&amp;&amp;(X(s.bit3=1))&amp;&amp;(X(s.bit4=0))))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 7
-      </name>
-      <property>
-        G((((((X(s.bit0=0))&amp;&amp;(X(s.bit1=1))&amp;&amp;(X(s.bit2=0))&amp;&amp;(X(s.bit3=0))&amp;&amp;(X(s.bit4=1))))||(((X(s.bit0=0))&amp;&amp;(X(s.bit1=0))&amp;&amp;(X(s.bit2=0))&amp;&amp;(X(s.bit3=1))&amp;&amp;(X(s.bit4=0))))))-&gt;(!(X(s.taking_cover=1))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 8
-      </name>
-      <property>
-        G((((((X(s.bit0=0))&amp;&amp;(X(s.bit1=0))&amp;&amp;(X(s.bit2=0))&amp;&amp;(X(s.bit3=1))&amp;&amp;(X(s.bit4=1)))||((X(s.bit0=0))&amp;&amp;(X(s.bit1=1))&amp;&amp;(X(s.bit2=0))&amp;&amp;(X(s.bit3=1))&amp;&amp;(X(s.bit4=0))))))&lt;-&gt;((X(s.T_narrow=1))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 9
-      </name>
-      <property>
-        G((((X(e.air_raid=1)))&amp;&amp;!((X(s.T_narrow=1)))&amp;&amp;!(s.T_narrow=1))&lt;-&gt;((X(s.taking_cover=1))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 10
-      </name>
-      <property>
-        G((((X(s.taking_cover=1))))&lt;-&gt;((X(s.T_low=1))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys tran 11
-      </name>
-      <property>
-        G((((X(s.taking_cover=1))))&lt;-&gt;((X(s.T_legged=1))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
         env fair 0
       </name>
       <property>
@@ -426,7 +225,7 @@
         sys fair 0
       </name>
       <property>
-        G(F(((e.distress_signal=1))-&gt;(((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=1&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1))))
+        G(F(((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=0&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1)))
       </property>
       <kind>
         G
@@ -443,24 +242,7 @@
         sys fair 1
       </name>
       <property>
-        G(F(((s.carrying_person=1)||(s.carrying_person=1))-&gt;(((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=0&amp;&amp;s.bit3=0&amp;&amp;s.bit4=1))))
-      </property>
-      <kind>
-        G
-      </kind>
-      <notes>
-         
-      </notes>
-      <toggled>
-        1
-      </toggled>
-    </requirement>
-    <requirement>
-      <name>
-        sys fair 2
-      </name>
-      <property>
-        G(F((!(e.distress_signal=1)&amp;&amp;!(s.carrying_person=1))-&gt;(((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=0&amp;&amp;s.bit3=0&amp;&amp;s.bit4=0)))))
+        G(F(((s.bit0=0&amp;&amp;s.bit1=0&amp;&amp;s.bit2=0&amp;&amp;s.bit3=0&amp;&amp;s.bit4=0))))
       </property>
       <kind>
         G

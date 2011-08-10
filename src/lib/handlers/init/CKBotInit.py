@@ -17,7 +17,7 @@ class initHandler:
     def __init__(self, proj, calib=False):
 
 		# Define the default configuration.
-		default_config = "Snake"
+		default_config = "Tripod"
 
 		# Initiate the CKBot runtime thread.
 		#self.runtime = CKBotThread(os.path.join(proj.ltlmop_root,"lib/platforms/ckbot/config/" + default_config + ".ckbot"))
