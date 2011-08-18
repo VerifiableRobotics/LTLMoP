@@ -474,8 +474,8 @@ public class GROneGame {
                             if (!p_st.and(sys.justiceAt(p_j)).isZero()) {
 								int next_p_j = (p_j + 1) % sysJustNum;   
 								
-								//Look for the next goal and see if you can satisfy it by staying in place. If so, swell. If not, poo.
-								while (!p_st.and(primed_cur_succ.and(Env.prime(p_st.and(sys.justiceAt(next_p_j))))).isZero() && next_p_j!=p_j)
+								//Look for the next goal and see if you can satisfy it by staying in place. If so, swell.
+								while (!next_op.and(sys.justiceAt(next_p_j)).isZero() && next_p_j!=p_j)
 								{
 									next_p_j = (next_p_j + 1) % sysJustNum;		
 								}
@@ -494,8 +494,9 @@ public class GROneGame {
 									}
 								} else {
 								//There are no unsatisfied goals, so just stay in place, yay.
-									candidate = p_st;										
-									jcand = p_j;
+									candidate = next_op;										
+									jcand = p_j;									
+                                    //System.out.println("All goals satisfied");
 								}
                             }
                         }                       
