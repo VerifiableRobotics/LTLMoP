@@ -238,7 +238,7 @@ public class GROneDebug {
 				 counter_exmple = g.envWinningStates().and(all_init);
 				 if (explainSys ==0 && !counter_exmple.isZero()) {
 					//checking for multi-step unsatisfiability between sys transitions and goals
-					 if (g.calculate_counterstrategy(all_init, true, false)) {
+					 if (g.calculate_counterstrategy(counter_exmple, true, false)) {
 						 debugInfo += "SysGoalsTrans UNSAT " + (i-1) + "\n";
 						 explainSys = 1;
 					 } else {//&& (!sys.justiceAt(i-1).equals(Env.TRUE()))) {
