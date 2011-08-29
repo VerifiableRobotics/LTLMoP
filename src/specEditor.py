@@ -1819,7 +1819,7 @@ class SpecEditorFrame(wx.Frame):
         
           if "EnvTrans UNREAL" in dline:
                 output = output + "Environment is unrealizable because the environment can force a safety violation.\n" 
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerADD(l, MARKER_SAFE)
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
           if "EnvGoals UNREAL" in dline:
                output = output + "Environment highlighted goal(s) unrealizable \n"
                for l in (dline.strip()).split()[2:]:

@@ -96,21 +96,7 @@ public class GROneDebug {
 		 } else if ((sys.initial().and(sys.trans())).isZero()) {
 			 debugInfo += "SysTrans UNSAT" + "\n";
 			 explainSys = 1;
-		 } else {
-		
-		 	 
-			 for (int i = 0; i < sys.justiceNum(); i++) {
-				 if (sys.justiceAt(i).isZero()) {
-					 debugInfo += "SysGoals UNSAT " + i + "\n";
-					 explainSys = 1;
-				 }
-				 else if ((sys.trans().and(Env.prime(sys.justiceAt(i))).isZero()) | sys.trans().and(sys.justiceAt(i)).isZero()) {
-					 debugInfo += "SysGoalsTrans UNSAT " + i + "\n";	
-				 	 explainSys = 1;
-				 }
-			 }
-			 			 
-		 }
+		 } 
 		  
 		 if (env.initial().isZero()) {
 			  debugInfo += "EnvInit UNSAT" + "\n";
@@ -118,21 +104,7 @@ public class GROneDebug {
 		 } else if ((env.initial().and(env.trans())).isZero()) {
 			  debugInfo += "EnvTrans UNSAT" + "\n";
 			  explainEnv = 1;
-		  } else {
-				 	 
-				 for (int i = 0; i < env.justiceNum(); i++) {
-					 if (env.justiceAt(i).isZero()) {
-						 debugInfo += "EnvGoals UNSAT " + i + "\n";
-						 explainEnv = 1;
-					 }
-					 else if ((env.trans().and(Env.prime(env.justiceAt(i))).isZero()) | (env.trans().and(env.justiceAt(i))).isZero()) { 
-						 debugInfo += "EnvGoalsTrans UNSAT " + i + "\n";
-						 explainEnv = 1;
-					 }
-					
-				 }
-				 			 
-		  }
+		 } 
 		 
 		 GROneGame g = null;
 		 
@@ -210,9 +182,18 @@ public class GROneDebug {
 		}	
 			
 		if (!env.justiceAt(env.justiceNum() - 1).equals(Env.TRUE())) {
-				
-			//checking for unrealizable environment justice 	
+		
+			
 			for (int i = env.justiceNum(); i >=1; i--){		
+				//checking for unrealizable environment justice 				
+				if (env.justiceAt(i-1).isZero()) {
+					debugInfo += "EnvGoals UNSAT " + (i-1) + "\n";
+					explainEnv = 1;
+				}
+				else if ((env.trans().and(Env.prime(env.justiceAt(i-1))).isZero()) | (env.trans().and(env.justiceAt(i-1))).isZero()) { 
+					debugInfo += "EnvGoalsTrans UNSAT " + (i-1) + "\n";
+					 explainEnv = 1;
+				}
 				 prev = counter_exmple;
 				 g = new GROneGame(env,sys, sys.justiceNum(), i);
 				 counter_exmple = g.envWinningStates().and(all_init);
@@ -244,6 +225,15 @@ public class GROneDebug {
 		
 		if (!sys.justiceAt(0).equals(Env.TRUE())) {
 			for (int i = 1; i <= sys.justiceNum(); i++){
+				 if (sys.justiceAt(i-1).isZero()) {
+					 debugInfo += "SysGoals UNSAT " + (i-1) + "\n";
+					 explainSys = 1;
+				 }
+				 else if ((sys.trans().and(Env.prime(sys.justiceAt(i-1))).isZero()) | sys.trans().and(sys.justiceAt(i-1)).isZero()) {
+					 debugInfo += "SysGoalsTrans UNSAT " + (i-1) + "\n";	
+				 	 explainSys = 1;
+				 }
+			 
 				 g = new GROneGame(env,sys, i, 1);
 				 counter_exmple = g.envWinningStates().and(all_init);
 				 if (explainSys ==0 && !counter_exmple.isZero()) {

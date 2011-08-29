@@ -492,7 +492,7 @@ public class GROneGame {
 										//System.out.println("1");
 										jcand = next_p_j;
 									}
-								} else {
+								} else if (!sys.justiceAt(p_j).isOne()) {
 								//There are no unsatisfied goals, so just stay in place, yay.
 									candidate = next_op;										
 									jcand = p_j;									
@@ -541,7 +541,8 @@ public class GROneGame {
                                 & (local_kind != 8) & (local_kind != 12)
                                 & (local_kind != 16) & (local_kind != 20))) {
                         	System.out.println("No successor was found");
-                        	result = false;
+                        	if (strategy_kind == 3) result = false;
+							else candidate = next_op;
                         }
 
                         local_kind--;
@@ -575,7 +576,7 @@ public class GROneGame {
                     }
                     autBDD = autBDD.and((p_st.imp(Env.prime(candidate))));   
                     result = result & (candidate.equals(next_op));
-                    //result = result & (candidate.equals(env.trans().and(sys.trans())));
+					//result = result & (candidate.equals(env.trans().and(sys.trans())));
 	        		
                 }
             }
