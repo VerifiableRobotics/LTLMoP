@@ -275,8 +275,9 @@ class simSetupDialog(wx.Dialog):
         self.choice_startpos.Clear()
         if self.parent.rfi is not None:
             for region in self.parent.rfi.regions:
-                self.choice_startpos.Append(region.name)
-        self.choice_startpos.Select(self.tempSimSetup[id]["InitialRegion"])
+                if not (region.isObstacle or region.name == "boundary"):
+                    self.choice_startpos.Append(region.name)
+        self.choice_startpos.SetStringSelection(self.parent.rfi.regions[self.tempSimSetup[id]["InitialRegion"]].name)
 
         # Set up the list of robots
         self.choice_sim_robot.Clear()
@@ -327,7 +328,7 @@ class simSetupDialog(wx.Dialog):
                 self.tempSimSetup[id]['InitialTruths'].append(sensor)
 
         # Update initial region
-        self.tempSimSetup[id]['InitialRegion'] = self.choice_startpos.GetSelection()
+        self.tempSimSetup[id]['InitialRegion'] = self.parent.rfi.indexOfRegionWithName(self.choice_startpos.GetStringSelection())
 
         # Update robot file name
         self.tempSimSetup[id]['RobotFile'] = self.choice_sim_robot.GetStringSelection()+".robot"
@@ -1052,8 +1053,9 @@ class SpecEditorFrame(wx.Frame):
 
         # Add the regions to the region listbox
         self.list_box_regions.Set([])
-        for i, region in enumerate(self.rfi.regions):
-            self.list_box_regions.Insert(region.name, i)        
+        for region in self.rfi.regions:
+            if not (region.isObstacle or region.name == "boundary"):
+                self.list_box_regions.Insert(region.name, 0)        
         
         # If we are working with an unsaved spec, assume everything is in the same dir
         # as the regions file
@@ -1432,6 +1434,23 @@ class SpecEditorFrame(wx.Frame):
         self.saveFile(self.fileName)
         self.parser = parseLP.parseLP()
         self.parser.main(self.fileName)
+
+        # Remove all references to any obstacle regions at this point
+        for r in self.proj.rfi.regions:
+            if r.isObstacle:
+                # Delete corresponding decomposed regions
+                for sub_r in self.parser.proj.regionMapping[r.name]:
+                    del self.parser.proj.rfi.regions[self.parser.proj.rfi.indexOfRegionWithName(sub_r)]
+                # Remove from mapping
+                del self.parser.proj.regionMapping[r.name]
+
+        self.proj.rfi.regions = filter(lambda r: not (r.isObstacle or r.name == "boundary"), self.proj.rfi.regions)
+                    
+        # save the regions into new region file
+        fileName = self.proj.getFilenamePrefix()+'_decomposed.regions'
+        self.parser.proj.rfi.recalcAdjacency()
+        self.parser.proj.rfi.writeFile(fileName)
+
         self.proj.regionMapping = self.parser.proj.regionMapping
         self.saveFile(self.fileName)
         
@@ -1445,13 +1464,13 @@ class SpecEditorFrame(wx.Frame):
         # substitute the regions name in specs
         text = self.text_ctrl_spec.GetText()
         for m in re.finditer(r'near (?P<rA>\w+)', text):
-            text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(self.parser.newPolysMap['near$'+m.group('rA')+'$'+str(50)])+")", text)
+            text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+str(50)])+")", text)
         for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
-            text=re.sub(r'within ' + m.group('dist')+' (from|of) '+ m.group('rA'), "("+' or '.join(self.parser.newPolysMap['near$'+m.group('rA')+'$'+m.group('dist')])+")", text)
+            text=re.sub(r'within ' + m.group('dist')+' (from|of) '+ m.group('rA'), "("+' or '.join(self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+m.group('dist')])+")", text)
         for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
-            text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(self.parser.newPolysMap['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"])+")", text)
-        for rname in self.parser.oldPolys.keys():
-            text=re.sub('\\b' + rname + '\\b', "("+' or '.join(self.parser.newPolysMap[rname])+")", text)
+            text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(self.parser.proj.regionMapping['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"])+")", text)
+        for r in self.proj.rfi.regions:
+            text=re.sub('\\b' + r.name + '\\b', "("+' or '.join(self.parser.proj.regionMapping[r.name])+")", text)
 
         print "===== New Specs ====="
         print
