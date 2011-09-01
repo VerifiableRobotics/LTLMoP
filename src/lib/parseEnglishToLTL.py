@@ -7,7 +7,29 @@
     corresponding LTL subformulas.
 """
 import re
+import copy
 import numpy
+
+#nextify = lambda x: " next(%s) " % x
+
+def nextify(p):
+    # Recursive function for aggressively applying the next operator
+
+    r_parens = re.compile('^\s*\((?P<inside>.*)\)\s*$',re.IGNORECASE)
+    r_logic = re.compile('^(?P<left>.*) (?P<op>(or|and|\||\&)) (?P<right>.*)$',re.IGNORECASE)
+    m_parens = r_parens.search(p)
+    m_logic = r_logic.search(p)
+
+    if m_parens:
+        i = m_parens.group('inside') 
+        return "( %s )" % nextify(i)
+    elif m_logic:
+        l = m_logic.group('left')
+        r = m_logic.group('right')
+        op = m_logic.group('op')
+        return "%s %s %s" % (nextify(l), op, nextify(r))
+    else:
+        return " next(%s) " % p
 
 def writeSpec(text, sensorList, regionList, robotPropList):
     ''' This function creates the Spec dictionary that contains the parsed LTL
@@ -34,13 +56,16 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     spec['SysGoals']= ''
 
 
-    map = {}
-    map['EnvInit']= []
-    map['EnvTrans']= []
-    map['EnvGoals']= []
-    map['SysInit']= []    
-    map['SysTrans']= []
-    map['SysGoals']= []
+    linemap = {}
+    linemap['EnvInit']= []
+    linemap['EnvTrans']= []
+    linemap['EnvGoals']= []
+    linemap['SysInit']= []    
+    linemap['SysTrans']= []
+    linemap['SysGoals']= []
+
+    RegionGroups = {}
+
     # List of all robot prpositions
     allRobotProp = regionList + robotPropList
 
@@ -74,6 +99,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     StayRE = re.compile('(stay there|stay)',re.IGNORECASE)
     EventRE = re.compile('(?P<prop>[\w\.]+) is set on (?P<setEvent>.+) and reset on (?P<resetEvent>.+)',re.IGNORECASE)
     ToggleRE = re.compile('(?P<prop>[\w\.]+) is toggled (when|on) (?P<toggleEvent>.+)',re.IGNORECASE)
+    RegionGroupingRE = re.compile('group (?P<groupName>[\w]+) (is|are) (?P<regions>.+)',re.IGNORECASE)
+    QuantifierRE = re.compile('(?P<quantifier>all|any)\s+(?P<groupName>\w+)',re.IGNORECASE)
 
 
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
@@ -99,19 +126,67 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             line = re.sub('\n$','',line)
         # If there are ',' or '.', remove then
         line = line.replace('\B.\B',' ') # Leave periods that are in the middle of words.
-        line = line.replace(',',' ')
 
+        # remove commas except for in region group definitions which need them for the list
+        if not RegionGroupingRE.search(line):
+            line = line.replace(',',' ')
+
+        # Check for the presence of a region quantifier
+        if QuantifierRE.search(line):
+            QuantifierParts = QuantifierRE.search(line)
+            quant_type = QuantifierParts.group('quantifier') 
+            quant_group = QuantifierParts.group('groupName') 
+            print "found quantifier '%s' for group '%s'" % (quant_type, quant_group)
+            if quant_group not in RegionGroups:
+                print 'ERROR(1): Could not parse the sentence in line '+ str(lineInd)+' :'
+                print line
+                print 'because no region grouping is previously defined for group name: ' + quant_group
+                continue
+
+            line = QuantifierRE.sub('QUANTIFIER_PLACEHOLDER',line)
+            QuantifierFlag = quant_type.upper()
+            allRobotProp.append("QUANTIFIER_PLACEHOLDER")
+
+            quant_or_string = {}
+            quant_and_string = {}
+            quant_or_string['current'] = "(" + " | ".join(RegionGroups[quant_group]) + ")"
+            quant_and_string['current'] = "(" + " & ".join(RegionGroups[quant_group]) + ")"
+            quant_or_string['next'] = "(" + " | ".join(map(nextify, RegionGroups[quant_group])) + ")"
+            quant_and_string['next'] = "(" + " & ".join(map(nextify, RegionGroups[quant_group])) + ")"
+            #quant_or_string['current'] = replaceLogicOp(quant_or_string['current'])
+            #quant_and_string['current'] = replaceLogicOp(quant_and_string['current'])
+            #quant_or_string['next'] = replaceLogicOp(quant_or_string['next'])
+            #quant_and_string['next'] = replaceLogicOp(quant_and_string['next'])
+        else:
+            QuantifierFlag = None
+
+        # If the sentence defines a group of regions
+        if RegionGroupingRE.search(line):
+            RGParts = RegionGroupingRE.search(line)
+            groupName = RGParts.group('groupName') 
+            groupList = RGParts.group('regions') 
+            RegionGroups[groupName] = re.split(r"\s*,\s*", groupList)
+            RegionGroups[groupName] = map(replaceLogicOp, RegionGroups[groupName])
+            print RegionGroups
 
         # If the sentence describes the initial state of the environemnt
-        if EnvInitRE.search(line):
+        elif EnvInitRE.search(line):
 
             # remove the first words     
             EnvInit = EnvInitRE.sub('',line)
 
             # parse the rest and return it to spec['EnvInit']
             LTLsubformula = parseInit(EnvInit,sensorList,lineInd)
+
+            # this shouldn't even be possible, but check just in case:
+            if "QUANTIFIER_PLACEHOLDER" in LTLsubformula:
+                print 'ERROR(15): Could not parse the sentence in line '+ str(lineInd)+' :'
+                print line
+                print 'because quantifiers are not valid in environment initial conditions'
+                continue
+
             spec['EnvInit']= spec['EnvInit'] + LTLsubformula
-            map['EnvInit'].append(lineInd)
+            linemap['EnvInit'].append(lineInd)
             
         # If the sentence describes the initial state of the robot
         elif SysInitRE.search(line):
@@ -144,8 +219,13 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 # parse Actions
                 LTLActSubformula = parseInit(ActInit,robotPropList,lineInd)
             
+            if QuantifierFlag == "ANY":
+                LTLRegSubformula = LTLRegSubformula.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
+            elif QuantifierFlag == "ALL":
+                LTLRegSubformula = LTLRegSubformula.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
+
             spec['SysInit']= spec['SysInit'] + LTLRegSubformula + LTLActSubformula
-            map['SysInit'].append(lineInd)
+            linemap['SysInit'].append(lineInd)
 
 
                 
@@ -165,6 +245,14 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # Extract the 2 pieces (condition and requirement)  
             Condition = CondParts.group('cond')
             Requirement = CondParts.group('req')
+
+            # Replace any quantifier in the condition clause
+            if QuantifierFlag == "ANY":
+                Condition = Condition.replace("next(QUANTIFIER_PLACEHOLDER)", quant_or_string['next'])
+                Condition = Condition.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
+            elif QuantifierFlag == "ALL":
+                Condition = Condition.replace("next(QUANTIFIER_PLACEHOLDER)", quant_and_string['next'])
+                Condition = Condition.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
 
             # Figure out what the requirement is and parse it
             if SafetyRE.search(Requirement):
@@ -200,6 +288,13 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     # add the 'stay there' as a condition (if R then stay there)
                     regCond = ReqFormulaInfo['formula'].replace('\t\t\t []<>','')
                     regCond = regCond.replace('& \n','')
+
+                    # Replace any quantifier in the regCond clause
+                    if QuantifierFlag == "ANY":
+                        regCond = regCond.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
+                    elif QuantifierFlag == "ALL":
+                        regCond = regCond.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
+
                     condStayFormula = {}
                     condStayFormula['formula'] = '\t\t\t [](' + regCond + ' -> ' + StayFormula + ') & \n'
                     condStayFormula['type'] = 'SysGoals'  # HACK: this is obviously SysTrans, but we don't want to allow any next()s 
@@ -209,7 +304,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     CondFormulaInfo['type'] = 'SysTrans'
 
                     spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
-                    map[CondFormulaInfo['type']].append(lineInd)
+                    linemap[CondFormulaInfo['type']].append(lineInd)
                 else:
                     # parse requirement normally
                     ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
@@ -230,15 +325,35 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 print ''
                 continue
 
-            # Parse the condition and add it to the requirement
-            CondFormulaInfo = parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,lineInd)
+            # Replace any quantifier in the requirement
+            if QuantifierFlag == "ANY":
+                if 'Goals' in ReqFormulaInfo['type']:   # liveness
+                    ReqFormulaInfo['formula'] = ReqFormulaInfo['formula'].replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
+                elif 'Trans' in ReqFormulaInfo['type']:   # safety
+                    print 'ERROR(13): Could not parse the sentence in line '+ str(lineInd)+' :'
+                    print line
+                    print 'because the ANY quantifier is not currently supported in safety requirements'
+                    print ''
+                    continue
 
-            spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
-            
-           
-            map[CondFormulaInfo['type']].append(lineInd)
-
-
+                # Parse the condition and add it to the requirement
+                CondFormulaInfo = parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,lineInd)
+                spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
+                linemap[CondFormulaInfo['type']].append(lineInd)
+            elif QuantifierFlag == "ALL":
+                for r in RegionGroups[quant_group]:
+                    tmp_req = copy.deepcopy(ReqFormulaInfo)
+                    tmp_req['formula'] = tmp_req['formula'].replace("next(QUANTIFIER_PLACEHOLDER)", nextify(r))
+                    tmp_req['formula'] = tmp_req['formula'].replace("QUANTIFIER_PLACEHOLDER", r)
+                    # Parse the condition and add it to the requirement
+                    CondFormulaInfo = parseConditional(Condition,tmp_req,CondType,sensorList,allRobotProp,lineInd)
+                    spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
+                    linemap[CondFormulaInfo['type']].append(lineInd)
+            else:
+                # Parse the condition and add it to the requirement
+                CondFormulaInfo = parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,lineInd)
+                spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
+                linemap[CondFormulaInfo['type']].append(lineInd)
 
         # An event definition
         elif EventRE.search(line):
@@ -248,11 +363,20 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             SetEvent = EventParts.group('setEvent') 
             ResetEvent = EventParts.group('resetEvent') 
 
+
             # Formulas defining when the proposition is true and false
             EventFormula = parseEvent(EventProp,SetEvent,ResetEvent,sensorList,allRobotProp,lineInd)
 
+            # Replace any quantifier in the event formula
+            if QuantifierFlag == "ANY":
+                EventFormula = EventFormula.replace("next(QUANTIFIER_PLACEHOLDER)", quant_or_string['next'])
+                EventFormula = EventFormula.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
+            elif QuantifierFlag == "ALL":
+                EventFormula = EventFormula.replace("next(QUANTIFIER_PLACEHOLDER)", quant_and_string['next'])
+                EventFormula = EventFormula.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
+
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
-            map['SysTrans'].append(lineInd)
+            linemap['SysTrans'].append(lineInd)
 
 
         # A toggle event definition
@@ -265,8 +389,16 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # Formulas defining when the proposition is true and false
             EventFormula = parseToggle(EventProp,ToggleEvent,sensorList,allRobotProp,lineInd)
 
+            # Replace any quantifier in the event formula
+            if QuantifierFlag == "ANY":
+                EventFormula = EventFormula.replace("next(QUANTIFIER_PLACEHOLDER)", quant_or_string['next'])
+                EventFormula = EventFormula.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
+            elif QuantifierFlag == "ALL":
+                EventFormula = EventFormula.replace("next(QUANTIFIER_PLACEHOLDER)", quant_and_string['next'])
+                EventFormula = EventFormula.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
+
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
-            map['SysTrans'].append(lineInd)
+            linemap['SysTrans'].append(lineInd)
 
         # A safety requirement
         elif SafetyRE.search(line):
@@ -276,12 +408,28 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # parse the safety requirement
             formulaInfo = parseSafety(SafetyReq,sensorList,allRobotProp,lineInd)
 
-            spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
-            map[formulaInfo['type']].append(lineInd)
+            # Replace any quantifier in the requirement
+            if QuantifierFlag == "ANY":
+                print 'ERROR(13): Could not parse the sentence in line '+ str(lineInd)+' :'
+                print line
+                print 'because the ANY quantifier is not currently supported in safety requirements'
+                print ''
+                continue
+            elif QuantifierFlag == "ALL":
+                for r in RegionGroups[quant_group]:
+                    tmp_req = copy.deepcopy(formulaInfo)
+                    tmp_req['formula'] = tmp_req['formula'].replace("next(QUANTIFIER_PLACEHOLDER)", nextify(r))
+                    tmp_req['formula'] = tmp_req['formula'].replace("QUANTIFIER_PLACEHOLDER", r)
+                    spec[tmp_req['type']] = spec[tmp_req['type']] + tmp_req['formula']
+                    linemap[tmp_req['type']].append(lineInd)
+            else:
+                spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+                linemap[formulaInfo['type']].append(lineInd)
 
             
         # A 'Go to and stay there' requirement
         elif LivenessRE.search(line) and StayRE.search(line):
+            #TODO: quantifier support
             # remove the liveness words    
             LivenessReq = LivenessRE.sub('',line)
             # remove the 'and stay there'      
@@ -306,7 +454,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             # Add the liveness ('go to') to the spec
             spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
-            map[formulaInfo['type']].append(lineInd)
+            linemap[formulaInfo['type']].append(lineInd)
 
 
             # add the 'stay there' as a condition (if R then stay there)
@@ -315,7 +463,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             condStayFormula = '\t\t\t [](' + regCond + ' -> ' + StayFormula + ') & \n'
 
             spec['SysTrans'] = spec['SysTrans'] + condStayFormula
-            map['SysTrans'].append(lineInd)
+            linemap['SysTrans'].append(lineInd)
 
 
 
@@ -327,15 +475,54 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # parse the liveness requirement
             formulaInfo = parseLiveness(LivenessReq,sensorList,allRobotProp,lineInd)
 
-            spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
-            map[formulaInfo['type']].append(lineInd)
+            # Replace any quantifier in the requirement
+            if QuantifierFlag == "ANY":
+                formulaInfo['formula'] = formulaInfo['formula'].replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
+
+                spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+                linemap[formulaInfo['type']].append(lineInd)
+            elif QuantifierFlag == "ALL":
+                for r in RegionGroups[quant_group]:
+                    tmp_req = copy.deepcopy(formulaInfo)
+                    tmp_req['formula'] = tmp_req['formula'].replace("QUANTIFIER_PLACEHOLDER", r)
+                    spec[tmp_req['type']] = spec[tmp_req['type']] + tmp_req['formula']
+                    linemap[tmp_req['type']].append(lineInd)
+            else:
+                spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+                linemap[formulaInfo['type']].append(lineInd)
         # Cannot parse
         else:
             print 'ERROR(16): Could not parse the sentence in line '+ str(lineInd)+' :'
             print line
             print 'because it is not in a known format'
             print ''
+
+        ## Resolve all the quantifiers
+        #if QuantifierFlag is not None:
+        #    for f_type in ['EnvInit', 'SysInit', 'EnvTrans', 'SysTrans', 'EnvGoals', 'SysGoals']:
+        #        for i, f in enumerate(spec[f_type]):
+        #            print "!!" + f
+        #            if "QUANTIFIER_PLACEHOLDER" not in f: continue
+        #            if f_type in ['EnvInit']:
+        #                print "ERROR: Quantifier not valid in environment initial conditions"
+        #            isCondition = "->" in f[f.find("QUANTIFIER_PLACEHOLDER"):]
+        #            if QuantifierFlag == "ANY":
+        #                spec[f_type][i] = f.replace("QUANTIFIER_PLACEHOLDER", or_string)
+        #            elif QuantifierFlag == "ALL":
+        #                if isCondition:
+        #                    spec[f_type][i] = f.replace("QUANTIFIER_PLACEHOLDER", and_string)
+        #                elif f_type in ["EnvTrans", "SysTrans"]:
+        #                    for r in RegionGroups[quant_group]:
+        #                        spec[f_type].append(f.replace("QUANTIFIER_PLACEHOLDER", r))
+        #                    spec[f_type][i] = ""
+        #                elif f_type in ["EnvGoals", "SysGoals"]:
+        #                    for r in RegionGroups[quant_group]:
+        #                        spec[f_type].append(f.replace("QUANTIFIER_PLACEHOLDER", r))
+        #                    spec[f_type][i] = ""
+        #    allRobotProp.remove("QUANTIFIER_PLACEHOLDER")
       
+        if QuantifierFlag is not None:
+            allRobotProp.remove("QUANTIFIER_PLACEHOLDER")
 
     # replace all region names with the bit encoding
     for key in spec:
@@ -389,7 +576,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         print 'They should be removed from the proposition lists\n'
     
 
-    return spec,map
+    return spec,linemap
 
 
 def parseInit(sentence,PropList,lineInd):

@@ -6,7 +6,7 @@
 ======== EXPERIMENT CONFIG 0 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.012811806809,-8.07774146808,-0.0185568627189,5.91272155958
+0.015105263183,-7.91368414226,-0.0243703678802,6.15273987364
 
 InitialRegion: # Initial region number
 10
@@ -67,7 +67,7 @@ hear_whistle,1
 hear_counting,1
 
 currentExperimentName:
-ASL
+Default
 
 
 ======== SPECIFICATION ========
@@ -102,55 +102,41 @@ Robot starts in Parking
 Robot starts with not count and not whistle and not hide and not playing
 
 ### Restrictions ###
-Always not Danger
-Always not SchoolWall
-Always not Wall
-Always not Tree
+group Obstacles is Wall, SchoolWall, Tree, Danger
+Always not all Obstacles
 
 ### Game start and end conditions ###
-playing is set on ((seeker and Parking and hear_whistle) or (not seeker and Parking and hear_counting)) and reset on ((seeker and see_player) or (not seeker and see_player))
-
-If you are not activating playing then go to Parking
-If you were not activating playing and you were in Parking then stay there
+playing is set on ((seeker and Parking and hear_whistle) or (not seeker and Parking and hear_counting)) and reset on (see_player)
+If you are not activating playing then go to Parking and stay there
 
 ### Hider/seeker alternation ###
-# Toggle the value of seeker at the end of a game
-If you were activating playing and you are not activating playing and you were activating seeker then do not seeker
-If you were activating playing and you are not activating playing and you were not activating seeker then do seeker
-# Otherwise, don't change anything
-If you were activating playing and you are activating playing and you were activating seeker then do seeker
-If you were activating playing and you are activating playing and you were not activating seeker then do not seeker
-If you were not activating playing and you are not activating playing and you were activating seeker then do seeker
-If you were not activating playing and you are not activating playing and you were not activating seeker then do not seeker
-If you were not activating playing and you are activating playing and you were activating seeker then do seeker
-If you were not activating playing and you are activating playing and you were not activating seeker then do not seeker
+seeker is toggled on end of playing
 
 ### Seeking Behavior ###
 Do count if and only if you are activating seeker and you are not activating playing and you are in Parking
 
-If you are activating seeker and you are activating playing then visit Classroom2
-If you are activating seeker and you are activating playing then visit Office
-If you are activating seeker and you are activating playing then visit Gym
-If you are activating seeker and you are activating playing then visit Closet
-If you are activating seeker and you are activating playing then visit Classroom1
-If you are activating seeker and you are activating playing then visit between Tree and Wall
+group SeekingSpots is Classroom2, Office, Gym, Closet, Classroom1, between Tree and Wall
+If you are activating seeker and playing then visit all SeekingSpots
 
 ### Hiding Behavior ###
-If you are not activating seeker and you are activating playing then go to ((between Tree and Wall) or Closet or Office)
+
+group HidingSpots is between Tree and Wall, Closet, Office
+If you are not activating seeker and you are activating playing then go to any HidingSpots
 Do hide if and only if you are not activating seeker and you are activating playing and you are in ((between Tree and Wall) or Closet or Office)
 
 If you were activating hide then stay there
-Do whistle if and only if you were not activating hide and you are activating hide
+Do whistle if and only if start of hide
+
+# Make reactions to see_player immediate, not waiting for transition to next region
+#If end of playing then stay there
 
 ### Talking ###
-Do say_imfound if and only if you were not activating seeker and you were activating playing and you are not activating playing
-Do say_foundyou if and only if you were activating seeker and you were activating playing and you are not activating playing
+Do say_imfound if and only if you were not activating seeker and end of playing
+Do say_foundyou if and only if you were activating seeker and end of playing
 Do say_hider if and only if you are not activating seeker and you are not activating playing and you are in Parking
 Do say_seeker if and only if you are activating seeker and you are not activating playing and you are in Parking
 
-If you were activating say_imfound then stay there
-If you were activating say_foundyou then stay there
-If you were activating say_hider then stay there
-If you were activating say_seeker then stay there
+# don't talk while walking
+If you were activating say_imfound or say_foundyou or say_hider or say_seeker then stay there
 
 
