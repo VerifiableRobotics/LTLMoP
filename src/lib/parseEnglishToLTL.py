@@ -167,6 +167,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             groupList = RGParts.group('regions') 
             RegionGroups[groupName] = re.split(r"\s*,\s*", groupList)
             RegionGroups[groupName] = map(replaceLogicOp, RegionGroups[groupName])
+
+            # Allow equivalency between basic singular/plural references
+            if groupName[-1] == "s":
+                RegionGroups[groupName[0:-1]] = RegionGroups[groupName]
+
             print RegionGroups
 
         # If the sentence describes the initial state of the environemnt
@@ -214,7 +219,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             if RegInit:
                 # parse regions
-                LTLRegSubformula = parseInit(RegInit,regionList,lineInd)
+                LTLRegSubformula = parseInit(RegInit,regionList + ["QUANTIFIER_PLACEHOLDER"],lineInd)
             if ActInit:
                 # parse Actions
                 LTLActSubformula = parseInit(ActInit,robotPropList,lineInd)
