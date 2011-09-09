@@ -1444,7 +1444,7 @@ class SpecEditorFrame(wx.Frame):
                 # Remove from mapping
                 del self.parser.proj.regionMapping[r.name]
 
-        self.proj.rfi.regions = filter(lambda r: not (r.isObstacle or r.name == "boundary"), self.proj.rfi.regions)
+        #self.proj.rfi.regions = filter(lambda r: not (r.isObstacle or r.name == "boundary"), self.proj.rfi.regions)
                     
         # save the regions into new region file
         fileName = self.proj.getFilenamePrefix()+'_decomposed.regions'
@@ -1470,7 +1470,8 @@ class SpecEditorFrame(wx.Frame):
         for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
             text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(self.parser.proj.regionMapping['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"])+")", text)
         for r in self.proj.rfi.regions:
-            text=re.sub('\\b' + r.name + '\\b', "("+' or '.join(self.parser.proj.regionMapping[r.name])+")", text)
+            if not (r.isObstacle or r.name == "boundary"):
+                text=re.sub('\\b' + r.name + '\\b', "("+' or '.join(self.parser.proj.regionMapping[r.name])+")", text)
 
         print "===== New Specs ====="
         print
