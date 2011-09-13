@@ -1382,20 +1382,17 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuCut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        #if self.text_ctrl_spec.CanCut():
         self.text_ctrl_spec.Cut()
         event.Skip()
 
     def onMenuCopy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        #if self.text_ctrl_spec.CanCopy():
         self.text_ctrl_spec.Copy()
         event.Skip()
 
     def onMenuPaste(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        # FIXME: On Mac, this double pastes-- check on Linux
         if self.text_ctrl_spec.CanPaste():
             self.text_ctrl_spec.Paste()
-        event.Skip()
+        #event.Skip()
 
     def onMenuCompile(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Let's make sure we have everything!
