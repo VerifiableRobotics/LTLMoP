@@ -104,9 +104,11 @@ public class GROneGame {
 							x = negp.and(env.yieldStates(sys, x)).or(start);
 						}
 						x_mem[j][i][cy] = x.id();
+						//System.out.println("X ["+ j + ", " + i + ", " + cy + "] = " + x_mem[j][i][cy]);							
 						y = y.id().or(x);
 					}
 					y_mem[j][cy] = y.id();
+					//System.out.println("Y ["+ j + "] = " + y_mem[j][cy]);													
 					cy++;
 					if (cy % 50 == 0) {
 						x_mem = extend_size(x_mem, cy);
@@ -115,6 +117,8 @@ public class GROneGame {
 				}
 				z = y.id();
 				z_mem[j] = z.id();
+				//System.out.println("Z ["+ j + "] = " + z_mem[j]);							
+						
 			}
 		}
 		x_mem = extend_size(x_mem, 0);
@@ -129,10 +133,11 @@ public class GROneGame {
 		int a = 0;
 		z = Env.FALSE();
 		x = Env.FALSE();
+				
 		for (iterZ = new FixPoint<BDD>(); iterZ.advance(z);) {
 			//for (int j = 0; j < sys.justiceNum(); j++) {
-			y = Env.TRUE();
-			for (int j = 0; j < sysJustNum; j++) {	
+			for (int j = 0; j < sysJustNum; j++) {							
+				y = Env.TRUE();			
 				for (iterY = new FixPoint<BDD>(); iterY.advance(y);) {
 					BDD start = ((sys.justiceAt(j).not()).or((env.yieldStates(sys, z.not())).not()))
 						//BDD start = ((sys.justiceAt(j).not()).or(sys.yieldStates(sys, z)))
@@ -141,14 +146,14 @@ public class GROneGame {
 						x = Env.FALSE();
 						c=0;
 						for (iterX = new FixPoint<BDD>(); iterX.advance(x);) {
-							x = ((env.justiceAt(i).or(((env.yieldStates(sys, x.not())).not()))).and(start));
+							x = x.id().or((env.justiceAt(i).or(((env.yieldStates(sys, x.not())).not()))).and(start));
 							//x = x.id().or((env.justiceAt(i).or(env.yieldStates(sys, x))).and(start));
 							x2_mem[j][i][a][c] = x.id();
 							//System.out.println("X ["+ j + ", " + i + ", " + a + ", " + c + "] = " + x2_mem[j][i][a][c]);
 							c++;
 						}
 						
-						y = y.id().and(x.id());
+						y = y.id().and(x);
 					}				
 					if (c % 50 == 0) {
 						x2_mem = extend_size(x2_mem, c);						
@@ -157,7 +162,7 @@ public class GROneGame {
 				y2_mem[j][a] = y.id();	
 				//System.out.println("Y ["+ j + ", " + c + "] = " + y2_mem[j][a]);
 
-				z = z.id().or(y.id());				
+				z = z.id().or(y);				
 			}
 			
 			
@@ -174,7 +179,7 @@ public class GROneGame {
 		x2_mem = extend_size(x2_mem, 0);
 		y2_mem = extend_size(y2_mem, 0);
 		z2_mem = extend_size(z2_mem, 0);
-		//System.out.println(z.id().equals(player2_winning.not()));
+		//System.out.println("SAME " + z.id().equals(player2_winning.not()));
 		return z.id();
 	}
 
@@ -403,7 +408,7 @@ public class GROneGame {
 
             st_stack.push(this_ini);
             j_stack.push(new Integer(0)); // TODO: is there a better default j?
-            this_ini.printSet();
+            //this_ini.printSet();
 
             // iterating over the stacks.
             while (!st_stack.isEmpty()) {
@@ -492,7 +497,7 @@ public class GROneGame {
 										//System.out.println("1");
 										jcand = next_p_j;
 									}
-								} else if (!sys.justiceAt(p_j).isOne()) {
+								} else if (sysJustNum != 1) {
 								//There are no unsatisfied goals, so just stay in place, yay.
 									candidate = next_op;										
 									jcand = p_j;									
@@ -540,9 +545,10 @@ public class GROneGame {
                         if (!((local_kind != 0) & (local_kind != 4)
                                 & (local_kind != 8) & (local_kind != 12)
                                 & (local_kind != 16) & (local_kind != 20))) {
-                        	System.out.println("No successor was found");
-                        	if (strategy_kind == 3) result = false;
-							else candidate = next_op;
+                        	//System.out.println("No successor was found");
+                        	assert !det : "No successor was found";
+							if (strategy_kind == 3) result = false;
+							else candidate = next_op.and(y_mem[p_j][p_cy]);
                         }
 
                         local_kind--;
@@ -733,8 +739,9 @@ public class GROneGame {
 		boolean result = true;
 		
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
-        
-        while (ini_iterator.hasNext()) {       
+        int flag = 0;
+		
+        while (ini_iterator.hasNext() && flag == 0) {       
 	        int a = 0;
 	        BDD this_ini = (BDD) ini_iterator.next();
 	       	            
@@ -766,50 +773,56 @@ public class GROneGame {
 	                BDD primed_cur_succ = Env.prime(env.succ(p_st));
 	                BDD input = Env.FALSE();
 	                
-	                int new_i = -1, new_j = -1;
-	                
+	                int new_i = 0, new_j = -1;
+					
+					/* Find Z index of current state */
+					// find minimal cy and an i
+					int p_az = -1;
+					for (int i = 0; i < z2_mem.length; i++) {
+						if (!p_st.and(z2_mem[i]).isZero()) {
+							p_az = i;
+							break;
+						}
+					}
+					assert p_az >= 0 : "Couldn't find p_az";
+				   
+					/* Find Y index of current state */
+					int p_j = -1;
+					for (int j = 0; j < sysJustNum; j++) {
+						 if (!p_st.and(y2_mem[j][p_az]).isZero()) {
+							p_j = j;
+							break;
+						}
+					}
+					assert p_j >= 0 : "Couldn't find p_j";
+
+				    
+					/* Find X index of current state */
+					int p_c = -1;
+					for (int c = 0; c < x2_mem[p_j][rank_i][p_az].length; c++) {
+						if (!p_st.and(x2_mem[p_j][rank_i][p_az][c]).isZero()) {
+							p_c = c;
+							break;
+						}
+					}
+					assert p_c >= 0 : "Couldn't find p_c";
+						
 	                while(input.isZero()) {
-						
-		                
-			        	
-			        	
-			        	//\rho_2 transitions		                
-			        	for (int az = 0; az < z2_mem.length; az++) {
-			        		for (int j = 0; j < sysJustNum; j++) {  
-			        			if (az == 0)
-			        				input = p_st.and(z2_mem[az])
-			        					.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
-			        					.and(sys.yieldStates(env,(Env.FALSE())).not()); 
-			        			else
-			        				input = p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
-		        					.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
-		        					.and((sys.yieldStates(env,(z2_mem[az-1]))).not());		        			
-			        			if (rank_j == -1 && !input.isZero()) {
-								//System.out.println("RHO 2");
-			        				new_i = rank_i;
-			        				new_j = j;
-			        				break;
-			        			}		                
-			        		}
-			        		if (rank_j != -1) break;
-			        	}
-			        	if (!input.isZero()) continue;
-						
-						input = p_st.and(z2_mem[0]).and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())));                
+			        	input = p_st.and(z2_mem[0]).and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())));                
 			        	if (!input.isZero()) {
 		                	new_i = rank_i;		        
 				        	new_j = -1;
-				        	continue;
+				        	break;
 				        }
 			        	
 			        	
 			        	//\rho_1 transitions in K\"onighofer et al
-			        	for (int az = 1; az < z2_mem.length; az++) {	
-				        	input = p_st.and(z2_mem[az])
+			        	for (int az = 1; az < z2_mem.length; az++) {
+							input = p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
 				        		.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[az-1]))))));
 				        	if (!input.isZero()) {	
-							//System.out.println("RHO 1");							
-				        		new_i = rank_i;
+								//System.out.println("RHO 1");	
+								new_i = rank_i;
 				        		new_j = -1;				
 				        		break;
 				        	}					                
@@ -818,14 +831,39 @@ public class GROneGame {
 			        	//if we are only looking for unsatisfiability, we only allow transitions 
 			        	//into a lower iterate of Z, i.e. \rho_1
 		        		if (!enable_234) {
-		        			if (input.isZero()) System.out.println("No successor was found");
+		        			//if (input.isZero()) System.out.println("No successor was found");
 			        		result = false;
-			        		continue;
+			        		break;
 			        	}
-			        	if (!input.isZero()) continue;
+			        	if (!input.isZero()) break;
 		                
-			        	//\rho_3 transitions
-			        	if (rank_j != -1 && p_st.and(env.justiceAt(rank_i)).isZero()) {
+			        	//\rho_2 transitions		                
+			        	if (rank_j == -1) {
+							for (int az = 0; az < z2_mem.length; az++) {
+								for (int j = 0; j < sysJustNum; j++) {  
+									if (az == 0)
+										input = p_st.and(z2_mem[az])
+											.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
+											.and(sys.yieldStates(env,(Env.FALSE())).not()); 
+									else
+										input = p_st.and(z2_mem[az]).and(z2_mem[az-1].not())
+										.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[j][az]))))
+										.and((sys.yieldStates(env,(z2_mem[az-1]))).not());		        			
+									if (!input.isZero()) {
+										//System.out.println("RHO 2");									
+										new_i = rank_i;
+										new_j = j;
+										break;
+									}		                
+								}
+								if (new_j != -1) break;
+							}
+						}
+			        	if (!input.isZero()) break;
+						
+						
+						//\rho_3 transitions						
+			        	if (rank_j != -1 && rank_i != -1 && p_st.and(env.justiceAt(rank_i)).isZero()) {
 						//System.out.println("RHO 3");	
 			        		new_i = (rank_i + 1) % env.justiceNum();
 			        		new_j = rank_j;		                	
@@ -842,7 +880,7 @@ public class GROneGame {
 			        		}
 			        	}
 			        	
-			        	if (!input.isZero()) continue;
+			        	if (!input.isZero()) break;
 			        	
 			        	//\rho_4 transitions
 			        	for (int az = 0; az < z2_mem.length; az++) {
@@ -870,6 +908,16 @@ public class GROneGame {
 			        			}
 			        		}
 			        	}
+						
+						//if (p_az == 0) input = p_st.and(z2_mem[p_az])
+							//				.and(primed_cur_succ.and(sys.yieldStates(env,(y2_mem[p_j][p_az]))));
+											
+						if (p_az == 0) {
+							if (p_c > 0)					
+									input = ((p_st.and((primed_cur_succ.and((sys.yieldStates(env,x2_mem[p_j][rank_i][p_az][p_c-1])))))));
+							else
+									input = ((p_st.and((primed_cur_succ.and((sys.yieldStates(env,x2_mem[p_j][rank_i][p_az][p_c])))))));
+						}
 			        	
 			        	assert (!input.isZero()) : "No successor was found";
 	                }
@@ -882,7 +930,7 @@ public class GROneGame {
 	        		
 	        		
 	        }
-    		
+    		flag = 1;
         }
         
                 

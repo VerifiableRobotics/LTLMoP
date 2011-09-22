@@ -115,6 +115,7 @@ public class GROneDebug {
 		  }
 		 
 		  BDD counter_example = g.envWinningStates().and(all_init);
+		  System.out.println("counter_example = " + counter_example);
 		  try { 
 			  if (!counter_example.isZero()) {
 				//checking for multi-step unsatisfiability between sys transitions and initial condition					 

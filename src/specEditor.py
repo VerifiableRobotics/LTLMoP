@@ -1572,7 +1572,7 @@ class SpecEditorFrame(wx.Frame):
         if realizable:
             self.appendLog("Automaton successfully synthesized.\n", "GREEN")
         else:
-            self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
+            self.appendLog("ERROR: Specification was unsynthesizable (unrealizable/unsatisfiable).\n", "RED")
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1827,7 +1827,7 @@ class SpecEditorFrame(wx.Frame):
                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
             
         if not realizable:
-            self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
+            #self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
             output += "No automaton synthesized.\n"        
           
         self.appendLog(output)

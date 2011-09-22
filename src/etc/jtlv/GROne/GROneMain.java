@@ -96,8 +96,8 @@ public class GROneMain {
 		 System.out.println("-----------------------------------------");
 		 PrintStream orig_out = System.out;
 		 System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
-		 g.printLosingStrategy(g.envWinningStates().and(g.getEnvPlayer().initial().and(
-	             g.getSysPlayer().initial())));
+		 System.out.println("counter_exmple = " + counter_exmple.equals(all_init));
+		 g.printLosingStrategy(counter_exmple);
 		 System.setOut(orig_out); // restore STDOUT
 		 System.out.print("-----------------------------------------\n");
 		 long t2 = (System.currentTimeMillis() - time);
@@ -170,8 +170,7 @@ public class GROneMain {
 				g.getSysPlayer().initial()).satOne(env.moduleUnprimeVars().union(
 						sys.moduleUnprimeVars()), false));  // Added BDDVarSet argument so that initial condition is fully specified -Cameron
         */
-		g.printWinningStrategy(g.getEnvPlayer().initial().and(
-	               g.getSysPlayer().initial()));
+		g.printWinningStrategy(all_init);
 		System.setOut(orig_out); // restore STDOUT
 		System.out.print("-----------------------------------------\n");
 		long t2 = (System.currentTimeMillis() - time);
