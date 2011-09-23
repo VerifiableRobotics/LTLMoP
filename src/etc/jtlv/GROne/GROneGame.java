@@ -739,9 +739,9 @@ public class GROneGame {
 		boolean result = true;
 		
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
-        int flag = 0;
+       
 		
-        while (ini_iterator.hasNext() && flag == 0) {       
+        while (ini_iterator.hasNext()) {       
 	        int a = 0;
 	        BDD this_ini = (BDD) ini_iterator.next();
 	       	            
@@ -930,7 +930,6 @@ public class GROneGame {
 	        		
 	        		
 	        }
-    		flag = 1;
         }
         
                 
