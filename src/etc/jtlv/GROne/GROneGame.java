@@ -484,7 +484,7 @@ public class GROneGame {
 								{
 									next_p_j = (next_p_j + 1) % sysJustNum;		
 								}
-								if (next_p_j!=p_j)
+								if (next_p_j!=p_j || sysJustNum == 1)
 								{								
 									int look_r = 0;
 									while ((next_op.and(y_mem[next_p_j][look_r]).isZero())) {
@@ -497,7 +497,7 @@ public class GROneGame {
 										//System.out.println("1");
 										jcand = next_p_j;
 									}
-								} else if (sysJustNum != 1) {
+								} else {
 								//There are no unsatisfied goals, so just stay in place, yay.
 									candidate = next_op;										
 									jcand = p_j;									
