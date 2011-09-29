@@ -122,7 +122,7 @@ public class GROneGame {
 			}
 		}
 		x_mem = extend_size(x_mem, 0);
-		y_mem = extend_size(y_mem, 0);
+		y_mem = extend_size(y_mem, 0);					
 		return z.id();
 	}
 	
@@ -461,7 +461,7 @@ public class GROneGame {
                 for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
                         .hasNext();) {
                     BDD primed_cur_succ = Env.prime(iter_succ.next());
-                    BDD next_op = Env
+					BDD next_op = Env
                             .unprime(sys.trans().and(p_st).and(primed_cur_succ)
                                     .exist(
                                             env.moduleUnprimeVars().union(
@@ -547,8 +547,9 @@ public class GROneGame {
                                 & (local_kind != 16) & (local_kind != 20))) {
                         	//System.out.println("No successor was found");
                         	assert !det : "No successor was found";
-							if (strategy_kind == 3) result = false;
-							else candidate = next_op.and(y_mem[p_j][p_cy]);
+							if (strategy_kind == 3 && !det) result = false;
+							//This next line is critical to finding transitions at the lowest "level sets"
+							else candidate = next_op.and(y_mem[p_j][p_cy]);													
                         }
 
                         local_kind--;
@@ -561,7 +562,6 @@ public class GROneGame {
              /*       BDD one_cand = candidate.satOne(env.moduleUnprimeVars().union(
                             sys.moduleUnprimeVars()), false);
              */       
-                    
                     
                     
                     for (BDDIterator candIter = candidate.iterator(env.moduleUnprimeVars().union(
