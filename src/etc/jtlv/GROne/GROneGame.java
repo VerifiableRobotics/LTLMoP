@@ -484,7 +484,7 @@ public class GROneGame {
 								{
 									next_p_j = (next_p_j + 1) % sysJustNum;		
 								}
-								if (next_p_j!=p_j || sysJustNum == 1)
+								if (next_p_j!=p_j || sys.justiceAt(p_j).isOne())
 								{								
 									int look_r = 0;
 									while ((next_op.and(y_mem[next_p_j][look_r]).isZero())) {
