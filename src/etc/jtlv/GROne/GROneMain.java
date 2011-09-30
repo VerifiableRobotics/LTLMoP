@@ -96,7 +96,6 @@ public class GROneMain {
 		 System.out.println("-----------------------------------------");
 		 PrintStream orig_out = System.out;
 		 System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
-		 System.out.println("counter_exmple = " + counter_exmple.equals(all_init));
 		 g.printLosingStrategy(counter_exmple);
 		 System.setOut(orig_out); // restore STDOUT
 		 System.out.print("-----------------------------------------\n");
