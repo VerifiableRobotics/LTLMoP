@@ -119,7 +119,7 @@ public class GROneDebug {
 		  try { 
 			  if (!counter_example.isZero()) {
 				//checking for multi-step unsatisfiability between sys transitions and initial condition					 
-				 if (g.calculate_counterstrategy(g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), false, false)) { 			 
+				 if (g.calculate_counterstrategy(counter_example, false, false)) { 			 
 					 debugInfo += "SysInitTrans UNSAT " + "\n";
 					 explainSys = 1;
 				 }
@@ -199,7 +199,7 @@ public class GROneDebug {
 				 g = new GROneGame(env,sys, sys.justiceNum(), i);
 				 counter_exmple = g.envWinningStates().and(all_init);
 				 if (explainEnv ==0) {
-					 if (g.calculate_strategy(3, all_init, false)) { 
+					 if (g.calculate_strategy(3, all_init.and(g.sysWinningStates()), false)) { 
 						 //checking for multi-step unsatisfiability between env transitions and goals
 						 debugInfo += "EnvGoalsTrans UNSAT " + (i-1) + "\n";
 						 explainEnv = 1;

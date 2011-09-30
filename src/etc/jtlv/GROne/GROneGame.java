@@ -480,12 +480,12 @@ public class GROneGame {
 								int next_p_j = (p_j + 1) % sysJustNum;   
 								
 								//Look for the next goal and see if you can satisfy it by staying in place. If so, swell.
-								while (!next_op.and(sys.justiceAt(next_p_j)).isZero() && next_p_j!=p_j)
+								while (!p_st.and(sys.justiceAt(next_p_j)).isZero() && next_p_j!=p_j)
 								{
 									next_p_j = (next_p_j + 1) % sysJustNum;		
 								}
-								if (next_p_j!=p_j || sys.justiceAt(p_j).isOne())
-								{								
+								//if (next_p_j!=p_j || sysJustNum == 1)
+															
 									int look_r = 0;
 									while ((next_op.and(y_mem[next_p_j][look_r]).isZero())) {
 										look_r++;
@@ -497,12 +497,15 @@ public class GROneGame {
 										//System.out.println("1");
 										jcand = next_p_j;
 									}
-								} else {
-								//There are no unsatisfied goals, so just stay in place, yay.
-									candidate = next_op;										
+								
+								/*else {
+								//There are no unsatisfied goals, so just try to stay in place 
+								//(stay in the same y-set)
+									BDD canStay = (p_st.and(next_op)).exist(sys.moduleVars()));
+									candidate = next_op.and(y_mem[next_p_j][p_cy]);										
 									jcand = p_j;									
                                     //System.out.println("All goals satisfied");
-								}
+								}*/
                             }
                         }                       
                         // b - second successor option in the strategy.
