@@ -958,7 +958,7 @@ public class GROneGame {
     	   //method for adding stated to the aut and state stack, based on whether we want a deterministic or nondet automaton
     	 	for (BDDIterator inputIter = input.iterator(env
                     .modulePrimeVars().union(
-                            sys.moduleUnprimeVars())); inputIter.hasNext();) {
+                            sys.modulePrimeVars())); inputIter.hasNext();) {
 							
                 BDD inputOne = (BDD) inputIter.next();
                            
