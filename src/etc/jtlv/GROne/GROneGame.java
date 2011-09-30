@@ -546,10 +546,11 @@ public class GROneGame {
                                 & (local_kind != 8) & (local_kind != 12)
                                 & (local_kind != 16) & (local_kind != 20))) {
                         	//System.out.println("No successor was found");
-                        	assert !det : "No successor was found";
-							if (strategy_kind == 3 && !det) result = false;
+                        	if (strategy_kind == 3 && !det) result = false;
 							//This next line is critical to finding transitions at the lowest "level sets"
-							else candidate = next_op.and(y_mem[p_j][p_cy]);													
+							else candidate = next_op.and(y_mem[p_j][p_cy]);	
+							assert !candidate.isZero() : "No successor was found";
+														
                         }
 
                         local_kind--;
