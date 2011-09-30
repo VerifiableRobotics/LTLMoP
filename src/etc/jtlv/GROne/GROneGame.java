@@ -552,7 +552,7 @@ public class GROneGame {
                         	if (strategy_kind == 3 && !det) result = false;
 							//This next line is critical to finding transitions at the lowest "level sets"
 							else candidate = next_op.and(y_mem[p_j][p_cy]);	
-							assert !candidate.isZero() : "No successor was found";
+							assert !(det && candidate.isZero()) : "No successor was found";
 														
                         }
 
@@ -957,7 +957,9 @@ public class GROneGame {
      public void addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
     	   //method for adding stated to the aut and state stack, based on whether we want a deterministic or nondet automaton
     	 	for (BDDIterator inputIter = input.iterator(env
-                    .modulePrimeVars()); inputIter.hasNext();) {
+                    .modulePrimeVars().union(
+                            sys.moduleUnprimeVars())); inputIter.hasNext();) {
+							
                 BDD inputOne = (BDD) inputIter.next();
                            
                 // computing the set of system possible successors.
