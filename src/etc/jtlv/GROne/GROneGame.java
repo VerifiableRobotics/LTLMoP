@@ -876,7 +876,6 @@ public class GROneGame {
 								if (p_c == 0) {
 									input = ((p_st.and((primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c])))))))))
 													.and((sys.yieldStates(env,Env.FALSE())).not());
-									System.out.println("shouldn't be zero = "+input);
 														
 								} else {
 									input = ((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c-1]))))))))
@@ -941,15 +940,11 @@ public class GROneGame {
 							
                 BDD inputOne = (BDD) inputIter.next();
                            
-                System.out.println("current input = " + inputOne);
-				// computing the set of system possible successors.
+                // computing the set of system possible successors.
                 Vector<BDD> sys_succs = new Vector<BDD>();               
                 BDD all_sys_succs = sys.succ(new_state.get_state().and(inputOne)).and(Env.unprime(inputOne));
                 int idx = -1;
-                System.out.println("cur state = " + new_state.get_state());
-				
-				System.out.println("all succs = " + all_sys_succs);
-				
+                
                 if (all_sys_succs.equals(Env.FALSE())) {
 					RawCState gsucc = new RawCState(aut.size(), Env.unprime(inputOne), new_j, new_i, inputOne);
                     idx = aut.indexOf(gsucc); // the equals doesn't consider
@@ -977,8 +972,6 @@ public class GROneGame {
                         .hasNext();) {
                     BDD sys_succ = iter_succ.next().and(Env.unprime(inputOne));
 					
-					System.out.println("sys succ adding = " + sys_succ);
-                   
                     RawCState gsucc = new RawCState(aut.size(), sys_succ, new_j, new_i, inputOne);
                     idx = aut.indexOf(gsucc); // the equals doesn't consider
                                               // the id number.
