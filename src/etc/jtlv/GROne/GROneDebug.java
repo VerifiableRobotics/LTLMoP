@@ -115,7 +115,6 @@ public class GROneDebug {
 		  }
 		 
 		  BDD counter_example = g.envWinningStates().and(all_init);
-		  System.out.println("counter_example = " + counter_example);
 		  try { 
 			  if (!counter_example.isZero()) {
 				//checking for multi-step unsatisfiability between sys transitions and initial condition					 
@@ -182,7 +181,7 @@ public class GROneDebug {
 			debugInfo += "REALIZABLE\n";
 		}	
 			
-		if (!env.justiceAt(env.justiceNum() - 1).equals(Env.TRUE())) {
+		if (!(env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
 		
 			
 			for (int i = env.justiceNum(); i >=1; i--){		
@@ -192,7 +191,7 @@ public class GROneDebug {
 					explainEnv = 1;
 				}
 				else if ((env.trans().and(Env.prime(env.justiceAt(i-1))).isZero()) | (env.trans().and(env.justiceAt(i-1))).isZero()) { 
-					debugInfo += "EnvGoalsTrans UNSAT " + (i-1) + "\n";
+					debugInfo += "EnvGoalsTrans UNSATz " + (i-1) + "\n";
 					 explainEnv = 1;
 				}
 				 prev = counter_exmple;
@@ -223,8 +222,7 @@ public class GROneDebug {
 		}	catch (Exception e){//Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
-		
-		if (!sys.justiceAt(0).equals(Env.TRUE())) {
+		if (!(sys.justiceNum()==1 && sys.justiceAt(0).equals(Env.TRUE()))) {
 			for (int i = 1; i <= sys.justiceNum(); i++){
 				 if (sys.justiceAt(i-1).isZero()) {
 					 debugInfo += "SysGoals UNSAT " + (i-1) + "\n";
