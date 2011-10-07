@@ -552,7 +552,7 @@ public class GROneGame {
                         	//System.out.println("No successor was found");
                         	if (strategy_kind == 3 && !det) return false;
 							//This next line is critical to finding transitions at the lowest "level sets"
-							else candidate = (next_op);//.and(y_mem[p_j][p_cy]);	
+							else candidate = (next_op).and(y_mem[p_j][p_cy]);	
 							assert !(det && candidate.isZero()) : "No successor was found";
 														
                         }
