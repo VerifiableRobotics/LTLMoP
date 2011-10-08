@@ -191,7 +191,7 @@ public class GROneDebug {
 					explainEnv = 1;
 				}
 				else if ((env.trans().and(Env.prime(env.justiceAt(i-1))).isZero()) | (env.trans().and(env.justiceAt(i-1))).isZero()) { 
-					debugInfo += "EnvGoalsTrans UNSATz " + (i-1) + "\n";
+					debugInfo += "EnvGoalsTrans UNSAT " + (i-1) + "\n";
 					 explainEnv = 1;
 				}
 				 prev = counter_exmple;
@@ -214,14 +214,16 @@ public class GROneDebug {
 			}
 		}
 		
-		try {
+		//Commented out code replaces the environment justices with TRUE
+		/*try {
 			while (env.justiceNum() > 0) {
 				env.popLastJustice();
 			}
 			env.addJustice(Env.TRUE());
 		}	catch (Exception e){//Catch exception if any
 			System.err.println("Error: " + e.getMessage());
-		}
+		}*/
+		
 		if (!(sys.justiceNum()==1 && sys.justiceAt(0).equals(Env.TRUE()))) {
 			for (int i = 1; i <= sys.justiceNum(); i++){
 				 if (sys.justiceAt(i-1).isZero()) {
