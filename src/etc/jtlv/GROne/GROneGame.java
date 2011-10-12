@@ -820,7 +820,7 @@ public class GROneGame {
 					//special caze when we are in Z_0. Either we force a safety violation, or we go to the relevant y2_mem[a][j], 
 					//and continue to violate the system liveness j
 						input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE()))));
-						//if (input.isZero()) input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(y2_mem[p_j][p_az])))))));  
+						if (input.isZero()) input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(y2_mem[p_j][p_az])))))));  
 													
 					} else {						
 						input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[p_az-1])))))));
@@ -904,7 +904,7 @@ public class GROneGame {
 					if (input.equals(oldInput) && !det) return false; 	
 				}				
 													
-				assert (!(input.isZero() && det)) : "No successor was found";
+				assert (!(input.isZero() && det)) : p_st+"No successor was found";
 				addState(new_state, input, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
 				//result is true if for every state, all environment actions take us into a lower iterate of Z
 				//this means the environment can do anything to prevent the system from achieving some goal.

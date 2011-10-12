@@ -56,7 +56,6 @@ public class GROneMain {
 
 		System.out.print("==== Constructing and playing the game ======\n");
 		long time = System.currentTimeMillis();
-		System.out.println(env.justiceNum());
 		
 		GROneGame g = new GROneGame(env,sys);
 		long t1 = (System.currentTimeMillis() - time);
@@ -119,7 +118,8 @@ public class GROneMain {
 		 System.out.println("===== Done ==============================");
 	*/			
 			
-         return;     
+         //Error code = 1 on exit
+		 System.exit(1);
 		 } 
 
 		// ///////////////////////////////////////////////
