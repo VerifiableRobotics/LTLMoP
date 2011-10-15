@@ -834,7 +834,7 @@ public class GROneGame {
 					//special caze when we are in Z_0. Either we force a safety violation, or we go to the relevant y2_mem[a][j], 
 					//and continue to violate the system liveness j
 						input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE()))));
-						if (input.isZero()) input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(y2_mem[p_j][p_az])))))));  
+						if (input.isZero()) input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c])))))));  
 													
 					} else {						
 						input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[p_az-1])))))));
