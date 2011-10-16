@@ -10,6 +10,7 @@ import edu.wis.jtlv.env.module.ModuleWithWeakFairness;
 import edu.wis.jtlv.env.module.Module;
 import edu.wis.jtlv.lib.FixPoint;
 import edu.wis.jtlv.old_lib.games.GameException;
+import edu.wis.jtlv.env.module.ModuleBDDField;
 
 /**
  * <p>
@@ -382,6 +383,19 @@ public class GROneGame {
 		if (ini.isZero()) result = false; else result = true;
 		// FDSModule res = new FDSModule("strategy");
 
+        // Create a varset of all non-location propositions
+        // (used later to prevent wobble)
+        //
+        // TODO: There is probably a cleaner way to do this
+        ModuleBDDField [] allFields = sys.getAllFields();        
+        BDDVarSet nonRegionProps = Env.getEmptySet();
+        for (int i = 0; i < allFields.length; i++) {      
+          ModuleBDDField thisField = allFields[i];
+          String fieldName = thisField.support().toString();
+          if (!fieldName.startsWith("<bit"))
+            nonRegionProps = nonRegionProps.union(thisField.support());
+        }
+
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
 		while (ini_iterator.hasNext()) {
 
@@ -481,32 +495,32 @@ public class GROneGame {
                             if (!p_st.and(sys.justiceAt(p_j)).isZero()) {
 								int next_p_j = (p_j + 1) % sysJustNum;   
 								
-								//Look for the next goal and see if you can satisfy it by staying in place. If so, swell.
-								while (!p_st.and(sys.justiceAt(next_p_j)).isZero() && next_p_j!=p_j)
+								// Cycle through goals that are trivially satisfied by staying in the exact same state.
+                                // (This is essentially stutter-state removal)
+								while (!p_st.and(sys.justiceAt(next_p_j)).isZero() && next_p_j != p_j)
 								{
 									next_p_j = (next_p_j + 1) % sysJustNum;		
 								}
-								//if (next_p_j!=p_j || sysJustNum == 1)
-															
-									int look_r = 0;
-									while ((next_op.and(y_mem[next_p_j][look_r]).isZero())) {
-										look_r++;
-									}
-										
-									BDD opt = next_op.and(y_mem[next_p_j][look_r]);
-									if (!opt.isZero()) {
-										candidate = opt;
-										//System.out.println("1");
-										jcand = next_p_j;
-									}
-								
-								else {
-								//There are no unsatisfied goals, so just try to 
-								//stay in the same y-set
-									candidate = next_op.and(y_mem[next_p_j][p_cy]);										
-									jcand = p_j;									
-                                    //System.out.println("All goals satisfied");
-								}
+
+                                // Find the lowest-rank transitionable state in the direction of the next unsatisfied goal
+                                // (or just stay in the same y-set if we've looped all the way around)
+                                int look_r = 0;
+                                while ((next_op.and(y_mem[next_p_j][look_r]).isZero())) {
+                                    look_r++;
+                                }
+                                    
+                                BDD opt = next_op.and(y_mem[next_p_j][look_r]);
+                                if (!opt.isZero()) {
+                                    candidate = opt;
+                                    //System.out.println("1");
+                                    jcand = next_p_j;
+                                }
+
+                                // If possible, trim down the candidates to prioritize movement-less transitions
+                                BDD current_region = p_st.exist(env.moduleUnprimeVars()).exist(nonRegionProps);
+                                if (!candidate.and(current_region).isZero()) {
+                                    candidate = candidate.and(current_region); 
+                                }
                             }
                         }                       
                         // b - second successor option in the strategy.
