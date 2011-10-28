@@ -197,7 +197,7 @@ public class GROneDebug {
 				 prev = counter_exmple;
 				 g = new GROneGame(env,sys, sys.justiceNum(), i);
 				 counter_exmple = g.envWinningStates().and(all_init);
-				 if (explainEnv ==0) {
+				 if (explainEnv ==0 && counter_exmple.isZero()) {
 					 if (g.calculate_strategy(3, all_init.and(g.sysWinningStates()), false)) { 
 						 //checking for multi-step unsatisfiability between env transitions and goals
 						 debugInfo += "EnvGoalsTrans UNSAT " + (i-1) + "\n";
