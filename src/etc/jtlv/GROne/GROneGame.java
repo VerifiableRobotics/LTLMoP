@@ -832,10 +832,13 @@ public class GROneGame {
 					//\rho_1 transitions in K\"onighofer et al
 					if (p_az == 0) {
 					//special caze when we are in Z_0. Either we force a safety violation, or we go to the relevant y2_mem[a][j], 
-					//and continue to violate the system liveness j
-						input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE()))));
-						if (input.isZero()) input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c])))))));  
-													
+					//and continue to violate the system liveness j						
+						//FIRST, WE CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
+						//input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
+						input = input.or(p_st.and((sys.yieldStates(env,Env.FALSE()))));//CONSIDERS ALL ENV. MOVES
+						
+						//OTHERWISE:
+						if (input.isZero()) input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c])))))));  													
 					} else {						
 						input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[p_az-1])))))));
 					}
@@ -950,15 +953,15 @@ public class GROneGame {
                     .modulePrimeVars()); inputIter.hasNext();) {
 							
                 BDD inputOne = (BDD) inputIter.next();
-                           
+				                           
                 // computing the set of system possible successors.
                 Vector<BDD> sys_succs = new Vector<BDD>();               
-                BDD all_sys_succs = sys.succ(new_state.get_state()).and(inputOne);
+                BDD all_sys_succs = sys.succ(new_state.get_state().and(inputOne));
                 int idx = -1;
                
                 if (all_sys_succs.equals(Env.FALSE())) {
 					RawCState gsucc = new RawCState(aut.size(), Env.unprime(inputOne), new_j, new_i, inputOne);
-                    idx = aut.indexOf(gsucc); // the equals doesn't consider
+					idx = aut.indexOf(gsucc); // the equals doesn't consider
                                               // the id number.
                     if (idx == -1) {                       
                         aut.add(gsucc);
