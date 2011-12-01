@@ -77,7 +77,7 @@ public class GROneMain {
         // ** Analysis calls
 
 		String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
-		GROneDebug.analyze(env,sys,debugFile);
+		GROneDebug.analyze(env,sys);
 
 		 ///////////////////////////////////////////////
 		 ///////////////////////////////////////////////
