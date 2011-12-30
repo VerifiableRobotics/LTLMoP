@@ -386,7 +386,8 @@ public class GROneGame {
 		if (ini.isZero()) result = false; else result = true;
 		
         // Create a varset of all non-location propositions
-        // (used later to prevent wobble)
+        // (used later to prevent inefficient wobbling when
+		// multiple goals are satisfied in the same location)
         //
         // TODO: There is probably a cleaner way to do this
         ModuleBDDField [] allFields = sys.getAllFields();        
@@ -397,6 +398,7 @@ public class GROneGame {
           if (!fieldName.startsWith("<bit"))
             nonRegionProps = nonRegionProps.union(thisField.support());
         }
+        
 
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
 		while (ini_iterator.hasNext()) {
