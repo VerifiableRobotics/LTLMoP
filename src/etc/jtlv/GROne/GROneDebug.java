@@ -16,7 +16,8 @@ import edu.wis.jtlv.lib.AlgRunnerThread;
 import edu.wis.jtlv.lib.AlgResultI;
 import edu.wis.jtlv.lib.mc.tl.LTLModelCheckAlg;
 
-
+// Class containing methods for performing unsatisfiability and unrealizability checks on a specification 
+// Spec consists of environment and system modules (env, sys)
 
 public class GROneDebug {
 
@@ -56,23 +57,24 @@ public class GROneDebug {
 		GROneParser.addReactiveBehavior(sys, sys_conjuncts);
 		//GROneParser.addPureReactiveBehavior(sys, sys_conjuncts);
 		
-		//Prints debugging statements
+		//Prints the results of analyzing the specification
 		System.out.println(analyze(env, sys));		
 	}
 	
 	public static String analyze(SMVModule env, SMVModule sys) {
-		int explainSys=0, explainEnv = 0; //keep track of explanations ot avoid redundancy
+		int explainSys=0, explainEnv = 0; //keep track of explanations to avoid redundancy
 		
 		BDD sys_init = sys.initial();
 		BDD env_init = env.initial();
 		BDD all_init = sys_init.and(env_init);	 
 		 
-		BDD envUnreal, sysUnreal;
+		//BDDs used to identify cases of unsynthesizability
+		BDD envUnreal, sysUnreal; 
 		BDD envUnsat, sysUnsat;
 
 		FixPoint<BDD> iter;
 		
-		String debugInfo = "";
+		String debugInfo = ""; //will eventually contain all debugging statements to be displayed
 		
 			
 		 //Fixpoint computation to determine reachability of environment deadlock states
@@ -107,6 +109,7 @@ public class GROneDebug {
 			  explainEnv = 1;
 		 } 
 		 
+		 //create a GR(1) game using the specified modules for the rest of the checks
 		 GROneGame g = null;		 
 		 try { 
 			  	g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());		
@@ -117,14 +120,14 @@ public class GROneDebug {
 		  BDD counter_example = g.envWinningStates().and(all_init);
 		  try { 
 			  if (!counter_example.isZero()) {
-				//checking for multi-step unsatisfiability between sys transitions and initial condition					 
+				//checking for multi-step unsatisfiability between sys transitions/safety and initial condition					 
 				//since the second argument is false, we are looking for deadlock 	
 				if (g.calculate_counterstrategy(counter_example, false, false)) { 			 
 					 debugInfo += "System initial condition inconsistent with transition relation." + "\n";
 					 explainSys = 1;
 				 }
 			  } else {		  
-				//checking for multi-step unsatisfiability between env transitions and initial condition
+				//checking for multi-step unsatisfiability between env transitions/safety and initial condition
 				//since the first argument is 1, we only allow system transitions of type \rho_1
 				//so we are looking for sequences of moves that take us to deadlock only
 				  if (g.calculate_strategy(1, g.getSysPlayer().initial().and(g.getEnvPlayer().initial()), false)) { 
@@ -136,7 +139,6 @@ public class GROneDebug {
 				System.err.println("Error: " + e.getMessage());
 	  }  
 
-	
 		  if (explainSys ==0 && !sysUnreal.equals(Env.FALSE())) {		 
 				 debugInfo += "System is unrealizable because the environment can force a safety violation."+ "\n"; //TRUE if unsat
 		  		 explainSys = 1;
@@ -148,6 +150,7 @@ public class GROneDebug {
 		  }
 		  
 		  
+		// check for unsatisfiability or unrealizability of the justice/liveness (vs. safety) conditions
 		try{
 			    debugInfo += justiceChecks(env,sys,explainSys,explainEnv);
 		}catch (Exception e){//Catch exception if any
@@ -176,7 +179,7 @@ public class GROneDebug {
 		g = new GROneGame(env,sys, sys.justiceNum(), env.justiceNum());
 			
 		counter_exmple = g.envWinningStates().and(all_init);		 
-		if (counter_exmple.isZero()) {			
+		if (counter_exmple.isZero()) {	//no winning environment states		
 			debugInfo += "Specification is realizable.\n";
 		}	
 			
@@ -216,6 +219,7 @@ public class GROneDebug {
 		}
 		
 		//Commented out code replaces the environment justices with TRUE
+		//Useful for system liveness unsatisfiability checks
 		/*try {
 			while (env.justiceNum() > 0) {
 				env.popLastJustice();
