@@ -1807,13 +1807,13 @@ class SpecEditorFrame(wx.Frame):
             if "System transition relation is unsatisfiable." in dline:
                 for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
             if "System highlighted goal(s) unsatisfiable" in dline:
-                for l in (dline.strip()).split()[2:]:
+                for l in (dline.strip()).split()[-1:]:
                     self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
-            if "System highlighted goal(s) inconsistent with transition relation." in dline:
-                for l in (dline.strip()).split()[2:]:
+            if "System highlighted goal(s) inconsistent with transition relation" in dline:
+                for l in (dline.strip()).split()[-1:]:
                     self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
                 for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-            if "System initial condition inconsistent with transition relation." in dline:
+            if "System initial condition inconsistent with transition relation" in dline:
                 for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
                 for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
            
@@ -1823,13 +1823,13 @@ class SpecEditorFrame(wx.Frame):
             if "Environment transition relation is unsatisfiable." in dline:
                 for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
             if "Environment highlighted goal(s) unsatisfiable." in dline:
-                for l in (dline.strip()).split()[2:]:
+                for l in (dline.strip()).split()[-1:]:
                     self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)
-            if "Environment highlighted goal(s) inconsistent with transition relation." in dline:
-                for l in (dline.strip()).split()[2:]:
+            if "Environment highlighted goal(s) inconsistent with transition relation" in dline:
+                for l in (dline.strip()).split()[-1:]:
                     self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
                 for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-            if "Environment initial condition inconsistent with transition relation." in dline:
+            if "Environment initial condition inconsistent with transition relation" in dline:
                 for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
                 for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
            
@@ -1838,7 +1838,7 @@ class SpecEditorFrame(wx.Frame):
             if "System is unrealizable because the environment can force a safety violation." in dline:
                 for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
             if "System highlighted goal(s) unrealizable." in dline:
-                for l in (dline.strip()).split()[2:]:
+                for l in (dline.strip()).split()[-1:]:
                     self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
                 for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
             
@@ -1846,7 +1846,7 @@ class SpecEditorFrame(wx.Frame):
             if "Environment is unrealizable because the environment can force a safety violation." in dline:
                 for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
             if "Environment highlighted goal(s) unrealizable." in dline:
-                for l in (dline.strip()).split()[2:]:
+                for l in (dline.strip()).split()[-1:]:
                     self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
                 for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
             
