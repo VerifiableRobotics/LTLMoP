@@ -109,6 +109,8 @@ class Automaton:
         if state is None:
             state = self.current_state
 
+        print "Rank: " + state.rank
+
         for key, output_val in state.outputs.iteritems():
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', key): continue 
@@ -354,6 +356,9 @@ class Automaton:
             if initial:
                 # First see if we can be in the state given our current region
                 if self.regionFromState(state) != self.current_region: continue
+                
+                # Start only with Rank 0 states
+                #if int(state.rank) != 0: continue
 
                 # Now check whether our current output values match those of the state
                 for key, value in state.outputs.iteritems():
@@ -452,8 +457,8 @@ class Automaton:
                 self.current_state = self.next_state  # We can transition immediately
                 #print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
 
-                # Actuate anything that might be necessary
-                self.updateOutputs()
+            # Actuate anything that might be necessary
+            self.updateOutputs(self.next_state)
 
         # Move one step towards the next region (or stay in the same region)
         # TODO: Use the "last" controllers?
@@ -475,5 +480,4 @@ class Automaton:
             self.current_region = self.next_region
             #print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
 
-            # Actuate anything that might be necessary
-            self.updateOutputs()
+         
