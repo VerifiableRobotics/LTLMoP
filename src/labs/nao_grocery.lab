@@ -1,0 +1,15 @@
+Name: # Name for this lab configuration
+Nao Real
+
+InitializationHandler:
+#lib.handlers.init.naoInit
+
+PoseHandler:
+lib.handlers.pose.viconPose
+
+ViconHost:
+10.0.0.102
+
+ViconPort:
+800
+
