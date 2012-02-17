@@ -34,6 +34,7 @@ class initHandler:
         except RuntimeError:
             print "(INIT) ERROR: Cannot connect to one or more of module proxies."
             print "Make sure the Nao is turned on and connected to the network."
+	    raise
             exit(-1)
         
     def getSharedData(self):

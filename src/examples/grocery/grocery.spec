@@ -49,7 +49,7 @@ Calibration: # Coordinate transformation between map and experiment: XScale, XOf
 0.00977732365244,-2.91751793427,-0.0100856770167,3.00816673781
 
 InitialRegion: # Initial region number
-3
+4
 
 InitialTruths: # List of initially true propositions
 
@@ -102,7 +102,7 @@ others=p1,p2,p3,p4,p5
 r1=p12
 
 Spec: # Specification in simple English
-group Corners is r2, r3, r4, r1
+group Corners is r1, r2, r3, r4
 robot starts in any Corner with false
 
 # Remember spills you've detected

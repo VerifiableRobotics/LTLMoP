@@ -13,3 +13,20 @@ ViconHost:
 ViconPort:
 800
 
+MotionControlHandler: # Module with continuous controller for moving between regions
+lib.handlers.motionControl.vectorController
+
+DriveHandler: # Module for converting a desired velocity vector to realistic motor commands
+lib.handlers.drive.bipedalDrive
+
+InitializationHandler:
+lib.handlers.init.naoInit
+
+SensorHandler:
+lib.handlers.sensor.naoSensor_landMark
+
+ActuatorHandler:
+lib.handlers.actuator.naoActuator_grocery
+
+LocomotionCommandHandler:
+lib.handlers.locomotionCommand.naoLocomotionCommand
