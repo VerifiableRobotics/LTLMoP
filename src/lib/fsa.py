@@ -195,9 +195,6 @@ class Automaton:
                 var = new_condition.group('var')
                 val = new_condition.group('val') 
 
-                # Ignore internal "current goal" propositions
-                if var.startswith('s_'): continue
-                
                 # And then put it in the right place!
 
                 if var not in sensors:
