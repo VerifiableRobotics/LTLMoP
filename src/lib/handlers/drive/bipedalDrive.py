@@ -10,11 +10,15 @@ Converts a desired global velocity vector into a desired velocity vector local t
 from math import sin, cos, sqrt, atan2, pi, fabs
 import sys
 import numpy
-import naoqi
-from naoqi import ALProxy
+#import naoqi
+#from naoqi import ALProxy
 
 class driveHandler:
     def __init__(self, proj, shared_data):
+        """
+        Initialization method of bipedalDrive handler.
+        """   
+
         try:
             # Get locomotion command handler to be called in setVelocity
             self.loco = proj.loco_handler

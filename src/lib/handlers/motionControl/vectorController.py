@@ -14,6 +14,10 @@ import time, math
 
 class motionControlHandler:
     def __init__(self, proj, shared_data):
+        """
+        Initialize vector controller
+        """
+
         # Get references to handlers we'll need to communicate with
         self.drive_handler = proj.drive_handler
         self.pose_handler = proj.pose_handler

@@ -45,9 +45,9 @@ class motionControlHandler:
         self.drive_handler.setVelocity(vx, vy, w)
         
         # Figure out whether we've exited the current region
-		if is_inside([pose[0], pose[1]], vertices):
-			arrived = False
-		else:
-			arrived = True
+        if is_inside([pose[0], pose[1]], vertices):
+            arrived = False
+        else:
+            arrived = True
 
         return arrived

@@ -26,7 +26,7 @@ class poseHandler:
         
         try:
             # Get vicon connection settings from robot configuration file
-            #ViconPort = int(proj.robot_data['ViconPort'][0])    # Vicon listener port (number)
+            ViconPort = int(proj.robot_data['ViconPort'][0])    # Vicon listener port (number)
             ViconPort = viconPort
             # Note that this number must be the same as is used when running ViconBroadcaster.exe
         except KeyError, ValueError:
@@ -59,9 +59,9 @@ class poseHandler:
         
         return array([pos_x, pos_y, theta])
 
-class __ListeningThread(Thread):
+class ListeningThread(Thread):
     def __init__(self, port):
-        super(__ListeningThread, self).__init__()
+        super(ListeningThread, self).__init__()
         self.port = port
         self.poseStr = ""
         self.lock = Lock()
@@ -109,7 +109,7 @@ class __ListeningThread(Thread):
 
 def startListening(port):
     global listener
-    listener = __ListeningThread(port)
+    listener = ListeningThread(port)
     listener.start()
 
 def stopListening():
