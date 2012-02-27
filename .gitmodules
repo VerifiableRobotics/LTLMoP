@@ -1,0 +1,3 @@
+[submodule "src/etc/SLURP"]
+	path = src/etc/SLURP
+	url = git@github.com:PennNLP/SLURP.git
