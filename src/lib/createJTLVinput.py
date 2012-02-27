@@ -7,7 +7,7 @@
     Its functions create the skeleton .smv file and the .ltl file which
     includes the topological relations and the given spec.
 """
-import numpy
+import math
 import parseEnglishToLTL
 import textwrap
 
@@ -64,19 +64,20 @@ def createSMVfile(fileName, numRegions, sensorList, robotPropList):
     smvFile.close()
     
 
-def createLTLfile(fileName, sensorList, robotPropList, adjData, spec):
+def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_sys):
     ''' This function writes the LTL file. It encodes the specification and 
     topological relation. 
     It takes as input a filename, the list of the
     sensor propositions, the list of robot propositions (without the regions),
     the adjacency data (transition data structure) and
-    a dictionary containing the specification strings.
+    a list of the lines in the specification
     '''
 
+p
     fileName = fileName + '.ltl'
     ltlFile = open(fileName, 'w')
 
-    numBits = int(numpy.ceil(numpy.log2(len(adjData))))
+    numBits = int(math.ceil(math.log(len(adjData),2)))
     bitEncode = parseEnglishToLTL.bitEncoding(len(adjData), numBits)
     currBitEnc = bitEncode['current']
     nextBitEnc = bitEncode['next']
@@ -90,18 +91,30 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec):
     ltlFile.write('LTLSPEC -- Assumptions\n')
     ltlFile.write('\t(\n')
 
+    # TODO: only do this if necessary
+    ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) & \n')
+
     # Write the environment assumptions
     # from the 'spec' input 
-    ltlFile.write(spec['EnvInit'])
-    ltlFile.write(spec['EnvTrans'])
-    ltlFile.write(spec['EnvGoals'])
+    ltlFile.write(' & \n'.join(spec_env))
     ltlFile.write('\n\t);\n\n')
 
     ltlFile.write('LTLSPEC -- Guarantees\n')
     ltlFile.write('\t(\n')
 
-    # Write the desired robot behavior
-    ltlFile.write(spec['SysInit'])
+    # TODO: only do this if necessary
+    ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) & \n')
+
+    # Setting the system initial formula to allow only valid
+    #  region encoding. This may be redundent if an initial region is
+    #  specified, but it is here to ensure the system cannot start from
+    #  an invalid encoding
+    initreg_formula = '\t\t\t( ' + currBitEnc[0] + ' \n'
+    for regionInd in range(1,len(currBitEnc)):
+        initreg_formula = initreg_formula + '\t\t\t\t | ' + currBitEnc[regionInd] + '\n'
+    initreg_formula = initreg_formula + '\t\t\t) & \n'
+
+    ltlFile.write(initreg_formula)
 
     # The topological relation (adjacency)
     for Origin in range(len(adjData)):
@@ -122,10 +135,9 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec):
         # closing this region
         ltlFile.write(' ) ) & \n ')
     
+    # Write the desired robot behavior
+    ltlFile.write(' & \n'.join(spec_sys))
 
-    # The rest of the spec
-    ltlFile.write(spec['SysTrans'])
-    ltlFile.write(spec['SysGoals'])
     # Close the LTL formula
     ltlFile.write('\n\t);\n')
 
