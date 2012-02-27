@@ -70,11 +70,11 @@ ASL
 RegionMapping:
 
 living=p4
-porch=p3
 deck=p7
-others=p2,p9,p10
+porch=p3
 dining=p6
 bedroom=p8
+others=p2,p9,p10
 kitchen=p5
 
 Spec: # Specification in simple English

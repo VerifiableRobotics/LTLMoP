@@ -1076,8 +1076,8 @@ def replaceRegionName(formula,bitEncode,regionList):
     tempFormula = formula[:]
     
     # first replace all 'next' region names with the next encoding
-    for nextProp in re.findall('(next\(\w+\))',tempFormula):
-        prop = nextProp.replace('next(','')
+    for nextProp in re.findall('(next\(s\.\w+\))',tempFormula):
+        prop = nextProp.replace('next(s.','')
         prop = prop.replace(')','')
 
         if prop in regionList:
@@ -1086,14 +1086,14 @@ def replaceRegionName(formula,bitEncode,regionList):
             # 'replace' is fine here because we are replacing next(region) and that cannot be a partial name
                
     # replace all leftover region names with the current encoding
-    for prop in re.findall('(\w+)',tempFormula):
+    for prop in re.findall('s\.(\w+)',tempFormula):
         if prop in regionList:
             ind = regionList.index(prop)
             # replace every occurrence of the proposition with the bit encoding
             # it is written this way to prevent partial word replacements (as with the .replace method)
             #tempFormula = re.sub('\s+'+prop, ' '+bitEncode['current'][ind],tempFormula) # if following a space
             #tempFormula = re.sub('\('+prop, '('+bitEncode['current'][ind],tempFormula) # if in ()
-            tempFormula = re.sub('\\b'+prop+'\\b', bitEncode['current'][ind],tempFormula)
+            tempFormula = re.sub('\\bs\.'+prop+'\\b', bitEncode['current'][ind],tempFormula)
 
             #tempFormula = tempFormula.replace(prop, bitEncode['current'][ind])
     

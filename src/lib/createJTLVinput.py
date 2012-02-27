@@ -48,7 +48,7 @@ def createSMVfile(fileName, numRegions, sensorList, robotPropList):
     """));
 
     # Define the number of bits needed to encode the regions
-    numBits = int(numpy.ceil(numpy.log2(numRegions)))
+    numBits = int(math.ceil(math.log(numRegions,2)))
     for bitNum in range(numBits):
         smvFile.write('\t\tbit')
         smvFile.write(str(bitNum))
@@ -70,10 +70,9 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
     It takes as input a filename, the list of the
     sensor propositions, the list of robot propositions (without the regions),
     the adjacency data (transition data structure) and
-    a list of the lines in the specification
+    a specification
     '''
 
-p
     fileName = fileName + '.ltl'
     ltlFile = open(fileName, 'w')
 
@@ -92,11 +91,12 @@ p
     ltlFile.write('\t(\n')
 
     # TODO: only do this if necessary
-    ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) & \n')
+    ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE)\n')
 
     # Write the environment assumptions
     # from the 'spec' input 
-    ltlFile.write(' & \n'.join(spec_env))
+    if spec_env != "":
+        ltlFile.write('&' + spec_env)
     ltlFile.write('\n\t);\n\n')
 
     ltlFile.write('LTLSPEC -- Guarantees\n')
@@ -136,7 +136,7 @@ p
         ltlFile.write(' ) ) & \n ')
     
     # Write the desired robot behavior
-    ltlFile.write(' & \n'.join(spec_sys))
+    ltlFile.write(spec_sys)
 
     # Close the LTL formula
     ltlFile.write('\n\t);\n')

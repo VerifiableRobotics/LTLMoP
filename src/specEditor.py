@@ -28,17 +28,11 @@ from lib.simulator.ode.ckbot import CKBotLib # added by Sarah
 
 # Add SLURP to path for import
 # Climb the tree to find out where we are
-p = os.path.abspath(sys.argv[0])
-t = ""
-while t != "src":
-    (p, t) = os.path.split(p)
-    if p == "":
-        print "I have no idea where I am; this is ridiculous"
-        sys.exit(1)
 
-sys.path.append(os.path.join(p,"src","etc","SLURP"))
+p = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(p, "etc", "SLURP"))
 
-from ltlbroom.specgenerate import generate
+from ltlbroom.specgeneration import generate
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
@@ -1460,7 +1454,7 @@ class SpecEditorFrame(wx.Frame):
                 # Remove from mapping
                 del self.parser.proj.regionMapping[r.name]
 
-        #self.proj.rfi.regions = filter(lambda r: not (r.isObstacle or r.name == "boundary"), self.proj.rfi.regions)
+        self.proj.rfi.regions = filter(lambda r: not (r.isObstacle or r.name == "boundary"), self.proj.rfi.regions)
                     
         # save the regions into new region file
         fileName = self.proj.getFilenamePrefix()+'_decomposed.regions'
@@ -1499,11 +1493,24 @@ class SpecEditorFrame(wx.Frame):
 
         LTLspec_env, LTLspec_sys, internalProps = generate(text, sensorList, regionList, robotPropList)
 
+        ###################
+        # Create SMV File #
+        ###################
+
+        self.appendLog("Creating SMV file...\n", "BLUE")
+        wx.Yield()
+
+        numRegions = len(self.parser.proj.rfi.regions)
+        createSMVfile(fileNamePrefix, numRegions, sensorList, robotPropList)
+
+	LTLspec_env = ' & \n'.join(LTLspec_env)
+	LTLspec_sys = ' & \n'.join(LTLspec_sys)
+
         # substitute decomposed region names
         for r in self.proj.rfi.regions:
             if not (r.isObstacle or r.name.lower() == "boundary"):
-                LTLspec_env = re.sub('\\b' + r.name + '\\b', "("+' | '.join(self.parser.proj.regionMapping[r.name])+")", LTLspec_env)
-                LTLspec_sys = re.sub('\\b' + r.name + '\\b', "("+' | '.join(self.parser.proj.regionMapping[r.name])+")", LTLspec_sys)
+                LTLspec_env = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
+                LTLspec_sys = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
 
         # Prepend "e." or "s." to propositions for JTLV
         for i, sensor in enumerate(sensorList):
@@ -1515,7 +1522,7 @@ class SpecEditorFrame(wx.Frame):
             text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
             robotPropList[i] = "s." + robotPropList[i]
 
-        regionList = [x.name for x in self.proj.parser.rfi.regions]
+        regionList = [x.name for x in self.parser.proj.rfi.regions]
 
         # Define the number of bits needed to encode the regions
         numBits = int(math.ceil(math.log(len(regionList),2)))
@@ -1534,15 +1541,6 @@ class SpecEditorFrame(wx.Frame):
 
         createLTLfile(fileNamePrefix, sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
 
-        ###################
-        # Create SMV File #
-        ###################
-
-        self.appendLog("Creating SMV file...\n", "BLUE")
-        wx.Yield()
-
-        numRegions = len(self.proj.parser.rfi.regions)
-        createSMVfile(fileNamePrefix, numRegions, sensorList, robotPropList)
         
 		#Invokes module for creating a file for use with Anzu,
 		#and converts it into a Marduk file for RATSY
