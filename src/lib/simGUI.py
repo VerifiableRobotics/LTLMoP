@@ -282,11 +282,11 @@ class SimGUI_Frame(wx.Frame):
                     break
             text = re.sub(r'\b'+p_reg+r'\b', '%s (%s)' % (p_reg, rname), text)
 
-        self.text_ctrl_sim_log.begintextcolour(color)
-        self.text_ctrl_sim_log.appendtext("["+time.strftime("%h:%m:%s", time.gmtime())+"] "+text)
-        self.text_ctrl_sim_log.endtextcolour()
-        self.text_ctrl_sim_log.showposition(self.text_ctrl_sim_log.getlastposition())
-        self.text_ctrl_sim_log.refresh()
+        self.text_ctrl_sim_log.BeginTextColour(color)
+        self.text_ctrl_sim_log.AppendText("["+time.strftime("%h:%m:%s", time.gmtime())+"] "+text)
+        self.text_ctrl_sim_log.EndTextColour()
+        self.text_ctrl_sim_log.ShowPosition(self.text_ctrl_sim_log.GetLastPosition())
+        self.text_ctrl_sim_log.Refresh()
 
     def onSimStartPause(self, event): # wxGlade: SimGUI_Frame.<event_handler>
         btn_label = self.button_sim_startPause.GetLabel()
@@ -351,6 +351,10 @@ class SimGUI_Frame(wx.Frame):
 
 
     def onSLURPSubmit(self, event): # wxGlade: SimGUI_Frame.<event_handler>
+        if self.text_ctrl_slurpin.GetValue() == "":
+            event.Skip()
+            return
+
         self.text_ctrl_slurpout.BeginBold()
         self.text_ctrl_slurpout.AppendText("User: ")
         self.text_ctrl_slurpout.EndBold()
