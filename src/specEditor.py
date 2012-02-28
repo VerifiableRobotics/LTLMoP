@@ -1469,6 +1469,7 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_locphrases.Select(0)
         
         text = self.text_ctrl_spec.GetText()
+        text = text.replace('\r','')
 
         sensorList = []
         for i, sensor in enumerate(self.list_box_sensors.GetItems()):
@@ -1495,6 +1496,7 @@ class SpecEditorFrame(wx.Frame):
         specGen = SpecGenerator()
         LTLspec_env, LTLspec_sys, internalProps, responses = \
             specGen.generate(text, sensorList, regionList, robotPropList)
+        robotPropList += internalProps
 
         ###################
         # Create SMV File #
@@ -1520,7 +1522,6 @@ class SpecEditorFrame(wx.Frame):
             text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
             sensorList[i] = "e." + sensorList[i]
 
-        robotPropList += internalProps
         for i, prop in enumerate(robotPropList):
             text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
             robotPropList[i] = "s." + robotPropList[i]
@@ -1566,25 +1567,25 @@ class SpecEditorFrame(wx.Frame):
 		################################################
 		# Add a check for Empty Gaits - added by Sarah #
 		################################################
-        self.appendLog("\nChecking for empty gaits...\n")
-        #print robotPropList
-        err = 0
-        libs = self.library
-        libs.readLibe()
-		# Check that each individual trait has a corresponding config-gait pair
-        for act in robotPropList:
-            act = act.strip("u's.")
-            if act[0] == "T":
-                act = act.strip("T_")
-                #print act
-                words = act.split("_and_")
-                #print words
-                config = libs.findGait(words)
-                #print config
-                if type(config) == type(None):
-                    err_message = "WARNING: No config-gait pair for actuator T_" + act + "\n"
-                    self.appendLog(err_message)
-                    err = 1
+#        self.appendLog("\nChecking for empty gaits...\n")
+#        #print robotPropList
+#        err = 0
+#        libs = self.library
+#        libs.readLibe()
+#		# Check that each individual trait has a corresponding config-gait pair
+#        for act in robotPropList:
+#            act = act.strip("u's.")
+#            if act[0] == "T":
+#                act = act.strip("T_")
+#                #print act
+#                words = act.split("_and_")
+#                #print words
+#                config = libs.findGait(words)
+#                #print config
+#                if type(config) == type(None):
+#                    err_message = "WARNING: No config-gait pair for actuator T_" + act + "\n"
+#                    self.appendLog(err_message)
+#                    err = 1
 			
         ####################
         # Create automaton #
