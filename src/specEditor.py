@@ -32,7 +32,7 @@ from lib.simulator.ode.ckbot import CKBotLib # added by Sarah
 p = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(p, "etc", "SLURP"))
 
-from ltlbroom.specgeneration import generate
+from ltlbroom.specgeneration import SpecGenerator
 
 ##################### WARNING! ########################
 #     DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.     #
@@ -1491,7 +1491,10 @@ class SpecEditorFrame(wx.Frame):
         wx.Yield()
         regionList = [x.name for x in self.proj.rfi.regions]
 
-        LTLspec_env, LTLspec_sys, internalProps = generate(text, sensorList, regionList, robotPropList)
+        # Make a new specgenerator and have it process the text
+        specGen = SpecGenerator()
+        LTLspec_env, LTLspec_sys, internalProps, responses = \
+            specGen.generate(text, sensorList, regionList, robotPropList)
 
         ###################
         # Create SMV File #
@@ -1503,8 +1506,8 @@ class SpecEditorFrame(wx.Frame):
         numRegions = len(self.parser.proj.rfi.regions)
         createSMVfile(fileNamePrefix, numRegions, sensorList, robotPropList)
 
-	LTLspec_env = ' & \n'.join(LTLspec_env)
-	LTLspec_sys = ' & \n'.join(LTLspec_sys)
+        LTLspec_env = ' & \n'.join(LTLspec_env)
+        LTLspec_sys = ' & \n'.join(LTLspec_sys)
 
         # substitute decomposed region names
         for r in self.proj.rfi.regions:
