@@ -58,6 +58,9 @@ class AnalysisResultsDialog(wx.Dialog):
         # end wxGlade
 
         self.parent = parent
+        self.statements = {}
+        self.statements["env"] = []
+        self.statements["sys"] = []
 
     def __set_properties(self):
         # begin wxGlade: AnalysisResultsDialog.__set_properties
@@ -82,17 +85,42 @@ class AnalysisResultsDialog(wx.Dialog):
 
     def populateTree(self, subtree, parentNode=None):
         if parentNode is None:
+            self.statements["env"] = []
+            self.statements["sys"] = []
             self.tree_ctrl_traceback.DeleteAllItems()
             parentNode = self.tree_ctrl_traceback.AddRoot("Root")
 
-        for item in subtree:
+        for j, item in enumerate(subtree):
             if len(item) == 2 and isinstance(item[0], str) and isinstance(item[1], list):
                 newnode = self.tree_ctrl_traceback.AppendItem(parentNode,item[0])
                 if len(item) > 1:
                     self.populateTree(item[1], newnode)
             else:
                 for statement in item:
-                    self.tree_ctrl_traceback.AppendItem(parentNode,statement)
+                    newnode = self.tree_ctrl_traceback.AppendItem(parentNode,statement)
+                    if j == 0:
+                        self.statements["env"].append((statement,newnode))
+                    elif j == 1:
+                        self.statements["sys"].append((statement,newnode))
+
+    def markFragments(self, agent, section, jx=[]):
+        jx_this = -1
+
+        for f,obj in self.statements[agent]:
+            if "[]<>" in f: 
+                ftype = "goal"
+                jx_this += 1
+            elif "[]" in f:
+                ftype = "trans"
+            else:
+                ftype = "init"
+
+            if ftype == section:
+                if section == "goal" and jx_this+1 in jx:
+                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"DEEPPINK")
+                elif section != "goal":
+                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"RED")
+                
                 
     def onButtonClose(self, event): # wxGlade: AnalysisResultsDialog.<event_handler>
         self.Hide()
@@ -1868,6 +1896,8 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        self.onMenuCompile(event)        
+
         # instantiate if necessary
         if self.analysisDialog is None:
             self.analysisDialog = AnalysisResultsDialog(self, self)
@@ -1878,15 +1908,10 @@ class SpecEditorFrame(wx.Frame):
         # Populate tree based on traceback data
 
         if self.tracebackTree is not None:
-            print self.tracebackTree
             self.analysisDialog.populateTree(self.tracebackTree) 
+
         self.analysisDialog.tree_ctrl_traceback.ExpandAll()
 
-        self.analysisDialog.Show()
-
-        return
-
-        self.onMenuCompile(event)        
         # Redirect all output to the log
         redir = RedirectText(self,self.text_ctrl_log)
 
@@ -1908,12 +1933,12 @@ class SpecEditorFrame(wx.Frame):
         while cmd.poll():
             wx.Yield()
             
-        
         fileNamePrefix = os.path.join(self.projectPath, self.projectName)
 
         realizable = False    
         for dline in cmd.stdout:
-            self.appendLog(dline)
+            self.analysisDialog.text_ctrl_summary.AppendText(dline)
+
             if "Specification is realizable." in dline:   
                 realizable = True            
                 aut = fsa.Automaton(self.parser.proj.rfi.regions, self.parser.proj.regionMapping, None, None, None) 
@@ -1925,63 +1950,49 @@ class SpecEditorFrame(wx.Frame):
                     if "->" in autline:
                         nonTrivial = True 
                 if nonTrivial:
-                    self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")                    
+                    self.analysisDialog.text_ctrl_summary.AppendText("Synthesized automaton is non-trivial.\n")
                 else:
-                    self.appendLog("Synthesized automaton is trivial.\n", "GREEN")
-            if "System initial condition is unsatisfiable." in dline:
-                for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-            if "System transition relation is unsatisfiable." in dline:
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
-            if "System highlighted goal(s) unsatisfiable" in dline:
-                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
-            if "System highlighted goal(s) inconsistent with transition relation." in dline:
-                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-            if "System initial condition inconsistent with transition relation." in dline:
-                for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-           
-        
-           
-        
-            if "Environment initial condition is unsatisfiable." in dline:
-                for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-            if "Environment transition relation is unsatisfiable." in dline:
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-            if "Environment highlighted goal(s) unsatisfiable." in dline:
-                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)
-            if "Environment highlighted goal(s) inconsistent with transition relation." in dline:
-                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-            if "Environment initial condition inconsistent with transition relation." in dline:
-                for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-           
-        
+                    self.analysisDialog.text_ctrl_summary.AppendText("Synthesized automaton is trivial.\n")
+            elif "System initial condition is unsatisfiable." in dline:
+                self.analysisDialog.markFragments("sys", "init")
+            elif "System transition relation is unsatisfiable." in dline:
+                self.analysisDialog.markFragments("sys", "trans")
+            elif "System highlighted goal(s) unsatisfiable" in dline:
+                self.analysisDialog.markFragments("sys", "goal", [int(l) for l in (dline.strip()).split('.')[1].split()])
+            elif "System highlighted goal(s) inconsistent with transition relation." in dline:
+                self.analysisDialog.markFragments("sys", "goal", [int(l) for l in (dline.strip()).split('.')[1].split()])
+                self.analysisDialog.markFragments("sys", "trans")
+            elif "System initial condition inconsistent with transition relation." in dline:
+                self.analysisDialog.markFragments("sys", "init")
+                self.analysisDialog.markFragments("sys", "trans")
+            elif "Environment initial condition is unsatisfiable." in dline:
+                self.analysisDialog.markFragments("env", "init")
+            elif "Environment transition relation is unsatisfiable." in dline:
+                self.analysisDialog.markFragments("env", "trans")
+            elif "Environment highlighted goal(s) unsatisfiable." in dline:
+                self.analysisDialog.markFragments("env", "goal", [int(l) for l in (dline.strip()).split('.')[1].split()])
+            elif "Environment highlighted goal(s) inconsistent with transition relation." in dline:
+                self.analysisDialog.markFragments("env", "goal", [int(l) for l in (dline.strip()).split('.')[1].split()])
+                self.analysisDialog.markFragments("env", "trans")
+            elif "Environment initial condition inconsistent with transition relation." in dline:
+                self.analysisDialog.markFragments("env", "init")
+                self.analysisDialog.markFragments("env", "trans")
+            elif "System is unrealizable because the environment can force a safety violation." in dline:
+                self.analysisDialog.markFragments("sys", "trans")
+            elif "System highlighted goal(s) unrealizable." in dline:
+                self.analysisDialog.markFragments("sys", "goal", [int(l) for l in (dline.strip()).split('.')[1].split()])
+                self.analysisDialog.markFragments("sys", "trans")
+            elif "Environment is unrealizable because the environment can force a safety violation." in dline:
+                self.analysisDialog.markFragments("env", "trans")
+            elif "Environment highlighted goal(s) unrealizable." in dline:
+                self.analysisDialog.markFragments("env", "goal", [int(l) for l in (dline.strip()).split('.')[1].split()])
+                self.analysisDialog.markFragments("env", "trans")
             
-            if "System is unrealizable because the environment can force a safety violation." in dline:
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
-            if "System highlighted goal(s) unrealizable." in dline:
-                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
-            
-        
-            if "Environment is unrealizable because the environment can force a safety violation." in dline:
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
-            if "Environment highlighted goal(s) unrealizable." in dline:
-                for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
-            
-          
         cmd.stdout.close()
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+
+        self.analysisDialog.Show()
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # TODO: check for failed compilation before allowing this
