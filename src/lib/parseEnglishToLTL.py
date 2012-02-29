@@ -106,7 +106,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
     StayFormula = createStayFormula(numBits)
 
-    lineInd = -1
+    lineInd = 0
 
     # iterate over the lines in the file
     for line in text.split("\n"):
@@ -570,7 +570,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     for prop in sensorList + robotPropList:
         if prop in specstr:
             continue
-	else:
+        else:
             unusedProp = unusedProp + [prop]
     # if there are unused propositions, print out a warning
     if unusedProp:
