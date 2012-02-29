@@ -1498,11 +1498,11 @@ class SpecEditorFrame(wx.Frame):
             specGen.generate(text, sensorList, regionList, robotPropList)
     
         # Add in the internal memory propositions, so they go into the SMV and spec files
-        robotPropList += internalProps
-
         for p in internalProps:
             if p not in self.list_box_customs.GetItems():
                 self.list_box_customs.AppendAndEnsureVisible(p)
+            if p not in robotPropList:
+                robotPropList += p
 
         self.saveFile(self.fileName)
 
