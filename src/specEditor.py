@@ -86,9 +86,13 @@ class AnalysisResultsDialog(wx.Dialog):
             parentNode = self.tree_ctrl_traceback.AddRoot("Root")
 
         for item in subtree:
-            newnode = self.tree_ctrl_traceback.AppendItem(parentNode,item[0])
-            if len(item) > 1:
-                self.populateTree(item[1], newnode)
+            if len(item) == 2 and isinstance(item[0], str) and isinstance(item[1], list):
+                newnode = self.tree_ctrl_traceback.AppendItem(parentNode,item[0])
+                if len(item) > 1:
+                    self.populateTree(item[1], newnode)
+            else:
+                for statement in item:
+                    self.tree_ctrl_traceback.AppendItem(parentNode,statement)
                 
     def onButtonClose(self, event): # wxGlade: AnalysisResultsDialog.<event_handler>
         self.Hide()
@@ -851,6 +855,7 @@ class SpecEditorFrame(wx.Frame):
         # Initialize values
         self.mapDialog = None
         self.analysisDialog = None
+        self.tracebackTree = None
         self.fileName = None
         self.projectName = None
         self.projectPath = ""
@@ -1556,8 +1561,15 @@ class SpecEditorFrame(wx.Frame):
 
         # Make a new specgenerator and have it process the text
         specGen = SpecGenerator()
-        LTLspec_env, LTLspec_sys, internalProps, responses, tracebackTree = \
+        LTLspec_env, LTLspec_sys, internalProps, responses, self.tracebackTree = \
             specGen.generate(text, sensorList, regionList, robotPropList)
+
+        for ln, response in enumerate(responses):
+            if not response:
+                self.text_ctrl_spec.MarkerAdd(ln,MARKER_PARSEERROR)
+
+        if not all(responses):
+            return
     
         # Add in the internal memory propositions, so they go into the SMV and spec files
 
@@ -1855,19 +1867,6 @@ class SpecEditorFrame(wx.Frame):
         self.panel_locmap.Refresh()
         event.Skip()
 
-    def _mkRandTree(self, level='Root'):
-        l_types = ['Root','Sentence','MetaAction','LTL Statement']
-
-        next_type = l_types[l_types.index(level) + 1]
-
-        if level != 'MetaAction':
-            nodes = [("%s %d" % (next_type, i), self._mkRandTree(next_type)) for i in range(1,random.randint(2,5))]
-        else:
-            nodes = [("%s %d" % (next_type, i),) for i in range(1,random.randint(2,5))]
-
-        return nodes
-
-
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # instantiate if necessary
         if self.analysisDialog is None:
@@ -1877,10 +1876,10 @@ class SpecEditorFrame(wx.Frame):
         self.analysisDialog.text_ctrl_summary.Clear()
 
         # Populate tree based on traceback data
-        tb_data = self._mkRandTree()  # Filler data for now
-        print tb_data
 
-        self.analysisDialog.populateTree(tb_data) 
+        if self.tracebackTree is not None:
+            print self.tracebackTree
+            self.analysisDialog.populateTree(self.tracebackTree) 
         self.analysisDialog.tree_ctrl_traceback.ExpandAll()
 
         self.analysisDialog.Show()
