@@ -1595,8 +1595,8 @@ class SpecEditorFrame(wx.Frame):
         numRegions = len(self.parser.proj.rfi.regions)
         createSMVfile(fileNamePrefix, numRegions, sensorList, robotPropList)
 
-        LTLspec_env = ' & \n'.join(LTLspec_env)
-        LTLspec_sys = ' & \n'.join(LTLspec_sys)
+        LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
+        LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
 
         # substitute decomposed region names
         for r in self.proj.rfi.regions:

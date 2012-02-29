@@ -96,7 +96,7 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
     # Write the environment assumptions
     # from the 'spec' input 
     if spec_env != "":
-        ltlFile.write('&' + spec_env)
+        ltlFile.write('\t\t&\n' + spec_env)
     ltlFile.write('\n\t);\n\n')
 
     ltlFile.write('LTLSPEC -- Guarantees\n')
@@ -137,7 +137,7 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
 
     # Write the desired robot behavior
     if spec_sys != "":
-        ltlFile.write('&' + spec_sys)
+        ltlFile.write('\t\t&\n' + spec_sys)
 
     # Close the LTL formula
     ltlFile.write('\n\t);\n')
