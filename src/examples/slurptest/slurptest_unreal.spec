@@ -72,16 +72,16 @@ ASL
 RegionMapping:
 
 living=p4
-deck=p7
 porch=p3
+deck=p7
+others=p2,p9,p10
 dining=p6
 bedroom=p8
-others=p2,p9,p10
 kitchen=p5
 
 Spec: # Specification in simple English
 Go to the porch and the deck.
-Avoid the kitchen.
+Avoid the porch.
 Start in the bedroom.
 
 
