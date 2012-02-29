@@ -1553,7 +1553,7 @@ class SpecEditorFrame(wx.Frame):
 
         # Make a new specgenerator and have it process the text
         specGen = SpecGenerator()
-        LTLspec_env, LTLspec_sys, internalProps, responses = \
+        LTLspec_env, LTLspec_sys, internalProps, responses, tracebackTree = \
             specGen.generate(text, sensorList, regionList, robotPropList)
     
         # Add in the internal memory propositions, so they go into the SMV and spec files
