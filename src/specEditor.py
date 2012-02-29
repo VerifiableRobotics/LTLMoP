@@ -766,11 +766,12 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.SetMarginType(0, wx.stc.STC_MARGIN_NUMBER)
         self.text_ctrl_spec.SetMarginType(1, wx.stc.STC_MARGIN_SYMBOL)
 
-        global MARKER_INIT, MARKER_SAFE, MARKER_LIVE
-        MARKER_INIT, MARKER_SAFE, MARKER_LIVE = range(3)
+        global MARKER_INIT, MARKER_SAFE, MARKER_LIVE, MARKER_PARSEERROR
+        MARKER_INIT, MARKER_SAFE, MARKER_LIVE, MARKER_PARSEERROR = range(4)
         self.text_ctrl_spec.MarkerDefine(MARKER_INIT,wx.stc.STC_MARK_ARROW,"white","red") 
         self.text_ctrl_spec.MarkerDefine(MARKER_SAFE,wx.stc.STC_MARK_ARROW,"white","blue") 
         self.text_ctrl_spec.MarkerDefine(MARKER_LIVE,wx.stc.STC_MARK_ARROW,"white","green") 
+        self.text_ctrl_spec.MarkerDefine(MARKER_PARSEERROR,wx.stc.STC_MARK_BACKGROUND,"red","red") 
         
         # Set up locative phrase map
         self.panel_locmap.SetBackgroundColour(wx.WHITE)   
@@ -1401,6 +1402,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_PARSEERROR)
+
         if self.rfi is None:
             wx.MessageBox("Please define regions before compiling.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
@@ -1420,7 +1423,7 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_log.Clear()
 
         # Redirect all output to the log
-        redir = RedirectText(self.text_ctrl_log)
+        redir = RedirectText(self,self.text_ctrl_log)
 
         sys.stdout = redir
         sys.stderr = redir
@@ -1616,7 +1619,7 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
 
-        redir = RedirectText(self.text_ctrl_log)
+        redir = RedirectText(self,self.text_ctrl_log)
 
         sys.stdout = redir
         sys.stderr = redir
@@ -1752,7 +1755,7 @@ class SpecEditorFrame(wx.Frame):
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
 		self.onMenuCompile(event)		
 		# Redirect all output to the log
-		redir = RedirectText(self.text_ctrl_log)
+		redir = RedirectText(self,self.text_ctrl_log)
 
 		sys.stdout = redir
 		sys.stderr = redir
@@ -1860,14 +1863,20 @@ class RedirectText:
     http://mail.python.org/pipermail/python-list/2007-June/445795.html
     """
 
-    def __init__(self,aWxTextCtrl):
+    def __init__(self,parent,aWxTextCtrl):
         self.out=aWxTextCtrl
+        self.parent=parent
 
     def write(self,string):
         self.out.BeginTextColour("BLACK")
         self.out.WriteText("\t"+string)
         self.out.EndTextColour()
         self.out.ShowPosition(self.out.GetLastPosition())
+
+        m = re.search(r"Could not parse the sentence in line (\d+)", string)
+        if m:
+            self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1))-1,MARKER_PARSEERROR)
+               
 
 if __name__ == "__main__":
     SpecEditor = wx.PySimpleApp(0)
