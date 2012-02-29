@@ -106,7 +106,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
     StayFormula = createStayFormula(numBits)
 
-    lineInd = -1
+    lineInd = 0
 
     # iterate over the lines in the file
     for line in text.split("\n"):
