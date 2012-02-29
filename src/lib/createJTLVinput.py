@@ -105,17 +105,6 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
     # TODO: only do this if necessary
     ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) & \n')
 
-    # Setting the system initial formula to allow only valid
-    #  region encoding. This may be redundent if an initial region is
-    #  specified, but it is here to ensure the system cannot start from
-    #  an invalid encoding
-    initreg_formula = '\t\t\t( ' + currBitEnc[0] + ' \n'
-    for regionInd in range(1,len(currBitEnc)):
-        initreg_formula = initreg_formula + '\t\t\t\t | ' + currBitEnc[regionInd] + '\n'
-    initreg_formula = initreg_formula + '\t\t\t) & \n'
-
-    ltlFile.write(initreg_formula)
-
     # The topological relation (adjacency)
     for Origin in range(len(adjData)):
         # from region i we can stay in region i
@@ -135,8 +124,20 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
         # closing this region
         ltlFile.write(' ) ) & \n ')
     
+    # Setting the system initial formula to allow only valid
+    #  region encoding. This may be redundent if an initial region is
+    #  specified, but it is here to ensure the system cannot start from
+    #  an invalid encoding
+    initreg_formula = '\t\t\t( ' + currBitEnc[0] + ' \n'
+    for regionInd in range(1,len(currBitEnc)):
+        initreg_formula = initreg_formula + '\t\t\t\t | ' + currBitEnc[regionInd] + '\n'
+    initreg_formula = initreg_formula + '\t\t\t) \n'
+
+    ltlFile.write(initreg_formula)
+
     # Write the desired robot behavior
-    ltlFile.write(spec_sys)
+    if spec_sys != "":
+        ltlFile.write('&' + spec_sys)
 
     # Close the LTL formula
     ltlFile.write('\n\t);\n')
