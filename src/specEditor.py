@@ -1557,11 +1557,16 @@ class SpecEditorFrame(wx.Frame):
             specGen.generate(text, sensorList, regionList, robotPropList)
     
         # Add in the internal memory propositions, so they go into the SMV and spec files
+
         for p in internalProps:
             if p not in self.list_box_customs.GetItems():
                 self.list_box_customs.AppendAndEnsureVisible(p)
             if p not in robotPropList:
-                robotPropList += p
+                robotPropList.append(p)
+
+	# Enable the delete button on the custom prop list if appropriate
+	if len(self.list_box_customs.GetItems()) > 0:	
+		self.button_custom_delete.Enable(True)
 
         self.saveFile(self.fileName)
 
