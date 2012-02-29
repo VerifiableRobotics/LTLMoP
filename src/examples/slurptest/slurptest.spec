@@ -50,18 +50,22 @@ pick_up,0
 drop,0
 radio,1
 extinguish,0
+sweep,1
 
 Customs: # List of custom propositions
 m_visit_deck
 m_visit_porch
+m_sweep_porch
+m_sweep_deck
 
 RegionFile: # Relative path of region description file
 iros10.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-fire,1
-person,1
+fire,0
+person,0
 hazardous_item,0
+sweep_done,1
 
 currentExperimentName:
 ASL
@@ -80,7 +84,7 @@ others=p2,p9,p10
 kitchen=p5
 
 Spec: # Specification in simple English
-Go to the porch and the deck.
+Search the porch and the deck.
 Avoid the kitchen.
 Start in the bedroom.
 
