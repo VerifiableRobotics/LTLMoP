@@ -117,9 +117,9 @@ class AnalysisResultsDialog(wx.Dialog):
 
             if ftype == section:
                 if section == "goal" and jx_this+1 in jx:
-                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"DEEPPINK")
+                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FF1493") # deep pink
                 elif section != "goal":
-                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"RED")
+                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"ORANGE")
                 
                 
     def onButtonClose(self, event): # wxGlade: AnalysisResultsDialog.<event_handler>
