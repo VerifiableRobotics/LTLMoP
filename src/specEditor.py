@@ -1715,7 +1715,7 @@ class SpecEditorFrame(wx.Frame):
         else:
             classpath = os.path.join(self.proj.ltlmop_root, "etc/jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc/jtlv", "GROne")
 
-        cmd = subprocess.Popen(["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl", "--safety"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+        cmd = subprocess.Popen(["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
         
         # TODO: Make this output live
         while cmd.poll():
@@ -1927,7 +1927,7 @@ class SpecEditorFrame(wx.Frame):
         else:
             classpath = os.path.join(self.proj.ltlmop_root, "etc/jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc/jtlv", "GROne")
 
-        cmd = subprocess.Popen(["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneDebug", fileNamePrefix + ".smv", fileNamePrefix + ".ltl", "--safety"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+        cmd = subprocess.Popen(["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneDebug", fileNamePrefix + ".smv", fileNamePrefix + ".ltl"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
         
         # TODO: Make this output live
         while cmd.poll():
