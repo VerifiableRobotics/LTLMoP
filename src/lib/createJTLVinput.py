@@ -95,7 +95,7 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
 
     # Write the environment assumptions
     # from the 'spec' input 
-    if spec_env != "":
+    if spec_env.strip() != "":
         ltlFile.write('\t\t&\n' + spec_env)
     ltlFile.write('\n\t);\n\n')
 
@@ -136,7 +136,7 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
     ltlFile.write(initreg_formula)
 
     # Write the desired robot behavior
-    if spec_sys != "":
+    if spec_sys.strip() != "":
         ltlFile.write('\t\t&\n' + spec_sys)
 
     # Close the LTL formula
