@@ -1803,52 +1803,52 @@ class SpecEditorFrame(wx.Frame):
             
             # System unsatisfiability
             if "System initial condition is unsatisfiable." in dline:
-                for l in self.self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
+                for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
             if "System transition relation is unsatisfiable." in dline:
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
             if "System highlighted goal(s) unsatisfiable" in dline:
                 for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
+                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)]-1,MARKER_LIVE)           
             if "System highlighted goal(s) inconsistent with transition relation" in dline:
                 for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
+                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)]-1,MARKER_LIVE)           
                 for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
             if "System initial condition inconsistent with transition relation" in dline:
-                for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+                for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
            
             # Environment unsatisfiability
             if "Environment initial condition is unsatisfiable." in dline:
-                for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
+                for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
             if "Environment transition relation is unsatisfiable." in dline:
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
             if "Environment highlighted goal(s) unsatisfiable" in dline:
                 for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)
+                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)]-1,MARKER_LIVE)
             if "Environment highlighted goal(s) inconsistent with transition relation" in dline:
                 for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)]-1,MARKER_LIVE)           
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
             if "Environment initial condition inconsistent with transition relation" in dline:
-                for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+                for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
            
         
             # System unrealizability
             if "System is unrealizable because the environment can force a safety violation" in dline:
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
             if "System highlighted goal(s) unrealizable" in dline:
                 for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
+                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)]-1,MARKER_LIVE)           
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
             
             # Environment unrealizability
             if "Environment is unrealizable because the system can force a safety violation" in dline:
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
             if "Environment highlighted goal(s) unrealizable" in dline:
                 for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
+                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)]-1,MARKER_LIVE)           
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
             
           
         cmd.stdout.close()
