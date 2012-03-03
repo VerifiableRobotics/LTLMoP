@@ -858,24 +858,21 @@ public class GROneGame {
 					
 					//\rho_1 transitions in K\"onighofer et al
 					if (p_az == 0) {
-					//special case when we are in Z_0. Either we force a safety violation, or we go to the relevant y2_mem[a][j], 
+					//special caze when we are in Z_0. Either we force a safety violation, or we go to the relevant y2_mem[a][j], 
 					//and continue to violate the system liveness j						
 						//FIRST, WE CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
 						//input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
 						input = input.or(p_st.and((sys.yieldStates(env,Env.FALSE()))));//CONSIDERS ALL ENV. MOVES
 						
 						//OTHERWISE:
-//						if (input.isZero()) {//input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c])))))));
-//							if (p_c == 0) {
-//								input = input.or(((p_st.and((primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c]))))))))))
-//												//this next clause is probably superfluous because of \rho_1
-//												.and((sys.yieldStates(env,Env.FALSE())).not());
-//													
-//							} else {
-//								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c-1])))))))))
-//												.and((sys.yieldStates(env,Env.FALSE())).not());
-//							}
-//						}
+						if (input.equals(oldInput)) {
+							if (p_c == 0) {
+								input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c]).and(env.justiceAt(rank_i))))))));
+								rank_i = (rank_i + 1)%envJustNum;
+							} else 
+								input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))));
+						}
+						
 					} else {						
 						input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[p_az-1])))))));
 					}
@@ -914,10 +911,10 @@ public class GROneGame {
 						new_i = (rank_i + 1) % env.justiceNum();
 						new_j = rank_j;		                	
 						if (p_az == 0) 
-							input = input.or((p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(y2_mem[rank_j][p_az])))))
+							input = input.or((p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(y2_mem[rank_j][p_az])))))
 									.and((sys.yieldStates(env,(Env.FALSE()))).not())));		        				
 						else 
-							input = input.or((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(y2_mem[rank_j][p_az]))))))
+							input = input.or((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(y2_mem[rank_j][p_az]))))))
 									.and((sys.yieldStates(env,z2_mem[p_az-1])).not())));
 					}
 					if (!input.equals(oldInput) && det) break;						
@@ -926,7 +923,7 @@ public class GROneGame {
 					if (rank_i != -1 && rank_j != -1) {
 						if (p_az == 0) {
 							if (p_c == 0) {
-								input = input.or(((p_st.and((primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c]))))))))))
+								input = input.or(((p_st.and((primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[rank_j][rank_i][p_az][p_c]))))))))))
 												//this next clause is probably superfluous because of \rho_1
 												.and((sys.yieldStates(env,Env.FALSE())).not());
 													
@@ -936,7 +933,7 @@ public class GROneGame {
 							}
 						} else {
 							if (p_c == 0) {
-								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c])))))))))
+								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[rank_j][rank_i][p_az][p_c])))))))))
 												.and((sys.yieldStates(env,z2_mem[p_az-1])).not());
 								
 																				
