@@ -121,15 +121,15 @@ def getFaceVF(vert, ROI, EF):
 	Vert = hstack((vert, vert))
 	dx = Vert[0, ROI+1] - Vert[0, ROI]
 	dy = Vert[1, ROI+1] - Vert[1, ROI]
-	Vf = [dy, -dx]/norm([dy, -dx])
+	Vf = array([dy, -dx])/norm([dy, -dx])
 	dx1 = Vert[0, ROI+2] - Vert[0, ROI+1]
 	dy1 = Vert[1, ROI+2] - Vert[1, ROI+1]
-	V1 = [dx1, dy1]/norm([dx1, dy1])
+	V1 = array([dx1, dy1])/norm([dx1, dy1])
 	ind = 1
 	while dot(Vf, V1) == 0:
 		dx1 = Vert[0, ROI+2+ind] - Vert[0, ROI+1+ind]
 		dy1 = Vert[1, ROI+2+ind] - Vert[1, ROI+1+ind]
-		V1 = [dx1, dy1]/norm([dx1, dy1])
+		V1 = array([dx1, dy1])/norm([dx1, dy1])
 		ind = ind + 1
 	if dot(Vf, V1) < 0:
 		Vf = -1*Vf
