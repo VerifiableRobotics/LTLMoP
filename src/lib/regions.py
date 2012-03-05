@@ -13,16 +13,111 @@
     Some parts extracted from pySketch by Erik Westra (ewestra@wave.co.nz)
 """
 
-# TODO: remove wx dependency!!
 # TODO: store regions with absolute coordinates, not x/y-pos + relative!!
 
-import os
-import wx   # Unfortunately necessary for wx.Point(), wx.Size(), and color stuff
+import os, sys
 import fileMethods
 import re, random, math
 import Polygon, Polygon.Utils, os
 
 Polygon.setTolerance(0.01)
+
+if 'wx' in sys.modules:
+    print "wx is loaded, using wx objects for regions"
+
+    import wx
+
+    Point = wx.Point
+    Size = wx.Size
+    Color = wx.Colour
+else:
+    print "wx is NOT loaded, using ltlmop objects for regions"
+    from numbers import Number
+
+    class Point(object):
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+        def __str__(self):
+            return "(%f, %f)" % (self.x, self.y)
+
+        def __add__(self, other):
+            if isinstance(other, Point):
+                return Point(self.x+other.x, self.y+other.y)
+            else:
+                raise TypeError("Points can only be added to other points")
+
+        def __mul__(self, other):
+            if isinstance(other, Number):
+                return Point(self.x*other, self.y*other)
+            else:
+                raise TypeError("Points can only multiplied by numbers")
+
+        def __rmul__(self, *args, **kwds):
+            return self.__mul__(*args, **kwds)
+
+        def __eq__(self, other):
+            EPS = 1e-6
+
+            return abs(self.x - other[0]) < EPS \
+               and abs(self.y - other[1]) < EPS
+
+        def __len__(self):
+            return 2
+    
+        def __getitem__(self, idx):
+            if idx == 0:
+                return self.x
+            elif idx == 1:
+                return self.y
+            else:
+                raise IndexError()
+
+        def __sub__(self, other):
+            if isinstance(other, Point):
+                return Point(self.x-other.x, self.y-other.y)
+            else:
+                raise TypeError("Points can only be subtracted from other points")
+
+    class Size(Point):
+        def __init__(self, w, h):
+            super(Size, self).__init__(w, h)
+        
+        def GetWidth(self):  return self.x
+        def GetHeight(self): return self.y
+
+        def __getattr__(self, name):
+            if name == "width": return self.x
+            elif name == "height": return self.y
+            else:
+                raise AttributeError()
+
+    class Color():
+        def __init__(self, red=0, green=0, blue=0):
+            self.color = (red, green, blue)
+
+        def __getitem__(self, idx):
+            return self.color[idx]
+        
+        def Red(self):   return self.color[0]
+        def Green(self): return self.color[1]
+        def Blue(self):  return self.color[2]
+
+        def SetFromName(self, name):
+            colorMapping = {'RED': (255,0,0),
+                            'ORANGE': (255,128,0),
+                            'YELLOW': (255,255,0),
+                            'GREEN': (0,255,0),
+                            'BLUE': (0,0,255),
+                            'PURPLE': (255,0,255)}
+
+            if name in colorMapping:
+                self.color = colorMapping[name]
+            else:
+                raise NotImplementedError("Color '%s' not recognized" % name)
+            
+                
 
 ############################################################
 
@@ -126,8 +221,8 @@ class RegionFileInterface:
 
         # Iterate over faces in obj1
         for face in obj1.getFaces():
-            pta = wx.Point(*face[0])
-            ptb = wx.Point(*face[1])
+            pta = Point(*face[0])
+            ptb = Point(*face[1])
 
             # Since we are modifying obj2, it's easier to re-run the loop than keep track of indices
             # in the case that we are adding two points.  Lazy, yes, but effective for now.
@@ -135,8 +230,8 @@ class RegionFileInterface:
             while not clean:
                 clean = True
                 for other_face in obj2.getFaces():
-                    other_pta = wx.Point(*other_face[0])
-                    other_ptb = wx.Point(*other_face[1])
+                    other_pta = Point(*other_face[0])
+                    other_ptb = Point(*other_face[1])
 
                     [on_segment_a, d_a, pint_a] = pointLineIntersection(other_pta, other_ptb, pta)
                     [on_segment_b, d_b, pint_b] = pointLineIntersection(other_pta, other_ptb, ptb)
@@ -309,8 +404,8 @@ class RegionFileInterface:
             region2 = self.indexOfRegionWithName(transData[1])
             faces = []
             for i in range(2, len(transData), 4):
-                p1 = wx.Point(int(transData[i]), int(transData[i+1]))
-                p2 = wx.Point(int(transData[i+2]), int(transData[i+3]))
+                p1 = Point(int(transData[i]), int(transData[i+1]))
+                p2 = Point(int(transData[i+2]), int(transData[i+3]))
                 faces.append(tuple(sorted((p1, p2))))
                 
             # During adjacency matrix reconstruction, we'll mirror over the diagonal
@@ -347,12 +442,12 @@ class Region:
               X increases to right, and Y increases downwards.
     """
 
-    def __init__(self, type=reg_POLY, position=wx.Point(0, 0), size=wx.Size(0, 0),
+    def __init__(self, type=reg_POLY, position=Point(0, 0), size=Size(0, 0),
                  color=None, points=[], name=''):
 
         if color is None:
             # Give a random color
-            color = wx.Colour()
+            color = Color()
             color.SetFromName(random.choice(['RED','ORANGE','YELLOW','GREEN','BLUE','PURPLE']))
 
         self.name              = name
@@ -422,11 +517,11 @@ class Region:
     
         if self.type == reg_POLY:    
             # Shift our vertices to align with the new bounding box
-            self.pointArray = map(lambda x: x-wx.Point(topLeftX, topLeftY), self.pointArray)
+            self.pointArray = map(lambda x: x-Point(topLeftX, topLeftY), self.pointArray)
 
         # Store the new bounding box
-        self.position = self.position + wx.Point(topLeftX, topLeftY)
-        self.size = wx.Size(botRightX - topLeftX, botRightY - topLeftY)
+        self.position = self.position + Point(topLeftX, topLeftY)
+        self.size = Size(botRightX - topLeftX, botRightY - topLeftY)
 
 
     # =============================
@@ -510,9 +605,9 @@ class Region:
         else:
             self.type = reg_POLY
 
-        self.position          = wx.Point(int(data[2]), int(data[3]))
-        self.size              = wx.Size(int(data[4]), int(data[5]))
-        self.color             = wx.Colour(red=int(data[6]),
+        self.position          = Point(int(data[2]), int(data[3]))
+        self.size              = Size(int(data[4]), int(data[5]))
+        self.color             = Color(red=int(data[6]),
                                          green=int(data[7]),
                                           blue=int(data[8]))
         if self.type == reg_POLY:
@@ -520,11 +615,11 @@ class Region:
             if thorough:
                 self.alignmentPoints = []
                 for i in range(10, len(data), 3):
-                    self.pointArray.append(wx.Point(int(data[i]), int(data[i+1])))
+                    self.pointArray.append(Point(int(data[i]), int(data[i+1])))
                     self.alignmentPoints.append(data[i+2])
             else:
                 for i in range(9, len(data), 2):
-                    self.pointArray.append(wx.Point(int(data[i]), int(data[i+1])))
+                    self.pointArray.append(Point(int(data[i]), int(data[i+1])))
         elif self.type == reg_RECT:
             if thorough:
                 self.alignmentPoints = []
@@ -565,7 +660,7 @@ class Region:
         """
 
         if relative:
-            offset = wx.Point(0, 0)
+            offset = Point(0, 0)
         else:
             offset = self.position
 
@@ -573,10 +668,10 @@ class Region:
             for pt in self.pointArray:
                 yield offset + pt
         elif self.type == reg_RECT:
-            for pt in [wx.Point(0, 0),
-                       wx.Point(self.size.width, 0),
-                       wx.Point(self.size.width, self.size.height),
-                       wx.Point(0, self.size.height)]:
+            for pt in [Point(0, 0),
+                       Point(self.size.width, 0),
+                       Point(self.size.width, self.size.height),
+                       Point(0, self.size.height)]:
                 yield offset + pt
 
     def getCenter(self):
@@ -594,7 +689,7 @@ class Region:
             cx = self.size.GetWidth()/2 + self.position.x
             cy = self.size.GetHeight()/2 + self.position.y
         
-        return wx.Point(cx, cy)
+        return Point(cx, cy)
 
     # =======================
     # == Selection Methods ==
@@ -741,7 +836,7 @@ class Region:
                     x2_new=x2-offsetX
                     y2_new=y2+offsetY
                     
-        return wx.Point(int(x1_new), int(y1_new)), wx.Point(int(x2_new), int(y2_new))
+        return Point(int(x1_new), int(y1_new)), Point(int(x2_new), int(y2_new))
         
     def findRegionNear(self, distance, mode='underEstimate',name='newRegion'):
         """
@@ -757,7 +852,7 @@ class Region:
         # the new region will have most features  same as the old one
         newRegion.name = name
         newRegion.type              = reg_POLY
-        newRegion.color             = wx.Color(255-self.color[0], 255-self.color[1], 255-self.color[2])
+        newRegion.color             = Color(255-self.color[0], 255-self.color[1], 255-self.color[2])
         newRegion.pointArray        = []
         center=self.getCenter()
         
@@ -795,7 +890,7 @@ class Region:
         # put the vertex in the right order
         poly = Polygon.Utils.convexHull(Polygon.Polygon(newRegion.pointArray))
         #poly = Polygon.Polygon(newRegion.pointArray)
-        newRegion.pointArray = [wx.Point(*x) for x in Polygon.Utils.pointList(poly)]
+        newRegion.pointArray = [Point(*x) for x in Polygon.Utils.pointList(poly)]
         newRegion.alignmentPoints   = [False] * len([x for x in newRegion.getPoints()])    
 
         newRegion.recalcBoundingBox()
@@ -819,7 +914,7 @@ class Region:
             x = float(b[1]*c[0] - b[0]*c[1])/det
             y = float(a[0]*c[1] - a[1]*c[0])/det
 
-        return wx.Point(x,y)
+        return Point(x,y)
         
     #
     #    # calculate the functions of the lines at the faces
@@ -880,7 +975,7 @@ def findRegionBetween(regionA, regionB,name = 'newRegion'):
     
     betw_AB = Polygon.Utils.convexHull(polyA+polyB)-polyA-polyB
     
-    newRegion.pointArray = [wx.Point(*x) for x in Polygon.Utils.pointList(betw_AB)]
+    newRegion.pointArray = [Point(*x) for x in Polygon.Utils.pointList(betw_AB)]
     newRegion.alignmentPoints   = [False] * len([x for x in newRegion.getPoints()])    
     
     newRegion.recalcBoundingBox()
@@ -914,5 +1009,5 @@ def pointLineIntersection(pt1, pt2, test_pt):
         d = (xm - xi)**2 + (ym - yi)**2
         on_segment = min(x1,x2) < xi < max(x1,x2) 
 
-    return [on_segment, d, wx.Point(xi, yi)]
+    return [on_segment, d, Point(xi, yi)]
 
