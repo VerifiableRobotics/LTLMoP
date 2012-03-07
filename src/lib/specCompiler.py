@@ -153,16 +153,19 @@ class SpecCompiler(object):
             time.sleep(0.1)
 
         realizable = False
+        realizableFS = False
 
         output = ""
         for line in subp.stdout:
             output += line
             if "Specification is realizable" in line:
-               realizable = True
+                realizable = True
+            if "Specification is realizable with slow and fast actions" in line:
+                realizableFS = True
                
         subp.stdout.close()
 
-        return (realizable, output)
+        return (realizable, realizableFS, output)
 
     def compile(self, with_safety_aut=False):
         self._decompose()
