@@ -544,7 +544,7 @@ class RobotFileParser:
                 for handlerObj in handlerList:
                     if handlerObj.name == val[0].split('(')[0]:
                         
-                        robotObj.handlers[handler_type] = deepcopy(handlerObj)
+                        robotObj.handlers[handler_type.split(':')[0]] = deepcopy(handlerObj)
                         break
                 # overwrite the parameter values
                 para_list = [x.strip() for x in val[0].split('(')[1].replace(')','').split(',')]
