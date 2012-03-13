@@ -549,7 +549,7 @@ class RobotFileParser:
                 # overwrite the parameter values
                 para_list = [x.strip() for x in val[0].split('(')[1].replace(')','').split(',')]
 
-                for methodObj in robotObj.handlers[handler_type].methods:
+                for methodObj in robotObj.handlers[handler_type.split(':')[0]].methods:
                     if methodObj.name == '__init__':
                         initMethodObj = methodObj
                         break
