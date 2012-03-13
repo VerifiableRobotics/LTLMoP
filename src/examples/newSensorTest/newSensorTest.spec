@@ -46,18 +46,19 @@ pioneer_ode.robot
 ======== SETTINGS ========
 
 Actions: # List of actions and their state (enabled = 1, disabled = 0)
-radio,0
-pick_up,0
-drop,0
+radio,1
+pick_up,1
+drop,1
 
 Customs: # List of custom propositions
+imacustom
 
 RegionFile: # Relative path of region description file
 newSensorTest.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-hazardous_item,0
-person,0
+hazardous_item,1
+person,1
 
 currentConfig:
 Experiment_with_Simulated_Pioneer_in_ODE
