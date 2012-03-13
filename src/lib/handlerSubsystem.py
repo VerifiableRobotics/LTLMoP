@@ -106,21 +106,12 @@ class HandlerSubsystem:
 
         self.handler_path = os.path.join(self.proj.ltlmop_root,'lib','handlers')
         self.handler_parser = HandlerParser(self.handler_path)
-        #self.handler_parser.printHandler()
-
-        
-        #testStringBefore = 'share.dummySensor.buttonPress(sensor_name="Fire")'
-        #testMethod = self.string2Method(testStringBefore)
-        #print testMethod.name,testMethod.handler,testMethod.para[0].type
-
-        #testStringAfter = self.method2String(testMethod)
-        #print testStringBefore == testStringAfter
 
 
         self.robot_parser = RobotFileParser(self.handler_path,self.handler_dic)
          
         self.config_path = os.path.join(self.proj.project_root,'configs')
-        self.config_parser = ConfigFileParser(self.config_path,self.handler_path,self.handler_dic)
+        self.config_parser = ConfigFileParser(self.config_path,self.handler_path,self.proj,self.handler_dic)
 
         #print self.configs[0].robots[0].handlers['init:nao'].methods[0].para[1].value
         #print self.robots[0].name
@@ -333,7 +324,7 @@ class HandlerParser:
         handlerModule = sys.modules[handlerFile]
         allClass = inspect.getmembers(handlerModule,inspect.isclass)
         for classObj in allClass:
-            if classObj[1].__module__ == handlerFile and not classObj[0].startswith('__'):
+            if classObj[1].__module__ == handlerFile and not classObj[0].startswith('_'):
                 handlerClass = classObj[1]
                 break
 
@@ -344,7 +335,7 @@ class HandlerParser:
         # parse methods in this handler
         handlerMethod = inspect.getmembers(handlerClass,inspect.ismethod)
         for methodName,method in handlerMethod:
-            if (not onlyLoadInit) or str(methodName)=='__init__':
+            if ((not onlyLoadInit and (not str(methodName).startswith('_')) or str(methodName)=='__init__') ):
                 # load all parameters
                 methodObj = MethodObject()
                 methodObj.name = methodName
@@ -533,7 +524,11 @@ class RobotFileParser:
                         else:
                             handlerParser = HandlerParser(self.handler_path)
                             fileName = os.path.join('lib','handlers','robots',robotFolder,val[0].split('(')[0]).replace('/','.')
-                            handlerList = [handlerParser.parseHandlers(fileName,handler_type,True)]
+                            if handler_type.split(':')[0] in ['init','locomotionCommand']:
+                                onlyLoadInit = True
+                            else:
+                                onlyLoadInit = False
+                            handlerList = [handlerParser.parseHandlers(fileName,handler_type,onlyLoadInit)]
                 else:
                     if self.handler_dic is not None:
                         # we can just quick load from the handler dictionary
@@ -565,6 +560,7 @@ class RobotFileParser:
                                 paraObj.setValue(para_value)
                                 break
         return robotObj
+    
                 
      
 class ConfigObject:
@@ -583,8 +579,9 @@ class ConfigFileParser:
     A parser loads all configuration files    
     """
 
-    def __init__(self,config_path,handler_path,handler_dic=None):
+    def __init__(self,config_path,handler_path,proj,handler_dic=None):
         self.silent = False
+        self.proj = proj
         self.config_path = config_path  # config folder path
         self.handler_path = handler_path    # handler folder path
         self.handler_dic = handler_dic  # handler dictionary stores all handler information
@@ -743,3 +740,18 @@ if __name__ == '__main__':
     proj.ltlmop_root = '/home/jim/Desktop/ltlmop_git/src'
     proj.project_root = '/home/jim/Desktop/ltlmop_git/src/examples/newSensorTest'
     h = HandlerSubsystem(proj)
+    h.loadAllHandlers()
+    #h.loadAllRobots()
+    h.loadAllConfigFiles()
+    
+    
+    #h.handler_parser.printHandler()
+    print h.configs[0].robots[0].handlers['sensor'].methods
+
+#testStringBefore = 'share.dummySensor.buttonPress(sensor_name="Fire")'
+#testMethod = self.string2Method(testStringBefore)
+#print testMethod.name,testMethod.handler,testMethod.para[0].type
+
+#testStringAfter = self.method2String(testMethod)
+#print testStringBefore == testStringAfter
+
