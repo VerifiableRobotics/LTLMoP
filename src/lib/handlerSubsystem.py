@@ -575,7 +575,7 @@ class ConfigObject:
         self.name = None    # name of the config file
         self.robots = []    # list of robot object used in this config file
         self.prop_mapping = {}  # dictionary for storing the propositions mapping
-        self.initial_truths = []
+        self.initial_truths = [] # list of initially true propoisitions
 
 
 class ConfigFileParser:
@@ -638,7 +638,7 @@ class ConfigFileParser:
             except IOError: 
                 if not self.silent: print "ERROR: Wrong actuator mapping -- %s" % actuatorMapping        
             configObj.prop_mapping[actuatorProp]=actuatorFun
-            
+
         if 'Initial_Truths' in config_data:
             # parse the initially true propositions
             for propName in config_data['General Config']['Initial_Truths']:
@@ -646,7 +646,7 @@ class ConfigFileParser:
                     configObj.initial_truths.append(propName)
                 except IOError: 
                     if not self.silent: print "ERROR: Wrong initially true propositions -- %s" 
-
+        
         
         # load robot configs
         robot_data = []
@@ -668,7 +668,7 @@ class ConfigFileParser:
                     if not self.silent: print "ERROR: Cannot parse robot data in %s" % fileName        
 
         return configObj
-        
+
     def saveAllConfigFiles(self):
         for configObj in self.configs:
             self.saveConfigFile(configObj)
@@ -701,7 +701,7 @@ class ConfigFileParser:
 
         data['General Config']['Sensor_Proposition_Mapping'] = sensorMappingList
         data['General Config']['Actuator_Proposition_Mapping'] = actuatorMappingList
-        
+                
         data['General Config']['Initial_Truths'] = configObj.initial_truths
                 
         for i,robot in enumerate(configObj.robots):
