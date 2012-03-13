@@ -481,7 +481,9 @@ class RobotFileParser:
                 fileList = os.listdir(os.path.join(self.handler_path,'robots',robotFolder))
                 for fileName in fileList:
                     if fileName.endswith('.robot'):
-                        self.robots.append(self.loadRobotFile(os.path.join(self.handler_path,'robots',robotFolder,fileName)))
+                        robotObj = self.loadRobotFile(os.path.join(self.handler_path,'robots',robotFolder,fileName))
+                        if (robotObj is not None) and (robotObj.type not in [r.type for r in self.robots]):
+                            self.robots.append(robotObj)    
 
     def loadRobotFile(self,fileName):
     
@@ -573,6 +575,7 @@ class ConfigObject:
         self.name = None    # name of the config file
         self.robots = []    # list of robot object used in this config file
         self.prop_mapping = {}  # dictionary for storing the propositions mapping
+        self.initial_truths = []
 
 
 class ConfigFileParser:
@@ -635,6 +638,14 @@ class ConfigFileParser:
             except IOError: 
                 if not self.silent: print "ERROR: Wrong actuator mapping -- %s" % actuatorMapping        
             configObj.prop_mapping[actuatorProp]=actuatorFun
+            
+        if 'Initial_Truths' in config_data:
+            # parse the initially true propositions
+            for propName in config_data['General Config']['Initial_Truths']:
+                try:
+                    configObj.initial_truths.append(propName)
+                except IOError: 
+                    if not self.silent: print "ERROR: Wrong initially true propositions -- %s" 
 
         
         # load robot configs
@@ -657,6 +668,10 @@ class ConfigFileParser:
                     if not self.silent: print "ERROR: Cannot parse robot data in %s" % fileName        
 
         return configObj
+        
+    def saveAllConfigFiles(self):
+        for configObj in self.configs:
+            self.saveConfigFile(configObj)
 
     def saveConfigFile(self,configObj,fileName=''):
         """
@@ -686,6 +701,8 @@ class ConfigFileParser:
 
         data['General Config']['Sensor_Proposition_Mapping'] = sensorMappingList
         data['General Config']['Actuator_Proposition_Mapping'] = actuatorMappingList
+        
+        data['General Config']['Initial_Truths'] = configObj.initial_truths
                 
         for i,robot in enumerate(configObj.robots):
             header = 'Robot'+str(i+1)+' Config'
@@ -714,7 +731,8 @@ class ConfigFileParser:
                     "Type": "Robot type",
                     "Actuator_Proposition_Mapping": 'Mapping between actuator propositions and actuator handler functions',
                     "Sensor_Proposition_Mapping": "Mapping between sensor propositions and sensor handler functions",
-                    "Name": 'Configuration name'}
+                    "Name": 'Configuration name',
+                    "Initial_Truths": "Initially true propositions"}
 
         fileMethods.writeToFile(os.path.join(self.proj.project_root,'configs',fileName), data, comments)
 
