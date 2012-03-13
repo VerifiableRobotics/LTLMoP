@@ -734,7 +734,7 @@ class ConfigFileParser:
                     "Name": 'Configuration name',
                     "Initial_Truths": "Initially true propositions"}
 
-        fileMethods.writeToFile(os.path.join(self.proj.project_root,'configs',fileName), data, comments)
+        fileMethods.writeToFile(os.path.join(self.config_path,fileName), data, comments)
 
                    
 
