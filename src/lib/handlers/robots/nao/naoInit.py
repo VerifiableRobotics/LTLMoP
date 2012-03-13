@@ -16,12 +16,12 @@ except ImportError:
 """
 
 class initHandler:
-    def __init__(self, proj, calib=False, ip='nao.local',portiPoo=9559):
+    def __init__(self, proj, calib=False, ip='nao.local',port=9559):
         """
         Initialization handler for NAO robot.
 
         ip (string): The ip address of NAO (default=nao.local)
-        portiPoo (int): The port of NAO (default=9559)
+        port (int): The port of NAO (default=9559)
         """
 
         try:

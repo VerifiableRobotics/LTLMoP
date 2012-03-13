@@ -1,12 +1,30 @@
-Type: # Robot Type
+RobotName: # Robot Name
+Pioneer ODE
+
+Type: # Robot type
 PioneerODE
 
-Pose: # Default pose handler for this robot
-handlers.pose.pioneerSimPose
+ActuatorHandler: # Robot default actuator handler with default arguement values
+PioneerODEActuator()
 
-MotionControl: # Default motion control handler for this robot
-handlers.motionControl.heatController
+DriveHandler: # Robot default drive handler with default arguement values
+differentialDrive(d=0.65)
 
-Drive: # Default drive handler for this robot
-handlers.drive.differentialDrive
+InitHandler: # Robot default init handler with default arguement values
+PioneerODEInit()
+
+LocomotionCommandHandler: # Robot locomotion command actuator handler with default arguement values
+PioneerODELocomotionCommand()
+
+MotionControlHandler: # Robot default motion control handler with default arguement values
+vectorController()
+
+PoseHandler: # Robot default pose handler with default arguement values
+pioneerSimPose()
+
+SensorHandler: # Robot default sensor handler with default arguement values
+PioneerODESensor()
+
+
+
 

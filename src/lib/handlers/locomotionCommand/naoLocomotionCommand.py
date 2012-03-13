@@ -7,10 +7,17 @@ naoLocomotionCommand.py - Nao Locomotion Command Handler
 Send forward, side, and angular velocity commands to the Nao.
 """
 
-class naoLocomotionCommandHandler:
+import naoqi
+from naoqi import ALProxy
+
+class locomotionCommandHandler:
 	def __init__(self, proj, shared_data):
-        self.naoInitHandler = shared_data['NAO_INIT_HANDLER']
-        self.movProxy = self.naoInitHandler.createProxy('ALMotion')
+		# Get proxy
+		try:
+			self.movProxy = shared_data['mov']
+		except KeyError, ValueError:
+			print "(LOCO) ERROR: No ALMotion proxy set to key 'mov' in initialization handler."
+			exit(-1)
 
 	def sendCommand(self, cmd):
 		"""	Send movement command to the Nao
