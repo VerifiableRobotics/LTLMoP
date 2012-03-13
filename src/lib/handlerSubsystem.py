@@ -74,13 +74,14 @@ class HandlerObject:
     def __init__(self):
         self.name = None    # name of the handler
         self.type = None    # type of the handler e.g. motionControl or drive
-        self.methods = []   # list of method objects in this handler 
+        self.methods = []   # list of method objects in this handler
 
     def toString(self):
         """
         Return the string representation of the handler object
         """
-        
+    def getType(self):
+        return self.type.split(':')[0]
 
 class RobotObject:
     """
