@@ -85,7 +85,7 @@ class handlerConfigDialog(wx.Dialog):
         # end wxGlade
 
     def _handler2dialog(self, handler):
-        self.SetTitle("Configure %s.%s" % (handler.type, handler.name))
+        self.SetTitle("Configure %s.%s" % (handler.getType(), handler.name))
         methodObj = [m for m in handler.methods if m.name == '__init__'][0]
 
         drawParamConfigPane(self.panel_configs, methodObj.para)
@@ -497,12 +497,7 @@ class addRobotDialog(wx.Dialog):
         
         for htype in self.robot.handlers.keys():
             self.handler_labels[htype] = wx.StaticText(self, -1, "%s:" % htype) 
-            if htype in self.hsub.handler_parser.handler_robotSpecific_type: 
-                print htype, self.hsub.handler_dic[htype]
-                # TODO: use correct robot
-                self.handler_combos[htype] = wx.ComboBox(self, -1, choices=[h.name for h in self.hsub.handler_dic[htype]["nao"]], style=wx.CB_DROPDOWN)
-            else:
-                self.handler_combos[htype] = wx.ComboBox(self, -1, choices=[h.name for h in self.hsub.handler_dic[htype]], style=wx.CB_DROPDOWN)
+            self.handler_combos[htype] = wx.ComboBox(self, -1, choices=[], style=wx.CB_DROPDOWN)
             self.handler_buttons[htype] = wx.Button(self, -1, "Configure...")
             sizer = wx.BoxSizer(wx.HORIZONTAL)
             sizer.Add(self.handler_labels[htype], 0, wx.ALL, 2)
@@ -521,6 +516,18 @@ class addRobotDialog(wx.Dialog):
             self.combo_box_robottype.Append(r.type)
             if r.type == self.robot.type:
                 self.combo_box_robottype.SetStringSelection(r)
+
+    def _populateHandlerCombos(self):
+        # Populate based on current robot type
+        for htype in self.robot.handlers.keys():
+            self.handler_combos[htype].Clear()
+
+            if htype in self.hsub.handler_parser.handler_robotSpecific_type: 
+                for i, h in enumerate(self.hsub.handler_dic[htype][self.robot.type]):
+                    self.handler_combos[htype].Insert(h.name, i)
+            else:
+                for i, h in enumerate(self.hsub.handler_dic[htype]):
+                    self.handler_combos[htype].Insert(h.name, i)
 
     def __set_properties(self):
         # begin wxGlade: addRobotDialog.__set_properties
@@ -557,6 +564,8 @@ class addRobotDialog(wx.Dialog):
         self.robot = robot
         self.combo_box_robottype.SetStringSelection(self.robot.type)
         self.text_ctrl_robotname.SetValue(self.robot.name)
+        self._populateHandlerCombos()
+
         for htype, h in self.robot.handlers.iteritems():
             # select the appropriate handler
             # TODO: what should the correct behavior be if it doesn't exist in the list of handlers already?
@@ -613,8 +622,6 @@ class addRobotDialog(wx.Dialog):
         event.Skip()
 
     def onChooseRobot(self, event): # wxGlade: addRobotDialog.<event_handler>
-        #self.robot.name = event.GetString()
-        #self.robot.type = event.GetString()
         self.robot = deepcopy([r for r in self.hsub.robots if r.type == event.GetString()][0])
         self._robot2dialog(self.robot)
         event.Skip()
