@@ -435,8 +435,7 @@ class simSetupDialog(wx.Dialog):
         event.Skip()
 
     def onClickOK(self, event): # wxGlade: simSetupDialog.<event_handler>
-        for j in xrange(self.list_box_experiment_name.GetCount()):
-            self.list_box_experiment_name.GetClientData(j).saveConfigFile()
+        self.hsub.config_parser.saveAllConfigFiles()
         self.Destroy()
 
 
@@ -676,8 +675,8 @@ class propMappingDialog(wx.Dialog):
 
         # Set up the list of robots
 
-        for r in self.robots:
-            self.list_box_robots.Append("%s (%s)" % (r.name, r.type))
+        for i, r in enumerate(self.robots):
+            self.list_box_robots.Insert("%s (%s)" % (r.name, r.type), i, r)
 
         # Set up the list of props
         self.list_box_props.Clear()
@@ -765,7 +764,13 @@ class propMappingDialog(wx.Dialog):
         event.Skip()
 
     def onSelectRobot(self, event): # wxGlade: propMappingDialog.<event_handler>
-        print "Event handler `onSelectRobot' not implemented!"
+        # Populate list of functions
+        self.list_box_functions.Clear()
+        pos = self.list_box_robots.GetSelection()
+        r = self.list_box_robots.GetClientData(pos)
+
+        for i, m in enumerate(r.handlers['sensor'].methods + r.handlers['actuator'].methods):
+            self.list_box_functions.Insert("%s" % (m.name), i, m)
         event.Skip()
 
     def onSelectHandler(self, event): # wxGlade: propMappingDialog.<event_handler>
