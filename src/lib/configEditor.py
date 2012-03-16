@@ -12,6 +12,9 @@ from handlerSubsystem import *
 # end wxGlade
 
 def drawParamConfigPane(target, paramList):
+    if target.GetSizer() is not None:
+        target.GetSizer().Clear(deleteWindows=True)
+
     list_sizer = wx.BoxSizer(wx.VERTICAL)
     param_controls = {}
     for p in paramList:
@@ -35,7 +38,11 @@ def drawParamConfigPane(target, paramList):
         #self.Bind(wx.EVT_BUTTON, self.onClickConfigure, self.handler_buttons[htype])
         #self.Bind(wx.EVT_COMBOBOX, self.onChangeHandler, self.handler_combos[htype])
 
+    #if paramList == []:
+    #    list_sizer.Add((20, 20), 0, 0, 0)
+
     target.SetSizer(list_sizer)
+    target.Layout()
 
 
 class handlerConfigDialog(wx.Dialog):
@@ -85,6 +92,8 @@ class handlerConfigDialog(wx.Dialog):
         # end wxGlade
 
     def _handler2dialog(self, handler):
+        self.handler = handler
+
         self.SetTitle("Configure %s.%s" % (handler.getType(), handler.name))
         methodObj = [m for m in handler.methods if m.name == '__init__'][0]
 
@@ -320,7 +329,7 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: Check for existing untitleds and add a number at the end (steal from reged)
         cfg.name = "Untitled configuration"
-        self.hsub.config_parser.configs.append(cfg)
+        self.hsub.configs.append(cfg)
 
         self.list_box_experiment_name.Append(cfg.name, cfg)
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
@@ -335,7 +344,7 @@ class simSetupDialog(wx.Dialog):
 
         # import the config file
         cfg = self.hsub.config_parser.loadConfigFile(fileName)        
-        self.hsub.config_parser.configs.append(cfg)
+        self.hsub.configs.append(cfg)
         self.list_box_experiment_name.Append(cfg.name, cfg)
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
         self._cfg2dialog(cfg)
@@ -351,7 +360,7 @@ class simSetupDialog(wx.Dialog):
             # TODO: gray out button when no action possible
             pos = self.list_box_experiment_name.GetSelection()
             self.list_box_experiment_name.Delete(pos)
-            self.hsub.config_parser.configs.pop(pos)
+            self.hsub.configs.pop(pos)
 
             if pos == numel - 1:
                 # If the very last element was deleted, move the selection up one
@@ -388,7 +397,7 @@ class simSetupDialog(wx.Dialog):
 
         pos = self.list_box_robots.GetSelection()
         r = self.list_box_robots.GetClientData(pos)
-        dlg._robot2dialog(r)
+        dlg._robot2dialog(deepcopy(r))
         if dlg.ShowModal() != wx.ID_CANCEL:
             r = dlg.robot
             obj = self._getSelectedConfigObject()
@@ -424,7 +433,7 @@ class simSetupDialog(wx.Dialog):
     def onClickEditMapping(self, event): # wxGlade: simSetupDialog.<event_handler>
         dlg = propMappingDialog(self, None, -1, "")
         obj = self._getSelectedConfigObject()
-        dlg._mapping2dialog(obj.prop_mapping)
+        dlg._mapping2dialog(deepcopy(obj.prop_mapping))
         if dlg.ShowModal() != wx.ID_CANCEL:
             obj.prop_mapping = dlg.mapping
         dlg.Destroy()
@@ -435,6 +444,7 @@ class simSetupDialog(wx.Dialog):
         event.Skip()
 
     def onClickOK(self, event): # wxGlade: simSetupDialog.<event_handler>
+        self.hsub.config_parser.configs = self.hsub.configs
         self.hsub.config_parser.saveAllConfigFiles()
         self.Destroy()
 
@@ -584,23 +594,17 @@ class addRobotDialog(wx.Dialog):
                     return
 
                 dlg = handlerConfigDialog(self, None, -1, "")
-                hname = self.handler_combos[htype].GetValue()
-                rname = self.robot.type
 
-                if htype in self.hsub.handler_parser.handler_robotSpecific_type: 
-                    hobj = [h for h in self.hsub.handler_dic[htype][rname] if h.name == hname][0]
-                else:
-                    hobj = [h for h in self.hsub.handler_dic[htype] if h.name == hname][0]
-
-                dlg._handler2dialog(hobj)
+                # Edit existing handler object
+                dlg._handler2dialog(deepcopy(self.robot.handlers[htype]))
 
                 if dlg.ShowModal() != wx.ID_CANCEL:
-                    #r = dlg.robot
-                    #self._cfg2dialog(obj)
+                    self.robot.handlers[htype] = dlg.handler
+                    #self._robot2dialog(self.robot)
                     pass
+
                 dlg.Destroy()
                 break
-
 
         event.Skip()
 
@@ -610,9 +614,22 @@ class addRobotDialog(wx.Dialog):
         # Figure out which handler was changed
         for htype, b in self.handler_combos.iteritems():
             if src is b:
-                #print "handler for %s is now %s" % (htype, src.GetValue())
+                hname = src.GetValue()
+
+                # If this handler has default values from the selected robot file, use them
                 # TODO: this will erase any previous config settings...
-                self.robot.handlers[htype] = src.GetValue()
+                default_robot = [r for r in self.hsub.robots if r.type == self.robot.type][0]
+                if default_robot.handlers[htype].name == hname:
+                    hobj = default_robot.handlers[htype]
+                else:
+                    # Otherwise, just grab the plain handler
+                    rname = self.robot.type
+                    if htype in self.hsub.handler_parser.handler_robotSpecific_type: 
+                        hobj = [h for h in self.hsub.handler_dic[htype][rname] if h.name == hname][0]
+                    else:
+                        hobj = [h for h in self.hsub.handler_dic[htype] if h.name == hname][0]
+
+                self.robot.handlers[htype] = hobj
                 break
 
         event.Skip()
@@ -648,6 +665,7 @@ class propMappingDialog(wx.Dialog):
         self.label_8 = wx.StaticText(self, -1, "Sensors/Actuators:")
         self.list_box_functions = wx.ListBox(self, -1, choices=[])
         self.label_10 = wx.StaticText(self, -1, "Parameters:")
+        self.panel_method_cfg = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
         self.button_11 = wx.Button(self, wx.ID_CANCEL, "")
         self.button_10 = wx.Button(self, wx.ID_OK, "")
 
@@ -700,6 +718,7 @@ class propMappingDialog(wx.Dialog):
         # begin wxGlade: propMappingDialog.__set_properties
         self.SetTitle("Proposition Mapping")
         self.SetSize((836, 616))
+        self.panel_method_cfg.SetScrollRate(10, 10)
         # end wxGlade
 
     def __do_layout(self):
@@ -731,6 +750,7 @@ class propMappingDialog(wx.Dialog):
         sizer_21.Add(self.list_box_functions, 1, wx.ALL|wx.EXPAND, 5)
         sizer_19.Add(sizer_21, 1, wx.EXPAND, 0)
         sizer_24.Add(self.label_10, 0, wx.ALL, 5)
+        sizer_24.Add(self.panel_method_cfg, 1, wx.ALL|wx.EXPAND, 5)
         sizer_19.Add(sizer_24, 1, wx.EXPAND, 0)
         sizer_16.Add(sizer_19, 5, wx.EXPAND, 0)
         sizer_25.Add((20, 20), 1, wx.EXPAND, 0)
@@ -774,7 +794,11 @@ class propMappingDialog(wx.Dialog):
         event.Skip()
 
     def onSelectHandler(self, event): # wxGlade: propMappingDialog.<event_handler>
-        print "Event handler `onSelectHandler' not implemented!"
+        pos = self.list_box_functions.GetSelection()
+        m = self.list_box_functions.GetClientData(pos)
+        drawParamConfigPane(self.panel_method_cfg, m.para)
+        self.Layout()
+
         event.Skip()
 
     def onClickOK(self, event): # wxGlade: propMappingDialog.<event_handler>
