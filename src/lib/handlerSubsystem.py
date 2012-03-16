@@ -66,6 +66,7 @@ class MethodObject:
         self.comment = ''       # comment of the method 
         self.para = []          # list of parameter object of this method
         self.reference = None   # reference of this method in the memory
+        self.omitPara = []      # list of parameter names that are omitted 
 
 class HandlerObject:
     """
@@ -80,6 +81,22 @@ class HandlerObject:
         """
         Return the string representation of the handler object
         """
+        # prepare the input for initiation
+        initMethodObj = None
+        for methodObj in self.methods:
+            if methodObj.name == '__init__':
+                initMethodObj = methodObj
+                break
+                
+        method_input = []
+        for paraObj in initMethodObj.para:
+            method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
+        method_input = '('+','.join(method_input)+')'
+        
+        return self.name+method_input
+        
+        
+        
     def getType(self):
         return self.type.split(':')[0]
 
@@ -139,7 +156,7 @@ class HandlerSubsystem:
         Return the method object according to the input string
         """
         if self.handler_dic is None:
-            print "ERROR: Cannot find handler dictionary, please load all handler first."
+            print "ERROR: Cannot find handler dictionary, please load all handlers first."
             return
 
         method_info,para_info = method_string.split('(')
@@ -344,6 +361,8 @@ class HandlerParser:
                     if para_name not in self.ignore_parameter: 
                         paraObj = ParameterObject(para_name)  
                         methodObj.para.append(paraObj)
+                    else:
+                        methodObj.omitPara.append(para_name)
         
                 # parse the description of the function
                 doc = inspect.getdoc(method)
