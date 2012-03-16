@@ -659,7 +659,7 @@ class ConfigFileParser:
                 if not self.silent: print "ERROR: Wrong actuator mapping -- %s" % actuatorMapping        
             configObj.prop_mapping[actuatorProp]=actuatorFun
 
-        if 'Initial_Truths' in config_data:
+        if 'Initial_Truths' in config_data['General Config']:
             # parse the initially true propositions
             for propName in config_data['General Config']['Initial_Truths']:
                 try:
