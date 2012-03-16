@@ -600,6 +600,10 @@ class ConfigFileParser:
                     self.configs.append(configObj)
                 
     def loadConfigFile(self,fileName):
+        # If only filename offered, assume it is in the config path
+        if len(os.path.split(fileName)[0]) == 0:
+            fileName = os.path.join(self.config_path,fileName)
+        
         # Add extension to the name if there isn't one. 
         if not fileName.endswith('.config'):
             fileName = fileName+'.config'  

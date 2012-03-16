@@ -14,6 +14,7 @@
 import os, sys
 import fileMethods, regions
 from numpy import *
+import handlerSubsystem
 
 class Project:
     """
@@ -209,7 +210,7 @@ class Project:
         
         return spec_data
     
-    def loadProject(self, spec_file, exp_cfg_name=None):
+    def loadProject(self, spec_file, exp_cfg_name=None,current_config_name=None):
         """
         Because the spec_file contains references to all other project files, this is all we
         need to know in order to load everything in.
@@ -220,14 +221,31 @@ class Project:
         # Figure out the name of the current experiment config if not specified
         if exp_cfg_name is None:
             exp_cfg_name = self.spec_data['SETTINGS']['currentExperimentName'][0]
+            
+        # Figure out the name of the current experiment config if not specified
+        if current_config_name is None:
+            current_config_name = self.spec_data['SETTINGS']['currentConfig'][0]
 
         self.regionMapping = self.loadRegionMapping(self.spec_data)
         self.exp_cfg_data = self.getExperimentConfig(exp_cfg_name)
+        self.current_configObj = self.loadExperimentConfig(current_config_name)
         self.lab_data = self.loadLabData(self.exp_cfg_data)
         self.robot_data = self.loadRobotFile(self.exp_cfg_data)
         self.rfi = self.loadRegionFile()
         self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps(self.exp_cfg_data)
         self.determineEnabledPropositions()
+        
+        
+        # this is for debugging
+        print '=========== This is for debugging ======================'
+        self.lookupHandlers()
+        print self.h_name
+        print '========================================================'
+        
+    def loadExperimentConfig(self,configFileName):
+        hSub = handlerSubsystem.HandlerSubsystem(self)
+        configObj = hSub.config_parser.loadConfigFile(configFileName)
+        return configObj
 
     def determineEnabledPropositions(self):
         """
@@ -268,21 +286,55 @@ class Project:
         return self.rfi.thumb
         #return self.getFilenamePrefix() + "_simbg.png"
     
+
     def lookupHandlers(self):
         """
         Figure out which handlers we are going to use, based on the different configurations file settings
+        
+        Only one motion/pose/drive/locomotion handler per experiment
+        Multiple init/sensor/actuator handlers per experiment, one for each robot (if any)
         """
 
         # TODO: Complain nicely instead of just dying when this breaks?
-        self.h_name = {}
-        self.h_name['init'] = self.lab_data["InitializationHandler"]
-        self.h_name['pose'] = self.lab_data["PoseHandler"][0]
-        self.h_name['sensor'] = self.lab_data["SensorHandler"][0]
-        self.h_name['actuator'] = self.lab_data["ActuatorHandler"][0]
-        self.h_name['locomotionCommand'] = self.lab_data["LocomotionCommandHandler"][0]
-        self.h_name['motionControl'] = self.robot_data["MotionControlHandler"][0]
-        self.h_name['drive'] = self.robot_data["DriveHandler"][0]
+        self.h_name = {'init':None,'pose':None,'locomotionCommand':None,'motionControl':None,'drive':None,'sensor':{},'actuator':{}}
+        self.robots = self.current_configObj.robots
+        
+        for robotObj in self.robots:
+            handlers = robotObj.handlers
+            for handler_type,handlerObj in handlers.iteritems():
+                if handler_type in ['sensor','actuator']:
+                    # TODO: allowing multiple robots with same type but different name
+                    self.h_name[handler_type][robotObj.type] = handlerObj
+                elif handler_type in ['init','pose','locomotionCommand','motionControl','drive']:
+                    if (self.h_name[handler_type] is None):
+                        self.h_name[handler_type] = handlerObj
+                    else:
+                        print "WARNING: Overwriting %s handler with %s" % (self.h_name[handler_type].name,handlerObj.name)
+                else:
+                    print "ERROR: Cannot recognize handler type %s"%handler_type
     
+#    def runInitialization(self, calib=False):
+#        """
+#        Run the necessary initialization handlers.
+
+#        We treat initialization handlers separately, because there may be more than one.
+#        NOTE: These will be loaded in the same order as they are listed in the lab config file.
+#        """
+
+#        self.shared_data = {}  # This is for storing things like server connection objects, etc.
+#        init_num = 1
+#        self.init_handlers = []
+#        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
+#        for handler in self.h_name['init']:
+#            if not self.silent: print "  -> %s" % handler
+#            # TODO: Is there a more elegant way to do this? This is pretty ugly...
+#            exec("from %s import initHandler as initHandler%d" % (handler, init_num)) in locals() # WARNING: This assumes our input data is not malicious...
+#            exec("self.init_handlers.append(initHandler%d(self, calib=calib))" % (init_num)) in locals()
+#            self.shared_data.update(self.init_handlers[-1].getSharedData())
+#            init_num += 1  # So they don't clobber each other
+
+#        return self.shared_data
+
     def runInitialization(self, calib=False):
         """
         Run the necessary initialization handlers.
@@ -304,7 +356,7 @@ class Project:
             init_num += 1  # So they don't clobber each other
 
         return self.shared_data
-
+        
     def importHandlers(self, list=None):
         """
         Load in specified handlers.  If no list is given, *all* handlers will be loaded.
