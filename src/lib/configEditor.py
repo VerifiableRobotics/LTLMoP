@@ -11,21 +11,23 @@ from handlerSubsystem import *
 # begin wxGlade: extracode
 # end wxGlade
 
-def drawParamConfigPane(target, paramList):
+def drawParamConfigPane(target, method):
     if target.GetSizer() is not None:
         target.GetSizer().Clear(deleteWindows=True)
 
     list_sizer = wx.BoxSizer(wx.VERTICAL)
     param_controls = {}
-    for p in paramList:
-        print "name: %s, type: %s, default: %s" % (p.name, p.type, p.default)
+    for p in method.para:
+        print "name: %s, type: %s, default: %s, value: %s" % (p.name, p.type, p.default, p.value)
         #SetToolTip(wx.ToolTip("click to hide")
         item_sizer = wx.BoxSizer(wx.HORIZONTAL)
         param_label = wx.StaticText(target, -1, "%s:" % p.name) 
         # TODO: add in different data types, min/max
         if p.type is not None:
-            if p.default is not None:
-                param_controls[p] = wx.TextCtrl(target, -1, p.default)
+            if p.value is not None:
+                param_controls[p] = wx.TextCtrl(target, -1, str(p.value))
+            elif p.default is not None:
+                param_controls[p] = wx.TextCtrl(target, -1, str(p.default))
             else:
                 param_controls[p] = wx.TextCtrl(target, -1, "")
 
@@ -35,11 +37,11 @@ def drawParamConfigPane(target, paramList):
         item_sizer.Add(param_controls[p], 1, wx.ALL, 5)
         item_sizer.Add(param_info_label, 0, wx.ALL, 5)
         list_sizer.Add(item_sizer, 0, wx.EXPAND, 0)
-        #self.Bind(wx.EVT_BUTTON, self.onClickConfigure, self.handler_buttons[htype])
-        #self.Bind(wx.EVT_COMBOBOX, self.onChangeHandler, self.handler_combos[htype])
 
-    #if paramList == []:
-    #    list_sizer.Add((20, 20), 0, 0, 0)
+        def callbackTextCtrl(*args, **kwds):
+            p.setValue(param_controls[p].GetValue())
+        
+        target.Bind(wx.EVT_TEXT, callbackTextCtrl, param_controls[p])
 
     target.SetSizer(list_sizer)
     target.Layout()
@@ -97,7 +99,7 @@ class handlerConfigDialog(wx.Dialog):
         self.SetTitle("Configure %s.%s" % (handler.getType(), handler.name))
         methodObj = [m for m in handler.methods if m.name == '__init__'][0]
 
-        drawParamConfigPane(self.panel_configs, methodObj.para)
+        drawParamConfigPane(self.panel_configs, methodObj)
         self.label_info.SetLabel(methodObj.comment)
         self.panel_configs.Layout()
         # FIXME: this is a sizing hack, because I can't figure out how to get Fit() to work
@@ -399,8 +401,8 @@ class simSetupDialog(wx.Dialog):
         r = self.list_box_robots.GetClientData(pos)
         dlg._robot2dialog(deepcopy(r))
         if dlg.ShowModal() != wx.ID_CANCEL:
-            r = dlg.robot
             obj = self._getSelectedConfigObject()
+            obj.robots[pos] = dlg.robot
             self._cfg2dialog(obj)
         dlg.Destroy()
         event.Skip()
@@ -601,7 +603,6 @@ class addRobotDialog(wx.Dialog):
                 if dlg.ShowModal() != wx.ID_CANCEL:
                     self.robot.handlers[htype] = dlg.handler
                     #self._robot2dialog(self.robot)
-                    pass
 
                 dlg.Destroy()
                 break
@@ -635,7 +636,14 @@ class addRobotDialog(wx.Dialog):
         event.Skip()
 
     def onClickOK(self, event): # wxGlade: addRobotDialog.<event_handler>
-        event.Skip()
+        # TODO: add in checks for all combo boxes (don't allow null handlers)
+
+        if self.robot.name is None or self.robot.name == "":
+            wx.MessageBox("Your robot needs a name!", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            event.Skip(False)
+        else:
+            event.Skip()
 
     def onChooseRobot(self, event): # wxGlade: addRobotDialog.<event_handler>
         self.robot = deepcopy([r for r in self.hsub.robots if r.type == event.GetString()][0])
@@ -695,6 +703,8 @@ class propMappingDialog(wx.Dialog):
 
         for i, r in enumerate(self.robots):
             self.list_box_robots.Insert("%s (%s)" % (r.name, r.type), i, r)
+        # TODO: include dummy!!
+        self.list_box_robots.SetSelection(0)
 
         # Set up the list of props
         self.list_box_props.Clear()
@@ -710,6 +720,10 @@ class propMappingDialog(wx.Dialog):
             self.list_box_props.Append(p)
 
         self.mapping = None
+        self.tempMethod = None
+
+        self.list_box_props.SetSelection(0)
+        self.onSelectProp(None)
 
     def _mapping2dialog(self, mapping):
         self.mapping = deepcopy(mapping)
@@ -764,16 +778,25 @@ class propMappingDialog(wx.Dialog):
 
     def onSelectProp(self, event): # wxGlade: propMappingDialog.<event_handler>
         # If you've selected a header, not a proposition, then gray out the edit box
-        if event.GetString().startswith("==="):
+        if self.list_box_props.GetStringSelection().startswith("==="):
             self.text_ctrl_mapping.SetValue("")
             self.text_ctrl_mapping.Enable(False)
+            self.list_box_robots.Enable(False)
+            self.list_box_functions.Clear()
+            self.list_box_functions.Enable(False)
         else:
             self.text_ctrl_mapping.Enable(True)
+            self.list_box_robots.Enable(True)
+            self.list_box_functions.Enable(True)
+            self.onSelectRobot(None)
+
             if event.GetString() in self.mapping:
                 self.text_ctrl_mapping.SetValue(self.mapping[event.GetString()])
             else:
                 self.text_ctrl_mapping.SetValue("")
-        event.Skip()
+
+        if event is not None:
+            event.Skip()
 
     def onClickEdit(self, event): # wxGlade: propMappingDialog.<event_handler>
         print "Event handler `onClickEdit' not implemented!"
@@ -789,17 +812,37 @@ class propMappingDialog(wx.Dialog):
         pos = self.list_box_robots.GetSelection()
         r = self.list_box_robots.GetClientData(pos)
 
-        for i, m in enumerate(r.handlers['sensor'].methods + r.handlers['actuator'].methods):
+        # Only show sensors for sensor props, and actuators for actuator props
+        if self.list_box_props.GetStringSelection() in self.proj.all_sensors:
+            methods = r.handlers['sensor'].methods
+        elif self.list_box_props.GetStringSelection() in self.proj.all_actuators:
+            methods = r.handlers['actuator'].methods
+        else:
+            print ("WARNING: Selected proposition '%s' that is neither sensor nor actuator. " +
+                  "This should be impossible.") % (self.list_box_props.GetStringSelection())
+
+        for i, m in enumerate([m for m in methods if not m.name.startswith("_")]):
             self.list_box_functions.Insert("%s" % (m.name), i, m)
-        event.Skip()
+
+        if event is not None:
+            event.Skip()
 
     def onSelectHandler(self, event): # wxGlade: propMappingDialog.<event_handler>
+        if event is not None:
+            event.Skip()
+
         pos = self.list_box_functions.GetSelection()
+
+        if pos < 0:
+            if self.panel_method_cfg.GetSizer() is not None:
+                self.panel_method_cfg.GetSizer().Clear(deleteWindows=True)
+            return
+
         m = self.list_box_functions.GetClientData(pos)
-        drawParamConfigPane(self.panel_method_cfg, m.para)
+        self.tempMethod = deepcopy(m)
+        drawParamConfigPane(self.panel_method_cfg, self.tempMethod)
         self.Layout()
 
-        event.Skip()
 
     def onClickOK(self, event): # wxGlade: propMappingDialog.<event_handler>
         print "Event handler `onClickOK' not implemented!"
@@ -849,8 +892,13 @@ class propMappingDialog(wx.Dialog):
         # Load detailed view of keyword below
             
         self.list_box_robots.SetStringSelection(corresponding_robots[0])
-        #self.list_box_robots.SetStringSelection(corresponding_robots[0])
-        #self.list_box_robots.SetStringSelection(corresponding_robots[0])
+        self.onSelectRobot(None)
+        self.list_box_functions.SetStringSelection(m.group("name"))
+        #self.onSelectHandler(None)
+
+        ######## TODO: finish below vvvv ##########
+
+        #self.tempMethod = 
 
         event.Skip()
 
