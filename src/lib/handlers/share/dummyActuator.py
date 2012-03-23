@@ -15,7 +15,10 @@ class actuatorHandler:
 
     def setActuator(self, name, val):
         """
-        Pretends to set actuator of name ``name`` to be in state ``val`` (binary).
+        Pretends to set actuator of name ``name`` to be in state ``val`` (bool).
+        
+        name (string): Name of the actuator
+        val (bool): the state of the actuator
         """
 
         if val:

@@ -36,6 +36,15 @@ class sensorHandler:
         while not self.sensorListenInitialized:
             time.sleep(0.05) # Yield cpu
 
+    def buttonPress(self,button_name):
+        """
+        Return a boolean value corresponding to the state of the sensor with name ``sensor_name``
+        If such a sensor does not exist, returns ``None``
+
+        button_name (string): Name of the sensor whose state is interested 
+        """
+
+        return
 
     def addSensorName(self,sensor_name,button_name):
         """
