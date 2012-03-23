@@ -161,12 +161,16 @@ class SpecEditorFrame(wx.Frame):
         self.button_edit_regions = wx.Button(self.panel_1, -1, "Edit Regions...")
         self.label_1_copy = wx.StaticText(self.panel_1, -1, "Sensors:")
         self.list_box_sensors = wx.CheckListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
+        self.button_sensor_add = wx.Button(self.panel_1, wx.ID_ADD, "")
+        self.button_sensor_remove = wx.Button(self.panel_1, wx.ID_REMOVE, "")
         self.label_1_copy_1 = wx.StaticText(self.panel_1, -1, "Actions:")
         self.list_box_actions = wx.CheckListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
+        self.button_actuator_add = wx.Button(self.panel_1, wx.ID_ADD, "")
+        self.button_actuator_remove = wx.Button(self.panel_1, wx.ID_REMOVE, "")
         self.label_1_copy_2 = wx.StaticText(self.panel_1, -1, "Custom Propositions:")
         self.list_box_customs = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
-        self.button_custom_new = wx.Button(self.panel_1, -1, "New...")
-        self.button_custom_delete = wx.Button(self.panel_1, -1, "Delete")
+        self.button_custom_add = wx.Button(self.panel_1, wx.ID_ADD, "")
+        self.button_custom_remove = wx.Button(self.panel_1, wx.ID_REMOVE, "")
         self.text_ctrl_log = wx.richtext.RichTextCtrl(self.notebook_1_pane_1, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.text_ctrl_LTL = wx.TextCtrl(self.notebook_1_pane_2, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
         self.label_locphrases = wx.StaticText(self.notebook_1_pane_3, -1, "Active locative phrases:")
@@ -201,10 +205,14 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onMapSelect, self.button_map)
         self.Bind(wx.EVT_BUTTON, self.onClickEditRegions, self.button_edit_regions)
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onPropositionDblClick, self.list_box_sensors)
+        self.Bind(wx.EVT_BUTTON, self.onPropAdd, self.button_sensor_add)
+        self.Bind(wx.EVT_BUTTON, self.onPropRemove, self.button_sensor_remove)
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onPropositionDblClick, self.list_box_actions)
+        self.Bind(wx.EVT_BUTTON, self.onPropAdd, self.button_actuator_add)
+        self.Bind(wx.EVT_BUTTON, self.onPropRemove, self.button_actuator_remove)
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onPropositionDblClick, self.list_box_customs)
-        self.Bind(wx.EVT_BUTTON, self.onCustomNew, self.button_custom_new)
-        self.Bind(wx.EVT_BUTTON, self.onCustomDelete, self.button_custom_delete)
+        self.Bind(wx.EVT_BUTTON, self.onPropAdd, self.button_custom_add)
+        self.Bind(wx.EVT_BUTTON, self.onPropRemove, self.button_custom_remove)
         self.Bind(wx.EVT_LISTBOX, self.onLocPhraseSelect, self.list_box_locphrases)
         self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelToggle, self.checkbox_regionlabel)
         # end wxGlade
@@ -270,7 +278,7 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_sensors.SetMinSize((123, 75))
         self.list_box_actions.SetMinSize((123, 75))
         self.list_box_customs.SetMinSize((123, 75))
-        self.button_custom_delete.Enable(False)
+        self.button_custom_remove.Enable(False)
         self.panel_1.SetScrollRate(10, 10)
         self.checkbox_regionlabel.SetValue(1)
         # end wxGlade
@@ -286,6 +294,8 @@ class SpecEditorFrame(wx.Frame):
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_11 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_6 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_5.Add(self.label_1, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
         sizer_5.Add(self.list_box_regions, 2, wx.LEFT|wx.EXPAND, 4)
@@ -295,13 +305,21 @@ class SpecEditorFrame(wx.Frame):
         sizer_5.Add(sizer_7, 0, wx.LEFT|wx.EXPAND, 4)
         sizer_5.Add(self.label_1_copy, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
         sizer_5.Add(self.list_box_sensors, 2, wx.LEFT|wx.EXPAND, 4)
+        sizer_6.Add(self.button_sensor_add, 0, wx.TOP, 5)
+        sizer_6.Add((5, 20), 0, 0, 0)
+        sizer_6.Add(self.button_sensor_remove, 0, wx.TOP, 5)
+        sizer_5.Add(sizer_6, 0, wx.LEFT|wx.EXPAND, 4)
         sizer_5.Add(self.label_1_copy_1, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
         sizer_5.Add(self.list_box_actions, 2, wx.LEFT|wx.EXPAND, 4)
+        sizer_11.Add(self.button_actuator_add, 0, wx.TOP, 5)
+        sizer_11.Add((5, 20), 0, 0, 0)
+        sizer_11.Add(self.button_actuator_remove, 0, wx.TOP, 5)
+        sizer_5.Add(sizer_11, 0, wx.LEFT|wx.EXPAND, 6)
         sizer_5.Add(self.label_1_copy_2, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
         sizer_5.Add(self.list_box_customs, 2, wx.LEFT|wx.EXPAND, 4)
-        sizer_8.Add(self.button_custom_new, 0, wx.TOP, 5)
+        sizer_8.Add(self.button_custom_add, 0, wx.TOP, 5)
         sizer_8.Add((5, 20), 0, 0, 0)
-        sizer_8.Add(self.button_custom_delete, 0, wx.TOP, 5)
+        sizer_8.Add(self.button_custom_remove, 0, wx.TOP, 5)
         sizer_5.Add(sizer_8, 0, wx.LEFT|wx.EXPAND, 4)
         self.panel_1.SetSizer(sizer_5)
         sizer_4.Add(self.panel_1, 1, wx.EXPAND, 0)
@@ -360,65 +378,6 @@ class SpecEditorFrame(wx.Frame):
             # Only allow adding of enabled propositions
             return
         self.text_ctrl_spec.AppendText(caller.GetStringSelection())
-
-        event.Skip()
-
-    def onCustomNew(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        """
-        Display a dialog asking for a proposition name and then add it to the custom proposition list.
-        """
-
-        # Find any existing custom propositions of name customX
-        nums = []
-        p = re.compile(r"^custom(?P<num>\d+)$")
-        for name in self.list_box_customs.GetItems():
-            m = p.match(name)
-            if not m: continue
-            nums.append(int(m.group('num')))
-        nums.sort()
-
-        # Find smallest available number
-        last = 0
-        for num in nums:
-            if num == last + 1:
-                last = num
-            elif num == last:
-                #print "Warning: Multiple propositions with name 'r%d'." % num
-                continue
-            else:
-                break
-
-        default_name = "custom" + str(last + 1)
-
-        # Ask the user for a proposition name, suggesting the next available one as default
-        name = wx.GetTextFromUser("Name:", "New Custom Proposition", default_name)
-        
-        if name != "":
-            # If it's valid, add it, select it and enable it
-            self.list_box_customs.Insert(name, self.list_box_customs.GetCount())
-            self.list_box_customs.Select(self.list_box_customs.GetCount()-1)
-            self.button_custom_delete.Enable(True)
-
-        event.Skip()
-
-    def onCustomDelete(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        """
-        Remove the selected custom proposition.
-        """
-
-        selection = self.list_box_customs.GetSelection()
-        self.list_box_customs.Delete(selection)
-        
-        # Select something reasonable now that the old item is gone
-        if selection > 0:
-            self.list_box_customs.Select(selection-1)
-        else:
-            if self.list_box_customs.GetCount() != 0:
-                self.list_box_customs.Select(0)
-
-        # Disable the Delete button if there's nothing to delete
-        if self.list_box_customs.GetCount() == 0:
-            self.button_custom_delete.Enable(False)
 
         event.Skip()
 
@@ -739,13 +698,19 @@ class SpecEditorFrame(wx.Frame):
                     self.loadRegionFile(os.path.join(filePath, content['RegionFile'][0]))
                 if 'Actions' in content:
                     self.loadList(content['Actions'], self.list_box_actions)
+                    if len(content['Actions']) > 0:
+                        self.button_actuator_remove.Enable(True)
+                        self.list_box_actions.Select(0)
                 if 'Customs' in content:
                     self.loadList(content['Customs'], self.list_box_customs)
                     if len(content['Customs']) > 0:
-                        self.button_custom_delete.Enable(True)
+                        self.button_custom_remove.Enable(True)
                         self.list_box_customs.Select(0)
                 if 'Sensors' in content:
                     self.loadList(content['Sensors'], self.list_box_sensors)
+                    if len(content['Sensors']) > 0:
+                        self.button_sensor_remove.Enable(True)
+                        self.list_box_sensors.Select(0)
                 if 'currentExperimentName' in content and len(content['currentExperimentName']) > 0:
                     self.currentExperimentName = content['currentExperimentName'][0]
                     
@@ -1311,6 +1276,87 @@ class SpecEditorFrame(wx.Frame):
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # TODO: check for failed compilation before allowing this
         subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.fileName])
+
+    def onPropAdd(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        """
+        Display a dialog asking for a proposition name and then
+        add it to the appropriate proposition list.
+        """
+
+        if event.GetEventObject() is self.button_sensor_add:
+            prop_prefix = "sensor"
+            lb = self.list_box_sensors
+            remove_button = self.button_sensor_remove
+        elif event.GetEventObject() is self.button_actuator_add:
+            prop_prefix = "actuator"
+            lb = self.list_box_actions
+            remove_button = self.button_actuator_remove
+        elif event.GetEventObject() is self.button_custom_add:
+            prop_prefix = "custom"
+            lb = self.list_box_customs
+            remove_button = self.button_custom_remove
+
+        # Find any existing propositions of name sensor/actuator/customX
+        nums = []
+        p = re.compile(r"^%s(?P<num>\d+)$" % prop_prefix)
+        for name in lb.GetItems():
+            m = p.match(name)
+            if not m: continue
+            nums.append(int(m.group('num')))
+        nums.sort()
+
+        # Find smallest available number
+        last = 0
+        for num in nums:
+            if num == last + 1:
+                last = num
+            elif num == last:
+                #print "Warning: Multiple propositions with name 'r%d'." % num
+                continue
+            else:
+                break
+
+        default_name = prop_prefix + str(last + 1)
+
+        # Ask the user for a proposition name, suggesting the next available one as default
+        name = wx.GetTextFromUser("Name:", "New %s Proposition" % prop_prefix.title(), default_name)
+        
+        if name != "":
+            # If it's valid, add it, select it and enable it
+            lb.Insert(name, lb.GetCount())
+            lb.Select(lb.GetCount()-1)
+            lb.Check(lb.GetCount()-1)
+            remove_button.Enable(True)
+
+        event.Skip(False)
+
+    def onPropRemove(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        """
+        Remove the selected proposition from the list.
+        """
+
+        if event.GetEventObject() is self.button_sensor_remove:
+            lb = self.list_box_sensors
+        elif event.GetEventObject() is self.button_actuator_remove:
+            lb = self.list_box_actions
+        elif event.GetEventObject() is self.button_custom_remove:
+            lb = self.list_box_customs
+
+        selection = lb.GetSelection()
+        lb.Delete(selection)
+        
+        # Select something reasonable now that the old item is gone
+        if selection > 0:
+            lb.Select(selection-1)
+        else:
+            if lb.GetCount() != 0:
+                lb.Select(0)
+
+        # Disable the Delete button if there's nothing to delete
+        if lb.GetCount() == 0:
+            event.GetEventObject().Enable(False)
+
+        event.Skip(False)
 
 # end of class SpecEditorFrame
 
