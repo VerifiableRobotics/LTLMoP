@@ -150,6 +150,7 @@ class simSetupDialog(wx.Dialog):
         self.button_addrobot = wx.Button(self, -1, "Add robot...")
         self.button_2 = wx.Button(self, -1, "Configure robot...")
         self.button_3 = wx.Button(self, -1, "Remove robot")
+        self.button_defaultrobot = wx.Button(self, -1, "Set as Main Robot")
         self.button_4 = wx.Button(self, -1, "Edit proposition mapping...")
         self.button_sim_apply = wx.Button(self, wx.ID_APPLY, "")
         self.button_sim_ok = wx.Button(self, wx.ID_OK, "")
@@ -166,6 +167,7 @@ class simSetupDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.onClickAddRobot, self.button_addrobot)
         self.Bind(wx.EVT_BUTTON, self.onClickConfigureRobot, self.button_2)
         self.Bind(wx.EVT_BUTTON, self.onClickRemoveRobot, self.button_3)
+        self.Bind(wx.EVT_BUTTON, self.onSetMainRobot, self.button_defaultrobot)
         self.Bind(wx.EVT_BUTTON, self.onClickEditMapping, self.button_4)
         self.Bind(wx.EVT_BUTTON, self.onClickApply, self.button_sim_apply)
         self.Bind(wx.EVT_BUTTON, self.onClickOK, self.button_sim_ok)
@@ -289,6 +291,7 @@ class simSetupDialog(wx.Dialog):
         sizer_4.Add(self.button_2, 0, wx.BOTTOM, 5)
         sizer_4.Add(self.button_3, 0, 0, 0)
         sizer_4.Add((20, 60), 0, 0, 0)
+        sizer_4.Add(self.button_defaultrobot, 0, wx.BOTTOM, 5)
         sizer_4.Add(self.button_4, 0, 0, 0)
         sizer_2.Add(sizer_4, 1, wx.EXPAND, 0)
         sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
@@ -329,7 +332,10 @@ class simSetupDialog(wx.Dialog):
         # Set up the robots list
         self.list_box_robots.Set([])
         for i, robot in enumerate(cfg.robots):
-            self.list_box_robots.Insert(robot.name, i, robot)
+            if robot.name == cfg.main_robot:
+                self.list_box_robots.Insert(robot.name + " (Main)", i, robot)
+            else:
+                self.list_box_robots.Insert(robot.name, i, robot)
 
         if len(cfg.robots) > 0:
             self.list_box_robots.Select(0)
@@ -401,6 +407,8 @@ class simSetupDialog(wx.Dialog):
         if dlg.ShowModal() != wx.ID_CANCEL:
             obj = self._getSelectedConfigObject()
             obj.robots += [dlg.robot]
+            if obj.main_robot == '':
+                obj.main_robot = dlg.robot.name
             self._cfg2dialog(obj)
         dlg.Destroy()
         event.Skip()
@@ -417,6 +425,9 @@ class simSetupDialog(wx.Dialog):
         dlg._robot2dialog(deepcopy(r))
         if dlg.ShowModal() != wx.ID_CANCEL:
             obj = self._getSelectedConfigObject()
+            # Update the name of the main robot if necessary
+            if obj.main_robot == obj.robots[pos].name:
+                obj.main_robot = dlg.robot.name
             obj.robots[pos] = dlg.robot
             self._cfg2dialog(obj)
         dlg.Destroy()
@@ -432,6 +443,11 @@ class simSetupDialog(wx.Dialog):
         # TODO: gray out button when no action possible
         if numel > 0:
             pos = self.list_box_robots.GetSelection()
+
+            # Clear the main_robot string if we're deleting that robot
+            if obj.main_robot == obj.robots[pos].name:
+                obj.main_robot = ''
+
             obj.robots.pop(pos)
             self._cfg2dialog(obj)
 
@@ -491,6 +507,18 @@ class simSetupDialog(wx.Dialog):
         else:
             obj.initial_truths.remove(name)
 
+        event.Skip()
+
+    def onSetMainRobot(self, event): # wxGlade: simSetupDialog.<event_handler>
+        pos = self.list_box_robots.GetSelection()
+        obj = self.list_box_robots.GetClientData(pos)
+
+        if obj is None:
+            return
+
+        self._getSelectedConfigObject().main_robot = obj.name
+        self._cfg2dialog(self._getSelectedConfigObject()) 
+        self.list_box_robots.SetSelection(pos)
         event.Skip()
 
 # end of class simSetupDialog
