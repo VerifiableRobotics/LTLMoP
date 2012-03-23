@@ -181,7 +181,12 @@ class simSetupDialog(wx.Dialog):
         # Set up the list of configs
         self.list_box_experiment_name.Clear()
         
+        print "Loading config files..."
         self.hsub.loadAllConfigFiles()
+        print "Loading handlers..."
+        self.hsub.loadAllHandlers()
+        print "Loading robots..."
+        self.hsub.loadAllRobots()
 
         current_config = self.proj.spec_data['SETTINGS']['currentExperimentName'][0]
 
@@ -503,8 +508,6 @@ class addRobotDialog(wx.Dialog):
         self.handler_combos = {}
         self.handler_buttons = {}
 
-        self.hsub.loadAllHandlers()
-        self.hsub.loadAllRobots()
         
         for htype in self.robot.handlers.keys():
             self.handler_labels[htype] = wx.StaticText(self, -1, "%s:" % htype) 
@@ -698,12 +701,14 @@ class propMappingDialog(wx.Dialog):
 
         self.proj = parent.proj
         self.robots = parent._getSelectedConfigObject().robots
+        self.hsub = parent.hsub
 
         # Set up the list of robots
 
         for i, r in enumerate(self.robots):
             self.list_box_robots.Insert("%s (%s)" % (r.name, r.type), i, r)
-        # TODO: include dummy!!
+
+        self.list_box_robots.Append("(Simulated)")
         self.list_box_robots.SetSelection(0)
 
         # Set up the list of props
@@ -803,7 +808,13 @@ class propMappingDialog(wx.Dialog):
         event.Skip()
 
     def onClickApply(self, event): # wxGlade: propMappingDialog.<event_handler>
-        print "Event handler `onClickApply' not implemented!"
+        if self.tempMethod is not None:
+            start, end = self.text_ctrl_mapping.GetSelection()
+            method_string = self.hsub.method2String(self.tempMethod)
+            if method_string is None:
+                print "ERROR: Method cannot be mapped to string"
+            else:
+                self.text_ctrl_mapping.Replace(start, end, method_string)
         event.Skip()
 
     def onSelectRobot(self, event): # wxGlade: propMappingDialog.<event_handler>
@@ -814,9 +825,15 @@ class propMappingDialog(wx.Dialog):
 
         # Only show sensors for sensor props, and actuators for actuator props
         if self.list_box_props.GetStringSelection() in self.proj.all_sensors:
-            methods = r.handlers['sensor'].methods
+            if self.list_box_robots.GetStringSelection() == "(Simulated)":
+                methods = self.hsub.handler_dic["sensor"]["shared"].methods
+            else:
+                methods = r.handlers['sensor'].methods
         elif self.list_box_props.GetStringSelection() in self.proj.all_actuators:
-            methods = r.handlers['actuator'].methods
+            if self.list_box_robots.GetStringSelection() == "(Simulated)":
+                methods = self.hsub.handler_dic["actuator"]["shared"].methods
+            else:
+                methods = r.handlers['actuator'].methods
         else:
             print ("WARNING: Selected proposition '%s' that is neither sensor nor actuator. " +
                   "This should be impossible.") % (self.list_box_props.GetStringSelection())
@@ -875,7 +892,10 @@ class propMappingDialog(wx.Dialog):
 
         # Make sure the robot name is valid
             
-        corresponding_robots = [n for n in self.list_box_robots.GetItems() if n.startswith(m.group("robot"))]
+        rname = m.group("robot")
+        if rname == "shared":
+            rname = "(Simulated)"
+        corresponding_robots = [n for n in self.list_box_robots.GetItems() if n.startswith(rname)]
 
         if len(corresponding_robots) != 1:
             print "WARNING: No unique robot corresponding to name '%s'." % m.group("robot")
@@ -894,11 +914,11 @@ class propMappingDialog(wx.Dialog):
         self.list_box_robots.SetStringSelection(corresponding_robots[0])
         self.onSelectRobot(None)
         self.list_box_functions.SetStringSelection(m.group("name"))
-        #self.onSelectHandler(None)
 
-        ######## TODO: finish below vvvv ##########
-
-        #self.tempMethod = 
+        print "matched: ", m.group()
+        self.tempMethod = self.hsub.string2Method(m.group())
+        drawParamConfigPane(self.panel_method_cfg, self.tempMethod)
+        self.Layout()
 
         event.Skip()
 
