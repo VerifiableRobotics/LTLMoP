@@ -70,6 +70,11 @@ class naoActuatorHandler:
                 self.doCount = False
 
     def sayPhrase(self, phrase, state, initial=False):
+        """
+        Use Nao's test to speech system to speak a word.
+
+        phrase (string): The word to be spoken
+        """
         if initial:
             if self.ttsProxy is None:
                 self.ttsProxy = self.naoInitHandler.createProxy('ALTextToSpeech')

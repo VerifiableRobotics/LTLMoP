@@ -38,17 +38,20 @@ class ParameterObject:
         elif self.type.lower() == 'int' or self.type.lower() == 'integer':
             self.value = int(value)
         elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
-            self.value = bool(eval(value))
+            if value.lower() in ['1','true','t']:
+                self.value = True
+            elif value.lower() in ['0','false','f']:
+                self.value = False
         elif self.type.lower() == 'str' or self.type.lower() == 'string':
-            self.value = str(value)
+            self.value = str(value).strip('\"\'')
         elif self.type.lower() == 'listofint' or self.type.lower() == 'listofinteger':
-            self.value = [int(x) for x in eval(value)]
+            self.value = [int(x) for x in value.strip('\'\"[]').split(',')]
         elif self.type.lower() == 'listoffloat':
-            self.value = [float(x) for x in eval(value)]
+            self.value = [float(x) for x in value.strip('\'\"[]').split(',')]
         elif self.type.lower() == 'listofbool' or self.type.lower() == 'listofboolean':
-            self.value = [bool(x) for x in eval(value)]
+            self.value = [bool(x) for x in value.strip('\'\"[]').split(',')]
         elif self.type.lower() == 'listofstr' or self.type.lower() == 'listofstring':
-            self.value = [str(x) for x in eval(value)]
+            self.value = [str(x).strip('\"') for x in value.strip('\'\"[]').split(',')]
         else:
             print 'ERROR: Invalid parameter type %s' % self.type
 
@@ -301,8 +304,8 @@ class HandlerParser:
                     self.handler_dic[handler_type] = self.loadHandler(handler_type,True)
         
         # now let's load all robot specific hanlders
-        self.handler_dic['sensor'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'sensor' in handlerObj.name.lower()]}
-        self.handler_dic['actuator'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'actuator' in handlerObj.name.lower()]}
+        self.handler_dic['sensor'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'sensor' in handlerObj.name.lower()][0]}
+        self.handler_dic['actuator'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'actuator' in handlerObj.name.lower()][0]}
         self.handler_dic['init'] = {}
         self.handler_dic['locomotionCommand'] = {}
         if 'robots' not in handlerFolders:
