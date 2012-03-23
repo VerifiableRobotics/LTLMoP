@@ -263,7 +263,10 @@ class HandlerSubsystem:
             if paraObj.value is None:
                 para_list.append( paraObj.name+'='+str(paraObj.default))
             else:
-                para_list.append( paraObj.name+'='+str(paraObj.value))
+                if paraObj.type.lower() == 'str' or paraObj.type.lower() == 'string':
+                    para_list.append( paraObj.name+'=\"'+str(paraObj.value)+'\"')
+                else:
+                    para_list.append( paraObj.name+'='+str(paraObj.value))
         para_info = ','.join(para_list)
 
         return '.'.join([robotName,handlerName,methodName])+'('+para_info+')'
@@ -304,8 +307,8 @@ class HandlerParser:
                     self.handler_dic[handler_type] = self.loadHandler(handler_type,True)
         
         # now let's load all robot specific hanlders
-        self.handler_dic['sensor'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'sensor' in handlerObj.name.lower()][0]}
-        self.handler_dic['actuator'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'actuator' in handlerObj.name.lower()][0]}
+        self.handler_dic['sensor'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'sensor' in handlerObj.name.lower()]}
+        self.handler_dic['actuator'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'actuator' in handlerObj.name.lower()]}
         self.handler_dic['init'] = {}
         self.handler_dic['locomotionCommand'] = {}
         if 'robots' not in handlerFolders:
@@ -737,11 +740,12 @@ class ConfigFileParser:
         sensorMappingList = []
         actuatorMappingList = []
         for prop, fun in configObj.prop_mapping.iteritems():
-            if 'sensor' in fun:
+            print fun
+            if 'sensor' in fun.lower():
                 sensorMapping = prop + ' = ' + fun
                 sensorMappingList.append(sensorMapping)
-            elif 'actuator' in fun:
-                actuatorMapping = fun + ' = ' + fun
+            elif 'actuator' in fun.lower():
+                actuatorMapping = prop + ' = ' + fun
                 actuatorMappingList.append(actuatorMapping)
 
         data['General Config']['Sensor_Proposition_Mapping'] = sensorMappingList
