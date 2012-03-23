@@ -432,7 +432,6 @@ class simSetupDialog(wx.Dialog):
         # TODO: gray out button when no action possible
         if numel > 0:
             pos = self.list_box_robots.GetSelection()
-            #self.list_box_robots.Delete(pos)
             obj.robots.pop(pos)
             self._cfg2dialog(obj)
 
@@ -827,7 +826,6 @@ class propMappingDialog(wx.Dialog):
 
     def onClickApply(self, event): # wxGlade: propMappingDialog.<event_handler>
         if self.tempMethod is not None:
-            start, end = self.text_ctrl_mapping.GetSelection()
             for p in self.tempMethod.para:
                 print p.name, p.value
 
@@ -838,6 +836,12 @@ class propMappingDialog(wx.Dialog):
             if method_string is None:
                 print "ERROR: Method cannot be mapped to string"
             else:
+                start, end = self.text_ctrl_mapping.GetSelection()
+                if start < 0:
+                    # If nothing is selected, just insert
+                    start = self.text_ctrl_mapping.GetInsertionPoint()
+                    end = start
+                
                 self.text_ctrl_mapping.Replace(start, end, method_string)
                 self.text_ctrl_mapping.SetSelection(start, start + len(method_string))
         event.Skip()
