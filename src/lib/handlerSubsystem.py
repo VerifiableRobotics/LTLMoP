@@ -111,16 +111,16 @@ class HandlerObject:
             string = self.name+method_input
         return string
         
-    def fullPath(self):
+    def fullPath(self,robotName=''):
         """ Return the full path for this handler object for importing"""
-        if handler_type in ['init','sensor','actuator','locomotionCommand']:
-            fileName = '.'.join(['lib.handlers.robots',robotName,handlerObj.name])
+        if self.getType() in ['init','sensor','actuator','locomotionCommand']:
+            fileName = '.'.join(['lib.handlers.robots',robotName,self.name])
         else:
-            fileName = '.'.join(['lib.handlers',handler_type,handlerObj.name])
-        return
+            fileName = '.'.join(['lib.handlers',self.getType(),self.name])
+        return fileName
         
     def getType(self):
-        return self.type.split(':')[0]
+        return self.type
 
 class RobotObject:
     """
@@ -131,13 +131,7 @@ class RobotObject:
         self.type = r_type  # type of the robot
         self.handlers = {'drive':driveH, 'init':initH, 'locomotionCommand':locoH, 'motionControl':motionH, 'pose':poseH, 'sensor':sensorH,'actuator':actuatorH} # dictionary of handler object for this robot
 
-    def update(self):
-        """update all handler type of robot specific handler to have robot name in it"""
-        
-        for handler_type in self.handlers:
-            if handler_type in ['init','locomotionCommand','sensor','actuator']:
-                self.handlers[handler_type].type += (':'+self.name)
-        
+    
 
 class HandlerSubsystem:
     """
@@ -230,11 +224,12 @@ class HandlerSubsystem:
                     break
              
             for para_pair in para_info:
-                para_name,para_value = [x.strip() for x in para_pair.split('=')]
-                for paraObj in methodObj.para:
-                    if paraObj.name == para_name:
-                        paraObj.setValue(para_value)
-                        break
+                if '=' in para_pair:
+                    para_name,para_value = [x.strip() for x in para_pair.split('=')]
+                    for paraObj in methodObj.para:
+                        if paraObj.name == para_name:
+                            paraObj.setValue(para_value)
+                            break
         else:
             print "ERROR: Cannot recognize method %s, please spicify which handler it belongs to." %method_info
             return
@@ -242,7 +237,7 @@ class HandlerSubsystem:
         return methodObj
 
 
-    def method2String(self,methodObj):
+    def method2String(self,methodObj,robotName=''):
         """
         Return the string representation according to the input method object 
         """
@@ -252,22 +247,12 @@ class HandlerSubsystem:
         if not isinstance(methodObj,MethodObject):
             print "ERROR: Input is not a valid method object!"
             return
-        if ':' not in methodObj.handler.type:
-            robotName = methodObj.handler.type
-        else:
-            robotName = methodObj.handler.type.split(':')[1]
+        if robotName=='':
+            print "ERROR: Needs robot name for method2String"
+            return
+
         handlerName = methodObj.handler.name
         methodName = methodObj.name
-
-#        if 'dummy' in handlerName:
-#            handlerType = 'share'
-#        elif 'sensor' in handlerName:
-#            handlerType = 'sensor'
-#        elif 'actuator' in handlerName:
-#            handlerType = 'actuator'
-#        else:
-#            print "ERROR: Invalid handler Type %s of method %s!" %(handlerName,methodName)
-#            return
 
         # convert all parameter object into string
         para_list = []
@@ -610,7 +595,6 @@ class RobotFileParser:
                             if para_name == paraObj.name:
                                 paraObj.setValue(para_value)
                                 break
-        robotObj.update()
         return robotObj
     
                 
@@ -817,12 +801,12 @@ if __name__ == '__main__':
     testMethod = h.string2Method(testStringBefore)
     
     print
-    testStringAfter = h.method2String(testMethod)
+    testStringAfter = h.method2String(testMethod,'share')
 
     print testStringBefore == testStringAfter
     
     testStringBefore = 'MAE.naoSensor.hearWord(word="Fire",threshold=0.9)'
     testMethod = h.string2Method(testStringBefore)
-    testStringAfter = h.method2String(testMethod)
+    testStringAfter = h.method2String(testMethod,'MAE')
     print testStringBefore == testStringAfter
 
