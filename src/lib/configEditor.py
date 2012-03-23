@@ -38,10 +38,20 @@ def drawParamConfigPane(target, method):
         item_sizer.Add(param_info_label, 0, wx.ALL, 5)
         list_sizer.Add(item_sizer, 0, wx.EXPAND, 0)
 
-        def callbackTextCtrl(*args, **kwds):
-            p.setValue(param_controls[p].GetValue())
+    # TODO: is there a better way to do this that doesn't involve a closure?
+    def callbackTextCtrl(event):
+        this_param = None
+
+        for p in method.para:
+            if event.GetEventObject() is param_controls[p]:
+                this_param = p
+                break
+
+        assert this_param is not None
+
+        this_param.setValue(param_controls[this_param].GetValue())
         
-        target.Bind(wx.EVT_TEXT, callbackTextCtrl, param_controls[p])
+    target.Bind(wx.EVT_TEXT, callbackTextCtrl)
 
     target.SetSizer(list_sizer)
     target.Layout()
@@ -451,8 +461,16 @@ class simSetupDialog(wx.Dialog):
         event.Skip()
 
     def onClickOK(self, event): # wxGlade: simSetupDialog.<event_handler>
+        # Save the config files
         self.hsub.config_parser.configs = self.hsub.configs
         self.hsub.config_parser.saveAllConfigFiles()
+
+        # Save the name of the currently active config in the spec file
+        self.proj.spec_data['SETTINGS']['currentExperimentName'] = [self._getSelectedConfigObject().name]
+        # TODO: move spec saving from speceditor to project.py
+        #self.proj.saveSpecFile(os.path.join(self.proj.project_root, self.proj.project_basename + ".spec"))
+
+        # Clean up
         self.Destroy()
 
 
@@ -810,11 +828,18 @@ class propMappingDialog(wx.Dialog):
     def onClickApply(self, event): # wxGlade: propMappingDialog.<event_handler>
         if self.tempMethod is not None:
             start, end = self.text_ctrl_mapping.GetSelection()
-            method_string = self.hsub.method2String(self.tempMethod)
+            for p in self.tempMethod.para:
+                print p.name, p.value
+
+            rname = self.list_box_robots.GetStringSelection().split(" ")[0]
+            if rname == "(Simulated)":
+                rname = "share"
+            method_string = self.hsub.method2String(self.tempMethod, rname)
             if method_string is None:
                 print "ERROR: Method cannot be mapped to string"
             else:
                 self.text_ctrl_mapping.Replace(start, end, method_string)
+                self.text_ctrl_mapping.SetSelection(start, start + len(method_string))
         event.Skip()
 
     def onSelectRobot(self, event): # wxGlade: propMappingDialog.<event_handler>
@@ -826,12 +851,13 @@ class propMappingDialog(wx.Dialog):
         # Only show sensors for sensor props, and actuators for actuator props
         if self.list_box_props.GetStringSelection() in self.proj.all_sensors:
             if self.list_box_robots.GetStringSelection() == "(Simulated)":
-                methods = self.hsub.handler_dic["sensor"]["shared"].methods
+                # TODO: might there be more than one type of handler in share?
+                methods = self.hsub.handler_dic["sensor"]["share"][0].methods
             else:
                 methods = r.handlers['sensor'].methods
         elif self.list_box_props.GetStringSelection() in self.proj.all_actuators:
             if self.list_box_robots.GetStringSelection() == "(Simulated)":
-                methods = self.hsub.handler_dic["actuator"]["shared"].methods
+                methods = self.hsub.handler_dic["actuator"]["share"][0].methods
             else:
                 methods = r.handlers['actuator'].methods
         else:
@@ -893,7 +919,7 @@ class propMappingDialog(wx.Dialog):
         # Make sure the robot name is valid
             
         rname = m.group("robot")
-        if rname == "shared":
+        if rname == "share":
             rname = "(Simulated)"
         corresponding_robots = [n for n in self.list_box_robots.GetItems() if n.startswith(rname)]
 
