@@ -219,7 +219,7 @@ class simSetupDialog(wx.Dialog):
             self._cfg2dialog(cfg)
 
         # Check for case where a non-existent config file is referenced in the spec file
-        if current_config not in [c.name for c in self.hsub.configs]:
+        if not any([current_config == c.name for c in self.hsub.configs]):
             print "WARNING: Cannot find config '%s' as referenced in spec file.  Ignoring." % current_config
             self.list_box_experiment_name.Select(0)
             self._cfg2dialog(self.list_box_experiment_name.GetClientData(0))
@@ -774,7 +774,28 @@ class propMappingDialog(wx.Dialog):
         self.onSelectProp(None)
 
     def _mapping2dialog(self, mapping):
-        self.mapping = deepcopy(mapping)
+        self.mapping = mapping
+    
+        # Set defaults as necessary
+        for p in self.proj.all_sensors:
+            if p not in mapping or self.mapping[p].strip() == "":
+                # FIXME: This code is a shining example of why we need a search function
+                
+                m = deepcopy([m for m in self.hsub.handler_dic["sensor"]["share"][0].methods
+                              if m.name == "buttonPress"][0])
+                para = [pa for pa in m.para if pa.name == "button_name"][0]
+                para.setValue(p)
+                self.mapping[p] = self.hsub.method2String(m, "share")
+
+        for p in self.proj.all_actuators:
+            if p not in mapping or self.mapping[p].strip() == "":
+                # FIXME: This code is a shining example of why we need a search function
+                
+                m = deepcopy([m for m in self.hsub.handler_dic["actuator"]["share"][0].methods
+                              if m.name == "setActuator"][0])
+                para = [pa for pa in m.para if pa.name == "name"][0]
+                para.setValue(p)
+                self.mapping[p] = self.hsub.method2String(m, "share")
 
     def __set_properties(self):
         # begin wxGlade: propMappingDialog.__set_properties
@@ -825,8 +846,8 @@ class propMappingDialog(wx.Dialog):
     def onSelectProp(self, event): # wxGlade: propMappingDialog.<event_handler>
         # If you've selected a header, not a proposition, then gray out the edit box
         if self.list_box_props.GetStringSelection().startswith("==="):
-            self.text_ctrl_mapping.SetValue("")
             self.text_ctrl_mapping.Enable(False)
+            self.text_ctrl_mapping.SetValue("")
             self.list_box_robots.Enable(False)
             self.list_box_functions.Clear()
             self.list_box_functions.Enable(False)
@@ -989,8 +1010,7 @@ class propMappingDialog(wx.Dialog):
         event.Skip()
 
     def onEditMapping(self, event): # wxGlade: propMappingDialog.<event_handler>
-        if not self.text_ctrl_mapping.IsEnabled() or \
-           self.text_ctrl_mapping.GetValue() == "":
+        if not self.text_ctrl_mapping.IsEnabled():
             return
 
         prop_name = self.list_box_props.GetStringSelection()
