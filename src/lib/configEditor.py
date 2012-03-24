@@ -290,7 +290,7 @@ class simSetupDialog(wx.Dialog):
         sizer_4.Add(self.button_addrobot, 0, wx.BOTTOM, 5)
         sizer_4.Add(self.button_2, 0, wx.BOTTOM, 5)
         sizer_4.Add(self.button_3, 0, 0, 0)
-        sizer_4.Add((20, 60), 0, 0, 0)
+        sizer_4.Add((20, 30), 0, 0, 0)
         sizer_4.Add(self.button_defaultrobot, 0, wx.BOTTOM, 5)
         sizer_4.Add(self.button_4, 0, 0, 0)
         sizer_2.Add(sizer_4, 1, wx.EXPAND, 0)
@@ -714,7 +714,6 @@ class propMappingDialog(wx.Dialog):
         self.list_box_props = wx.ListBox(self, -1, choices=[], style=wx.LB_SINGLE|wx.LB_ALWAYS_SB)
         self.label_11 = wx.StaticText(self, -1, "Continuous controller mapping:")
         self.text_ctrl_mapping = wx.richtext.RichTextCtrl(self, -1, "")
-        self.button_8 = wx.Button(self, -1, u"Edit\n  ↓")
         self.button_9 = wx.Button(self, -1, u"        ↑\nInsert/Apply")
         self.label_7 = wx.StaticText(self, -1, "Robots:")
         self.list_box_robots = wx.ListBox(self, -1, choices=[])
@@ -730,7 +729,6 @@ class propMappingDialog(wx.Dialog):
 
         self.Bind(wx.EVT_LISTBOX, self.onSelectProp, self.list_box_props)
         self.Bind(wx.EVT_TEXT, self.onEditMapping, self.text_ctrl_mapping)
-        self.Bind(wx.EVT_BUTTON, self.onClickEdit, self.button_8)
         self.Bind(wx.EVT_BUTTON, self.onClickApply, self.button_9)
         self.Bind(wx.EVT_LISTBOX, self.onSelectRobot, self.list_box_robots)
         self.Bind(wx.EVT_LISTBOX, self.onSelectHandler, self.list_box_functions)
@@ -781,7 +779,7 @@ class propMappingDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: propMappingDialog.__set_properties
         self.SetTitle("Proposition Mapping")
-        self.SetSize((836, 616))
+        self.SetSize((981, 419))
         self.panel_method_cfg.SetScrollRate(10, 10)
         # end wxGlade
 
@@ -802,8 +800,6 @@ class propMappingDialog(wx.Dialog):
         sizer_16.Add(self.label_11, 0, wx.ALL, 5)
         sizer_16.Add(self.text_ctrl_mapping, 1, wx.ALL|wx.EXPAND, 5)
         sizer_18.Add((20, 20), 1, wx.EXPAND, 0)
-        sizer_18.Add(self.button_8, 0, wx.ALL, 5)
-        sizer_18.Add((40, 20), 0, 0, 0)
         sizer_18.Add(self.button_9, 0, wx.ALL, 5)
         sizer_18.Add((20, 20), 1, wx.EXPAND, 0)
         sizer_16.Add(sizer_18, 0, wx.EXPAND, 0)
@@ -815,13 +811,13 @@ class propMappingDialog(wx.Dialog):
         sizer_19.Add(sizer_21, 1, wx.EXPAND, 0)
         sizer_24.Add(self.label_10, 0, wx.ALL, 5)
         sizer_24.Add(self.panel_method_cfg, 1, wx.ALL|wx.EXPAND, 5)
-        sizer_19.Add(sizer_24, 1, wx.EXPAND, 0)
+        sizer_19.Add(sizer_24, 3, wx.EXPAND, 0)
         sizer_16.Add(sizer_19, 5, wx.EXPAND, 0)
         sizer_25.Add((20, 20), 1, wx.EXPAND, 0)
         sizer_25.Add(self.button_11, 0, wx.ALL, 5)
         sizer_25.Add(self.button_10, 0, wx.ALL, 5)
         sizer_16.Add(sizer_25, 0, wx.EXPAND, 0)
-        sizer_14.Add(sizer_16, 2, wx.EXPAND, 0)
+        sizer_14.Add(sizer_16, 4, wx.EXPAND, 0)
         self.SetSizer(sizer_14)
         self.Layout()
         # end wxGlade
@@ -847,10 +843,6 @@ class propMappingDialog(wx.Dialog):
 
         if event is not None:
             event.Skip()
-
-    def onClickEdit(self, event): # wxGlade: propMappingDialog.<event_handler>
-        print "Event handler `onClickEdit' not implemented!"
-        event.Skip()
 
     def onClickApply(self, event): # wxGlade: propMappingDialog.<event_handler>
         if self.tempMethod is not None:
