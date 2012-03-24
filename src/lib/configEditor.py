@@ -721,8 +721,8 @@ class propMappingDialog(wx.Dialog):
         self.list_box_functions = wx.ListBox(self, -1, choices=[])
         self.label_10 = wx.StaticText(self, -1, "Parameters:")
         self.panel_method_cfg = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
-        self.button_11 = wx.Button(self, wx.ID_CANCEL, "")
-        self.button_10 = wx.Button(self, wx.ID_OK, "")
+        self.button_11 = wx.Button(self, wx.ID_OK, "")
+        self.button_10 = wx.Button(self, wx.ID_CANCEL, "")
 
         self.__set_properties()
         self.__do_layout()
