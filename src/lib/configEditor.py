@@ -18,7 +18,7 @@ def drawParamConfigPane(target, method):
     list_sizer = wx.BoxSizer(wx.VERTICAL)
     param_controls = {}
     for p in method.para:
-        print "name: %s, type: %s, default: %s, value: %s" % (p.name, p.type, p.default, p.value)
+        #print "name: %s, type: %s, default: %s, value: %s" % (p.name, p.type, p.default, p.value)
         #SetToolTip(wx.ToolTip("click to hide")
         item_sizer = wx.BoxSizer(wx.HORIZONTAL)
         param_label = wx.StaticText(target, -1, "%s:" % p.name) 
@@ -981,7 +981,7 @@ class propMappingDialog(wx.Dialog):
         self.onSelectRobot(None)
         self.list_box_functions.SetStringSelection(m.group("name"))
 
-        print "matched: ", m.group()
+        #print "matched: ", m.group()
         self.tempMethod = self.hsub.string2Method(m.group())
         drawParamConfigPane(self.panel_method_cfg, self.tempMethod)
         self.Layout()
