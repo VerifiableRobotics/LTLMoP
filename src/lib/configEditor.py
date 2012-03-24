@@ -919,19 +919,35 @@ class propMappingDialog(wx.Dialog):
         event.Skip()
 
         if event.GetEventType() in [wx.wxEVT_KEY_DOWN, wx.wxEVT_KEY_UP] and \
-           event.GetKeyCode() not in [wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_HOME, wx.WXK_END, \
+           event.GetKeyCode() not in [wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_HOME, wx.WXK_END, 
                                       wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_RIGHT, wx.WXK_NUMPAD_UP, wx.WXK_NUMPAD_DOWN]:
+        #                              wx.WXK_BACK, wx.WXK_DELETE]:
             return
         
-        # Check to see if we're clicking or keying to a keyword
-        s = self.text_ctrl_mapping.GetValue()
+        # TODO: Make backspace work as expected; maybe colorize/bold
+
         i = self.text_ctrl_mapping.GetInsertionPoint()
+
+        # Special case for beginning or end of field
+        if i == 0 or i == self.text_ctrl_mapping.GetLastPosition():
+            self.text_ctrl_mapping.SelectNone()
+            return
+
+        s = self.text_ctrl_mapping.GetValue()
+
+        start, end = self.text_ctrl_mapping.GetSelection()
+        if start >= 0:
+            # If something is selected, check to make sure neither side is inside a methodstring
+            check_pts = [start, end]
+        else:
+            # Otherwise just make sure the insertion point hasn't moved inside a methodstring
+            check_pts = [i]
 
         p = re.compile(r"(?P<robot>\w+)\.(?P<type>\w+)\.(?P<name>\w+)\((?P<args>[^\)]*)\)")
         m_local = None
 
         for m in p.finditer(s):
-            if i > m.start() and i < m.end():
+            if any([i > m.start() and i < m.end() for i in check_pts]):
                 m_local = m 
                 break 
 
