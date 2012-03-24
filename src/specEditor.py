@@ -79,7 +79,7 @@ class MapDialog(wx.Dialog):
     def onMapClick(self, event):
         x, y = self.panel_2.CalcUnscrolledPosition(event.GetX(), event.GetY())
         for region in self.parent.rfi.regions:
-            if region.objectContainsPoint(x, y):
+            if region.name.lower() != "boundary" and region.objectContainsPoint(x, y):
                 self.parent.text_ctrl_spec.AppendText(region.name)
                 #self.EndModal(1)
                 self.Close()
