@@ -26,7 +26,7 @@ RobotFile: # Relative path of robot description file
 ======== EXPERIMENT CONFIG 1 ========
 
 Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-1.0,0.0,1.0,0.0
+0.3,0.0,-0.3,0.0
 
 InitialRegion: # Initial region number
 1
@@ -47,8 +47,8 @@ pioneer_ode.robot
 
 Actions: # List of actions and their state (enabled = 1, disabled = 0)
 radio,1
-pick_up,1
-drop,1
+pick_up,0
+drop,0
 
 Customs: # List of custom propositions
 imacustom
@@ -57,11 +57,8 @@ RegionFile: # Relative path of region description file
 newSensorTest.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-hazardous_item,1
+hazardous_item,0
 person,1
-
-currentConfig:
-Experiment_with_Simulated_Pioneer_in_ODE
 
 currentExperimentName:
 New Experiment1
@@ -71,10 +68,15 @@ New Experiment1
 
 RegionMapping:
 
-r1=p2
-others=p3,p4,p5,p6
+r3=p1
+r1=p3
+r2=p2
+others=
 
 Spec: # Specification in simple English
 visit r1
+visit r2
+visit r3
+do radio if and only if you are sensing person
 
 

@@ -144,12 +144,12 @@ def main(argv):
     # Initialize each module #
     ##########################
 
-    proj.lookupHandlers()
+#    proj.lookupHandlers()
 
     # Import the relevant handlers
     print "Importing handler functions..."
     
-    proj.runInitialization()
+#    proj.runInitialization()
     proj.importHandlers()
 
     #######################
@@ -158,7 +158,7 @@ def main(argv):
     
     print "Loading automaton..."
 
-    FSA = fsa.Automaton(proj.rfi.regions, proj.regionMapping, proj.sensor_handler, proj.actuator_handler, proj.motion_handler)
+    FSA = fsa.Automaton(proj.rfi.regions, proj.regionMapping, proj.sensor_handler, proj.actuator_handler, proj.motion_handler,proj.h_instance)
 
     FSA.loadFile(aut_file, proj.all_sensors, proj.all_actuators, proj.spec_data['SETTINGS']['Customs'])
 

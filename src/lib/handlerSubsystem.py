@@ -42,6 +42,8 @@ class ParameterObject:
                 self.value = True
             elif value.lower() in ['0','false','f']:
                 self.value = False
+        elif self.type.lower() == 'region':
+            self.value = int(value)
         elif self.type.lower() == 'str' or self.type.lower() == 'string':
             self.value = str(value).strip('\"\'')
         elif self.type.lower() == 'listofint' or self.type.lower() == 'listofinteger':
@@ -79,6 +81,7 @@ class HandlerObject:
         self.name = None    # name of the handler
         self.type = None    # type of the handler e.g. motionControl or drive
         self.methods = []   # list of method objects in this handler
+        self.robotType = '' # type of the robot using this handler for robot specific handlers
 
     def toString(self,forsave = True):
         """
@@ -96,15 +99,18 @@ class HandlerObject:
                 
         method_input = []
         for paraObj in initMethodObj.para:
-            method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
+            if paraObj.type.lower() == 'str' or paraObj.type.lower() == 'string':
+                method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
+            else:
+                method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
         if not forsave:
             for para_name in initMethodObj.omitPara:
                 if para_name == 'initial':
                     method_input.append('%s=%s'%(para_name,'True'))
                 elif para_name == 'proj':
-                    method_input.append('%s=%s'%(para_name,'self'))
+                    method_input.append('%s=%s'%(para_name,'self.proj'))
                 elif para_name == 'shared_data':
-                    method_input.append('%s=%s'%(para_name,'self.shared_data'))
+                    method_input.append('%s=%s'%(para_name,'self.proj.shared_data'))
                 
         method_input = '('+','.join(method_input)+')'
         
@@ -114,10 +120,14 @@ class HandlerObject:
             string = self.name+method_input
         return string
         
-    def fullPath(self,robotName=''):
+    def fullPath(self,robotName,configObj):
         """ Return the full path for this handler object for importing"""
         if self.getType() in ['init','sensor','actuator','locomotionCommand']:
-            fileName = '.'.join(['lib.handlers.robots',robotName,self.name])
+            for robotObj in configObj.robots:
+                if robotObj.name == robotName:
+                    robotFolder = robotObj.type
+                    break
+            fileName = '.'.join(['lib.handlers.robots',robotFolder,self.name])
         else:
             fileName = '.'.join(['lib.handlers',self.getType(),self.name])
         return fileName
@@ -272,7 +282,131 @@ class HandlerSubsystem:
         return '.'.join([robotName,handlerName,methodName])+'('+para_info+')'
         
 
+    def importHandlers(self,configObj,all_handler_types=None):
+        """
+        Figure out which handlers we are going to use, based on the different configurations file settings
+        Only one motion/pose/drive/locomotion handler per experiment
+        Multiple init/sensor/actuator handlers per experiment, one for each robot (if any)
+        Note that the order of loading is important, due to inter-handler dependencies.
+        """
+        self.h_obj = {'init':{},'pose':{},'locomotionCommand':{},'motionControl':{},'drive':{},'sensor':{},'actuator':{}}
+        robots = configObj.robots
+        
+        # load all handler objects based on the current configuration
+        for robotObj in robots:
+            handlers = robotObj.handlers
+            for handler_type,handlerObj in handlers.iteritems():
+                if handler_type in ['init','sensor','actuator']:
+                    self.h_obj[handler_type][robotObj.name] = handlerObj
+                elif handler_type in ['pose','motionControl','locomotionCommand','drive']:
+                    # only load for main robot
+                    if robotObj.name == configObj.main_robot:
+                        self.h_obj[handler_type][robotObj.name] = handlerObj
+                else:
+                    if not self.silent: print "ERROR: Cannot recognize handler type %s"%handler_type
+        
+        # load dummy handlers
+        handlerParser = HandlerParser(self.handler_path)
+        for handlerObj in handlerParser.loadHandler('share'):
+            if 'sensor' in handlerObj.name.lower():
+                self.h_obj['sensor']['share'] = handlerObj
+            elif 'actuator' in handlerObj.name.lower():
+                self.h_obj['actuator']['share'] = handlerObj
+        # complain if there is any missing handler
+        for handler_type, handlerObj in self.h_obj.iteritems():
+            if (handlerObj == {}):
+                if not self.silent: print "ERROR: Cannot find handler for %s" % handler_type
+      
 
+        # initiate all handlers
+        for handler_type in all_handler_types:
+            for robotName,handlerObj in self.h_obj[handler_type].iteritems():
+                # get handler class object for initiating
+                fileName = handlerObj.fullPath(robotName,configObj)
+                if not self.silent: print "  -> %s" % fileName
+                __import__(fileName)
+                handlerModule = sys.modules[fileName]
+                allClass = inspect.getmembers(handlerModule,inspect.isclass)
+                for classObj in allClass:
+                    if classObj[1].__module__ == fileName and not classObj[0].startswith('_'):
+                        handlerClass = classObj[1]
+                        break
+            
+                # initiate the handler
+                if handler_type in ['init','sensor','actuator']:
+                    self.proj.h_instance[handler_type][robotName] = eval('handlerClass'+handlerObj.toString(False))
+                    if handler_type == 'init':
+                        self.proj.shared_data.update(self.proj.h_instance[handler_type][robotName].getSharedData())
+                else:
+                    self.proj.h_instance[handler_type] = eval('handlerClass'+handlerObj.toString(False))
+                    
+        self.proj.sensor_handler = {}
+        self.proj.actuator_handler = {}
+        self.proj.sensor_handler['initializing_handler']={}
+        self.proj.actuator_handler['initializing_handler']={}
+        
+        # prepare the regular expression
+        methodRE = re.compile(r"(?P<method_string>(?P<robot>\w+)\.(?P<type>\w+)\.(?P<name>\w+)\((?P<args>[^\)]*)\))")
+        
+        # initialize sensor and actuator methods
+        # first need to get the method used for sensor and actuator
+        
+        for prop,method in configObj.prop_mapping.iteritems():
+            fullExpression = method
+            codeList = []
+            for m in methodRE.finditer(method):
+                method_string = m.group('method_string')
+                methodEvalString = ''
+                robotName = m.group('robot')
+                handlerName = m.group('type')
+                methodName = m.group('name')
+                para_info = [x.strip() for x in m.group('args').replace(')','').split(',')]
+                
+                if prop in self.proj.all_sensors:
+                    methodEvalString = 'self.h_instance[%s][%s].%s'%('\'sensor\'','\''+robotName+'\'',self.constructMethodString(robotName,'sensor',methodName,para_info))
+                    codeList.append(methodEvalString)
+                elif prop in self.proj.all_actuators:
+                    methodEvalString = 'self.h_instance[%s][%s].%s'%('\'actuator\'','\''+robotName+'\'',self.constructMethodString(robotName,'actuator',methodName,para_info))
+                    codeList.append(methodEvalString)
+                
+                fullExpression = fullExpression.replace(method_string,methodEvalString)
+            if prop in self.proj.all_sensors:
+                self.proj.sensor_handler['initializing_handler'][prop] = codeList
+                self.proj.sensor_handler[prop]=compile(fullExpression,"<string>","eval")
+            elif prop in self.proj.all_actuators:
+                self.proj.actuator_handler['initializing_handler'][prop] = codeList
+                self.proj.actuator_handler[prop]=compile(fullExpression,"<string>","eval")
+        
+    def constructMethodString(self,robotName,handlerName,methodName,para_info):
+        """
+        returns the string used to execute the corresponding method
+        """ 
+        methods = deepcopy(self.h_obj[handlerName][robotName].methods)
+        for methodObj in methods:
+            if methodObj.name == methodName:
+                method_input = []
+                for paraObj in methodObj.para:
+                    for para_pair in para_info:
+                        if paraObj.name == para_pair.split('=',1)[0]:
+                            paraObj.setValue(para_pair.split('=',1)[1])
+                            break
+                            
+                    if paraObj.type.lower() == 'str' or paraObj.type.lower() == 'string':
+                        method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
+                    else:
+                        method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
+                for para_name in methodObj.omitPara:
+                    if para_name == 'initial':
+                        method_input.append('%s=%s'%(para_name,'initial'))
+                    elif para_name == 'proj':
+                        method_input.append('%s=%s'%(para_name,'self.proj'))
+                    elif para_name == 'shared_data':
+                        method_input.append('%s=%s'%(para_name,'self.proj.shared_data'))
+                    elif para_name == 'actuatorVal':
+                        method_input.append('%s=%s'%(para_name,'new_val'))
+                        
+                method_input = methodName+'('+','.join(method_input)+')'
+        return method_input
 
 class HandlerParser:
     """
@@ -285,7 +419,7 @@ class HandlerParser:
                                     # for sensor,actuator,init and locomotion handler the value is a dictionary {name of the robot: handler object}
         self.handler_types = ['pose','drive','motionControl','share']       # list of types of handlers, must match with the folder name in lib/handler folder
         self.handler_robotSpecific_type = ['init','locomotionCommand','sensor','actuator']   # list of types of robot specific handlers in each robot folder
-        self.ignore_parameter = ['self','initial','proj','shared_data']     # list of name of parameter that should be ignored where parse the handler methods
+        self.ignore_parameter = ['self','initial','proj','shared_data','actuatorVal']     # list of name of parameter that should be ignored where parse the handler methods
 
 
     def loadAllHandlers(self):
@@ -320,7 +454,7 @@ class HandlerParser:
                     fileList = os.listdir(os.path.join(self.handler_path,'robots',robotFolder))
                     for fileName in fileList:
                         for handler_type in self.handler_robotSpecific_type:
-                            if fileName.endswith('py') and (not fileName.startswith('__')) and handler_type.lower() in fileName.lower():
+                            if fileName.endswith('py') and (not fileName.startswith('_')) and handler_type.lower() in fileName.lower():
                                 h_file = os.path.join('lib','handlers','robots',robotFolder,fileName.split('.')[0]).replace('/','.')
                                 if handler_type in ['init','locomotionCommand']:
                                     onlyLoadInit = True
@@ -336,7 +470,7 @@ class HandlerParser:
         handlerFileList = os.listdir(path)
         
         for h_file in handlerFileList:
-            if h_file.endswith('.py') and not h_file.startswith('__'):
+            if h_file.endswith('.py') and not h_file.startswith('_'):
                 fileName = '.'.join(['lib','handlers',folder,h_file.split('.')[0]])
                 handlerList.append(self.parseHandlers(fileName,folder,onlyLoadInit))
 
@@ -571,6 +705,7 @@ class RobotFileParser:
                             else:
                                 onlyLoadInit = False
                             handlerList = [handlerParser.parseHandlers(fileName,handler_type,onlyLoadInit)]
+                            
                 else:
                     if self.handler_dic is not None:
                         # we can just quick load from the handler dictionary

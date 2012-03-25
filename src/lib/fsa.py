@@ -45,7 +45,7 @@ class Automaton:
     current state of the automaton when being executed. 
     """
 
-    def __init__ (self, regions, region_mapping, sensor_handler, actuator_handler, motion_handler):
+    def __init__ (self, regions, region_mapping, sensor_handler, actuator_handler, motion_handler,h_instance):
         """
         Creates a new automaton.
 
@@ -63,6 +63,7 @@ class Automaton:
         self.sensor_handler = sensor_handler
         self.actuator_handler = actuator_handler
         self.motion_handler = motion_handler
+        self.h_instance = h_instance
 
         # Variables for keeping track of the current state
         self.current_state = None
@@ -122,7 +123,9 @@ class Automaton:
                 # Run any actuator handlers if appropriate
                 if key in self.actuators:
                     self.motion_handler.gotoRegion(self.current_region, self.current_region)  # Stop, in case actuation takes time
-                    self.actuator_handler.setActuator(key, new_val)
+                    #self.actuator_handler.setActuator(key, new_val)
+                    initial=False
+                    eval(self.actuator_handler[key])
 
                 self.current_outputs[key] = new_val
 
@@ -308,6 +311,15 @@ class Automaton:
         # Define our pool of states to select from
         if initial:
             state_list = self.states
+            
+            # initialize all sensor and actuators
+            for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
+                for code in codes:
+                    eval(code)
+            for prop,code in self.actuator_handler['initializing_handler'].iteritems():
+                new_val = self.current_outputs[prop]
+                for code in codes:
+                    eval(code)
         else:
             state_list = self.current_state.transitions
 
@@ -315,7 +327,7 @@ class Automaton:
         # This is so we don't risk the readings changing in the middle of our state search
         sensor_state = {}
         for sensor in self.sensors:
-            sensor_state[sensor] = self.sensor_handler.getSensorValue(sensor) 
+            sensor_state[sensor] = eval(self.sensor_handler[sensor])
 
         for state in state_list:
             okay = True
@@ -378,7 +390,10 @@ class Automaton:
         for key, output_val in self.current_state.outputs.iteritems():
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', key): continue 
-            self.actuator_handler.setActuator(key, output_val)
+            if key in self.actuators:
+                new_val = output_val
+                initial=False
+                eval(self.actuator_handler[key])
 
         return self.current_state
 

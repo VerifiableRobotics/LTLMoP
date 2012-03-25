@@ -24,7 +24,7 @@ class sensorHandler:
 
         # Create a subprocess
         print "(SENS) Starting sensorHandler window and listen thread..."
-        self.p_sensorHandler = subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"lib","handlers","sensor","SensorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        self.p_sensorHandler = subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
         self.fd_sensorHandler = self.p_sensorHandler.stderr
 
@@ -36,29 +36,31 @@ class sensorHandler:
         while not self.sensorListenInitialized:
             time.sleep(0.05) # Yield cpu
 
-    def buttonPress(self,button_name):
+    def buttonPress(self,button_name,init_value,initial=False):
         """
         Return a boolean value corresponding to the state of the sensor with name ``sensor_name``
         If such a sensor does not exist, returns ``None``
 
-        button_name (string): Name of the sensor whose state is interested 
+        button_name (string): Name of the sensor whose state is interested
+        init_value (bool): The initial state of the sensor
         """
-
-        return
-
-    def addSensorName(self,sensor_name,button_name):
-        """
-        Add a sensor with sensor_name, will show on the GUI with button_name
-        """
-        if sensor_name not in self.sensorValue.keys(): 
-            self.sensorValue[sensor_name] = (sensor_name in self.proj.initial_sensors)
-            if sensor in self.proj.initial_sensors:
-                self.p_sensorHandler.stdin.write(sensor + ",1\n")
+        if initial:
+            if button_name not in self.sensorValue.keys(): 
+                self.sensorValue[button_name] = init_value
+                if init_value:
+                    self.p_sensorHandler.stdin.write(button_name + ",1\n")
+                else:
+                    self.p_sensorHandler.stdin.write(button_name + ",0\n")
+            return self.sensorValue[button_name]
+        else:
+            if button_name in self.sensorValue:
+                return self.sensorValue[button_name]
             else:
-                self.p_sensorHandler.stdin.write(sensor + ",0\n")
+                print "(SENS) WARNING: Sensor %s is unknown!" % button_name
+                return None
 
 
-    def getSensorValue(self, sensor_name, initial=False):
+    def _getSensorValue(self, sensor_name, initial=False):
         """
         Return a boolean value corresponding to the state of the sensor with name ``sensor_name``
         If such a sensor does not exist, returns ``None``
@@ -84,7 +86,7 @@ class sensorHandler:
         UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         UDPSock.bind(addr)
-
+        
         while 1: 
             # Wait for and receive a message from the subwindow
             input,addrFrom = UDPSock.recvfrom(1024)

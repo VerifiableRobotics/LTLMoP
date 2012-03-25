@@ -19,7 +19,7 @@ class driveHandler:
         """   
 
         try:
-            self.loco = proj.loco_handler
+            self.loco = proj.h_instance['locomotionCommand']
             self.coordmap = proj.coordmap_lab2map
         except NameError:
             print "(DRIVE) Locomotion Command Handler not found."

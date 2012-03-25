@@ -11,13 +11,15 @@ from numpy import *
 from lib.simulator.ode.pioneer import DiffDriveSim
 
 class initHandler:
-    def __init__(self, proj, calib=False):
+    def __init__(self, proj, initial_region,calib=False):
+        """
+        Initialization handler for pioneer ode simulated robot.
 
-        if True: 
-            return
-        
+        initial_region (region): The index of the region where the simulated robot starts
+        """
+
         # Start in the center of the defined initial region
-        initial_region = proj.rfiold.regions[int(proj.exp_cfg_data['InitialRegion'][0])]
+        initial_region = proj.rfiold.regions[int(initial_region)]
         initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(proj.regionMapping[initial_region.name][0])]
         center = initial_region.getCenter()
     
@@ -43,7 +45,7 @@ class initHandler:
         regc =  str(region_calib)
         UDPServer = subprocess.Popen(["python",os.path.join(proj.ltlmop_root,"lib","simulator","ode","pioneer","UDPServer.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
                 
-        drive = subprocess.Popen(["python",os.path.join(proj.ltlmop_root,"lib", "simulator","ode","pioneer", "PioneerSim.py"), regionfile,regc,pose])
+        drive = subprocess.Popen(["python",os.path.join(proj.ltlmop_root,"lib", "simulator","ode","pioneer", "pioneerSim.py"), regionfile,regc,pose])
         
         
     def getSharedData(self):

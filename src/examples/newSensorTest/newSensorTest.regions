@@ -10,11 +10,19 @@ CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, v
 Obstacles: # Names of regions to treat as obstacles
 
 Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
-boundary	rect	180	111	391	180	255	0	0
-r1	rect	244	177	227	85	0	0	255
+boundary	poly	148	104	480	395	255	165	0	2	0	0	248	73	395	366	365	385	211	480	42	196	17
+r3	poly	148	283	385	216	255	255	0	207	0	385	32	366	186	73	216	0	69
+r2	poly	344	121	284	194	47	0	255	0	0	284	25	189	194	11	162
+r1	poly	148	104	207	248	255	0	6	196	17	207	179	0	248	2	0
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
 newSensorTest_simbg.png
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+boundary	r3	514	469	533	315	148	352	221	499	221	499	514	469
+boundary	r2	533	315	628	146	344	121	628	146
+boundary	r1	150	104	344	121	148	352	150	104
+r3	r2	355	283	533	315
+r3	r1	148	352	355	283
+r2	r1	344	121	355	283
 

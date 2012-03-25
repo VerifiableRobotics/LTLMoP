@@ -225,8 +225,8 @@ class Project:
             
         # Figure out the name of the current experiment config if not specified
         if current_config_name is None:
-            current_config_name = self.spec_data['SETTINGS']['currentConfig'][0]
-
+#            current_config_name = self.spec_data['SETTINGS']['currentConfig'][0]
+           current_config_name = 'Experiment_with_Simulated_Pioneer_in_ODE'
         self.regionMapping = self.loadRegionMapping(self.spec_data)
         self.exp_cfg_data = self.getExperimentConfig(exp_cfg_name)
         self.current_configObj = self.loadExperimentConfig(current_config_name)
@@ -237,16 +237,16 @@ class Project:
         self.determineEnabledPropositions()
         
         
-        # this is for debugging
-        print '=========== This is for debugging ======================'
-        self.lookupHandlers()
-        self.importHandlers()
-        print self.h_instance
-        print '========================================================'
+#        # this is for debugging
+#        print '=========== This is for debugging ======================'
+##        self.lookupHandlers()
+#        self.importHandlers()
+#        print self.h_instance
+#        print '========================================================'
         
     def loadExperimentConfig(self,configFileName):
-        hSub = handlerSubsystem.HandlerSubsystem(self)
-        configObj = hSub.config_parser.loadConfigFile(configFileName)
+        self.hSub = handlerSubsystem.HandlerSubsystem(self)
+        configObj = self.hSub.config_parser.loadConfigFile(configFileName)
         return configObj
 
     def determineEnabledPropositions(self):
@@ -289,62 +289,12 @@ class Project:
         #return self.getFilenamePrefix() + "_simbg.png"
     
 
-    def lookupHandlers(self):
-        """
-        Figure out which handlers we are going to use, based on the different configurations file settings
-        
-        Only one motion/pose/drive/locomotion handler per experiment
-        Multiple init/sensor/actuator handlers per experiment, one for each robot (if any)
-        """
-
-        # TODO: Complain nicely instead of just dying when this breaks?
-        self.h_obj = {'init':{},'pose':{},'locomotionCommand':{},'motionControl':{},'drive':{},'sensor':{},'actuator':{}}
-        self.robots = self.current_configObj.robots
-        
-        for robotObj in self.robots:
-            handlers = robotObj.handlers
-            for handler_type,handlerObj in handlers.iteritems():
-                if handler_type in ['init','sensor','actuator']:
-                    # TODO: allowing multiple robots with same type but different name
-                    self.h_obj[handler_type][robotObj.name] = handlerObj
-                elif handler_type in ['pose','motionControl','locomotionCommand','drive']:
-                    # only load for main robot
-                    if robotObj.name == self.current_configObj.main_robot:
-                        self.h_obj[handler_type][robotObj.name] = handlerObj
-                else:
-                    if not self.silent: print "ERROR: Cannot recognize handler type %s"%handler_type
-   
-        for handler_type, handlerObj in self.h_obj.iteritems():
-            if (handlerObj == {} ):
-                if not self.silent: print "ERROR: Cannot find handler for %s" % handler_type 
-
-
-    def runInitialization(self, calib=False):
-        """
-        Run the necessary initialization handlers.
-
-        We treat initialization handlers separately, because there may be more than one.
-        NOTE: These will be loaded in the same order as they are listed in the lab config file.
-        """
-
-        self.shared_data = {}  # This is for storing things like server connection objects, etc.
-        init_num = 1
-        self.init_handlers = []
-        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
-        for handler in self.h_obj['init']:
-            if not self.silent: print "  -> %s" % handler
-            # TODO: Is there a more elegant way to do this? This is pretty ugly...
-            exec("from %s import initHandler as initHandler%d" % (handler, init_num)) in locals() # WARNING: This assumes our input data is not malicious...
-            exec("self.init_handlers.append(initHandler%d(self, calib=calib))" % (init_num)) in locals()
-            self.shared_data.update(self.init_handlers[-1].getSharedData())
-            init_num += 1  # So they don't clobber each other
-
-        return self.shared_data
-        
     def importHandlers(self, all_handler_types=None):
         """
+        Figure out which handlers we are going to use, based on the different configurations file settings
+        Only one motion/pose/drive/locomotion handler per experiment
+        Multiple init/sensor/actuator handlers per experiment, one for each robot (if any)
         Load in specified handlers.  If no list is given, *all* handlers will be loaded.
-
         Note that the order of loading is important, due to inter-handler dependencies.
         """
 
@@ -354,32 +304,14 @@ class Project:
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
         self.h_instance = {'init':{},'pose':None,'locomotionCommand':None,'motionControl':None,'drive':None,'sensor':{},'actuator':{}}
 
-        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
-        # Now do the rest of them
-        for handler_type in all_handler_types:
-            for robotName,handlerObj in self.h_obj[handler_type].iteritems():
-                # get handler class object for initiating
-                if handler_type in ['init','sensor','actuator','locomotionCommand']:
-                    fileName = '.'.join(['lib.handlers.robots',robotName,handlerObj.name])
-                else:
-                    fileName = '.'.join(['lib.handlers',handler_type,handlerObj.name])
-                if not self.silent: print "  -> %s" % fileName
-                __import__(fileName)
-                handlerModule = sys.modules[fileName]
-                allClass = inspect.getmembers(handlerModule,inspect.isclass)
-                for classObj in allClass:
-                    if classObj[1].__module__ == fileName and not classObj[0].startswith('_'):
-                        handlerClass = classObj[1]
-                        break
-            
-                # initiate the handler
-                if handler_type in ['init','sensor','actuator']:
-                    self.h_instance[handler_type][robotName] = eval('handlerClass'+handlerObj.toString(False))
-                    if handler_type == 'init':
-                        self.shared_data.update(self.h_instance[handler_type][robotName].getSharedData())
-                else:
-                    self.h_instance[handler_type] = eval('handlerClass'+handlerObj.toString(False))
-            
+        self.hSub.importHandlers(self.current_configObj,all_handler_types)
+        self.pose_handler = self.h_instance['pose']
+        if not self.silent: print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
+        self.loco_handler = self.h_instance['locomotionCommand']
+        self.drive_handler = self.h_instance['drive']
+        self.motion_handler = self.h_instance['motionControl']
+
+        
 #            exec("from %s import %sHandler" % (self.h_name[handler], handler)) in locals() # WARNING: This assumes our input data is not malicious...
 #            if handler == 'pose':
 #                self.pose_handler = poseHandler(self, self.shared_data)
