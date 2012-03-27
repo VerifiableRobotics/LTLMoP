@@ -95,7 +95,7 @@ class Project:
 
         return rfi
 
-    def getCoordMaps(self, exp_cfg_data):
+    def getCoordMaps(self):
         """
         Returns forward (map->lab) and reverse (lab->map) coordinate mapping functions, in that order
 
@@ -105,13 +105,18 @@ class Project:
         #### Create the coordmap functions
 
         # Look for transformation values in spec file
-        try:
-            transformValues = exp_cfg_data['Calibration'][0].split(",")
-            [xscale, xoffset, yscale, yoffset] = map(float, transformValues)
-        except KeyError, ValueError:
-            if not self.silent: print "ERROR: Please calibrate and update values before running simulation."
-            return
+        #try:
+        #    transformValues = exp_cfg_data['Calibration'][0].split(",")
+        #    [xscale, xoffset, yscale, yoffset] = map(float, transformValues)
+        #except KeyError, ValueError:
+        #    if not self.silent: print "ERROR: Please calibrate and update values before running simulation."
+        #    return
 
+        # TODO: actually use calibration!!!!!
+        xscale = 1
+        yscale = 1
+        xoffset = 0
+        yoffset = 0
         # Create functions for coordinate transformation
         # (numpy may seem like overkill for this, but we already have it as a dependency anyways...)
         scale = diag([xscale, yscale])
@@ -217,7 +222,7 @@ class Project:
 
         self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
-        #self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps(self.exp_cfg_data)
+        self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps()
         self.determineEnabledPropositions()
         
         
@@ -282,7 +287,7 @@ class Project:
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
         self.h_instance = {'init':{},'pose':None,'locomotionCommand':None,'motionControl':None,'drive':None,'sensor':{},'actuator':{}}
 
-        self.hSub.importHandlers(self.current_configObj,all_handler_types)
+        self.hSub.importHandlers(self.currentConfig,all_handler_types)
         self.pose_handler = self.h_instance['pose']
         if not self.silent: print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
         self.loco_handler = self.h_instance['locomotionCommand']

@@ -160,7 +160,7 @@ def main(argv):
 
     FSA = fsa.Automaton(proj.rfi.regions, proj.regionMapping, proj.sensor_handler, proj.actuator_handler, proj.motion_handler,proj.h_instance)
 
-    FSA.loadFile(aut_file, proj.all_sensors, proj.all_actuators, proj.spec_data['SETTINGS']['Customs'])
+    FSA.loadFile(aut_file, proj.enabled_sensors, proj.enabled_actuators, proj.all_customs)
 
     ############################
     # Start status/control GUI #
@@ -218,12 +218,8 @@ def main(argv):
 
     ### Figure out where we should start from
 
-    if 'InitialRegion' in proj.exp_cfg_data: 
-        init_region = int(proj.exp_cfg_data['InitialRegion'][0])
-        init_region = proj.rfi.indexOfRegionWithName(proj.regionMapping[proj.rfiold.regions[init_region].name][0])
-    else:
-        print "WARNING: Initial region auto-detection not yet implemented" # TODO: determine initial region
-        init_region = 0
+    print "WARNING: Initial region auto-detection not yet implemented" # TODO: determine initial region
+    init_region = 0
 
     print "Starting from initial region: " + proj.rfi.regions[init_region].name
     
@@ -231,8 +227,8 @@ def main(argv):
 
     # Figure out our initially true outputs
     init_outputs = []
-    for prop in proj.exp_cfg_data['InitialTruths']:
-        if prop not in proj.all_sensors:
+    for prop in proj.currentConfig.initial_truths:
+        if prop not in proj.enabled_sensors:
             init_outputs.append(prop)
 
     init_state = FSA.chooseInitialState(init_region, init_outputs)
