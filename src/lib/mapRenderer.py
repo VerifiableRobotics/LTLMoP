@@ -103,24 +103,24 @@ class DrawableRegion(Region):
 
 #----------------------------------------------------------------------------
 
-def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], deemphasizeList=[], memory=False):
-    """ Draw the map contained in the given project onto the target canvas.
+def drawMap(target, rfi, scaleToFit=True, drawLabels=True, highlightList=[], deemphasizeList=[], memory=False):
+    """ Draw the map contained in the given RegionFileInterface onto the target canvas.
     """
 
     # Nothing to draw if there are no regions loaded yet
-    if proj.rfi is None:
+    if rfi is None:
         print "ERROR: Can't draw a map without loading some regions first"
         return
 
     # Upgrade from Regions to DrawableRegions, if necessary
     # TODO: Should really only be necessary once
-    for i, region in enumerate(proj.rfi.regions):
+    for i, region in enumerate(rfi.regions):
         if isinstance(region, DrawableRegion):
             continue
 
         obj = DrawableRegion(region.type)
         obj.setData(region.getData())
-        proj.rfi.regions[i] = obj
+        rfi.regions[i] = obj
         del region
 
     if memory:
@@ -151,7 +151,7 @@ def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], de
         windowAspect = 1.0*maximumHeight/maximumWidth
 
         # TODO: Assuming the regions don't change, we only really need to calculate this once
-        (leftMargin, topMargin, rightExtent, downExtent) = proj.rfi.getBoundingBox()
+        (leftMargin, topMargin, rightExtent, downExtent) = rfi.getBoundingBox()
 
         W = rightExtent + 2*leftMargin
         H = downExtent + 2*topMargin
@@ -169,8 +169,8 @@ def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], de
         mapScale = 1
 
     # Draw the regions!
-    for i in range(len(proj.rfi.regions)-1, -1, -1):
-        obj = proj.rfi.regions[i]
+    for i in range(len(rfi.regions)-1, -1, -1):
+        obj = rfi.regions[i]
         doHighlight = (obj.name in highlightList)
         doDeemphasize = (obj.name in deemphasizeList)
 

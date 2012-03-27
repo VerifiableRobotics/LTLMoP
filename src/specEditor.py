@@ -9,21 +9,17 @@
     allowing for editing, compilation, and execution/simulation
 """
 
-import re, sys, os, subprocess, time, copy
-import wxversion
-#wxversion.select('2.8')
+import re, sys, os, subprocess
 import wx, wx.richtext, wx.stc
-from lib.regions import *
-from lib.createJTLVinput import createLTLfile, createSMVfile
-from lib.parseEnglishToLTL import writeSpec
-import lib.fileMethods as fileMethods
-import lib.project as project
-import lib.fsa as fsa
-import lib.parseLP as parseLP
-import lib.mapRenderer as mapRenderer
-from lib.convert import createAnzuFile
-from lib.simulator.ode.ckbot import CKBotLib # added by Sarah
-#import lib.recolorLTL as recolorLTL
+
+sys.path.append("lib")
+
+from regions import *
+import fileMethods
+import project
+import fsa
+import mapRenderer
+from specCompiler import SpecCompiler
 
 ######################### WARNING! ############################
 #         DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.         #
@@ -33,14 +29,13 @@ from lib.simulator.ode.ckbot import CKBotLib # added by Sarah
 
 class MapDialog(wx.Dialog):
     """
-    A silly little dialog that displays the regions on top of the map so that you can
+    A simple little dialog that displays the regions on top of the map so that you can
     select a region visually instead of just choosing the name.
     """
     
     # FIXME: Doesn't scroll on Windows???
 
     def __init__(self, parent, *args, **kwds):
-        self.parent = parent
         # begin wxGlade: MapDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
@@ -49,7 +44,8 @@ class MapDialog(wx.Dialog):
         self.__set_properties()
         self.__do_layout()
         # end wxGlade
-        
+
+        self.parent = parent
 
     def __set_properties(self):
         # begin wxGlade: MapDialog.__set_properties
@@ -74,16 +70,16 @@ class MapDialog(wx.Dialog):
         self.panel_2.Bind(wx.EVT_LEFT_DOWN, self.onMapClick)
 
     def drawMap(self, event):
-        mapRenderer.drawMap(self.panel_2, self.parent.proj, scaleToFit=False)
+        mapRenderer.drawMap(self.panel_2, self.parent.proj.rfi, scaleToFit=False)
 
     def onMapClick(self, event):
         x, y = self.panel_2.CalcUnscrolledPosition(event.GetX(), event.GetY())
-        for region in self.parent.rfi.regions:
+        for region in self.parent.proj.rfi.regions:
             if region.name.lower() != "boundary" and region.objectContainsPoint(x, y):
                 self.parent.text_ctrl_spec.AppendText(region.name)
-                #self.EndModal(1)
                 self.Close()
                 break 
+
         event.Skip()
 
 # end of class MapDialog
@@ -94,7 +90,7 @@ class SpecEditorFrame(wx.Frame):
     The main application window!
     """
 
-    # TODO: Use the scintilla-style text editor. Select-all, search-replace, syntax highlighting, etc.
+    # TODO: syntax highlighting with the StyledTextCtrl?
 
     def __init__(self, *args, **kwds):
         # begin wxGlade: SpecEditorFrame.__init__
@@ -111,23 +107,18 @@ class SpecEditorFrame(wx.Frame):
         
         # Menu Bar
         self.frame_1_menubar = wx.MenuBar()
-        global MENU_IMPORT; MENU_IMPORT = wx.NewId()
-        global MENU_IMPORT_ROBOT; MENU_IMPORT_ROBOT = wx.NewId()
         global MENU_IMPORT_REGION; MENU_IMPORT_REGION = wx.NewId()
         global MENU_COMPILE; MENU_COMPILE = wx.NewId()
         global MENU_SIMCONFIG; MENU_SIMCONFIG = wx.NewId()
         global MENU_SIMULATE; MENU_SIMULATE = wx.NewId()
-        global MENU_DOTTY; MENU_DOTTY = wx.NewId()
         global MENU_ANALYZE; MENU_ANALYZE = wx.NewId()
+        global MENU_DOTTY; MENU_DOTTY = wx.NewId()
         global MENU_MOPSY; MENU_MOPSY = wx.NewId()
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(wx.ID_NEW, "&New\tCtrl-N", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(wx.ID_OPEN, "&Open...\tCtrl-O", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.Append(MENU_IMPORT_REGION, "Import &Region File...\tCtrl-R", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(wx.ID_CLOSE, "&Close\tCtrl-W", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu_sub = wx.Menu()
-        wxglade_tmp_menu_sub.Append(MENU_IMPORT_ROBOT, "Robot &Description File...\tCtrl-D", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu_sub.Append(MENU_IMPORT_REGION, "&Region File...\tCtrl-R", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu.AppendMenu(MENU_IMPORT, "&Import", wxglade_tmp_menu_sub, "")
         wxglade_tmp_menu.Append(wx.ID_SAVE, "&Save\tCtrl-S", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(wx.ID_SAVEAS, "Save &As...", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(wx.ID_EXIT, "&Quit\tCtrl-Q", "", wx.ITEM_NORMAL)
@@ -144,10 +135,10 @@ class SpecEditorFrame(wx.Frame):
         wxglade_tmp_menu.Append(MENU_COMPILE, "&Compile\tF5", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(MENU_SIMCONFIG, "Confi&gure Simulation...\tShift-F6", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(MENU_SIMULATE, "&Simulate\tF6", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu.Append(MENU_DOTTY, "View &Automaton\tF9", "", wx.ITEM_NORMAL)
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Run")
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(MENU_ANALYZE, "&Analyze\tF8", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.Append(MENU_DOTTY, "View &Automaton\tF9", "", wx.ITEM_NORMAL)
         wxglade_tmp_menu.Append(MENU_MOPSY, "&Visualize Counterstrategy...\tF10", "", wx.ITEM_NORMAL)
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Debug")
         wxglade_tmp_menu = wx.Menu()
@@ -183,9 +174,8 @@ class SpecEditorFrame(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.onMenuNew, id=wx.ID_NEW)
         self.Bind(wx.EVT_MENU, self.onMenuOpen, id=wx.ID_OPEN)
-        self.Bind(wx.EVT_MENU, self.doClose, id=wx.ID_CLOSE)
-        self.Bind(wx.EVT_MENU, self.onImportRobot, id=MENU_IMPORT_ROBOT)
         self.Bind(wx.EVT_MENU, self.onImportRegion, id=MENU_IMPORT_REGION)
+        self.Bind(wx.EVT_MENU, self.doClose, id=wx.ID_CLOSE)
         self.Bind(wx.EVT_MENU, self.onMenuSave, id=wx.ID_SAVE)
         self.Bind(wx.EVT_MENU, self.onMenuSaveAs, id=wx.ID_SAVEAS)
         self.Bind(wx.EVT_MENU, self.onMenuQuit, id=wx.ID_EXIT)
@@ -197,8 +187,8 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuCompile, id=MENU_COMPILE)
         self.Bind(wx.EVT_MENU, self.onMenuConfigSim, id=MENU_SIMCONFIG)
         self.Bind(wx.EVT_MENU, self.onMenuSimulate, id=MENU_SIMULATE)
-        self.Bind(wx.EVT_MENU, self.onMenuViewAut, id=MENU_DOTTY)
         self.Bind(wx.EVT_MENU, self.onMenuAnalyze, id=MENU_ANALYZE)
+        self.Bind(wx.EVT_MENU, self.onMenuViewAut, id=MENU_DOTTY)
         self.Bind(wx.EVT_MENU, self.onMenuMopsy, id=MENU_MOPSY)
         self.Bind(wx.EVT_MENU, self.onMenuAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onPropositionDblClick, self.list_box_regions)
@@ -217,6 +207,9 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelToggle, self.checkbox_regionlabel)
         # end wxGlade
 
+        # Listen for checkbox toggles
+        self.Bind(wx.EVT_CHECKLISTBOX, self.onPropToggle)
+
 		# Create the StyledTextControl for the specification area manually, since wxGlade doesn't support it
         self.text_ctrl_spec = wx.stc.StyledTextCtrl(self.window_1_pane_1, -1, style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.WANTS_CHARS)
         self.text_ctrl_spec.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
@@ -232,6 +225,9 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDefine(MARKER_INIT,wx.stc.STC_MARK_ARROW,"white","red") 
         self.text_ctrl_spec.MarkerDefine(MARKER_SAFE,wx.stc.STC_MARK_ARROW,"white","blue") 
         self.text_ctrl_spec.MarkerDefine(MARKER_LIVE,wx.stc.STC_MARK_ARROW,"white","green") 
+
+        # Listen for changes to the text
+        self.Bind(wx.stc.EVT_STC_CHANGE, self.onSpecTextChange, self.text_ctrl_spec)
         
         # Set up locative phrase map
         self.panel_locmap.SetBackgroundColour(wx.WHITE)   
@@ -241,42 +237,54 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.doClose)
         self.Bind(wx.EVT_END_PROCESS, self.onProcessTerminate)
 
-        # Initialize values
-        self.mapDialog = None
-        self.fileName = None
-        self.projectName = None
-        self.projectPath = ""
-        self.projectFiles = {}
-        self.rfi = None
-        self.subprocess = [None] * 4
-        self.simSetup = []
-        self.currentExperimentName = ""
-        self.currentExperimentConfig = {}
+        self.initializeNewSpec()
 
-        global PROCESS_REGED; PROCESS_REGED = 0
-        global PROCESS_DOTTY; PROCESS_DOTTY = 1
+        global PROCESS_REGED, PROCESS_DOTTY
+        PROCESS_REGED, PROCESS_DOTTY = range(0, len(self.subprocess))
 
-        # Set default values
-        self.setDefaults()
-        self.proj = project.Project()
-        self.proj.regionMapping = {}
-        self.parser = None
-		
+        # Null the subprocess values
+        self.subprocess[PROCESS_REGED] = None
+        self.subprocess[PROCESS_DOTTY] = None
+
         # HACK: This is an undocumented hack you can uncomment to help kill stuck copies of speceditor on windows
         # If in use, requires spec file argument on command line
         #if sys.argv[-1] != "-dontbreak":
-        #    os.system("taskkill /im python.exe /f && " + " ".join(sys.argv) + " -dontbreak")
-
-        # Initialize library -- Sarah
-        self.library = CKBotLib.CKBotLib()
+        #    os.system("taskkill /im python.exe /f & " + " ".join(sys.argv) + " -dontbreak")
        
+    def initializeNewSpec(self):
+        # Initialize values
+        self.mapDialog = None
+        self.proj = project.Project()
+        self.decomposedRFI = None
+        self.subprocess = [None] * 2
+        self.dirty = False
+
+        # Reset GUI
+        self.button_map.Enable(False)
+        self.button_sensor_remove.Enable(False)
+        self.button_actuator_remove.Enable(False)
+        self.button_custom_remove.Enable(False)
+        self.list_box_regions.Clear()
+        self.list_box_sensors.Clear()
+        self.list_box_actions.Clear()
+        self.list_box_customs.Clear()
+        self.list_box_locphrases.Clear()
+        self.text_ctrl_spec.SetText("")
+        self.text_ctrl_spec.EmptyUndoBuffer()
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
+        self.text_ctrl_log.Clear()
+
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
         self.SetSize((900, 700))
         self.button_map.Enable(False)
         self.list_box_sensors.SetMinSize((123, 75))
+        self.button_sensor_remove.Enable(False)
         self.list_box_actions.SetMinSize((123, 75))
+        self.button_actuator_remove.Enable(False)
         self.list_box_customs.SetMinSize((123, 75))
         self.button_custom_remove.Enable(False)
         self.panel_1.SetScrollRate(10, 10)
@@ -356,16 +364,19 @@ class SpecEditorFrame(wx.Frame):
         self.window_1.SetSashGravity(1.0)
 
     def drawLocMap(self, event):
-        """ Respond to a request to redraw the contents of our drawing panel.
+        """ Respond to a request to redraw the contents of the decomposed map
         """
 
-        # Nothing to draw if there are no regions loaded yet
-        if self.parser is None or self.proj.regionMapping is None:
+        # Nothing to draw if no decomposed regions have been generated
+        if self.decomposedRFI is None:
             return
 
-        highlightList = self.parser.proj.regionMapping[self.list_box_locphrases.GetStringSelection()]
+        highlightList = self.proj.regionMapping[self.list_box_locphrases.GetStringSelection()]
 
-        mapRenderer.drawMap(self.panel_locmap, self.parser.proj, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList)
+        # TODO: Advise the user that the decomposed map may be inaccurate if
+        #  mtime(spec)>mtime(aut) or spectext is dirty
+
+        mapRenderer.drawMap(self.panel_locmap, self.decomposedRFI, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList)
 
     def onPropositionDblClick(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -377,106 +388,80 @@ class SpecEditorFrame(wx.Frame):
            and not caller.IsChecked(caller.GetSelection()):
             # Only allow adding of enabled propositions
             return
+
         self.text_ctrl_spec.AppendText(caller.GetStringSelection())
 
         event.Skip()
+
+    def onPropToggle(self, event):
+        caller = event.GetEventObject()
+
+        if caller is self.list_box_sensors:
+            self.proj.enabled_sensors = self.list_box_sensors.GetCheckedStrings()
+        elif caller is self.list_box_actions:
+            self.proj.enabled_actuators = self.list_box_actions.GetCheckedStrings()
+
+        self.dirty = True
+
+    def onSpecTextChange(self, event):
+        self.proj.specText = self.text_ctrl_spec.GetText()
+
+        self.dirty = True
 
     def onMapSelect(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
         Show the map with overlayed regions so that the user can select a region name visually.
         """
 
-        if self.mapDialog is not None:
-            self.mapDialog.Show()
-        # TODO: Finish me
+        self.mapDialog.Show()
 
         event.Skip()
-
-    def onImportRobot(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        """
-        Ask the user for a robot description file and then import it.
-        """
-
-        fileName = wx.FileSelector("Import Robot Description File", default_extension="robot",
-                                  wildcard="Robot description files (*.robot)|*.robot",
-                                  flags = wx.OPEN | wx.FILE_MUST_EXIST)
-        if fileName == "": return
-
-        self.readRobotFile(fileName)
-
-    def readRobotFile(self, fileName):
-        """
-        Parse in a robot description file!
-        """
-
-        data = fileMethods.readFromFile(fileName)
-
-        # Make sure the file is good:
-        if data is None or 'Sensors' not in data or 'Actions' not in data:
-            wx.MessageBox("Cannot open robot file %s" % (fileName), "Error",
-                        style = wx.OK | wx.ICON_ERROR)
-            return
-
-        # Add the sensors and actions to the listboxes;
-        # assume everything is enabled by default
-        self.list_box_sensors.SetItems(data['Sensors'])
-        for i in xrange(self.list_box_sensors.GetCount()):
-            self.list_box_sensors.Check(i)
-
-        self.list_box_actions.SetItems(data['Actions'])
-        for i in xrange(self.list_box_actions.GetCount()):
-            self.list_box_actions.Check(i)
-
-        # Remember the robot description file name
-        self.projectFiles['RobotFile'] = os.path.basename(fileName)
 
     def onImportRegion(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
         Ask the user for a region file and then import it.
         """
-        fileName = wx.FileSelector("Import Region File", default_extension="regions",
+        filename = wx.FileSelector("Import Region File", default_extension="regions",
                                   wildcard="Region files (*.regions)|*.regions",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
-        if fileName == "": return
+        if filename == "": return
         
-        self.loadRegionFile(fileName)
-
-    def loadRegionFile(self, fileName):
-        """
-        Parse in a region file!
-        """
-
-        # TODO: The Project module needs to be properly integrated here...
-
-        # Create a RFI if necessary
-        if self.rfi is None:
-            self.rfi = RegionFileInterface()
+        rfi = RegionFileInterface()
 
         # Try loading the file
-        if not self.rfi.readFile(fileName):
+        if not rfi.readFile(filename):
             wx.MessageBox("Cannot open region file %s" % (fileName), "Error",
                         style = wx.OK | wx.ICON_ERROR)
             self.rfi = None
             return
 
-        # Update the path information
-        # NOTE: At least for now, all project files must be in the same directory.
-        self.projectFiles["RegionFile"] = os.path.basename(fileName)
+        # Loading succeeded, so bring the rfi into our project
+        self.proj.rfi = rfi
 
-        # Add the regions to the region listbox
-        self.list_box_regions.Set([])
-        for region in self.rfi.regions:
-            if not (region.isObstacle or region.name == "boundary"):
-                self.list_box_regions.Insert(region.name, 0)        
-        
         # If we are working with an unsaved spec, assume everything is in the same dir
         # as the regions file
-        if self.projectPath == "":
-            self.projectPath = os.path.dirname(os.path.abspath(fileName))
+        if self.proj.project_root is None:
+            self.proj.project_root = os.path.dirname(os.path.abspath(filename))
 
+        self.dirty = True
+
+        self.updateFromRFI()
+
+    def updateFromRFI(self):
+        """
+        Update the GUI to reflect a newly loaded region file
+        """
+
+        # Add the regions to the region listbox
+        self.list_box_regions.Clear()
+        for region in self.proj.rfi.regions:
+            if not (region.isObstacle or region.name.lower() == "boundary"):
+                self.list_box_regions.Append(region.name)        
+        
         # Create the map selection dialog
         if self.mapDialog is not None:
             self.mapDialog.Destroy()
+
         self.mapDialog = MapDialog(frame_1, frame_1)
         frame_1.button_map.Enable(True)
 
@@ -486,8 +471,11 @@ class SpecEditorFrame(wx.Frame):
         Create a new specification.
         """
 
-        # TODO: Make new window here?
-        pass
+        if self.dirty:
+            if not self.askIfUserWantsToSave("starting a new specification"):
+                return
+
+        self.initializeNewSpec()
 
         event.Skip()
 
@@ -496,13 +484,18 @@ class SpecEditorFrame(wx.Frame):
         Ask the user for a specification file to open, and then open it.
         """
 
-        fileName = wx.FileSelector("Open File", default_extension="spec",
+        if self.dirty:
+            if not self.askIfUserWantsToSave("opening a different specification"):
+                return
+
+        filename = wx.FileSelector("Open File", default_extension="spec",
                                   wildcard="Specification files (*.spec)|*.spec",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
-        if fileName == "": return
+        if filename == "": return
 
-        self.openFile(fileName)  # FIXME: This is really ugly
-        #event.Skip()
+        self.openFile(filename)
+
+        event.Skip()
 
     def onMenuSave(self, event=None): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -510,10 +503,11 @@ class SpecEditorFrame(wx.Frame):
         Else, ask for a filename and then save it.
         """
 
-        if self.fileName == None:
+        if self.proj.project_basename is None:
             self.onMenuSaveAs(event)
         else:
-            self.saveFile(self.fileName)
+            self.proj.writeSpecFile()
+            self.dirty = False
 
     def onMenuSaveAs(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -521,247 +515,99 @@ class SpecEditorFrame(wx.Frame):
         """
 
         # If this isn't the first save, set the current filename as default
-        if self.fileName == None:
+        if self.proj.project_basename is None:
             default = ""
         else:
-            default = self.fileName
+            default = self.proj.getFilenamePrefix() + ".spec"
 
         # Get a filename
-        fileName = wx.FileSelector("Save File As", "examples",
+        filename = wx.FileSelector("Save File As", "examples",
                                   default_filename=default,
                                   default_extension="spec",
                                   wildcard="Specification files (*.spec)|*.spec",
                                   flags = wx.SAVE | wx.OVERWRITE_PROMPT)
-        if fileName == "": return # User cancelled.
+
+        if filename == "": return # User cancelled.
 
         # Force a .spec extension.  How mean!!!
-        if os.path.splitext(fileName)[1] != ".spec":
-            fileName = fileName + ".spec"
+        if os.path.splitext(filename)[1] != ".spec":
+            filename = filename + ".spec"
         
-        # Update the window title
-        title = os.path.basename(fileName)
-        self.SetTitle("Specification Editor - " + title)
-
-        # Update paths
-        self.fileName = fileName
-        self.projectName = os.path.splitext(title)[0]
-        self.projectPath = os.path.dirname(os.path.abspath(fileName))
-
         # Save data to the file
-        self.saveFile(fileName)
-
-    def saveFile(self, fileName):
-        """
-        Write all data out to a file.
-        """
-
-        if fileName is None:
-            return
-        
-        # Only store enabled sensors
-        sensorList = []
-        for i, sensor in enumerate(self.list_box_sensors.GetItems()):
-            if self.list_box_sensors.IsChecked(i):
-                sensorList.append(sensor)
-                
-        data = {'SPECIFICATION':{}, 'SETTINGS':{}}
-        
-        regionMappingData = ''
-        if len(self.proj.regionMapping)>0:
-            mappingData = ''
-            for nameOfRegion,regionList in self.proj.regionMapping.iteritems():
-                mappingData = '='.join([nameOfRegion,','.join(regionList)])
-                regionMappingData = '\n'.join([regionMappingData,mappingData])
-        else:
-            regionMappingData='Null=Null'
-        
-        view = self.text_ctrl_spec.GetText()
-        specOnly = ""
-        for line in view:
-            if (line == "RESULT") : break
-            else : specOnly += line
-            
-            
-        data['SPECIFICATION'] = {'Spec': str(specOnly),'RegionMapping': regionMappingData}
-        data['SETTINGS'] = {"RegionFile": self.projectFiles["RegionFile"],
-                            "Sensors": self.dumpListBox(self.list_box_sensors),
-                            "Actions": self.dumpListBox(self.list_box_actions),
-                            "Customs": self.dumpListBox(self.list_box_customs),
-                            "currentExperimentName": self.currentExperimentName,
-                            }
-        if len(self.simSetup)>0:
-            for id, config in enumerate(self.simSetup):
-                #if config['Name'] != 'Default': # TODO: Ask Jim why he put this here
-                expConfig = {   "Name": config['Name'],
-                                "RobotFile": config['RobotFile'],
-                                "Lab": config['LabFile'],
-                                "Calibration": ",".join(map(str,[config["XScale"], config["XOffset"],
-                                                    config["YScale"], config["YOffset"]])),
-                                "InitialTruths": config['InitialTruths'],
-                                "InitialRegion": config['InitialRegion']
-                            }
-                data['EXPERIMENT CONFIG '+str(id)] = expConfig
-
-
-        comments = {"FILE_HEADER": "This is a specification definition file for the LTLMoP toolkit.\n" +
-                                   "Format details are described at the beginning of each section below.\n" +
-                                   "Note that all values are separated by *tabs*.",
-                    "RegionFile": "Relative path of region description file",
-                    "RobotFile": "Relative path of robot description file",
-                    "Sensors": "List of sensors and their state (enabled = 1, disabled = 0)",
-                    "Actions": "List of actions and their state (enabled = 1, disabled = 0)",
-                    "Customs": "List of custom propositions",
-                    "InitialTruths": "List of initially true propositions",
-                    "InitialRegion": "Initial region number",
-                    "Calibration": "Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset",
-                    "Lab": 'Lab configuration file',
-                    "Spec": "Specification in simple English",
-                    "Name": 'Name of the experiment'}
-
-        fileMethods.writeToFile(fileName, data, comments)
-
-        # If this is the first time saving, reload the Project object
-        if self.proj.project_basename is None:
-            self.proj.loadProject(fileName)
-            
-    def dumpListBox(self, list):
-        data = []
-        for i, item in enumerate(list.GetItems()):
-            if hasattr(list, "IsChecked"):
-                if list.IsChecked(i):
-                    check = "1"
-                else:
-                    check = "0"
-                data.append(item+","+check)
-            else:
-                data.append(item)
-
-        return data
-
-    def loadList(self, data, list):
-        if len(data) == 0:
-            return
-
-        list.SetItems([])
-        for i, item in enumerate(data):
-            if ',' in item:
-                [name, check] = item.split(',')
-                list.Insert(name, i)
-                if check == "1":
-                    list.Check(i)
-            else:
-                list.Insert(item, i)
-
-    def setDefaults(self):
-        """
-        Set some pretty reasonable default values.
-        """
-        self.projectFiles["RegionFile"] = ""
-        self.projectFiles["RobotFile"] = ""
-        self.currentExperimentName = 'Default'
-        self.simSetup = [{  "Name": "Default",
-                            "RobotFile": "",
-                            "LabFile": "",
-                            "XScale": 1.0,
-                            "XOffset": 0.0,
-                            "YScale": 1.0,
-                            "YOffset": 0.0,
-                            "InitialTruths": [],
-                            "InitialRegion": 0 }]
-        self.text_ctrl_spec.SetText("")
-
-        # Null the subprocess values
-        self.subprocess[PROCESS_REGED] = None
-        self.subprocess[PROCESS_DOTTY] = None
-
-    def openFile(self, fileName):#, recolor, sysColor, envColor):          
-
-        if fileName is None:
-            return
-
-        self.proj.loadProject(fileName)
- 
-        data = self.proj.spec_data
-
-        self.setDefaults()
-
-        filePath = os.path.dirname(os.path.abspath(fileName))
-
-        for name, content in data.iteritems():
-            if name == 'SPECIFICATION' and 'Spec' in content and len(content['Spec']) > 0:
-                for i, line in enumerate(content['Spec']): 
-                            line = line + "\n"
-                            self.text_ctrl_spec.AppendText(line)
-
-            elif name =='SETTINGS':
-                if 'RegionFile' in content and len(content['RegionFile']) > 0:
-                    self.loadRegionFile(os.path.join(filePath, content['RegionFile'][0]))
-                if 'Actions' in content:
-                    self.loadList(content['Actions'], self.list_box_actions)
-                    if len(content['Actions']) > 0:
-                        self.button_actuator_remove.Enable(True)
-                        self.list_box_actions.Select(0)
-                if 'Customs' in content:
-                    self.loadList(content['Customs'], self.list_box_customs)
-                    if len(content['Customs']) > 0:
-                        self.button_custom_remove.Enable(True)
-                        self.list_box_customs.Select(0)
-                if 'Sensors' in content:
-                    self.loadList(content['Sensors'], self.list_box_sensors)
-                    if len(content['Sensors']) > 0:
-                        self.button_sensor_remove.Enable(True)
-                        self.list_box_sensors.Select(0)
-                if 'currentExperimentName' in content and len(content['currentExperimentName']) > 0:
-                    self.currentExperimentName = content['currentExperimentName'][0]
-                    
-
-            elif 'EXPERIMENT CONFIG' in name:
-                self.simSetup.append({})
-                if 'Name' in content and len(content['Name']) > 0:
-                    self.simSetup[-1]["Name"] = content['Name'][0]
-                else:
-                    self.simSetup[-1]["Name"]=""
-                if 'RobotFile' in content and len(content['RobotFile']) > 0:
-                    self.simSetup[-1]["RobotFile"] = content['RobotFile'][0]
-                else:
-                    self.simSetup[-1]["RobotFile"]=""
-                if 'InitialTruths' in content:
-                    self.simSetup[-1]['InitialTruths'] = content['InitialTruths']
-                if 'InitialRegion' in content and len(content['InitialRegion']) > 0:
-                    self.simSetup[-1]['InitialRegion'] = int(content['InitialRegion'][0])
-                if 'Calibration' in content and len(content['Calibration'][0].split(","))==4:
-                    [xScale, xOffset, yScale, yOffset] = content['Calibration'][0].split(",")
-                    self.simSetup[-1]['XScale'] = float(xScale)
-                    self.simSetup[-1]['XOffset'] = float(xOffset)
-                    self.simSetup[-1]['YScale'] = float(yScale)
-                    self.simSetup[-1]['YOffset'] = float(yOffset)
-                if 'Lab' in content and len(content['Lab']) > 0:
-                    self.simSetup[-1]['LabFile'] = content['Lab'][0]
-                else:
-                    self.simSetup[-1]["LabFile"]=""
-
-        # Remove default if we have other configs
-        if len(self.simSetup) > 1:
-            del self.simSetup[0]
+        self.proj.writeSpecFile(filename)
+        self.dirty = False
 
         # Update the window title
-        title = os.path.basename(fileName)
-        self.SetTitle("Specification Editor - " + title)
+        self.SetTitle("Specification Editor - " + self.proj.project_basename + ".spec")
 
-        # Update paths
-        self.fileName = fileName
-        self.projectName = os.path.splitext(title)[0]
-        self.projectPath = filePath
+    def openFile(self, filename):
+        proj = project.Project()
+        proj.loadProject(filename)
+
+        if proj is None:
+            wx.MessageBox("Cannot open specification file %s" % (fileName), "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+        self.initializeNewSpec()
+        self.proj = proj
+
+        # Suppress any errors
+        self.proj.setSilent(True)
+        self.decomposedRFI = self.proj.loadRegionFile(decomposed=True)
+        self.proj.setSilent(False)
+
+        if self.decomposedRFI is None and self.proj.regionMapping is not None:
+            print "WARNING: Region mapping exists but failed to load decomposed region file"
+
+        # TODO: Advise the user that these may be inaccurate if
+        #  mtime(spec)>mtime(aut) or spectext is dirty!!!
+
+        if self.proj.regionMapping is not None:
+            # Update workspace decomposition listbox
+            self.list_box_locphrases.Set(self.proj.regionMapping.keys())
+            self.list_box_locphrases.Select(0)
+
+        # Load in LTL file to the LTL tab
+        if os.path.exists(self.proj.getFilenamePrefix()+".ltl"):
+            f = open(self.proj.getFilenamePrefix()+".ltl","r")
+            ltl = "".join(f.readlines())
+            f.close()
+            self.text_ctrl_LTL.SetValue(ltl)
+
+        #####################################
+
+        self.text_ctrl_spec.AppendText(self.proj.specText)
+        self.updateFromRFI()
+
+        self.list_box_actions.Set(self.proj.all_actuators)
+        self.list_box_actions.SetCheckedStrings(self.proj.enabled_actuators)
+        if len(self.proj.all_actuators) > 0:
+            self.button_actuator_remove.Enable(True)
+                    
+        self.list_box_sensors.Set(self.proj.all_sensors)
+        self.list_box_sensors.SetCheckedStrings(self.proj.enabled_sensors)
+        if len(self.proj.all_sensors) > 0:
+            self.button_sensor_remove.Enable(True)
+
+        self.list_box_customs.Set(self.proj.all_customs)
+        if len(self.proj.all_customs) > 0:
+            self.button_custom_remove.Enable(True)
+
+        # Update the window title
+        self.SetTitle("Specification Editor - " + self.proj.project_basename + ".spec")
 
         self.text_ctrl_spec.EmptyUndoBuffer()
+
+        self.dirty = False
     
     def doClose(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
         Respond to the "Close" menu command.
         """
 
-        # TODO: if self.dirty:
-        if not self.askIfUserWantsToSave("closing"): return
+        if self.dirty:
+            if not self.askIfUserWantsToSave("closing"): return
         
         # Detach from any running subprocesses
         for process in self.subprocess: 
@@ -794,11 +640,13 @@ class SpecEditorFrame(wx.Frame):
     def onMenuUndo(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         if self.text_ctrl_spec.CanUndo():
             self.text_ctrl_spec.Undo()
+
         event.Skip()
 
     def onMenuRedo(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         if self.text_ctrl_spec.CanRedo():
             self.text_ctrl_spec.Redo()
+
         event.Skip()
 
     def onMenuCut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
@@ -812,19 +660,22 @@ class SpecEditorFrame(wx.Frame):
     def onMenuPaste(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         if self.text_ctrl_spec.CanPaste():
             self.text_ctrl_spec.Paste()
+
         #event.Skip()
 
-    def onMenuCompile(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        # Let's make sure we have everything!
+    def onMenuCompile(self, event, with_safety_aut=False): # wxGlade: SpecEditorFrame.<event_handler>
+        # Clear the error markers
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
-        if self.rfi is None:
+
+        # Let's make sure we have everything!
+        if self.proj.rfi is None:
             wx.MessageBox("Please define regions before compiling.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
     
-        if self.text_ctrl_spec.GetText() == "":
+        if self.proj.specText.strip() == "":
             wx.MessageBox("Please write a specification before compiling.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -834,6 +685,11 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
 
+        # TODO: we could just pass the proj object
+        self.proj.writeSpecFile()
+        self.dirty = False
+        compiler = SpecCompiler(self.proj.getFilenamePrefix() + ".spec")
+
         # Clear the log so we can start fresh grocer
         self.text_ctrl_log.Clear()
 
@@ -842,170 +698,44 @@ class SpecEditorFrame(wx.Frame):
 
         sys.stdout = redir
         sys.stderr = redir
-        
-        ##########################
-        # Create new region File #
-        ##########################
-        
+
         self.appendLog("Parsing locative prepositions...\n", "BLUE")
         wx.Yield()
-        self.saveFile(self.fileName)
-        self.parser = parseLP.parseLP()
-        self.parser.main(self.fileName)
 
-        # Remove all references to any obstacle regions at this point
-        for r in self.proj.rfi.regions:
-            if r.isObstacle:
-                # Delete corresponding decomposed regions
-                for sub_r in self.parser.proj.regionMapping[r.name]:
-                    del self.parser.proj.rfi.regions[self.parser.proj.rfi.indexOfRegionWithName(sub_r)]
-                # Remove from mapping
-                del self.parser.proj.regionMapping[r.name]
+        compiler._decompose()
+        self.proj = compiler.proj
+        self.decomposedRFI = compiler.parser.proj.rfi
 
-        #self.proj.rfi.regions = filter(lambda r: not (r.isObstacle or r.name == "boundary"), self.proj.rfi.regions)
-                    
-        # save the regions into new region file
-        fileName = self.proj.getFilenamePrefix()+'_decomposed.regions'
-        self.parser.proj.rfi.recalcAdjacency()
-        self.parser.proj.rfi.writeFile(fileName)
-
-        self.proj.regionMapping = self.parser.proj.regionMapping
-        self.saveFile(self.fileName)
-        
         # Update workspace decomposition listbox
         self.list_box_locphrases.Set(self.proj.regionMapping.keys())
         self.list_box_locphrases.Select(0)
-        
-        # update the rfi for new regions
-        rfi = self.parser.proj.rfi
-        
-        # substitute the regions name in specs
-        text = self.text_ctrl_spec.GetText()
-        for m in re.finditer(r'near (?P<rA>\w+)', text):
-            text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+str(50)])+")", text)
-        for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
-            text=re.sub(r'within ' + m.group('dist')+' (from|of) '+ m.group('rA'), "("+' or '.join(self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+m.group('dist')])+")", text)
-        for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
-            text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(self.parser.proj.regionMapping['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"])+")", text)
-        for r in self.proj.rfi.regions:
-            if not (r.isObstacle or r.name == "boundary"):
-                text=re.sub('\\b' + r.name + '\\b', "("+' or '.join(self.parser.proj.regionMapping[r.name])+")", text)
-
-        print "===== New Specs ====="
-        print
-        print text
-        print "====================="
-        ###################
-        # Create SMV File #
-        ###################
 
         self.appendLog("Creating SMV file...\n", "BLUE")
         wx.Yield()
 
-        numRegions = len(rfi.regions)
-
-        sensorList = []
-        for i, sensor in enumerate(self.list_box_sensors.GetItems()):
-            if self.list_box_sensors.IsChecked(i):
-                sensorList.append(sensor)
-
-        robotPropList = []
-        for i, action in enumerate(self.list_box_actions.GetItems()):
-            if self.list_box_actions.IsChecked(i):
-                robotPropList.append(action)
-        robotPropList.extend(self.list_box_customs.GetItems())
-
-        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
-
-        createSMVfile(fileNamePrefix, numRegions, sensorList, robotPropList)
-
-        ###################
-        # Create LTL File #
-        ###################
+        compiler._writeSMVFile()
 
         self.appendLog("Creating LTL file...\n", "BLUE")
         wx.Yield()
-        regionList = [x.name for x in rfi.regions]
 
-        spec,self.map = writeSpec(text, sensorList, regionList, robotPropList)
-        # TODO: Catch errors here
-        adjData = rfi.transitions
-
-        createLTLfile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
-        createAnzuFile(fileNamePrefix, sensorList, robotPropList, adjData, spec)
+        compiler._writeLTLFile()
                
-        #self.appendLog(self.proj.ltlmop_root)
-        #arg="python \lib\convert_anzu_input_to_marduk.py -r -i "+fileNamePrefix + ".anzu "+ "-o "+ fileNamePrefix + ".rat"
-        #os.system(arg)
-
-        classpath = "\"" + os.path.join(self.proj.ltlmop_root, "lib", "convert_anzu_input_to_marduk.py\"")
-        fNP = "\""+ fileNamePrefix + "\""
-        
-        arg="python "+classpath+" -r -i " + fNP+ ".anzu "+ "-o " +  fNP + ".rat"
-        
-        os.system(arg)
-        
-        #wx.Execute(arg, wx.EXEC_ASYNC, self.subprocess[PROCESS_REGED])
-        
-
-        if os.path.exists(fileNamePrefix+".ltl"):
-            f = open(fileNamePrefix+".ltl","r")
+        # Load in LTL file to the LTL tab
+        if os.path.exists(self.proj.getFilenamePrefix()+".ltl"):
+            f = open(self.proj.getFilenamePrefix()+".ltl","r")
             ltl = "".join(f.readlines())
             f.close()
             self.text_ctrl_LTL.SetValue(ltl)
 
 			
-		################################################
-		# Add a check for Empty Gaits - added by Sarah #
-		################################################
-        self.appendLog("\nChecking for empty gaits...\n")
-        #print robotPropList
-        err = 0
-        libs = self.library
-        libs.readLibe()
-		# Check that each individual trait has a corresponding config-gait pair
-        for act in robotPropList:
-            act = act.strip("u's.")
-            if act[0] == "T":
-                act = act.strip("T_")
-                #print act
-                words = act.split("_and_")
-                #print words
-                config = libs.findGait(words)
-                #print config
-                if type(config) == type(None):
-                    err_message = "WARNING: No config-gait pair for actuator T_" + act + "\n"
-                    self.appendLog(err_message)
-                    err = 1
-			
-        ####################
-        # Create automaton #
-        ####################
-
         self.appendLog("Creating automaton...\n", "BLUE")
         wx.Yield()
 
-        # Windows uses a different delimiter for the java classpath
-        if os.name == "nt":
-            classpath = os.path.join(self.proj.ltlmop_root, "etc\jtlv", "jtlv-prompt1.4.0.jar") + ";" + os.path.join(self.proj.ltlmop_root, "etc\jtlv", "GROne")
-        else:
-            classpath = os.path.join(self.proj.ltlmop_root, "etc/jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc/jtlv", "GROne")
+        realizable, output = compiler._synthesize(with_safety_aut)
 
-        cmd = subprocess.Popen(["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneMain", fileNamePrefix + ".smv", fileNamePrefix + ".ltl", "--safety"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-        
-        # TODO: Make this output live
-        while cmd.poll():
-            wx.Yield()
-
-        realizable = False
-
-        for line in cmd.stdout:
-            self.appendLog("\t"+line)
-            if "Specification is realizable" in line:
-               realizable = True
-               
-        cmd.stdout.close()
         print "\n"
+
+        self.appendLog("\t"+output.replace("\n", "\n\t"))
 
         if realizable:
             self.appendLog("Automaton successfully synthesized.\n", "GREEN")
@@ -1015,7 +745,6 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_log.BeginTextColour(color)
         #self.text_ctrl_log.BeginBold()
@@ -1024,15 +753,17 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_log.EndTextColour()
         self.text_ctrl_log.ShowPosition(self.text_ctrl_log.GetLastPosition())
 
-
-
     def onMenuSimulate(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        """ Run the simulation with current experiment configration. """
+        """ Run the simulation with current experiment configuration. """
 
-        # TODO: Maybe we shouldn't be recalculating fileNamePrefix so much...
-        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
+        if self.dirty:
+            response = wx.MessageBox("Specification may have changed since last compile.\nContinue anyways, without recompiling?"
+                                    "Warning", wx.YES_NO | wx.CANCEL, self)
 
-        if self.projectName is None or not os.path.isfile(fileNamePrefix+".aut"):
+            if response != wx.YES:
+                return
+
+        if not os.path.isfile(self.proj.getFilenamePrefix()+".aut"):
             # TODO: Deal with case where aut file exists but is lame
             wx.MessageBox("Cannot find automaton for simulation.  Please make sure compilation completed successfully.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
@@ -1043,14 +774,14 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = redir
         sys.stderr = redir
 
-        subprocess.Popen(["python", os.path.join("lib","execute.py"), "-a", fileNamePrefix + ".aut", "-s", fileNamePrefix + ".spec"])
+        subprocess.Popen(["python", os.path.join("lib","execute.py"), "-a", self.proj.getFilenamePrefix() + ".aut", "-s", self.proj.getFilenamePrefix() + ".spec"])
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
 
     def onClickEditRegions(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        # Provide visual feedback and ake sure multiple copies of the Region Editor
+        # Provide visual feedback and make sure multiple copies of RegionEditor
         # can't be open at the same time
         self.button_edit_regions.Enable(False)
         self.button_edit_regions.SetLabel("Starting Region Editor...")
@@ -1061,32 +792,33 @@ class SpecEditorFrame(wx.Frame):
 
         # Spawn asynchronous subprocess
         self.subprocess[PROCESS_REGED] = wx.Process(self, PROCESS_REGED)
-        if self.projectFiles['RegionFile'] != "":
+        if self.proj.rfi is not None:
             # If we already have a region file defined, open it up for editing
-            fileName = os.path.join(self.projectPath, self.projectFiles['RegionFile'])
+            fileName = self.proj.rfi.filename
             self.lastRegionModTime = os.path.getmtime(fileName)
             wx.Execute("python regionEditor.py %s" % fileName, wx.EXEC_ASYNC, self.subprocess[PROCESS_REGED])
         else:
             # Otherwise let's create a new region file
-            if self.projectName is None:
+            if self.proj.project_basename is None:
                 # First we need a project name, though
                 wx.MessageBox("Please save first to give the project a name.", "Error",
                             style = wx.OK | wx.ICON_ERROR)
                 self.onMenuSave()
-                if self.projectName is None:
+                if self.proj.project_basename is None:
                     # If the save was cancelled, forget it
                     self.button_edit_regions.SetLabel("Edit Regions...")
                     self.Layout()
                     self.button_edit_regions.Enable(True)
                     return
+
             # We'll name the region file with the same name as our project
-            fileName = os.path.join(self.projectPath, self.projectName+".regions")
+            fileName = self.proj.getFilenamePrefix()+".regions"
             wx.Execute("python regionEditor.py %s" % fileName, wx.EXEC_ASYNC, self.subprocess[PROCESS_REGED])
 
-    
     def onProcessTerminate(self, event):
-        id = event.GetId()
-        if id == PROCESS_REGED:
+        ID = event.GetId()
+
+        if ID == PROCESS_REGED:
             ###############################
             # After Region Editor returns #
             ###############################
@@ -1097,41 +829,67 @@ class SpecEditorFrame(wx.Frame):
             self.button_edit_regions.Enable(True)
 
             # If we were editing a new region file
-            if self.projectFiles['RegionFile'] == "":
-                fileName = os.path.join(self.projectPath, self.projectName+".regions")
+            if self.proj.rfi is None:
+                fileName = self.proj.getFilenamePrefix()+".regions"
                 # Check whether the user actually saved or not
                 if os.path.isfile(fileName):
-                    self.loadRegionFile(fileName)
-                    self.projectFiles['RegionFile']=os.path.basename(fileName)
+                    rfi = RegionFileInterface()
+
+                    # Try loading the file
+                    if not rfi.readFile(fileName):
+                        print "ERROR: Could not load newly created region file"
+                        return 
+
+                    self.proj.rfi = rfi
+                    self.dirty = True
+                    self.updateFromRFI()
+
             # Or if it was a pre-existing region file
             else:
-                fileName = os.path.join(self.projectPath, self.projectFiles['RegionFile'])
+                fileName = self.proj.rfi.filename
                 # Check to see if its modification time has changed; no point in reloading otherwise
                 if os.path.getmtime(fileName) != self.lastRegionModTime:
-                    self.loadRegionFile(fileName)
-        elif id == PROCESS_DOTTY:
-            ########################
-            # After Dotty returns #
-            ########################
+                    rfi = RegionFileInterface()
 
-            # TODO: Check exists & mtime to make sure it didn't die
-            self.appendLog("Export complete!\n", "GREEN")
+                    # Try loading the file
+                    if not rfi.readFile(fileName):
+                        print "ERROR: Could not reload region file"
+                        return 
+
+                    self.proj.rfi = rfi
+                    self.dirty = True
+                    self.updateFromRFI()
+
+        elif ID == PROCESS_DOTTY:
+            #######################
+            # After Dotty returns #
+            #######################
+
+            # TODO: Check mtime to make sure it didn't die
+            if os.path.isfile(self.proj.getFilenamePrefix()+".pdf"):
+                self.appendLog("Export complete!\n", "GREEN")
+
         else:
             print "Unknown PID"
             return
 
-        if self.subprocess[id] != None:
-            self.subprocess[id].Destroy()
-            self.subprocess[id] = None
+        if self.subprocess[ID] is not None:
+            self.subprocess[ID].Destroy()
+            self.subprocess[ID] = None
 
     def onMenuConfigSim(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        # TODO: call configEditor  
-        pass
+        # Launch the config editor
+        # TODO: Discourage editing of spec while it's open?
+        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"), self.proj.getFilenamePrefix()+".spec"])
+
+    def _exportDotFile(self):
+        aut = fsa.Automaton(self.decomposedRFI.regions, self.proj.regionMapping, None, None, None) 
+
+        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
+        aut.writeDot(self.proj.getFilenamePrefix()+".dot")
 
     def onMenuViewAut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
-
-        if self.projectName is None or self.rfi is None or not os.path.isfile(fileNamePrefix+".aut"):
+        if not os.path.isfile(self.proj.getFilenamePrefix()+".aut"):
             wx.MessageBox("Cannot find automaton for viewing.  Please make sure compilation completed successfully.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -1141,26 +899,26 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
 
+        # TODO: Advise the user that the exported automaton may be inaccurate if
+        #  mtime(spec)>mtime(aut) or spectext is dirty
+
         self.appendLog("Generating PDF file from automaton...\n", "BLUE")
 
-        aut = fsa.Automaton(self.parser.proj.rfi.regions, self.parser.proj.regionMapping, None, None, None) 
+        self._exportDotFile()
 
-        aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
-        aut.writeDot(fileNamePrefix+".dot")
         self.subprocess[PROCESS_DOTTY] = wx.Process(self, PROCESS_DOTTY)
-        #wx.Execute("dot -Tps2 -o%s.ps2 %s.dot" % ("\""+fileNamePrefix+"\"", "\""+fileNamePrefix+"\""),
-                    #wx.EXEC_ASYNC, self.subprocess[PROCESS_DOTTY])
-        wx.Execute("dot -Tpdf -o%s.pdf\" %s.dot\"" % ("\""+fileNamePrefix, "\""+fileNamePrefix),
+        
+        wx.Execute("dot -Tpdf -o%s.pdf %s.dot" % (self.proj.getFilenamePrefix(), self.proj.getFilenamePrefix()),
                     wx.EXEC_ASYNC, self.subprocess[PROCESS_DOTTY])
-        #self.subprocess[PROCESS_DOTTY].Destroy()
-        self.subprocess[PROCESS_DOTTY] = None
 
     def onMenuQuit(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.doClose(event)
         #event.Skip()
 
     def onMenuAbout(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        print "Event handler `onMenuAbout' not implemented"
+        wx.MessageBox("Specification Editor is part of the LTLMoP Toolkit.\n" + \
+                      "For more information, please visit http://ltlmop.github.com", "About Specification Editor",
+                      style = wx.OK | wx.ICON_INFORMATION)
         event.Skip()
 
     def onRegionLabelToggle(self, event): # wxGlade: SpecEditorFrame.<event_handler>
@@ -1172,23 +930,19 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        self.onMenuCompile(event)
-        self.onMenuViewAut(event)
+        self.onMenuCompile(event, with_safety_aut=True)
         
-        fileNamePrefix = os.path.join(self.projectPath, self.projectName)
-
         output = "\nRESULT\n"
-        f = open(fileNamePrefix+".debug","r")
+        f = open(self.proj.getFilenamePrefix()+".debug","r")
         realizable = False    
         for dline in f.readlines():
           if "REALIZABLE" in dline:   
             realizable = True            
-            self.appendLog("Automaton successfully synthesized.\n", "GREEN")
-            aut = fsa.Automaton(self.parser.proj.rfi.regions, self.parser.proj.regionMapping, None, None, None) 
-            aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
-            aut.writeDot(fileNamePrefix+".dot")
-            f = open(fileNamePrefix+".dot","r")
+            #self.appendLog("Automaton successfully synthesized.\n", "GREEN")
+            self._exportDotFile()
+            f = open(self.proj.getFilenamePrefix()+".dot","r")
             nonTrivial = False
+            # TODO: There is no reason to be parsing the Dot file for this...
             for autline in f.readlines():
                 if "->" in autline:
                     nonTrivial = True 
@@ -1199,8 +953,8 @@ class SpecEditorFrame(wx.Frame):
                 self.appendLog("Synthesized automaton is trivial.\n", "GREEN")
                 output += "Synthesized automaton is trivial.\n"
           if "SysInit UNSAT" in dline:
-           output = output + "System initial condition is unsatisfiable.\n" 
-           for l in self.self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
+               output = output + "System initial condition is unsatisfiable.\n" 
+               for l in self.self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
           if "SysTrans UNSAT" in dline:
             output = output + "System transition relation is unsatisfiable.\n" 
             for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
@@ -1275,7 +1029,7 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # TODO: check for failed compilation before allowing this
-        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.fileName])
+        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec"])
 
     def onPropAdd(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -1287,14 +1041,17 @@ class SpecEditorFrame(wx.Frame):
             prop_prefix = "sensor"
             lb = self.list_box_sensors
             remove_button = self.button_sensor_remove
+            append_lists = [self.proj.all_sensors, self.proj.enabled_sensors]
         elif event.GetEventObject() is self.button_actuator_add:
             prop_prefix = "actuator"
             lb = self.list_box_actions
             remove_button = self.button_actuator_remove
+            append_lists = [self.proj.all_actuators, self.proj.enabled_actuators]
         elif event.GetEventObject() is self.button_custom_add:
             prop_prefix = "custom"
             lb = self.list_box_customs
             remove_button = self.button_custom_remove
+            append_lists = [self.proj.all_customs]
 
         # Find any existing propositions of name sensor/actuator/customX
         nums = []
@@ -1325,8 +1082,14 @@ class SpecEditorFrame(wx.Frame):
             # If it's valid, add it, select it and enable it
             lb.Insert(name, lb.GetCount())
             lb.Select(lb.GetCount()-1)
-            lb.Check(lb.GetCount()-1)
+            if prop_prefix != "custom":
+                lb.Check(lb.GetCount()-1)
             remove_button.Enable(True)
+
+            for l in append_lists:
+                l.append(name)
+
+        self.dirty = True
 
         event.Skip(False)
 
@@ -1335,16 +1098,25 @@ class SpecEditorFrame(wx.Frame):
         Remove the selected proposition from the list.
         """
 
+        # Figure out which listbox called us
         if event.GetEventObject() is self.button_sensor_remove:
             lb = self.list_box_sensors
+            remove_lists = [self.proj.all_sensors, self.proj.enabled_sensors]
         elif event.GetEventObject() is self.button_actuator_remove:
             lb = self.list_box_actions
+            remove_lists = [self.proj.all_actuators, self.proj.enabled_actuators]
         elif event.GetEventObject() is self.button_custom_remove:
             lb = self.list_box_customs
+            remove_lists = [self.proj.all_customs]
 
+        # Remove the prop from the appropriate list(s) in proj
+        for l in remove_lists:
+            if lb.GetStringSelection() in l:
+                l.remove(lb.GetStringSelection())
+        
         selection = lb.GetSelection()
         lb.Delete(selection)
-        
+
         # Select something reasonable now that the old item is gone
         if selection > 0:
             lb.Select(selection-1)
@@ -1355,6 +1127,8 @@ class SpecEditorFrame(wx.Frame):
         # Disable the Delete button if there's nothing to delete
         if lb.GetCount() == 0:
             event.GetEventObject().Enable(False)
+
+        self.dirty = True
 
         event.Skip(False)
 

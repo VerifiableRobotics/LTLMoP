@@ -59,6 +59,7 @@ class RegionFileInterface:
         self.regions = regions
         self.transitions = transitions
         self.thumb = thumb
+        self.filename = None
 
     def setToDefaultName(self, region):
         if region.name is '':
@@ -326,6 +327,8 @@ class RegionFileInterface:
             for rname in data["Obstacles"]:
                 self.regions[self.indexOfRegionWithName(rname)].isObstacle = True
             
+        self.filename = filename
+
         return True
    
 ############################################################

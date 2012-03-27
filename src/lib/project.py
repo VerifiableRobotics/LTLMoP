@@ -9,7 +9,6 @@
 """
 
 # TODO: Document better
-# TODO: Add in output (write-to-file) functions?
 
 import os, sys
 import fileMethods, regions
@@ -24,110 +23,48 @@ class Project:
 
     def __init__(self):
         self.project_basename = None
+        self.project_root = None
+        self.spec_data = None
         self.silent = False
-        pass
+        self.regionMapping = None
+        self.rfi = None
+        self.specText = ""
+        self.all_sensors = []
+        self.enabled_sensors = []
+        self.all_actuators = []
+        self.enabled_actuators = []
+        self.all_customs = []
+        self.currentConfig = None
 
     def setSilent(self, silent):
         self.silent = silent
 
-    def getExperimentConfig(self, exp_cfg_name):
-        """
-        Returns a dictionary corresponding to the specified experiment config
-        """
-
-        # Find the section that corresponds to this configuration
-        for key, val in self.spec_data.iteritems():
-            if key.startswith("EXPERIMENT CONFIG") and val['Name'][0] == exp_cfg_name :
-                if not self.silent: print "  -> Using experiment configuration \"%s\"" % exp_cfg_name
-                return val
-
-
-        if not self.silent: print "ERROR: Could not find experiment config with name \"%s\" in spec file!" % exp_cfg_name
-        return
-
-    def loadLabData(self, exp_cfg_data):
-        """
-        Takes an experiment config dictionary and returns a lab config dictionary.
-        """
-
-        #### Load in the lab setup file
-        
-        try:
-            lab_name = exp_cfg_data['Lab'][0]
-        except IndexError, KeyError:
-            if not self.silent: print "WARNING: Lab configuration file undefined"        
-            return
-
-        # Add extension to the name if there isn't one. 
-        if not lab_name.endswith('.lab'):
-            lab_name = lab_name+'.lab'     
-        if not self.silent: print "Loading lab setup file %s..." % lab_name
-        try:
-            # First try path relative to project path
-            lab_data = fileMethods.readFromFile(os.path.join(self.project_root, lab_name))   
-        except IOError: 
-            try:
-                # If that doesn't work, try looking in $self.ltlmop_root/labs/ directory
-                lab_data = fileMethods.readFromFile(os.path.join(self.ltlmop_root, "labs", lab_name))   
-            except IOError:
-                if not self.silent: print "ERROR: Couldn't find lab setup file in project directory or labs folder."
-                return
-        if not self.silent: print "  -> Looks like you want to run your experiment with %s. Good choice." % lab_data["Name"][0]
-        
-        return lab_data
-        
-    def loadRegionMapping(self, spec_data):
+    def loadRegionMapping(self):
         """
         Takes the region mapping data and returns region mapping dictionary.
         """
+
+        if self.spec_data is None:
+            print "ERROR: Cannot load region mapping data before loading a spec file"
+            return None
+
         try:
-            mapping_data = spec_data['SPECIFICATION']['RegionMapping']
-        except IndexError, KeyError:
+            mapping_data = self.spec_data['SPECIFICATION']['RegionMapping']
+        except KeyError:
             if not self.silent: print "WARNING: Region mapping data undefined"        
-            return {'Null':['Null']}
+            return None
+
         if len(mapping_data) == 0:
             if not self.silent: print "WARNING: Region mapping data is empty"        
-            return {'Null':['Null']}
+            return None
         
         regionMapping = {}
         for line in mapping_data:
-            oldRegionName,newRegionList = line.split('=')
-            regionMapping[oldRegionName] = newRegionList.split(',')
+            oldRegionName, newRegionList = line.split('=')
+            regionMapping[oldRegionName.strip()] = [n.strip() for n in newRegionList.split(',')]
+
         return regionMapping
         
-        
-    def loadRobotFile(self, exp_cfg_data):
-        """
-        Takes an experiment config dictionary and returns a robot description dictionary.
-        """
-
-        #### Load in the robot file
-        
-        try:
-            rdf_name = exp_cfg_data['RobotFile'][0]
-        except IndexError, KeyError:
-            if not self.silent: print "WARNING: Robot description file undefined"        
-            return
-
-        # Add extension to the name if there isn't one. 
-        if not rdf_name.endswith('.robot'):
-            rdf_name = rdf_name+'.robot'  
-     
-        if not self.silent: print "Loading robot description file %s..." % rdf_name
-        try:
-            # First try path relative to project path
-            rdf_data = fileMethods.readFromFile(os.path.join(self.project_root, rdf_name))   
-        except IOError: 
-            try:
-                # If that doesn't work, try looking in $self.ltlmop_root/robots/ directory
-                rdf_data = fileMethods.readFromFile(os.path.join(self.ltlmop_root, "robots", rdf_name))   
-            except IOError:
-                if not self.silent: print "ERROR: Couldn't find robot description file in project directory or robots folder."
-                return
-        if not self.silent: print "  -> %s looks excited for this run." % rdf_data["Name"][0]
-        
-        return rdf_data
-
     def loadRegionFile(self, decomposed=False):
         """
         Returns a Region File Interface object corresponding to the regions file referenced in the spec file
@@ -135,24 +72,24 @@ class Project:
 
         #### Load in the region file
 
-        try:
-            regf_name = self.spec_data['SETTINGS']['RegionFile'][0]
-            if decomposed:
-                #regf_name = regf_name.split(".")[0] + "_decomposed.regions"
-                regf_name = self.getFilenamePrefix() + "_decomposed.regions"
-        except IndexError, KeyError:
-            if not self.silent: print "WARNING: Region file undefined"        
-            return
+        if decomposed:
+            regf_name = self.getFilenamePrefix() + "_decomposed.regions"
+        else:
+            try:
+                regf_name = os.path.join(self.project_root, self.spec_data['SETTINGS']['RegionFile'][0])
+            except (IndexError, KeyError):
+                if not self.silent: print "WARNING: Region file undefined"        
+                return None
 
         if not self.silent: print "Loading region file %s..." % regf_name
         rfi = regions.RegionFileInterface() 
 
-        if rfi.readFile(os.path.join(self.project_root, regf_name)) == False:
+        if not rfi.readFile(regf_name):
             if not self.silent:
                 print "ERROR: Could not load region file %s!"  % regf_name
                 if decomposed:
                     print "Are you sure you compiled your specification?"
-            return
+            return None
      
         if not self.silent: print "  -> Found definitions for %d regions." % len(rfi.regions)
 
@@ -201,17 +138,66 @@ class Project:
             (p, t) = os.path.split(p)
             if p == "":
                 print "I have no idea where I am; this is ridiculous"
-                sys.exit(1)
+                return None
 
-        self.ltlmop_root = os.path.join(p,"src")
+        self.ltlmop_root = os.path.join(p, "src")
 
         ### Load in the specification file
         if not self.silent: print "Loading specification file %s..." % spec_file
         spec_data = fileMethods.readFromFile(spec_file)   
+
+        if spec_data is None:
+            if not self.silent: print "WARNING: Failed to load specification file"
+            return None
+
+        try:
+            self.specText = '\n'.join(spec_data['SPECIFICATION']['Spec'])
+        except KeyError:
+            if not self.silent: print "WARNING: Specification text undefined"        
         
         return spec_data
+
+    def writeSpecFile(self, filename=None):
+        if filename is None:
+            # Default to same filename as we loaded from
+            filename = os.path.join(self.project_root, self.project_basename + ".spec")
+        else:
+            # Update our project paths based on the new filename
+            self.project_root = os.path.dirname(os.path.abspath(filename))
+            self.project_basename, ext = os.path.splitext(os.path.basename(filename)) 
+
+        data = {}
+        
+        data['SPECIFICATION'] = {"Spec": self.specText}
+
+        if self.regionMapping is not None:
+            data['SPECIFICATION']['RegionMapping'] = [rname + " = " + ', '.join(rlist) for
+                                                      rname, rlist in self.regionMapping.iteritems()]
+
+        data['SETTINGS'] = {"Sensors": [p + ", " + str(int(p in self.enabled_sensors)) for p in self.all_sensors],
+                            "Actions": [p + ", " + str(int(p in self.enabled_actuators)) for p in self.all_actuators],
+                            "Customs": self.all_customs}
+
+        if self.currentConfig is not None:
+            data['SETTINGS']['CurrentConfigName'] = self.currentConfig.name
     
-    def loadProject(self, spec_file, exp_cfg_name=None,current_config_name=None):
+        if self.rfi is not None:
+            # Save the path to the region file as relative to the spec file
+            # FIXME: relpath has case sensitivity problems on OS X
+            data['SETTINGS']['RegionFile'] = os.path.normpath(os.path.relpath(self.rfi.filename, self.project_root))
+
+        comments = {"FILE_HEADER": "This is a specification definition file for the LTLMoP toolkit.\n" +
+                                   "Format details are described at the beginning of each section below.",
+                    "RegionFile": "Relative path of region description file",
+                    "Sensors": "List of sensor propositions and their state (enabled = 1, disabled = 0)",
+                    "Actions": "List of action propositions and their state (enabled = 1, disabled = 0)",
+                    "Customs": "List of custom propositions",
+                    "Spec": "Specification in structured English",
+                    "RegionMapping": "Mapping between region names and their decomposed counterparts"}
+
+        fileMethods.writeToFile(filename, data, comments)
+
+    def loadProject(self, spec_file, current_config_name=None):
         """
         Because the spec_file contains references to all other project files, this is all we
         need to know in order to load everything in.
@@ -220,58 +206,48 @@ class Project:
         self.spec_data = self.loadSpecFile(spec_file)
 
         # Figure out the name of the current experiment config if not specified
-        if exp_cfg_name is None:
-            exp_cfg_name = self.spec_data['SETTINGS']['currentExperimentName'][0]
-            
-        # Figure out the name of the current experiment config if not specified
         if current_config_name is None:
-#            current_config_name = self.spec_data['SETTINGS']['currentConfig'][0]
-           current_config_name = 'Experiment_with_player_stage'
-           #current_config_name = 'Experiment_with_Simulated_Pioneer_in_ODE'
-        self.regionMapping = self.loadRegionMapping(self.spec_data)
-        self.exp_cfg_data = self.getExperimentConfig(exp_cfg_name)
-        self.current_configObj = self.loadExperimentConfig(current_config_name)
-        self.lab_data = self.loadLabData(self.exp_cfg_data)
-        self.robot_data = self.loadRobotFile(self.exp_cfg_data)
+            try:
+                current_config_name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
+            except (KeyError, IndexError):
+                if not self.silent: print "WARNING: No experiment configuration defined"        
+                self.currentConfig = None
+            else:
+                self.currentConfig = self.loadExperimentConfig(current_config_name)
+
+        self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
-        self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps(self.exp_cfg_data)
+        #self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps(self.exp_cfg_data)
         self.determineEnabledPropositions()
         
         
-#        # this is for debugging
-#        print '=========== This is for debugging ======================'
-##        self.lookupHandlers()
-#        self.importHandlers()
-#        print self.h_instance
-#        print '========================================================'
-        
-    def loadExperimentConfig(self,configFileName):
+    def loadExperimentConfig(self, configFileName):
         self.hSub = handlerSubsystem.HandlerSubsystem(self)
         configObj = self.hSub.config_parser.loadConfigFile(configFileName)
         return configObj
 
     def determineEnabledPropositions(self):
         """
-        Populate ``all_sensors``, ``initial_sensors``, and ``all_actuators`` lists based on
-        configuration information.
+        Populate lists ``all_sensors``, ``enabled_sensors``, etc.
         """
     
-        # Figure out what sensors are enabled, and which are initially true
+        # Figure out what sensors are enabled
         self.all_sensors = []
-        self.initial_sensors = []
+        self.enabled_sensors = []
         for line in self.spec_data['SETTINGS']['Sensors']:
             sensor, val = line.split(',')
+            self.all_sensors.append(sensor.strip())
             if int(val) == 1: 
-                self.all_sensors.append(sensor)
-                if sensor in self.exp_cfg_data['InitialTruths']:
-                    self.initial_sensors.append(sensor)
+                self.enabled_sensors.append(sensor.strip())
 
         # Figure out what actuators are enabled
         self.all_actuators = []
+        self.enabled_actuators = []
         for line in self.spec_data['SETTINGS']['Actions']:
             act, val = line.split(',')
+            self.all_actuators.append(act.strip())
             if int(val) == 1: 
-                self.all_actuators.append(act)
+                self.enabled_actuators.append(act.strip())
 
         # Figure out what the custom propositions are
         self.all_customs = self.spec_data['SETTINGS']['Customs']
@@ -286,9 +262,10 @@ class Project:
 
     def getBackgroundImagePath(self):
         """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
+        
+        # TODO: remove this and all use of bg image png
         return self.rfi.thumb
-        #return self.getFilenamePrefix() + "_simbg.png"
-    
+
 
     def importHandlers(self, all_handler_types=None):
         """
@@ -311,8 +288,8 @@ class Project:
         self.loco_handler = self.h_instance['locomotionCommand']
         self.drive_handler = self.h_instance['drive']
         self.motion_handler = self.h_instance['motionControl']
-
-        
+            
+            
 #            exec("from %s import %sHandler" % (self.h_name[handler], handler)) in locals() # WARNING: This assumes our input data is not malicious...
 #            if handler == 'pose':
 #                self.pose_handler = poseHandler(self, self.shared_data)

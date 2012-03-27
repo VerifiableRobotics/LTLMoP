@@ -134,14 +134,14 @@ class MopsyFrame(wx.Frame):
 
         print "Loading safety constraints..."
         self.safety_aut = fsa.Automaton(self.proj.rfi.regions, self.proj.regionMapping, self.sysDummySensorHandler, self.sysDummyActuatorHandler, self.dummyMotionHandler) 
-        self.safety_aut.loadFile(self.proj.getFilenamePrefix() + "_safety.aut", self.proj.all_sensors, self.proj.all_actuators, self.proj.all_customs)
+        self.safety_aut.loadFile(self.proj.getFilenamePrefix() + "_safety.aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
         print "Loading environment counter-strategy..."
         self.num_bits = int(numpy.ceil(numpy.log2(len(self.proj.rfi.regions))))  # Number of bits necessary to encode all regions
         region_props = ["bit" + str(n) for n in xrange(self.num_bits)]
         self.env_aut = fsa.Automaton(self.proj.rfi.regions, self.proj.regionMapping, self.envDummySensorHandler, self.envDummyActuatorHandler, self.dummyMotionHandler)
         # We are being a little tricky here by just reversing the sensor and actuator propositions
         # to create a sort of dual of the usual automaton
-        self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.all_actuators + self.proj.all_customs + region_props, self.proj.all_sensors, [])
+        self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.enabled_actuators + self.proj.all_customs + region_props, self.proj.enabled_sensors, [])
         
         # Force initial state to state #0 in counter-strategy
         self.env_aut.current_region = None
@@ -180,7 +180,7 @@ class MopsyFrame(wx.Frame):
         for s in self.proj.all_customs:
             del(actprops[s])
         custprops = copy.deepcopy(self.actuatorStates)
-        for s in self.proj.all_actuators:
+        for s in self.proj.enabled_actuators:
             del(custprops[s])
 
         self.populateToggleButtons(self.sizer_env, self.env_buttons, self.sensorStates)
@@ -192,7 +192,7 @@ class MopsyFrame(wx.Frame):
             b.Enable(False)
 
         # Set up the logging grid
-        colheaders = self.proj.all_sensors + ["Region"] + self.proj.all_actuators + self.proj.all_customs
+        colheaders = self.proj.enabled_sensors + ["Region"] + self.proj.enabled_actuators + self.proj.all_customs
         self.history_grid.CreateGrid(0,len(colheaders))
         for i,n in enumerate(colheaders):
             self.history_grid.SetColLabelValue(i," " + n + " ")
@@ -258,9 +258,9 @@ class MopsyFrame(wx.Frame):
 
     def appendToHistory(self):
         self.history_grid.AppendRows(1)
-        newvals = [self.sensorStates[s] for s in self.proj.all_sensors] + \
+        newvals = [self.sensorStates[s] for s in self.proj.enabled_sensors] + \
                   [self.safety_aut.getAnnotatedRegionName(self.current_region)] + \
-                  [self.actuatorStates[s] for s in self.proj.all_actuators] + \
+                  [self.actuatorStates[s] for s in self.proj.enabled_actuators] + \
                   [self.actuatorStates[s] for s in self.proj.all_customs] 
         lastrow = self.history_grid.GetNumberRows()-1
 
@@ -343,7 +343,7 @@ class MopsyFrame(wx.Frame):
         else:
             hl = []
 
-        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj, scaleToFit=True, drawLabels=True, memory=True, highlightList=hl, deemphasizeList=self.regionsToHide)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=True, memory=True, highlightList=hl, deemphasizeList=self.regionsToHide)
 
         self.Refresh()
         self.Update()

@@ -38,6 +38,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         the region names and the list of robot propositions (other than regions). 
     '''
 
+    sensorList = copy.deepcopy(sensorList)
+    robotPropList = copy.deepcopy(robotPropList)
+
     # Prepend "e." or "s." to propositions for JTLV
     for i, sensor in enumerate(sensorList):
         text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)

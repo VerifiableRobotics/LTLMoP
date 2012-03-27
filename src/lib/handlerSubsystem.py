@@ -831,9 +831,9 @@ class ConfigFileParser:
                     if not self.silent: print "ERROR: Wrong initially true propositions -- %s" 
                     
 
-        if 'Main_Robot' in config_data['General Config']:
+        try:
             configObj.main_robot = config_data['General Config']['Main_Robot'][0]
-        else:
+        except (IndexError, KeyError):
             if not self.silent: print "ERROR: Cannot find main robot for this config" 
             
         # load robot configs
@@ -890,10 +890,7 @@ class ConfigFileParser:
 
         data['General Config']['Sensor_Proposition_Mapping'] = sensorMappingList
         data['General Config']['Actuator_Proposition_Mapping'] = actuatorMappingList
-        if configObj.main_robot == '':
-            data['General Config']['Main_Robot'] = configObj.robots[0].name
-        else:
-            data['General Config']['Main_Robot'] = configObj.main_robot
+        data['General Config']['Main_Robot'] = configObj.main_robot
         data['General Config']['Initial_Truths'] = configObj.initial_truths
                 
         for i,robot in enumerate(configObj.robots):

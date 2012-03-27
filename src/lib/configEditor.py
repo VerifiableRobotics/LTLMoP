@@ -186,6 +186,11 @@ class simSetupDialog(wx.Dialog):
         self.proj = project.Project()
         self.proj.loadProject(sys.argv[1])
 
+        # Create configs/ directory for project if it doesn't exist already
+        config_dir = os.path.join(self.proj.project_root, "configs")
+        if not os.path.exists(config_dir):
+            os.mkdir(config_dir)
+
         # Initialize handler subsystem
         
         self.hsub = HandlerSubsystem(self.proj)
@@ -200,11 +205,9 @@ class simSetupDialog(wx.Dialog):
         print "Loading robots..."
         self.hsub.loadAllRobots()
 
-        current_config = self.proj.spec_data['SETTINGS']['currentExperimentName'][0]
-
         for cfg in self.hsub.configs:
             self.list_box_experiment_name.Append(cfg.name, cfg)
-            if cfg.name == current_config:
+            if self.proj.currentConfig is not None and cfg.name == self.proj.currentConfig.name:
                 self.list_box_experiment_name.SetStringSelection(cfg.name)
                 self._cfg2dialog(cfg)
 
@@ -216,13 +219,14 @@ class simSetupDialog(wx.Dialog):
             cfg.name = "Untitled configuration"
             self.hsub.config_parser.configs.append(cfg)
             self.list_box_experiment_name.Append(cfg.name, cfg)
+            self.list_box_experiment_name.SetSelection(0)
             self._cfg2dialog(cfg)
 
         # Check for case where a non-existent config file is referenced in the spec file
-        if not any([current_config == c.name for c in self.hsub.configs]):
-            print "WARNING: Cannot find config '%s' as referenced in spec file.  Ignoring." % current_config
-            self.list_box_experiment_name.Select(0)
-            self._cfg2dialog(self.list_box_experiment_name.GetClientData(0))
+        #if not any([current_config == c.name for c in self.hsub.configs]):
+        #    print "WARNING: Cannot find config '%s' as referenced in spec file.  Ignoring." % current_config
+        #    self.list_box_experiment_name.Select(0)
+        #    self._cfg2dialog(self.list_box_experiment_name.GetClientData(0))
 
     def __set_properties(self):
         # begin wxGlade: simSetupDialog.__set_properties
@@ -472,22 +476,22 @@ class simSetupDialog(wx.Dialog):
         event.Skip()
 
     def onClickApply(self, event): # wxGlade: simSetupDialog.<event_handler>
-        print "Event handler `onClickApply' not implemented!"
-        event.Skip()
-
-    def onClickOK(self, event): # wxGlade: simSetupDialog.<event_handler>
         # Save the config files
         self.hsub.config_parser.configs = self.hsub.configs
         self.hsub.config_parser.saveAllConfigFiles()
 
         # Save the name of the currently active config in the spec file
-        self.proj.spec_data['SETTINGS']['currentExperimentName'] = [self._getSelectedConfigObject().name]
-        # TODO: move spec saving from speceditor to project.py
-        #self.proj.saveSpecFile(os.path.join(self.proj.project_root, self.proj.project_basename + ".spec"))
+        self.proj.currentConfig = self._getSelectedConfigObject()
+        self.proj.writeSpecFile()
+
+        event.Skip()
+
+    def onClickOK(self, event): # wxGlade: simSetupDialog.<event_handler>
+        self.onClickApply(event)
 
         # Clean up
         self.Destroy()
-
+        event.Skip()
 
     def _getSelectedConfigObject(self):
         pos = self.list_box_experiment_name.GetSelection()
@@ -867,8 +871,8 @@ class propMappingDialog(wx.Dialog):
 
     def onClickApply(self, event): # wxGlade: propMappingDialog.<event_handler>
         if self.tempMethod is not None:
-            for p in self.tempMethod.para:
-                print p.name, p.value
+            #for p in self.tempMethod.para:
+            #    print p.name, p.value
 
             rname = self.list_box_robots.GetStringSelection().split(" ")[0]
             if rname == "(Simulated)":
@@ -933,7 +937,7 @@ class propMappingDialog(wx.Dialog):
 
 
     def onClickOK(self, event): # wxGlade: propMappingDialog.<event_handler>
-        print "Event handler `onClickOK' not implemented!"
+        #print "Event handler `onClickOK' not implemented!"
         event.Skip()
 
     def onClickMapping(self, event):
