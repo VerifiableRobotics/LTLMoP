@@ -95,7 +95,7 @@ class Project:
 
         return rfi
 
-    def getCoordMaps(self):
+    def getCoordMaps(self,calibData=None):
         """
         Returns forward (map->lab) and reverse (lab->map) coordinate mapping functions, in that order
 
@@ -113,10 +113,13 @@ class Project:
         #    return
 
         # TODO: actually use calibration!!!!!
-        xscale = 1
-        yscale = 1
-        xoffset = 0
-        yoffset = 0
+        if calibData==None:
+            xscale = 1
+            yscale = 1
+            xoffset = 0
+            yoffset = 0
+        else:
+            xscale,yscale,xoffset,yoffset=calibData
         # Create functions for coordinate transformation
         # (numpy may seem like overkill for this, but we already have it as a dependency anyways...)
         scale = diag([xscale, yscale])

@@ -32,7 +32,7 @@ class ParameterObject:
         self.min = None     # the min value allowed for the parameter
         self.value = None   # the value user set for the parameter
         
-    def setValue(self,value):
+    def setValue(self,value,deli = ','):
     
         if self.type.lower() == 'float':
             value.replace("pi","3.1415")
@@ -52,13 +52,14 @@ class ParameterObject:
         elif self.type.lower() == 'str' or self.type.lower() == 'string':
             self.value = str(value).strip('\"\'')
         elif self.type.lower() == 'listofint' or self.type.lower() == 'listofinteger':
-            self.value = [int(eval(x)) for x in value.strip('\'\"[]').split(',')]
+            self.value = [int(eval(x)) for x in value.strip('\'\"[]').split(deli)]
         elif self.type.lower() == 'listoffloat':
-            self.value = [float(eval(x)) for x in value.strip('\'\"[]').split(',')]
+            
+            self.value = [float(eval(x)) for x in value.strip('\'\"[]').split(deli)]
         elif self.type.lower() == 'listofbool' or self.type.lower() == 'listofboolean':
-            self.value = [bool(x) for x in value.strip('\'\"[]').split(',')]
+            self.value = [bool(x) for x in value.strip('\'\"[]').split(deli)]
         elif self.type.lower() == 'listofstr' or self.type.lower() == 'listofstring':
-            self.value = [str(x).strip('\"') for x in value.strip('\'\"[]').split(',')]
+            self.value = [str(x).strip('\"') for x in value.strip('\'\"[]').split(deli)]
         else:
             print 'ERROR: Invalid parameter type %s' % self.type
 
@@ -108,6 +109,10 @@ class HandlerObject:
                 method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
             else:
                 method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
+            # change the deliminator of list into ";"
+            if forsave and paraObj.type.startswith('listof'):
+                method_input[-1]=method_input[-1].replace(',',';')
+
         if not forsave:
             for para_name in initMethodObj.omitPara:
                 if para_name == 'initial':
@@ -282,6 +287,7 @@ class HandlerSubsystem:
                     para_list.append( paraObj.name+'=\"'+str(paraObj.value)+'\"')
                 else:
                     para_list.append( paraObj.name+'='+str(paraObj.value))
+            
         para_info = ','.join(para_list)
 
         return '.'.join([robotName,handlerName,methodName])+'('+para_info+')'
@@ -393,7 +399,7 @@ class HandlerSubsystem:
                 for paraObj in methodObj.para:
                     for para_pair in para_info:
                         if paraObj.name == para_pair.split('=',1)[0]:
-                            paraObj.setValue(para_pair.split('=',1)[1])
+                            paraObj.setValue(para_pair.split('=',1)[1],';')
                             break
                             
                     if paraObj.type.lower() == 'str' or paraObj.type.lower() == 'string':
@@ -494,7 +500,6 @@ class HandlerParser:
         # Regular expressions to help us out
         argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
         numRE = re.compile('(?P<key>[^=]+)=(?P<val>[^,]+),?',re.IGNORECASE)
-        
         # start to load the handler file
         if not self.silent: print "  -> Loading %s " % handlerFile
         
@@ -550,7 +555,7 @@ class HandlerParser:
                                         for pair in numRE.findall(m.group('range')):
                                             if pair[0] == 'default':
                                                 para.default = pair[1]
-                                                para.setValue(pair[1])
+                                                para.setValue(pair[1],';')
                                             elif pair[0] == 'min':
                                                 para.min = pair[1]
                                             elif pair[0] == 'max':
@@ -739,7 +744,7 @@ class RobotFileParser:
                         
                         for paraObj in initMethodObj.para:
                             if para_name == paraObj.name:
-                                paraObj.setValue(para_value)
+                                paraObj.setValue(para_value,';')
                                 break
         return robotObj
     
@@ -880,7 +885,6 @@ class ConfigFileParser:
         sensorMappingList = []
         actuatorMappingList = []
         for prop, fun in configObj.prop_mapping.iteritems():
-            print fun
             if 'sensor' in fun.lower():
                 sensorMapping = prop + ' = ' + fun
                 sensorMappingList.append(sensorMapping)
