@@ -15,11 +15,14 @@ class initHandler:
         """
         Initialization handler for pioneer ode simulated robot.
 
-        initial_region (region): The index of the region where the simulated robot starts
+        initial_region (region): The name of the region where the simulated robot starts
         """
 
         # Start in the center of the defined initial region
-        initial_region = proj.rfiold.regions[int(initial_region)]
+        for i,r in enumerate(proj.rfiold.regions):
+            if r.name == initial_region:
+                initial_region = r
+                break
         initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(proj.regionMapping[initial_region.name][0])]
         center = initial_region.getCenter()
     

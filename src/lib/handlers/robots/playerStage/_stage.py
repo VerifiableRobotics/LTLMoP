@@ -11,7 +11,7 @@ import textwrap, os, subprocess, time
 from numpy import *
 
 class initHandler:
-    def __init__(self, proj, calib=False):
+    def __init__(self, proj, init_region,calib=False):
         """
         If ``calib`` is ``True``, we'll start the robot at location ``(0, 0)``.
 
@@ -19,7 +19,7 @@ class initHandler:
         """
 
         ### Create Stage config files
-
+        self.init_region = init_region
         print "(INIT) Writing Stage configuration files..."
         self.writeSimConfig(proj, calib)
 
@@ -31,7 +31,7 @@ class initHandler:
         # Create a subprocess
         p_player = subprocess.Popen(["player", proj.getFilenamePrefix() + ".cfg"], stdout=subprocess.PIPE)
         fd_player = p_player.stdout
-
+        
         # Wait for it to fully start up
         while 1:
             input = fd_player.readline()
@@ -63,7 +63,10 @@ class initHandler:
             startpos = array([0,0])
         else:
             # Start in the center of the defined initial region
-            initial_region = proj.rfiold.regions[int(proj.exp_cfg_data['InitialRegion'][0])]
+            for i,r in enumerate(proj.rfiold.regions):
+                if r.name == self.init_region:
+                    initial_region = r
+                    break
             initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(proj.regionMapping[initial_region.name][0])]
             startpos = proj.coordmap_map2lab(initial_region.getCenter())
 

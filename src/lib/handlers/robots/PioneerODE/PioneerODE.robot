@@ -11,7 +11,7 @@ DriveHandler: # Robot default drive handler with default arguement values
 differentialDrive(d=0.65)
 
 InitHandler: # Robot default init handler with default arguement values
-PioneerODEInit()
+PioneerODEInit(initial_region=None)
 
 LocomotionCommandHandler: # Robot locomotion command actuator handler with default arguement values
 PioneerODELocomotionCommand()

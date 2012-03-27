@@ -14,12 +14,13 @@ from playerc import *
 import _stage
 
 class initHandler:
-    def __init__(self, proj, host, port,Enable_Stage,calib=False):
+    def __init__(self, proj, host, port,init_region,Enable_Stage,calib=False):
         """
         Init handler for bipedal robot
 
         host (string): The ip address of player (default="localhost")
         port (int): The port of player (default=6665)
+        init_region (region): The name of initial region
         Enable_Stage (bool): True for enabling stage simulator (default=True)
         """
 
@@ -35,7 +36,7 @@ class initHandler:
             
         # initialize state
         if Enable_Stage:
-            _stage.initHandler(proj,calib)
+            _stage.initHandler(proj,init_region,calib)
 
         # Connect it
         for timeout in range(0,3):

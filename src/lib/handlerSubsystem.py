@@ -48,7 +48,7 @@ class ParameterObject:
             elif value.lower() in ['0','false','f']:
                 self.value = False
         elif self.type.lower() == 'region':
-            self.value = int(value)
+            self.value = str(value)
         elif self.type.lower() == 'str' or self.type.lower() == 'string':
             self.value = str(value).strip('\"\'')
         elif self.type.lower() == 'listofint' or self.type.lower() == 'listofinteger':
