@@ -213,7 +213,7 @@ class Project:
                 if not self.silent: print "WARNING: No experiment configuration defined"        
                 self.currentConfig = None
             else:
-                self.currentConfig = self.loadExperimentConfig(current_config_name)
+                self.currentConfig = self.loadExperimentConfig(current_config_name.replace(" ", "_"))
 
         self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
