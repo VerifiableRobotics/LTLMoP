@@ -314,12 +314,14 @@ class Automaton:
             
             # initialize all sensor and actuators
             for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
-                for code in codes:
-                    eval(code)
+                if prop in self.sensors:
+                    for code in codes:
+                        eval(code)
             for prop,code in self.actuator_handler['initializing_handler'].iteritems():
-                new_val = self.current_outputs[prop]
-                for code in codes:
-                    eval(code)
+                if prop in self.actuators:
+                    new_val = self.current_outputs[prop]
+                    for code in codes:
+                        eval(code)
         else:
             state_list = self.current_state.transitions
 
