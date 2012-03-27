@@ -42,7 +42,7 @@ class sensorHandler:
         If such a sensor does not exist, returns ``None``
 
         button_name (string): Name of the sensor whose state is interested
-        init_value (bool): The initial state of the sensor
+        init_value (bool): The initial state of the sensor (default=False)
         """
         if initial:
             if button_name not in self.sensorValue.keys(): 

@@ -17,8 +17,8 @@ class motionControlHandler:
         """
         Heat motion planning controller
         """
-        self.drive_handler = proj.drive_handler
-        self.pose_handler = proj.pose_handler
+        self.drive_handler = proj.h_instance['drive']
+        self.pose_handler = proj.h_instance['pose']
         self.fwd_coordmap = proj.coordmap_map2lab
         self.rfi = proj.rfi
         self.last_warning = 0
