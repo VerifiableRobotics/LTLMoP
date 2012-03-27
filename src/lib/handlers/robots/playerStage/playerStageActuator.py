@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 ===============================================
-PioneerODEActuator.py - Simulated Pioneer Robot Actuator Handler
+playerStageActuator.py - Simulated player stage Robot Actuator Handler
 ===============================================
 """
 class naoActuatorHandler:
     def __init__(self, proj, shared_data):
         """
-        Simulated Pioneer Robot Actuator Handler
+        Simulated player stage Robot Actuator Handler
         """
         pass
     #####################################

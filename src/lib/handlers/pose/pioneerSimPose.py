@@ -14,7 +14,7 @@ import math
 class poseHandler:
     def __init__(self, proj, shared_data,host,port):
         """
-        Pose Handler for pioneer ode robot.
+        Pose Handler for simulated pioneer ode robot.
 
         host (string): The host for communication with simulator, must match the one in UDPServer.py (default="localhost")
         port (int): The port for communication with simulator, must match the one in UDPServer.py (default=23456)

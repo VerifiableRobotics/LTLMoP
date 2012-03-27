@@ -14,72 +14,86 @@ import numpy
 #from naoqi import ALProxy
 
 class driveHandler:
-    def __init__(self, proj, shared_data):
+    def __init__(self, proj, shared_data,maxspeed,maxfreq,angcur,angfwd,minvel,silent):
         """
-        Initialization method of bipedalDrive handler.
-        """   
+        Drive handler for bipedal robot
 
+        maxspeed (float): Scale speed with repect to Nao maximum speed (default=1.0,min=0.5,max=1.0)
+        maxfreq (float): Scale step frequency with repect to Nao maximum frequency (default=1.0,min=0.5,max=1.0)
+        angcur (float): If robot is directed between +/- angcur, it walks in a curve (default=pi/3,min=pi/6,max=pi/2)
+        angfwd (float): If robot is directed between +/- angfwd, it walks straight forward (default=pi/12,min=pi/12,max=pi/6)
+        minvel (float): If robot is given a velocity less than minvel it doesn't move. Otherwise it turns in place (default=0.3,min=0.2,max=0.4)
+        silent (bool): If true, no debug message will be printed (default=True)
+        """
+        
+        # Set constants
+        self.maxspeed = maxspeed
+        self.maxfreq = maxfreq
+        self.angcur = angcur
+        self.angfwd = angfwd
+        self.minvel = minvel
+        self.silent = silent
+          
         try:
             # Get locomotion command handler to be called in setVelocity
             self.loco = proj.loco_handler
-            
+        except NameError:
+            if not self.silent: print "(DRIVE) Locomotion Command Handler not found."
+            exit(-1)  
+        try:  
             # ?? Get pose handler (don't trust motion controller theta value??
             self.pose = proj.pose_handler
-            
+        except NameError:
+            if not self.silent: print "(DRIVE) Pose Handler not found."
+            exit(-1)  
+        try:  
             # ?? Get map coordinate transformation method for printing ??
             self.coordmap = proj.coordmap_lab2map
         except NameError:
-            print "(DRIVE) Locomotion Command Handler not found."
+            if not self.silent: print "(DRIVE) Calibration data not found."
             exit(-1)
 
     def setVelocity(self, x, y, theta=0):
-        #print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
-        #print "(drive) velocity = %f,%f" % tuple([x,y]) #???#
+        #if not self.silent: print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
+        #if not self.silent: print "(drive) velocity = %f,%f" % tuple([x,y]) #???#
         
-        # Set constants
-        maxspeed = 1      # Scale speed to percentage of Nao maximum
-        maxfreq = 1       # Scale step frequency to percentage of Nao maximum
-        angcur = pi/3       # If robot is directed between +/- angcur, it walks in a curve (default: pi/3)
-        angfwd = pi/12      # If robot is directed between +/- angfwd, it walks straight forward (default: pi/12)
-        minvel = 0.3        # If robot is given a velocity less than minvel it doesn't move
-                            # Otherwise it turns in place
-        
-        print >>sys.__stdout__, 180*atan2(y,x)/pi
+       
+        if not self.silent: print >>sys.__stdout__, 180*atan2(y,x)/pi
         # Find direction of where robot should go
         th = numpy.arctan2(y,x)-theta
         while th > pi:
             th = th-2*pi
         while th < -pi:
             th = th+2*pi
-        print >>sys.__stdout__, "(drive) th = "+str(th) #??#
+        if not self.silent: print >>sys.__stdout__, "(drive) th = "+str(th) #??#
         
         # Set velocities based on where robot should go
-        f = maxfreq             # Step frequency
+        f = self.maxfreq             # Step frequency
         vy = 0                  # Never step sideways
-        if numpy.hypot(x,y) < minvel:
+        if numpy.hypot(x,y) < self.minvel:
             vx = 0              # Don't move
             w = 0
-            print >>sys.__stdout__, "(drive) not moving" #??#
-        elif numpy.fabs(th) > angcur:
+            if not self.silent: print >>sys.__stdout__, "(drive) not moving" #??#
+        elif numpy.fabs(th) > self.angcur:
             vx = 0              # Turn in place
             if th > 0:
-                w = maxspeed    # Turn left
-                print >>sys.__stdout__, "(drive) turning left" #??#
+                w = self.maxspeed    # Turn left
+                if not self.silent: print >>sys.__stdout__, "(drive) turning left" #??#
             else:
-                w = -maxspeed   # Turn right
-                print >>sys.__stdout__, "(drive) turning right" #??#
-        elif numpy.fabs(th) > angfwd:
-            vx = maxspeed       # Walk forward while turning
+                w = -self.maxspeed   # Turn right
+                if not self.silent: print >>sys.__stdout__, "(drive) turning right" #??#
+        elif numpy.fabs(th) > self.angfwd:
+            vx = self.maxspeed       # Walk forward while turning
             if th > 0:
-                w = maxspeed/2  # Turn left
-                print >>sys.__stdout__, "(drive) curving left" #??#
+                w = self.maxspeed/2  # Turn left
+                if not self.silent: print >>sys.__stdout__, "(drive) curving left" #??#
             else:
-                w = -maxspeed/2 # Turn right
-                print >>sys.__stdout__, "(drive) curving right" #??#
+                w = -self.maxspeed/2 # Turn right
+                if not self.silent: print >>sys.__stdout__, "(drive) curving right" #??#
         else:
-            vx = maxspeed       # Walk straight forward
+            vx = self.maxspeed       # Walk straight forward
             w = 0
-            print >>sys.__stdout__, "(drive) walking straight" #??#
+            if not self.silent: print >>sys.__stdout__, "(drive) walking straight" #??#
         
         # Call locomotion handler
         self.loco.sendCommand([vx,vy,w,f])

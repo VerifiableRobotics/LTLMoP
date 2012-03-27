@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 """
 ====================================================
-PioneerODESensor.py - Sensor handler for the Simulated Pioneer Robot
+playerStageSensor.py - Simulated player stage Robot Sensor Handler
 ====================================================
 """
 
 class naoSensorHandler:
     def __init__(self, proj, shared_data):
         """
-        Sensor handler for the Simulated Pioneer Robot
+        Simulated player stage Robot Sensor Handler
         """
-        
         pass
 
     ###################################

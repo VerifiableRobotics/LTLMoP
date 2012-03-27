@@ -59,21 +59,6 @@ class sensorHandler:
                 print "(SENS) WARNING: Sensor %s is unknown!" % button_name
                 return None
 
-
-    def _getSensorValue(self, sensor_name, initial=False):
-        """
-        Return a boolean value corresponding to the state of the sensor with name ``sensor_name``
-        If such a sensor does not exist, returns ``None``
-
-        sensor_name (string): Name of the sensor whose state is interested
-        """
-
-        if sensor_name in self.sensorValue:
-            return self.sensorValue[sensor_name]
-        else:
-            print "(SENS) WARNING: Sensor %s is unknown!" % sensor_name
-            return None
-
     def _sensorListen(self):
         """
         Processes messages from the sensor handler subwindow, and updates our cache appropriately

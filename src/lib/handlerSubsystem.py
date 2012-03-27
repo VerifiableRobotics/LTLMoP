@@ -31,12 +31,17 @@ class ParameterObject:
         self.max = None     # the max value allowed for the parameter
         self.min = None     # the min value allowed for the parameter
         self.value = None   # the value user set for the parameter
-
+        
     def setValue(self,value):
+    
         if self.type.lower() == 'float':
-            self.value = float(value)
+            value.replace("pi","3.1415")
+            re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
+            self.value = float(eval(value))
         elif self.type.lower() == 'int' or self.type.lower() == 'integer':
-            self.value = int(value)
+            value.replace("pi","3.1415")
+            re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
+            self.value = int(eval(value))
         elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
             if value.lower() in ['1','true','t']:
                 self.value = True
@@ -47,9 +52,9 @@ class ParameterObject:
         elif self.type.lower() == 'str' or self.type.lower() == 'string':
             self.value = str(value).strip('\"\'')
         elif self.type.lower() == 'listofint' or self.type.lower() == 'listofinteger':
-            self.value = [int(x) for x in value.strip('\'\"[]').split(',')]
+            self.value = [int(eval(x)) for x in value.strip('\'\"[]').split(',')]
         elif self.type.lower() == 'listoffloat':
-            self.value = [float(x) for x in value.strip('\'\"[]').split(',')]
+            self.value = [float(eval(x)) for x in value.strip('\'\"[]').split(',')]
         elif self.type.lower() == 'listofbool' or self.type.lower() == 'listofboolean':
             self.value = [bool(x) for x in value.strip('\'\"[]').split(',')]
         elif self.type.lower() == 'listofstr' or self.type.lower() == 'listofstring':
@@ -455,7 +460,7 @@ class HandlerParser:
                     for fileName in fileList:
                         for handler_type in self.handler_robotSpecific_type:
                             if fileName.endswith('py') and (not fileName.startswith('_')) and handler_type.lower() in fileName.lower():
-                                h_file = os.path.join('lib','handlers','robots',robotFolder,fileName.split('.')[0]).replace('/','.')
+                                h_file = '.'.join(['lib','handlers','robots',robotFolder,fileName.split('.')[0]])
                                 if handler_type in ['init','locomotionCommand']:
                                     onlyLoadInit = True
                                 else:

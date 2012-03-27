@@ -226,7 +226,7 @@ class Project:
         # Figure out the name of the current experiment config if not specified
         if current_config_name is None:
 #            current_config_name = self.spec_data['SETTINGS']['currentConfig'][0]
-           current_config_name = 'Experiment_with_Simulated_Pioneer_in_ODE'
+           current_config_name = 'Experiment_with_player_stage'
         self.regionMapping = self.loadRegionMapping(self.spec_data)
         self.exp_cfg_data = self.getExperimentConfig(exp_cfg_name)
         self.current_configObj = self.loadExperimentConfig(current_config_name)

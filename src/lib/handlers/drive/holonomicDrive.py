@@ -10,8 +10,12 @@ Used for ideal holonomic point robots.
 
 class driveHandler:
     def __init__(self, proj, shared_data):
+        """
+        Passes velocity requests directly through.
+        Used for ideal holonomic point robots.
+        """
         try:
-            self.loco = proj.loco_handler
+            self.loco = proj.h_instance['locomotionCommand']
             self.coordmap = proj.coordmap_lab2map
         except NameError:
             print "(DRIVE) Locomotion Command Handler not found."

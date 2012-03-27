@@ -14,6 +14,9 @@ import time
 
 class motionControlHandler:
     def __init__(self, proj, shared_data):
+        """
+        Heat motion planning controller
+        """
         self.drive_handler = proj.drive_handler
         self.pose_handler = proj.pose_handler
         self.fwd_coordmap = proj.coordmap_map2lab
