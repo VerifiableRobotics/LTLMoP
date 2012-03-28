@@ -559,20 +559,27 @@ class addRobotDialog(wx.Dialog):
         self.handler_combos = {}
         self.handler_buttons = {}
 
-        
-        for htype in self.robot.handlers.keys():
-            self.handler_labels[htype] = wx.StaticText(self, -1, "%s:" % htype) 
+        for htype, hlabel in [("init", "Initialization"),
+                              ("pose", "Pose"),
+                              ("sensor", "Sensor"),
+                              ("actuator", "Actuator"),
+                              ("motionControl", "Motion control"),
+                              ("drive", "Drive"),
+                              ("locomotionCommand", "Locomotion command")]:
+
+            self.handler_labels[htype] = wx.StaticText(self, -1, "%s handler:" % hlabel)
             self.handler_combos[htype] = wx.ComboBox(self, -1, choices=[], style=wx.CB_DROPDOWN)
             self.handler_buttons[htype] = wx.Button(self, -1, "Configure...")
-            sizer = wx.BoxSizer(wx.HORIZONTAL)
-            sizer.Add(self.handler_labels[htype], 0, wx.ALL, 2)
-            sizer.Add(self.handler_combos[htype], 1, wx.ALL, 2)
-            sizer.Add(self.handler_buttons[htype], 0, wx.ALL, 2)
-            self.sizer_9.Add(sizer, 0, wx.EXPAND, 0)
+            self.sizer_9.Add(self.handler_labels[htype], 0, wx.ALL|wx.ALIGN_RIGHT, 0)
+            self.sizer_9.Add(self.handler_combos[htype], 1, wx.ALL|wx.EXPAND, 0)
+            self.sizer_9.Add(self.handler_buttons[htype], 0, wx.ALL, 0)
             self.Bind(wx.EVT_BUTTON, self.onClickConfigure, self.handler_buttons[htype])
             self.Bind(wx.EVT_COMBOBOX, self.onChangeHandler, self.handler_combos[htype])
 
         self.Layout()
+        
+        self.SetSizeHints(self.GetSize()[0], 0)  # Force width to stay the same
+        self.Fit()
 
         # Set up the list of robot types
         self.combo_box_robottype.Clear()
@@ -597,14 +604,14 @@ class addRobotDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: addRobotDialog.__set_properties
         self.SetTitle("Add/Configure Robot")
-        self.SetSize((388, 410))
+        self.SetSize((637, 410))
         # end wxGlade
 
     def __do_layout(self):
         # begin wxGlade: addRobotDialog.__do_layout
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         sizer_11 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_9 = wx.BoxSizer(wx.VERTICAL)
+        sizer_9 = wx.FlexGridSizer(1, 3, 2, 7)
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_7.Add(self.label_3, 0, wx.ALL, 5)
@@ -614,8 +621,9 @@ class addRobotDialog(wx.Dialog):
         sizer_8.Add(self.text_ctrl_robotname, 1, wx.ALL, 5)
         sizer_5.Add(sizer_8, 0, wx.EXPAND, 0)
         sizer_5.Add(self.static_line_1, 0, wx.EXPAND, 0)
-        sizer_5.Add(sizer_9, 1, wx.EXPAND, 0)
-        sizer_5.Add((20, 20), 1, wx.EXPAND, 0)
+        sizer_9.AddGrowableCol(1)
+        sizer_5.Add(sizer_9, 1, wx.ALL|wx.EXPAND, 10)
+        sizer_5.Add((20, 5), 0, wx.EXPAND, 0)
         sizer_11.Add((20, 20), 1, wx.EXPAND, 0)
         sizer_11.Add(self.button_7, 0, wx.ALL, 5)
         sizer_11.Add(self.button_6, 0, wx.ALL, 5)
