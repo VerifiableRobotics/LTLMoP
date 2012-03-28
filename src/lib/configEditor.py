@@ -171,10 +171,13 @@ class simSetupDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.onClickEditMapping, self.button_4)
         self.Bind(wx.EVT_BUTTON, self.onClickApply, self.button_sim_apply)
         self.Bind(wx.EVT_BUTTON, self.onClickOK, self.button_sim_ok)
+        self.Bind(wx.EVT_BUTTON, self.onClickCancel, self.button_sim_cancel)
         # end wxGlade
 
         self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckProp, self.list_box_init_customs)
         self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckProp, self.list_box_init_actions)
+
+        self.Bind(wx.EVT_CLOSE, self.doClose)
 
         if len(sys.argv) < 2:
             print "You must specify a specification file."
@@ -320,6 +323,10 @@ class simSetupDialog(wx.Dialog):
         self.Centre()
         # end wxGlade
 
+    def doClose(self, event):
+        # TODO: Check for dirty?
+        self.Destroy()
+    
     def _cfg2dialog(self, cfg):
         self.text_ctrl_sim_experiment_name.SetValue(cfg.name)
 
@@ -494,7 +501,7 @@ class simSetupDialog(wx.Dialog):
         self.onClickApply(event)
 
         # Clean up
-        self.Destroy()
+        self.doClose(event)
         event.Skip()
 
     def _getSelectedConfigObject(self):
@@ -527,6 +534,11 @@ class simSetupDialog(wx.Dialog):
         self._getSelectedConfigObject().main_robot = obj.name
         self._cfg2dialog(self._getSelectedConfigObject()) 
         self.list_box_robots.SetSelection(pos)
+        event.Skip()
+
+    def onClickCancel(self, event): # wxGlade: simSetupDialog.<event_handler>
+        # Clean up
+        self.doClose(event)
         event.Skip()
 
 # end of class simSetupDialog
