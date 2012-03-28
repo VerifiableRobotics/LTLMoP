@@ -61,7 +61,7 @@ public class GROneMain {
 		long t1 = (System.currentTimeMillis() - time);
 		System.out.println("Games time: " + t1);
 		
-        // ** Export safety automaton
+        // ** Export safety automaton for vounterstrategy visualization
 		
         if (args.length == 3 && args[2].equals("--safety")) {
             System.out.println("Exporting safety constraints automaton...");
@@ -77,11 +77,10 @@ public class GROneMain {
         // ** Analysis calls
 
 		String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
-		GROneDebug.analyze(env,sys,debugFile);
+		GROneDebug.analyze(env,sys);
 
 		 ///////////////////////////////////////////////
-		 ///////////////////////////////////////////////
-		 //old
+		 //Check that every initial system state is winning for every initial environment state
 		 BDD all_init = g.getSysPlayer().initial().and(g.getEnvPlayer().initial());
 		 BDD counter_exmple = g.envWinningStates().and(all_init);
 		 if (!counter_exmple.isZero()) {
@@ -91,6 +90,24 @@ public class GROneMain {
 		 
 		 
 		 
+		// If you only care about the existence of a winning initial system state for every initial environment state
+			// (vs. every initial system state being winning for every initial environment state)
+		/*	BDD env_ini = g.getEnvPlayer().initial();
+			BDDVarSet env_vars = g.getEnvPlayer().moduleUnprimeVars();
+			for (BDDIterator it = env_ini.iterator(env_vars); it.hasNext();) {
+				BDD eini = (BDD) it.next();
+				BDD sys_response = eini.and(g.getSysPlayer().initial()).and(
+						g.sysWinningStates());
+	            System.out.println("---------------");
+	            sys_response.printSet();
+				if (sys_response.isZero()) {
+					System.out.println("Specification is unrealizable...");
+					System.out.println("The env player can win from states:");
+					System.out.println("\t" + eini);
+					System.out.println("===== Done ==============================");
+					return;
+				}
+		}*/
 		 
 		 	
 		 System.out.println("==== Computing counterstrategy =========");
@@ -105,71 +122,18 @@ public class GROneMain {
 		 System.out.println("===== Done ==============================");
 			
 		
-	/*	 System.out.println("==== Computing counterstrategy =========");
-		 System.out.println("-----------------------------------------");
-		 orig_out = System.out;
-		 System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
-		 g.printLosingStrategy(g.envWinningStates().and(g.getEnvPlayer().initial().and(
-		             g.getSysPlayer().initial())));
-		 System.setOut(orig_out); // restore STDOUT
-		 System.out.print("-----------------------------------------\n");
-		 t2 = (System.currentTimeMillis() - time);
-		 System.out.println("Strategy time: " + t2);
-		 System.out.println("===== Done ==============================");
-	*/			
-			
-         //Error code = 1 on exit
+	     //Error code = 1 on exit
 		 System.exit(1);
 		 } 
 
-		// ///////////////////////////////////////////////
-		// ///////////////////////////////////////////////
-		// Let win := winm(nps,nqs);
-		// Let initial := I(1) & I(2);
-		// Let right := (I(2) & win) forsome vars2;
-		// Let counter := I(1) & !right;
-		// If (counter)
-		// Print "\n Specification is unrealizable\n";
-		// Print counter;
-		// Let realizable := 0;
-		// Return;
-		// Else
-		// Let realizable := 1;
-		// End -- If (counter)
-		// ///////////////////////////////////////////////
-		// ///////////////////////////////////////////////
 
-		// ///////////////////////////////////////////////
-		// ///////////////////////////////////////////////
-		// new
-	/*	BDD env_ini = g.getEnvPlayer().initial();
-		BDDVarSet env_vars = g.getEnvPlayer().moduleUnprimeVars();
-		for (BDDIterator it = env_ini.iterator(env_vars); it.hasNext();) {
-			BDD eini = (BDD) it.next();
-			BDD sys_response = eini.and(g.getSysPlayer().initial()).and(
-					g.sysWinningStates());
-            System.out.println("---------------");
-            sys_response.printSet();
-			if (sys_response.isZero()) {
-				System.out.println("Specification is unrealizable...");
-				System.out.println("The env player can win from states:");
-				System.out.println("\t" + eini);
-				System.out.println("===== Done ==============================");
-				return;
-			}
-		}*/
-		// otherwise we can synthesis
+		
 		
 		System.out.println("Specification is realizable...");
 		System.out.println("==== Building an implementation =========");
 		System.out.println("-----------------------------------------");
 		PrintStream orig_out = System.out;
 		System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
-		/*
-        g.printWinningStrategy(g.getEnvPlayer().initial().and(
-				g.getSysPlayer().initial()).satOne(env.moduleUnprimeVars().union(
-						sys.moduleUnprimeVars()), false));  // Added BDDVarSet argument so that initial condition is fully specified -Cameron
-        */
 		g.printWinningStrategy(all_init);
 		System.setOut(orig_out); // restore STDOUT
 		System.out.print("-----------------------------------------\n");

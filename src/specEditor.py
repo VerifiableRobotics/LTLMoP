@@ -44,7 +44,7 @@ class MapDialog(wx.Dialog):
         self.__set_properties()
         self.__do_layout()
         # end wxGlade
-
+        
         self.parent = parent
 
     def __set_properties(self):
@@ -210,7 +210,7 @@ class SpecEditorFrame(wx.Frame):
         # Listen for checkbox toggles
         self.Bind(wx.EVT_CHECKLISTBOX, self.onPropToggle)
 
-		# Create the StyledTextControl for the specification area manually, since wxGlade doesn't support it
+        # Create the StyledTextControl for the specification area manually, since wxGlade doesn't support it
         self.text_ctrl_spec = wx.stc.StyledTextCtrl(self.window_1_pane_1, -1, style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.WANTS_CHARS)
         self.text_ctrl_spec.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.window_1_pane_1.GetSizer().Insert(0, self.text_ctrl_spec, 2, wx.EXPAND, 0)
@@ -220,12 +220,13 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.SetMarginType(0, wx.stc.STC_MARGIN_NUMBER)
         self.text_ctrl_spec.SetMarginType(1, wx.stc.STC_MARGIN_SYMBOL)
 
-        global MARKER_INIT, MARKER_SAFE, MARKER_LIVE
-        MARKER_INIT, MARKER_SAFE, MARKER_LIVE = range(3)
+        global MARKER_INIT, MARKER_SAFE, MARKER_LIVE, MARKER_PARSEERROR
+        MARKER_INIT, MARKER_SAFE, MARKER_LIVE, MARKER_PARSEERROR = range(4)
         self.text_ctrl_spec.MarkerDefine(MARKER_INIT,wx.stc.STC_MARK_ARROW,"white","red") 
         self.text_ctrl_spec.MarkerDefine(MARKER_SAFE,wx.stc.STC_MARK_ARROW,"white","blue") 
         self.text_ctrl_spec.MarkerDefine(MARKER_LIVE,wx.stc.STC_MARK_ARROW,"white","green") 
-
+        self.text_ctrl_spec.MarkerDefine(MARKER_PARSEERROR,wx.stc.STC_MARK_BACKGROUND,"red","red") 
+        
         # Listen for changes to the text
         self.Bind(wx.stc.EVT_STC_CHANGE, self.onSpecTextChange, self.text_ctrl_spec)
         
@@ -246,12 +247,12 @@ class SpecEditorFrame(wx.Frame):
         self.subprocess[PROCESS_REGED] = None
         self.subprocess[PROCESS_DOTTY] = None
         self.subprocess[PROCESS_SIMCONFIG] = None
-
+        
         # HACK: This is an undocumented hack you can uncomment to help kill stuck copies of speceditor on windows
         # If in use, requires spec file argument on command line
         #if sys.argv[-1] != "-dontbreak":
         #    os.system("taskkill /im python.exe /f & " + " ".join(sys.argv) + " -dontbreak")
-       
+
     def initializeNewSpec(self):
         # Initialize values
         self.mapDialog = None
@@ -259,7 +260,7 @@ class SpecEditorFrame(wx.Frame):
         self.decomposedRFI = None
         self.subprocess = [None] * 3
         self.dirty = False
-
+       
         # Reset GUI
         self.button_map.Enable(False)
         self.button_sensor_remove.Enable(False)
@@ -410,7 +411,7 @@ class SpecEditorFrame(wx.Frame):
         self.proj.specText = self.text_ctrl_spec.GetText()
 
         self.dirty = True
-
+        
     def onMapSelect(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
         Show the map with overlayed regions so that the user can select a region name visually.
@@ -546,7 +547,7 @@ class SpecEditorFrame(wx.Frame):
     def openFile(self, filename):
         proj = project.Project()
         proj.loadProject(filename)
-
+        
         if proj is None:
             wx.MessageBox("Cannot open specification file %s" % (fileName), "Error",
                         style = wx.OK | wx.ICON_ERROR)
@@ -577,7 +578,7 @@ class SpecEditorFrame(wx.Frame):
             ltl = "".join(f.readlines())
             f.close()
             self.text_ctrl_LTL.SetValue(ltl)
-
+ 
         #####################################
 
         self.text_ctrl_spec.AppendText(self.proj.specText)
@@ -587,7 +588,7 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_actions.SetCheckedStrings(self.proj.enabled_actuators)
         if len(self.proj.all_actuators) > 0:
             self.button_actuator_remove.Enable(True)
-                    
+
         self.list_box_sensors.Set(self.proj.all_sensors)
         self.list_box_sensors.SetCheckedStrings(self.proj.enabled_sensors)
         if len(self.proj.all_sensors) > 0:
@@ -596,12 +597,12 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_customs.Set(self.proj.all_customs)
         if len(self.proj.all_customs) > 0:
             self.button_custom_remove.Enable(True)
-
+                    
         # Update the window title
         self.SetTitle("Specification Editor - " + self.proj.project_basename + ".spec")
 
         self.text_ctrl_spec.EmptyUndoBuffer()
-
+    
         self.dirty = False
     
     def doClose(self, event): # wxGlade: SpecEditorFrame.<event_handler>
@@ -671,8 +672,9 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_PARSEERROR)
 
-        # Let's make sure we have everything!
+		# Let's make sure we have everything!
         if self.proj.rfi is None:
             wx.MessageBox("Please define regions before compiling.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
@@ -697,11 +699,11 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_log.Clear()
 
         # Redirect all output to the log
-        redir = RedirectText(self.text_ctrl_log)
+        redir = RedirectText(self,self.text_ctrl_log)
 
         sys.stdout = redir
         sys.stderr = redir
-
+        
         self.appendLog("Parsing locative prepositions...\n", "BLUE")
         wx.Yield()
 
@@ -712,7 +714,7 @@ class SpecEditorFrame(wx.Frame):
         # Update workspace decomposition listbox
         self.list_box_locphrases.Set(self.proj.regionMapping.keys())
         self.list_box_locphrases.Select(0)
-
+        
         self.appendLog("Creating SMV file...\n", "BLUE")
         wx.Yield()
 
@@ -722,7 +724,7 @@ class SpecEditorFrame(wx.Frame):
         wx.Yield()
 
         compiler._writeLTLFile()
-               
+
         # Load in LTL file to the LTL tab
         if os.path.exists(self.proj.getFilenamePrefix()+".ltl"):
             f = open(self.proj.getFilenamePrefix()+".ltl","r")
@@ -730,7 +732,7 @@ class SpecEditorFrame(wx.Frame):
             f.close()
             self.text_ctrl_LTL.SetValue(ltl)
 
-			
+            
         self.appendLog("Creating automaton...\n", "BLUE")
         wx.Yield()
 
@@ -773,7 +775,7 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
 
-        redir = RedirectText(self.text_ctrl_log)
+        redir = RedirectText(self,self.text_ctrl_log)
 
         sys.stdout = redir
         sys.stderr = redir
@@ -964,103 +966,103 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.onMenuCompile(event, with_safety_aut=True)
+
+        # Redirect all output to the log
+        redir = RedirectText(self,self.text_ctrl_log)
+
+        sys.stdout = redir
+        sys.stderr = redir
+
+        # Windows uses a different delimiter for the java classpath
+        if os.name == "nt":
+            classpath = os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "jtlv-prompt1.4.0.jar") + ";" + os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "GROne")
+        else:
+            classpath = os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "GROne")
+
+        cmd = subprocess.Popen(["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneDebug", self.proj.getFilenamePrefix() + ".smv", self.proj.getFilenamePrefix() + ".ltl", "--safety"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
         
-        output = "\nRESULT\n"
-        f = open(self.proj.getFilenamePrefix()+".debug","r")
+        # TODO: Make this output live
+        while cmd.poll():
+            wx.Yield()
+            
         realizable = False    
-        for dline in f.readlines():
-          if "REALIZABLE" in dline:   
-            realizable = True            
-            #self.appendLog("Automaton successfully synthesized.\n", "GREEN")
-            self._exportDotFile()
-            f = open(self.proj.getFilenamePrefix()+".dot","r")
-            nonTrivial = False
+        for dline in cmd.stdout:
+            self.appendLog(dline)
+            if "Specification is realizable." in dline:   
+                realizable = True            
+                
+                # check for trivial initial-state automaton with no transitions
+                self._exportDotFile()
+                f = open(self.proj.getFilenamePrefix()+".dot","r")
+                nonTrivial = False
             # TODO: There is no reason to be parsing the Dot file for this...
-            for autline in f.readlines():
-                if "->" in autline:
-                    nonTrivial = True 
-            if nonTrivial:
-                self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")
-                output += "Synthesized automaton is non-trivial.\n"
-            else:
-                self.appendLog("Synthesized automaton is trivial.\n", "GREEN")
-                output += "Synthesized automaton is trivial.\n"
-          if "SysInit UNSAT" in dline:
-               output = output + "System initial condition is unsatisfiable.\n" 
-               for l in self.self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-          if "SysTrans UNSAT" in dline:
-            output = output + "System transition relation is unsatisfiable.\n" 
-            for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
-          if "SysGoals UNSAT" in dline:
-               output = output + "System highlighted goal(s) unsatisfiable \n"
-               for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
-          if "SysGoalsTrans UNSAT" in dline:
-               output = output + "System highlighted goal(s) inconsistent with transition relation. \n"
-               for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
-               for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-          if "SysInitTrans UNSAT" in dline:
-               output = output + "System initial condition inconsistent with transition relation. \n"
-               for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-               for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+                for autline in f.readlines():
+                    if "->" in autline:
+                        nonTrivial = True 
+                if nonTrivial:
+                    self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")                    
+                else:
+                    self.appendLog("Synthesized automaton is trivial.\n", "GREEN")
+            
+            # highlight sentences corresponding to identified errors
+            
+            # System unsatisfiability
+            if "System initial condition is unsatisfiable." in dline:
+                for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
+            if "System transition relation is unsatisfiable." in dline:
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
+            if "System highlighted goal(s) unsatisfiable" in dline:
+                for l in (dline.strip()).split()[-1:]:
+                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)]-1,MARKER_LIVE)           
+            if "System highlighted goal(s) inconsistent with transition relation" in dline:
+                for l in (dline.strip()).split()[-1:]:
+                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)]-1,MARKER_LIVE)           
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
+            if "System initial condition inconsistent with transition relation" in dline:
+                for l in self.map['SysInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
+           
+            # Environment unsatisfiability
+            if "Environment initial condition is unsatisfiable." in dline:
+                for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
+            if "Environment transition relation is unsatisfiable." in dline:
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
+            if "Environment highlighted goal(s) unsatisfiable" in dline:
+                for l in (dline.strip()).split()[-1:]:
+                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)]-1,MARKER_LIVE)
+            if "Environment highlighted goal(s) inconsistent with transition relation" in dline:
+                for l in (dline.strip()).split()[-1:]:
+                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)]-1,MARKER_LIVE)           
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
+            if "Environment initial condition inconsistent with transition relation" in dline:
+                for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
            
         
-           
-        
-          if "EnvInit UNSAT" in dline:
-            output = output + "Environment initial condition is unsatisfiable.\n" 
-            for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-          if "EnvTrans UNSAT" in dline:
-            output = output + "Environment transition relation is unsatisfiable.\n" 
-            for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-          if "EnvGoals UNSAT" in dline:
-               output = output + "Environment highlighted goal(s) unsatisfiable \n"
-               for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)
-          if "EnvGoalsTrans UNSAT" in dline:
-               output = output + "Environment highlighted goal(s) inconsistent with transition relation. \n"
-               for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
-               for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-          if "EnvInitTrans UNSAT" in dline:
-               output = output + "Environment initial condition inconsistent with transition relation. \n"
-               for l in self.map['EnvInit']: self.text_ctrl_spec.MarkerAdd(l,MARKER_INIT)
-               for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-           
-        
+            # System unrealizability
+            if "System is unrealizable because the environment can force a safety violation" in dline:
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
+            if "System highlighted goal(s) unrealizable" in dline:
+                for l in (dline.strip()).split()[-1:]:
+                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)]-1,MARKER_LIVE)           
+                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
             
-          if "SysTrans UNREAL" in dline:
-                output = output + "System is unrealizable because the environment can force a safety violation.\n" 
-                #for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerSetBackground(l,"RED")
-                for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
-          if "SysGoals UNREAL" in dline:
-               output = output + "System highlighted goal(s) unrealizable \n"
-               for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['SysGoals'][int(l)],MARKER_LIVE)           
-               #for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerSetBackground(l,"RED")
-               for l in self.map['SysTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
+            # Environment unrealizability
+            if "Environment is unrealizable because the system can force a safety violation" in dline:
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
+            if "Environment highlighted goal(s) unrealizable" in dline:
+                for l in (dline.strip()).split()[-1:]:
+                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)]-1,MARKER_LIVE)           
+                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
             
-        
-          if "EnvTrans UNREAL" in dline:
-                output = output + "Environment is unrealizable because the environment can force a safety violation.\n" 
-                for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)
-          if "EnvGoals UNREAL" in dline:
-               output = output + "Environment highlighted goal(s) unrealizable \n"
-               for l in (dline.strip()).split()[2:]:
-                    self.text_ctrl_spec.MarkerAdd(self.map['EnvGoals'][int(l)],MARKER_LIVE)           
-               for l in self.map['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
-            
-        if not realizable:
-            #self.appendLog("ERROR: Specification was unrealizable.\n", "RED")
-            output += "No automaton synthesized.\n"        
           
-        self.appendLog(output)
-        
+        cmd.stdout.close()
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        # Opens the counterstrategy visualization interfacs ("Mopsy")
+       
         # TODO: check for failed compilation before allowing this
         subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec"])
 
@@ -1174,14 +1176,20 @@ class RedirectText:
     http://mail.python.org/pipermail/python-list/2007-June/445795.html
     """
 
-    def __init__(self,aWxTextCtrl):
+    def __init__(self,parent,aWxTextCtrl):
         self.out=aWxTextCtrl
+        self.parent=parent
 
     def write(self,string):
         self.out.BeginTextColour("BLACK")
         self.out.WriteText("\t"+string)
         self.out.EndTextColour()
         self.out.ShowPosition(self.out.GetLastPosition())
+
+        m = re.search(r"Could not parse the sentence in line (\d+)", string)
+        if m:
+            self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1))-1,MARKER_PARSEERROR)
+               
 
 if __name__ == "__main__":
     SpecEditor = wx.PySimpleApp(0)
