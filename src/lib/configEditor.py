@@ -106,7 +106,7 @@ class handlerConfigDialog(wx.Dialog):
         self.handler = handler
 
         self.SetTitle("Configure %s.%s" % (handler.getType(), handler.name))
-        methodObj = [m for m in handler.methods if m.name == '__init__'][0]
+        methodObj = handler.getMethodByName('__init__')
 
         drawParamConfigPane(self.panel_configs, methodObj)
         self.label_info.SetLabel(methodObj.comment)
@@ -673,16 +673,13 @@ class addRobotDialog(wx.Dialog):
 
                 # If this handler has default values from the selected robot file, use them
                 # TODO: this will erase any previous config settings...
-                default_robot = [r for r in self.proj.hsub.robots if r.type == self.robot.type][0]
+                default_robot = self.proj.hsub.getRobotByType(self.robot.type)
                 if default_robot.handlers[htype].name == hname:
                     hobj = default_robot.handlers[htype]
                 else:
                     # Otherwise, just grab the plain handler
                     rname = self.robot.type
-                    if htype in self.proj.hsub.handler_parser.handler_robotSpecific_type: 
-                        hobj = [h for h in self.proj.hsub.handler_dic[htype][rname] if h.name == hname][0]
-                    else:
-                        hobj = [h for h in self.proj.hsub.handler_dic[htype] if h.name == hname][0]
+                    hobj = self.proj.hsub.getHandler(htype, hname, rname)
 
                 self.robot.handlers[htype] = hobj
                 break
@@ -784,21 +781,15 @@ class propMappingDialog(wx.Dialog):
         # Set defaults as necessary
         for p in self.proj.all_sensors:
             if p not in mapping or self.mapping[p].strip() == "":
-                # FIXME: This code is a shining example of why we need a search function
-                
-                m = deepcopy([m for m in self.proj.hsub.handler_dic["sensor"]["share"][0].methods
-                              if m.name == "buttonPress"][0])
-                para = [pa for pa in m.para if pa.name == "button_name"][0]
+                m = deepcopy(self.proj.hsub.handler_dic["sensor"]["share"][0].getMethodByName("buttonPress"))
+                para = m.getParaByName("button_name")
                 para.setValue(p)
                 self.mapping[p] = self.proj.hsub.method2String(m, "share")
 
         for p in self.proj.all_actuators:
             if p not in mapping or self.mapping[p].strip() == "":
-                # FIXME: This code is a shining example of why we need a search function
-                
-                m = deepcopy([m for m in self.proj.hsub.handler_dic["actuator"]["share"][0].methods
-                              if m.name == "setActuator"][0])
-                para = [pa for pa in m.para if pa.name == "name"][0]
+                m = deepcopy(self.proj.hsub.handler_dic["actuator"]["share"][0].getMethodByName("setActuator"))
+                para = m.getParaByName("name")
                 para.setValue(p)
                 self.mapping[p] = self.proj.hsub.method2String(m, "share")
 

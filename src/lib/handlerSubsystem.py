@@ -79,6 +79,14 @@ class MethodObject:
         self.reference = None   # reference of this method in the memory
         self.omitPara = []      # list of parameter names that are omitted 
 
+    def getParaByName(self, name):
+        for p in self.para:
+            if p.name == name:
+                return p
+
+        print "WARNING: Could not find parameter of name '%s' in method '%s'" % (name, self.name)
+        return None
+
 class HandlerObject:
     """
     A handler object!
@@ -88,6 +96,14 @@ class HandlerObject:
         self.type = None    # type of the handler e.g. motionControl or drive
         self.methods = []   # list of method objects in this handler
         self.robotType = '' # type of the robot using this handler for robot specific handlers
+
+    def getMethodByName(self, name):
+        for m in self.methods:
+            if m.name == name:
+                return m
+
+        print "WARNING: Could not find method of name '%s' in handler '%s'" % (name, self.name)
+        return None
 
     def toString(self,forsave = True):
         """
@@ -197,6 +213,31 @@ class HandlerSubsystem:
 
     def setSilent(self,silent):
         self.silent = silent
+
+    def getRobotByType(self, t):
+        for r in self.robots:
+            if r.type == t:
+                return r
+
+        print "WARNING: Could not find robot of type '%s'" % (t)
+        return None
+
+    def getHandler(self, htype, hname, rname=None):
+        if htype in self.handler_parser.handler_robotSpecific_type:
+            if rname is None:
+                print "WARNING: Handler of type '%s' requires a robot type to be specified for lookup" % (htype)
+                return None
+
+            for h in self.handler_dic[htype][rname]:
+                if h.name == hname:
+                    return h
+        else:
+            for h in self.handler_dic[htype]:
+                if h.name == hname:
+                    return h
+
+        print "WARNING: Could not find handler of type '%s' with name '%s'" % (htype, hname)
+        return None
 
     def string2Method(self,method_string):
         """
