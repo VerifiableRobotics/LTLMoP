@@ -821,7 +821,11 @@ class ConfigFileParser:
         self.silent = silent
 
     def loadAllConfigFiles(self):
-        
+        # Create configs/ directory for project if it doesn't exist already
+#        config_dir = os.path.join(self.proj.project_root, "configs")
+        if not os.path.exists(self.config_path):
+            os.mkdir(self.config_path)
+
         fileList = os.listdir(self.config_path)
         for fileName in fileList:
             if fileName.endswith('.config'):

@@ -36,6 +36,17 @@ class Project:
         self.all_customs = []
         self.currentConfig = None
 
+        # Climb the tree to find out where we are
+        p = os.path.abspath(sys.argv[0])
+        t = ""
+        while t != "src":
+            (p, t) = os.path.split(p)
+            if p == "":
+                print "I have no idea where I am; this is ridiculous"
+                return None
+
+        self.ltlmop_root = os.path.join(p, "src")
+
     def setSilent(self, silent):
         self.silent = silent
 
@@ -139,16 +150,6 @@ class Project:
         self.project_root = os.path.abspath(os.path.dirname(spec_file))
         self.project_basename, ext = os.path.splitext(os.path.basename(spec_file)) 
         
-        # Climb the tree to find out where we are
-        p = os.path.abspath(sys.argv[0])
-        t = ""
-        while t != "src":
-            (p, t) = os.path.split(p)
-            if p == "":
-                print "I have no idea where I am; this is ridiculous"
-                return None
-
-        self.ltlmop_root = os.path.join(p, "src")
 
         ### Load in the specification file
         if not self.silent: print "Loading specification file %s..." % spec_file
@@ -210,6 +211,9 @@ class Project:
         Load the config object with name ``name`` (case-insensitive).  If no name is specified, load the one defined as currently selected. 
         """
 
+        self.hsub = handlerSubsystem.HandlerSubsystem(self)
+        self.hsub.loadAllConfigFiles()
+    
         if name is None:
             try:
                name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
@@ -217,9 +221,6 @@ class Project:
                 if not self.silent: print "WARNING: No experiment configuration defined"        
                 return None
 
-        self.hsub = handlerSubsystem.HandlerSubsystem(self)
-        self.hsub.loadAllConfigFiles()
-    
         for c in self.hsub.configs:
             if c.name.lower() == name.lower():
                 return c

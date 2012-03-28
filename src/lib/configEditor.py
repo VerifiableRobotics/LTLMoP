@@ -190,9 +190,9 @@ class simSetupDialog(wx.Dialog):
         self.proj.loadProject(sys.argv[1])
 
         # Create configs/ directory for project if it doesn't exist already
-        config_dir = os.path.join(self.proj.project_root, "configs")
-        if not os.path.exists(config_dir):
-            os.mkdir(config_dir)
+#        config_dir = os.path.join(self.proj.project_root, "configs")
+#        if not os.path.exists(config_dir):
+#            os.mkdir(config_dir)
 
         # Set up the list of configs
         self.list_box_experiment_name.Clear()
