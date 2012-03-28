@@ -12,19 +12,14 @@ import edu.wis.jtlv.lib.FixPoint;
 import edu.wis.jtlv.old_lib.games.GameException;
 import edu.wis.jtlv.env.module.ModuleBDDField;
 
-/**
- * <p>
- * Nir Piterman, Amir Pnueli, and Yaniv Sa’ar. Synthesis of Reactive(1) Designs.
- * In VMCAI, pages 364–380, Charleston, SC, Jenuary 2006.
- * </p>
+/** 
  * <p>
  * To execute, create an object with two Modules, one for the system and the
- * other for the environment, and then just extract the strategy through
- * {@link edu.wis.jtlv.old_lib.games.GR1Game#printWinningStrategy()}.
+ * other for the environment, and then just extract the strategy/counterstrategy 
+ * via the printWinningStrategy() and printLosingStrategy() methods.
  * </p>
  * 
- * @version {@value edu.wis.jtlv.env.Env#version}
- * @author yaniv sa'ar. (parts modified by Cameron Finucane)
+ * @author Yaniv Sa'ar, Vasumathi Raman, Cameron Finucane)
  * 
  */
 public class GROneGame {
@@ -43,6 +38,8 @@ public class GROneGame {
 					"cannot instanciate a GR[1] Game with an empty player.");
 		}
 		
+		//Define system and environment modules, and how many liveness conditions are to be considered. 
+		//The first sysJustNum system livenesses and the first envJustNum environment livenesses will be used
 		this.env = env;
 		this.sys = sys;
 		this.sysJustNum = sysJustNum;
@@ -57,9 +54,11 @@ public class GROneGame {
 		x2_mem = new BDD[sysJustNum][envJustNum][50][50];
 		y2_mem = new BDD[sysJustNum][50];
 		z2_mem = new BDD[50];	
-		this.player2_winning = this.calculate_win();	
-		this.player1_winning = this.calculate_loss();
-		//this.player1_winning = this.player2_winning.not();
+		
+		//
+		this.player2_winning = this.calculate_win();	//(system winning states)
+		this.player1_winning = this.calculate_loss();   //(environment winning states)
+		//this.player1_winning = this.player2_winning.not(); //commented out after counterstrategy addition - VR
 
 	}
 	
@@ -77,10 +76,10 @@ public class GROneGame {
 
 	/**
 	 * <p>
-	 * Calculating winning states.
+	 * Calculating Player-2 winning states.
 	 * </p>
 	 * 
-	 * @return The winning states for this game.
+	 * @return The Player-2 winning states for this game.
 	 */
 	private BDD calculate_win() {
 		BDD x, y, z;
@@ -126,6 +125,14 @@ public class GROneGame {
 		return z.id();
 	}
 	
+	/**
+	 * <p>
+	 * Calculating Player-2 losing states.
+	 * </p>
+	 * 
+	 * @return The Player-2 losing states for this game.
+	 */
+	
 	private BDD calculate_loss() {
 		BDD x, y, z;
 		FixPoint<BDD> iterZ, iterY, iterX;
@@ -135,19 +142,16 @@ public class GROneGame {
 		x = Env.FALSE();
 				
 		for (iterZ = new FixPoint<BDD>(); iterZ.advance(z);) {
-			//for (int j = 0; j < sys.justiceNum(); j++) {
 			for (int j = 0; j < sysJustNum; j++) {							
 				y = Env.TRUE();			
 				for (iterY = new FixPoint<BDD>(); iterY.advance(y);) {
 					BDD start = ((sys.justiceAt(j).not()).or((env.yieldStates(sys, z.not())).not()))
-						//BDD start = ((sys.justiceAt(j).not()).or(sys.yieldStates(sys, z)))
 								.and((env.yieldStates(sys, y.not())).not());
 					for (int i = 0; i < envJustNum; i++) {
 						x = Env.FALSE();
 						c=0;
 						for (iterX = new FixPoint<BDD>(); iterX.advance(x);) {
 							x = x.id().or((env.justiceAt(i).or(((env.yieldStates(sys, x.not())).not()))).and(start));
-							//x = x.id().or((env.justiceAt(i).or(env.yieldStates(sys, x))).and(start));
 							x2_mem[j][i][a][c] = x.id();
 							//System.out.println("X ["+ j + ", " + i + ", " + a + ", " + c + "] = " + x2_mem[j][i][a][c]);
 							c++;
@@ -179,7 +183,6 @@ public class GROneGame {
 		x2_mem = extend_size(x2_mem, 0);
 		y2_mem = extend_size(y2_mem, 0);
 		z2_mem = extend_size(z2_mem, 0);
-		//System.out.println("SAME " + z.id().equals(player2_winning.not()));
 		return z.id();
 	}
 
@@ -220,9 +223,9 @@ public class GROneGame {
 			}
 		}
 		return res;
-	}
-	
+	}	
 	// extended_size<=0 will tight the arrays to be the exact sizes.
+	
 	private BDD[][][] extend_size(BDD[][][] in, int extended_size) {
 		BDD[][][] res;
 		if (extended_size > 0) {
@@ -258,7 +261,6 @@ public class GROneGame {
 		return res;
 	}
 
-	// extended_size<=0 will tight the arrays to be the exact sizes.
 	private BDD[][] extend_size(BDD[][] in, int extended_size) {
 		BDD[][] res;
 		if (extended_size > 0) {
@@ -317,7 +319,8 @@ public class GROneGame {
 	/**
 	 * <p>
 	 * Extracting an arbitrary implementation from the set of possible
-	 * strategies.
+	 * strategies. 
+	 * The second argument changes the priority of searching for different types of moves in the game
 	 * </p>
 	 */
 	public void printWinningStrategy(BDD ini) {
@@ -330,6 +333,12 @@ public class GROneGame {
 		// return calculate_strategy(23);
 	}
 	
+	/**
+	 * <p>
+	 * Extracting an arbitrary counterstrategy from the set of possible counterstrategies. 
+	 * </p>
+	 */
+	
 	public void printLosingStrategy(BDD ini) {
 		calculate_counterstrategy(ini);
 		// return calculate_strategy(3);
@@ -337,22 +346,19 @@ public class GROneGame {
 		// return calculate_strategy(11);
 		// return calculate_strategy(15);
 		// return calculate_strategy(19);
+		
 	}
-	
-	//public void printLosingTrace(BDD ini) {
-//		calculate_countertrace(ini);
-		// return calculate_strategy(3);
-		// return calculate_strategy(7);
-		// return calculate_strategy(11);
-		// return calculate_strategy(15);
-		// return calculate_strategy(19);
-//	/}
+
 	
 	
 	/**
 	 * <p>
 	 * Extracting an implementation from the set of possible strategies with the
-	 * given priority to the next step.
+	 * given priority to the next step, following the approach outlined in	
+	 * </p>
+	 * <p>
+	 * Nir Piterman, Amir Pnueli, and Yaniv Sa'ar. Synthesis of Reactive(1) Designs.
+	 * In VMCAI 2006, pp. 364-380.
 	 * </p>
 	 * <p>
 	 * Possible priorities are:<br>
@@ -366,12 +372,9 @@ public class GROneGame {
 	 * 
 	 * @param kind
 	 *            The priority kind.
+	 * @param det
+	 *            true if a deterministic strategy is desired, otherwise false
 	 */
-	
-	public void calculate_strategy(int kind, BDD ini) {
-		calculate_strategy(kind, ini, true);
-	}
-	
 	
 		
 	public boolean calculate_strategy(int kind, BDD ini, boolean det) {
@@ -381,10 +384,10 @@ public class GROneGame {
 		Stack<RawState> aut = new Stack<RawState>();
 		boolean result;
 		if (ini.isZero()) result = false; else result = true;
-		// FDSModule res = new FDSModule("strategy");
-
+		
         // Create a varset of all non-location propositions
-        // (used later to prevent wobble)
+        // (used later to prevent inefficient wobbling when
+		// multiple goals are satisfied in the same location)
         //
         // TODO: There is probably a cleaner way to do this
         ModuleBDDField [] allFields = sys.getAllFields();        
@@ -395,6 +398,7 @@ public class GROneGame {
           if (!fieldName.startsWith("<bit"))
             nonRegionProps = nonRegionProps.union(thisField.support());
         }
+        
 
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
 		while (ini_iterator.hasNext()) {
@@ -428,8 +432,13 @@ public class GROneGame {
                 BDD p_st = st_stack.pop();
                 int p_j = j_stack.pop().intValue();
 
-                /* Create a new automaton state for our current state 
-                  (or use a matching one if it already exists) */
+                /* 
+                * Create a new automaton state for our current state 
+                * (or use a matching one if it already exists) 
+            	* p_st is the current state value,
+				* and p_j is the system goal currently being pursued.
+				* cf. RawState class definition below.
+				*/
                 RawState new_state = new RawState(aut.size(), p_st, p_j);
                 int nidx = aut.indexOf(new_state);
                 if (nidx == -1) {
@@ -574,15 +583,7 @@ public class GROneGame {
                         local_kind--;
                     }
 
-                    // picking one candidate. In JDD satOne is not take
-                    // env.unprimeVars().union(sys.unprimeVars()) into its
-                    // considerations.
-                    // BDD one_cand = candidate.satOne();
-             /*       BDD one_cand = candidate.satOne(env.moduleUnprimeVars().union(
-                            sys.moduleUnprimeVars()), false);
-             */       
-                    
-                        	
+                      	
                     for (BDDIterator candIter = candidate.iterator(env.moduleUnprimeVars().union(
                             sys.moduleUnprimeVars())); candIter.hasNext();) {
                         BDD one_cand = (BDD) candIter.next();
@@ -658,6 +659,18 @@ public class GROneGame {
 		}
 		if (strategy_kind == 3) return result; else return false;
 	}
+	
+	//Default deterministic version for backwards compatibility
+	public void calculate_strategy(int kind, BDD ini) {
+		calculate_strategy(kind, ini, true);
+	}
+	
+	
+	/**
+	 * <p>
+	 * Extracting a safety automaton characterizing all allowed system moves. 
+	 * Used to restrict the user during counterstrategy visualization with Mopsy.	 
+	 */
 	
 	public void generate_safety_aut(BDD ini) {
 		Stack<BDD> st_stack = new Stack<BDD>();
@@ -740,13 +753,22 @@ public class GROneGame {
 	}
 
 	
-
+	
 		
-	public void calculate_counterstrategy(BDD ini) {
-		calculate_counterstrategy(ini, true, true);
-	}
-		
-		
+	/**
+	 * <p>
+	 Extracting an arbitrary counterstrategy from the set of possible counterstrategies, following the approach outlined in 
+	 * </p>
+	 * <p>
+	 * Robert Konighofer, Georg Hofferek, Roderick Bloem. Debugging formal specifications using simple counterstrategies. In FMCAD 2009, pp. 152-159.
+	 * </p>
+	 * 
+	 * @param enable_234
+	 *            Whether moves of all types are to be allowed, or only moves leading closer to a system violation
+	 * @param det
+	 *            true if a deterministic strategy is desired, otherwise false
+	 *            
+	 */
 	public boolean calculate_counterstrategy(BDD ini, boolean enable_234, boolean det) {
 		Stack<BDD> st_stack = new Stack<BDD>();
 		Stack<Integer> i_stack = new Stack<Integer>();
@@ -764,9 +786,8 @@ public class GROneGame {
 	       	            
 	        int idx = -1;
 	        st_stack.push(this_ini);
-	        i_stack.push(new Integer(0)); // TODO: is there a better default j?
+	        i_stack.push(new Integer(0)); // TODO: is there a better default i?
 	        j_stack.push(new Integer(-1)); // TODO: is there a better default j?
-	        //this_ini.printSet();
 	        
 	        
 	        // iterating over the stacks.
@@ -777,7 +798,13 @@ public class GROneGame {
 				int rank_j = j_stack.pop().intValue();
 				
 				/* Create a new automaton state for our current state 
-				(or use a matching one if it already exists) */
+				* (or use a matching one if it already exists) 
+				* p_st is the current state value,
+				* rank_i is the environment goal currently being pursued, 
+				* and rank_j is the system goal currently being prevented.
+				* cf. RawCState class definition below.
+				*/
+				
 				RawCState new_state = new RawCState(aut.size(), p_st, rank_j, rank_i, Env.FALSE());
 				int nidx = aut.indexOf(new_state);
 				if (nidx == -1) {
@@ -838,7 +865,14 @@ public class GROneGame {
 						input = input.or(p_st.and((sys.yieldStates(env,Env.FALSE()))));//CONSIDERS ALL ENV. MOVES
 						
 						//OTHERWISE:
-						if (input.isZero()) input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c])))))));  													
+						if (input.equals(oldInput)) {
+							if (p_c == 0) {
+								input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c]).and(env.justiceAt(rank_i))))))));
+								rank_i = (rank_i + 1)%envJustNum;
+							} else 
+								input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))));
+						}
+						
 					} else {						
 						input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(z2_mem[p_az-1])))))));
 					}
@@ -877,10 +911,10 @@ public class GROneGame {
 						new_i = (rank_i + 1) % env.justiceNum();
 						new_j = rank_j;		                	
 						if (p_az == 0) 
-							input = input.or((p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(y2_mem[rank_j][p_az])))))
+							input = input.or((p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(y2_mem[rank_j][p_az])))))
 									.and((sys.yieldStates(env,(Env.FALSE()))).not())));		        				
 						else 
-							input = input.or((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(y2_mem[rank_j][p_az]))))))
+							input = input.or((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(y2_mem[rank_j][p_az]))))))
 									.and((sys.yieldStates(env,z2_mem[p_az-1])).not())));
 					}
 					if (!input.equals(oldInput) && det) break;						
@@ -889,7 +923,7 @@ public class GROneGame {
 					if (rank_i != -1 && rank_j != -1) {
 						if (p_az == 0) {
 							if (p_c == 0) {
-								input = input.or(((p_st.and((primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c]))))))))))
+								input = input.or(((p_st.and((primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[rank_j][rank_i][p_az][p_c]))))))))))
 												//this next clause is probably superfluous because of \rho_1
 												.and((sys.yieldStates(env,Env.FALSE())).not());
 													
@@ -899,7 +933,7 @@ public class GROneGame {
 							}
 						} else {
 							if (p_c == 0) {
-								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c])))))))))
+								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[rank_j][rank_i][p_az][p_c])))))))))
 												.and((sys.yieldStates(env,z2_mem[p_az-1])).not());
 								
 																				
@@ -944,12 +978,17 @@ public class GROneGame {
         return result;
         
 	}
-                
-          	
-          	
-    public void addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
-    	   //method for adding stated to the aut and state stack, based on whether we want a deterministic or nondet automaton
-    	 	for (BDDIterator inputIter = input.iterator(env
+         	
+
+	//Default is deterministic and allows all types of transitions
+	public void calculate_counterstrategy(BDD ini) {
+		calculate_counterstrategy(ini, true, true);
+	}
+	
+	
+	//method for adding stated to the aut and state stack, based on whether we want a deterministic or nondet automaton
+ 	private void addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
+    	   for (BDDIterator inputIter = input.iterator(env
                     .modulePrimeVars()); inputIter.hasNext();) {
 							
                 BDD inputOne = (BDD) inputIter.next();
@@ -1008,6 +1047,8 @@ public class GROneGame {
      }
 		
 	@SuppressWarnings("unused")
+	//Class for a state of the STRATEGY automaton. 
+	//The "rank" is the system goal currently being pursued.
 	private class RawState {
 		private int id;
 		private int rank;
@@ -1084,23 +1125,17 @@ public class GROneGame {
 	}
 	
 	
+	//Class for a state of the COUNTERSTRATEGY automaton.  
+	//"rank_i" is the environment goal currently being pursued, 
+	//and "rank_j" is the system goal currently being prevented.
 	private class RawCState {
 		private int id;
-		private int rank_i;//_old, rank_j_old;
-		private int rank_j;//i_new, rank_j_new;
+		private int rank_i;
+		private int rank_j;
 		private BDD input;
 		private BDD state;
-		private Vector<RawCState> succ;
+		private Vector<RawCState> succ;		
 		
-		/*public RawCState(int id, BDD state, int rank_i_old, int rank_i_new, int rank_j_old, int rank_j_new, BDD input) {
-			this.id = id;
-			this.state = state;
-			this.rank_i_old = rank_i_old;
-			this.rank_j_old = rank_j_old;
-			this.rank_i_new = rank_i_new;
-			this.rank_j_new = rank_j_new;
-			this.input = input;
-		}*/
 		
 		public RawCState(int id, BDD state, int rank_j, int rank_i, BDD input) {
 			this.id = id;
@@ -1147,23 +1182,7 @@ public class GROneGame {
 		public void set_rank_j(int rank) {
 			this.rank_j = rank;
 		}
-		
-		/*public int get_rank_i_new() {
-			return this.rank_i_new;
-		}
 
-		public void set_rank_i_new(int rank) {
-			this.rank_i_new = rank;
-		}
-		
-		public int get_rank_j_new() {
-			return this.rank_j_new;
-		}
-
-		public void set_rank_j_new(int rank) {
-			this.rank_j_new = rank;
-		}*/
-		
 
 		public boolean equals(Object other) {
             return this.equals(other, true);
@@ -1176,32 +1195,14 @@ public class GROneGame {
 			if (other_raw == null)
 				return false;
             if (use_rank) {
-                //return ((this.rank_i_old == other_raw.rank_i_old) & (this.rank_j_old == other_raw.rank_j_old) & (this.rank_i_new == other_raw.rank_i_new) & (this.rank_j_new == other_raw.rank_j_new) & 
-            	return ((this.rank_i == other_raw.rank_i) & (this.rank_j == other_raw.rank_j) &
+                return ((this.rank_i == other_raw.rank_i) & (this.rank_j == other_raw.rank_j) &
                 		(this.state.equals(other_raw.state)));
             } else {
                 return ((this.state.equals(other_raw.state)));
             }
 		}
 
-		
-		/*public String toString() {
-			String res = "State " + id + " with rank_i " + rank_i + " with rank_j " + rank_j + " -> "
-					+ state.toStringWithDomains(Env.stringer) + "\n";
-			if (succ.isEmpty()) {
-				res += "\tWith no successors.";
-			} else {
-				RawCState[] all_succ = new RawCState[succ.size()];
-				succ.toArray(all_succ);
-				res += "\tWith successors : " + all_succ[0].id;
-				for (int i = 1; i < all_succ.length; i++) {
-					res += ", " + all_succ[i].id;
-				}
-			}
-			res += "\tWith input : " + input.toStringWithDomains(Env.stringer) + "\n";			
-			return res;
-		}*/
-		
+			
 		public String toString() {
 			String res = "State " + id + " with rank (" + rank_i + "," + rank_j + ") -> " 
 				+ state.toStringWithDomains(Env.stringer) + "\n";

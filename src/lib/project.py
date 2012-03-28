@@ -181,8 +181,9 @@ class Project:
 
         #coordmap_map2lab = lambda pt: (array((a*vstack([mat(pt).T,1]))[0:2]).flatten()) 
         #coordmap_lab2map = lambda pt: (array((linalg.inv(a)*vstack([mat(pt).T,1]))[0:2]).flatten()) 
-        coordmap_map2lab = lambda pt: (dot(scale, pt) + offset)
-        coordmap_lab2map = lambda pt: (dot(inv_scale, pt - offset))
+
+        coordmap_map2lab = lambda pt: (dot(scale, array([pt[0], pt[1]])) + offset)
+        coordmap_lab2map = lambda pt: (dot(inv_scale, array([pt[0], pt[1]]) - offset))
 
         return coordmap_map2lab, coordmap_lab2map
 

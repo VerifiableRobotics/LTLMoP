@@ -20,7 +20,7 @@ class driveHandler:
             exit(-1)
 
     def setVelocity(self, x, y, theta=0):
-        print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
+        #print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
 
         # Feedback linearization code:
         #d = 0.125 # Distance from front axle to point we are abstracting to [m]
