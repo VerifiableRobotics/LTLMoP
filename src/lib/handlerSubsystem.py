@@ -767,6 +767,9 @@ class RobotFileParser:
                             else:
                                 onlyLoadInit = False
                             handlerList = [handlerParser.parseHandlers(fileName,handler_type,onlyLoadInit)]
+
+                            while None in handlerList:
+                                handlerList.remove(None)
                             
                 else:
                     if self.handler_dic is not None:
@@ -776,6 +779,9 @@ class RobotFileParser:
                         handlerParser = HandlerParser(self.handler_path)
                         fileName = '.'.join(['lib','handlers',handler_type,val[0].split('(')[0]])
                         handlerList = [handlerParser.parseHandlers(fileName,handler_type,True)]
+
+                        while None in handlerList:
+                            handlerList.remove(None)
                 
                 # copy the handler object from the dictionary
                 for handlerObj in handlerList:
