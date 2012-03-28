@@ -207,9 +207,9 @@ class simSetupDialog(wx.Dialog):
 
         for cfg in self.hsub.configs:
             self.list_box_experiment_name.Append(cfg.name, cfg)
-            if self.proj.currentConfig is not None and cfg.name == self.proj.currentConfig.name:
-                self.list_box_experiment_name.SetStringSelection(cfg.name)
-                self._cfg2dialog(cfg)
+
+        if self.proj.currentConfig is not None:
+            self.list_box_experiment_name.SetStringSelection(self.proj.currentConfig.name)
 
         # Check for case where no config files are present
         if self.list_box_experiment_name.GetCount() == 0:
@@ -219,8 +219,12 @@ class simSetupDialog(wx.Dialog):
             cfg.name = "Untitled configuration"
             self.hsub.config_parser.configs.append(cfg)
             self.list_box_experiment_name.Append(cfg.name, cfg)
+
+        # By default, select the first one
+        if self.list_box_experiment_name.GetSelection() < 0:
             self.list_box_experiment_name.SetSelection(0)
-            self._cfg2dialog(cfg)
+
+        self._cfg2dialog(self._getSelectedConfigObject())
 
         # Check for case where a non-existent config file is referenced in the spec file
         #if not any([current_config == c.name for c in self.hsub.configs]):
