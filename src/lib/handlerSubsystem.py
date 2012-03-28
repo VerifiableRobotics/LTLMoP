@@ -606,8 +606,9 @@ class HandlerParser:
 
                         # The line comments the function
                         else:
-                            methodObj.comment = methodObj.comment+(line)
+                            methodObj.comment += line + "\n"
 
+                methodObj.comment = methodObj.comment.strip()
 
                 # if there are parameter that has no description
                 argToRemove = []  

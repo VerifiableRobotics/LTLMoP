@@ -647,6 +647,12 @@ class addRobotDialog(wx.Dialog):
             else:   
                 self.handler_combos[htype].SetValue("")
 
+            # Disable the "Configure" button if there are no parameters
+            if len(h.getMethodByName("__init__").para) == 0:
+                self.handler_buttons[htype].Enable(False)
+            else:
+                self.handler_buttons[htype].Enable(True)
+
     def onClickConfigure(self, event):
         src = event.GetEventObject()
         
@@ -690,7 +696,10 @@ class addRobotDialog(wx.Dialog):
                     hobj = self.proj.hsub.getHandler(htype, hname, rname)
 
                 self.robot.handlers[htype] = hobj
+                
                 break
+
+        self._robot2dialog(self.robot)
 
         event.Skip()
 
