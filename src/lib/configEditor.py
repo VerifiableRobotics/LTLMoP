@@ -16,6 +16,13 @@ def drawParamConfigPane(target, method):
         target.GetSizer().Clear(deleteWindows=True)
 
     list_sizer = wx.BoxSizer(wx.VERTICAL)
+
+    label_info = wx.StaticText(target, -1, method.comment)
+    label_info.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+    static_line = wx.StaticLine(target, -1)
+    list_sizer.Add(label_info, 0, wx.ALL|wx.EXPAND, 5)
+    list_sizer.Add(static_line, 0, wx.EXPAND, 0)
+
     param_controls = {}
     for p in method.para:
         #print "name: %s, type: %s, default: %s, value: %s" % (p.name, p.type, p.default, p.value)
@@ -54,14 +61,14 @@ def drawParamConfigPane(target, method):
     target.SetSizer(list_sizer)
     target.Layout()
 
+    label_info.Wrap(list_sizer.GetSize()[0])
+
 
 class handlerConfigDialog(wx.Dialog):
     def __init__(self, parent, *args, **kwds):
         # begin wxGlade: handlerConfigDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
-        self.label_info = wx.StaticText(self, -1, "info")
-        self.static_line_2 = wx.StaticLine(self, -1)
         self.panel_configs = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
         self.button_defaults = wx.Button(self, -1, "Reset to Defaults")
         self.button_OK = wx.Button(self, wx.ID_OK, "")
@@ -78,7 +85,6 @@ class handlerConfigDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: handlerConfigDialog.__set_properties
         self.SetTitle("Configure XXXhandler")
-        self.label_info.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.panel_configs.SetScrollRate(10, 10)
         self.button_OK.SetDefault()
         # end wxGlade
@@ -87,8 +93,6 @@ class handlerConfigDialog(wx.Dialog):
         # begin wxGlade: handlerConfigDialog.__do_layout
         sizer_10 = wx.BoxSizer(wx.VERTICAL)
         sizer_26 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_10.Add(self.label_info, 0, wx.ALL|wx.EXPAND, 5)
-        sizer_10.Add(self.static_line_2, 0, wx.EXPAND, 0)
         sizer_10.Add(self.panel_configs, 1, wx.EXPAND, 0)
         sizer_26.Add(self.button_defaults, 0, wx.ALL, 5)
         sizer_26.Add((20, 20), 1, 0, 0)
@@ -107,7 +111,6 @@ class handlerConfigDialog(wx.Dialog):
         methodObj = handler.getMethodByName('__init__')
 
         drawParamConfigPane(self.panel_configs, methodObj)
-        self.label_info.SetLabel(methodObj.comment)
         self.panel_configs.Layout()
         # FIXME: this is a sizing hack, because I can't figure out how to get Fit() to work
         a = self.panel_configs.GetSizer().GetMinSize()
