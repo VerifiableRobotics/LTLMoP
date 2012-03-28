@@ -513,7 +513,7 @@ class HandlerParser:
                                 else:
                                     onlyLoadInit = False
                                 self.handler_dic[handler_type][robotFolder] = [self.parseHandlers(h_file,handler_type,onlyLoadInit)]
-                                while None is in self.handler_dic[handler_type][robotFolder]:
+                                while None in self.handler_dic[handler_type][robotFolder]:
                                     self.handler_dic[handler_type][robotFolder].remove(None)
 
     def loadHandler(self,folder,onlyLoadInit=False):
@@ -528,7 +528,7 @@ class HandlerParser:
                 fileName = '.'.join(['lib','handlers',folder,h_file.split('.')[0]])
                 handlerList.append(self.parseHandlers(fileName,folder,onlyLoadInit))
 
-        while None is in handlerList:
+        while None in handlerList:
             handlerList.remove(None)
 
         return handlerList
