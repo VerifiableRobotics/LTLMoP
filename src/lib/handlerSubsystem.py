@@ -513,6 +513,8 @@ class HandlerParser:
                                 else:
                                     onlyLoadInit = False
                                 self.handler_dic[handler_type][robotFolder] = [self.parseHandlers(h_file,handler_type,onlyLoadInit)]
+                                while None is in self.handler_dic[handler_type][robotFolder]:
+                                    self.handler_dic[handler_type][robotFolder].remove(None)
 
     def loadHandler(self,folder,onlyLoadInit=False):
 
@@ -525,6 +527,9 @@ class HandlerParser:
             if h_file.endswith('.py') and not h_file.startswith('_'):
                 fileName = '.'.join(['lib','handlers',folder,h_file.split('.')[0]])
                 handlerList.append(self.parseHandlers(fileName,folder,onlyLoadInit))
+
+        while None is in handlerList:
+            handlerList.remove(None)
 
         return handlerList
     
@@ -545,7 +550,12 @@ class HandlerParser:
         if not self.silent: print "  -> Loading %s " % handlerFile
         
 #        sys.path.append(os.path.join(self.proj.ltlmop_root, 'lib')
-        __import__(handlerFile)
+        try:
+            __import__(handlerFile)
+        except ImportError:
+            print "WARNING: Failed to import handler %s" % handlerFile
+            return None
+
         handlerModule = sys.modules[handlerFile]
         allClass = inspect.getmembers(handlerModule,inspect.isclass)
         for classObj in allClass:
