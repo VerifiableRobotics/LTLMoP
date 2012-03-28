@@ -19,7 +19,6 @@ def drawParamConfigPane(target, method):
     param_controls = {}
     for p in method.para:
         #print "name: %s, type: %s, default: %s, value: %s" % (p.name, p.type, p.default, p.value)
-        #SetToolTip(wx.ToolTip("click to hide")
         item_sizer = wx.BoxSizer(wx.HORIZONTAL)
         param_label = wx.StaticText(target, -1, "%s:" % p.name) 
         # TODO: add in different data types, min/max
@@ -31,11 +30,10 @@ def drawParamConfigPane(target, method):
             else:
                 param_controls[p] = wx.TextCtrl(target, -1, "")
 
-        param_info_label = wx.StaticText(target, -1, "(%s)" % p.des)
+        param_label.SetToolTip(wx.ToolTip(p.des))
         item_sizer = wx.BoxSizer(wx.HORIZONTAL)
         item_sizer.Add(param_label, 0, wx.ALL, 5)
         item_sizer.Add(param_controls[p], 1, wx.ALL, 5)
-        item_sizer.Add(param_info_label, 0, wx.ALL, 5)
         list_sizer.Add(item_sizer, 0, wx.EXPAND, 0)
 
     # TODO: is there a better way to do this that doesn't involve a closure?
