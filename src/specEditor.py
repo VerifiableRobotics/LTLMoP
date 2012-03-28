@@ -277,6 +277,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
         self.text_ctrl_log.Clear()
 
+        self.SetTitle("Specification Editor - Untitled")
+
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
@@ -897,6 +899,15 @@ class SpecEditorFrame(wx.Frame):
             wx.MessageBox("Simulation Config is already running.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
+
+        if self.proj.project_basename is None:
+            # First we need a project name, though
+            wx.MessageBox("Please save first to give the project a name.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            self.onMenuSave()
+            if self.proj.project_basename is None:
+                # If the save was cancelled, forget it
+                return
 
         self.subprocess[PROCESS_SIMCONFIG] = wx.Process(self, PROCESS_SIMCONFIG)
         
