@@ -45,25 +45,24 @@ class Automaton:
     current state of the automaton when being executed. 
     """
 
-    def __init__ (self, regions, region_mapping, sensor_handler, actuator_handler, motion_handler, h_instance):
+    def __init__ (self, proj):
         """
         Creates a new automaton.
 
-        You need to pass a list of region objects (for mapping between region names and numbers), 
-        and handler objects for sensors, actuators, and region-to-region movement.
+        You need to pass project instance 
         """
 
         self.states = []    # A collection of state objects belonging to the automaton
 
-        self.regions = regions
-        self.regionMapping = region_mapping
-        self.num_bits = int(numpy.ceil(numpy.log2(len(regions))))  # Number of bits necessary to encode all regions
+        self.regions = proj.rfi.regions # a list of region objects 
+        self.regionMapping = proj.regionMapping # mapping between original regions and decomposed regions
+        self.num_bits = int(numpy.ceil(numpy.log2(len(self.regions))))  # Number of bits necessary to encode all regions
 
         # Store references to the handlers
-        self.sensor_handler = sensor_handler
-        self.actuator_handler = actuator_handler
-        self.motion_handler = motion_handler
-        self.h_instance = h_instance
+        self.sensor_handler = proj.sensor_handler # handler objects for sensors
+        self.actuator_handler = proj.actuator_handler # handler objects for actuators
+        self.motion_handler = proj.motion_handler # region-to-region movement handler
+        self.h_instance = proj.h_instance
 
         # Variables for keeping track of the current state
         self.current_state = None

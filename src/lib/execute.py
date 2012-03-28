@@ -152,12 +152,12 @@ def main(argv):
     proj.importHandlers()
 
     #######################
-    # Load automaton file #
+    # Load automaton file # 
     #######################
     
     print "Loading automaton..."
 
-    FSA = fsa.Automaton(proj.rfi.regions, proj.regionMapping, proj.sensor_handler, proj.actuator_handler, proj.motion_handler,proj.h_instance)
+    FSA = fsa.Automaton(proj)
 
     FSA.loadFile(aut_file, proj.enabled_sensors, proj.enabled_actuators, proj.all_customs)
 
