@@ -2,11 +2,10 @@
 
 
 """ ================================================
-    configClass.py - Object from a .config file
+    handlerSubsystem.py - Interface for working with handlers, configs
     ================================================
     
-    This module exposes an object that allows for loading/editing/saving the data 
-    in a given .config file
+    This module Defines objects for handler system. It also provides interface that deal with handler and config files
 """
 
 
@@ -20,7 +19,8 @@ import project
 
 class ParameterObject:
     """
-    A parameter object!
+    A parameter object
+    Each object represents one parameter of a given method
     """
 
     def __init__(self,para_name):
@@ -33,8 +33,14 @@ class ParameterObject:
         self.value = None   # the value user set for the parameter
         
     def setValue(self,value,deli = ','):
-    
+        """
+        This function makes sure all parameter are set according to the desired type
+        
+        The deli flag defines the deliminator used for list
+        """
         if self.type.lower() == 'float':
+            # A float type. Allows simple algebra and pi
+            # TODO: supports more math
             value.replace("pi","3.1415")
             re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
             self.value = float(eval(value))
@@ -513,9 +519,7 @@ class HandlerParser:
                                 else:
                                     onlyLoadInit = False
                                 self.handler_dic[handler_type][robotFolder] = [self.parseHandlers(h_file,handler_type,onlyLoadInit)]
-                                while None in self.handler_dic[handler_type][robotFolder]:
-                                    self.handler_dic[handler_type][robotFolder].remove(None)
-
+                                
     def loadHandler(self,folder,onlyLoadInit=False):
 
         handlerList = []
@@ -526,10 +530,9 @@ class HandlerParser:
         for h_file in handlerFileList:
             if h_file.endswith('.py') and not h_file.startswith('_'):
                 fileName = '.'.join(['handlers',folder,h_file.split('.')[0]])
-                handlerList.append(self.parseHandlers(fileName,folder,onlyLoadInit))
-
-        while None in handlerList:
-            handlerList.remove(None)
+                h_obj = self.parseHandlers(fileName,folder,onlyLoadInit)
+                if h_obj is not None:
+                    handlerList.append(h_obj)
 
         return handlerList
     
@@ -549,7 +552,6 @@ class HandlerParser:
         # start to load the handler file
         if not self.silent: print "  -> Loading %s " % handlerFile
         
-#        sys.path.append(os.path.join(self.proj.ltlmop_root, 'lib')
         try:
             __import__(handlerFile)
         except ImportError:
@@ -767,10 +769,11 @@ class RobotFileParser:
                             else:
                                 onlyLoadInit = False
                             handlerList = [handlerParser.parseHandlers(fileName,handler_type,onlyLoadInit)]
-
-                            while None in handlerList:
-                                handlerList.remove(None)
                             
+                        # return no robot object if any of the robot specific handler cannot be loaded
+                        if handlerList[0] == None:
+                            print "WARNING: Cannot load all necessary handlers for robot %s" %robotObj.name
+                            return None
                 else:
                     if self.handler_dic is not None:
                         # we can just quick load from the handler dictionary
@@ -780,30 +783,28 @@ class RobotFileParser:
                         fileName = '.'.join(['handlers',handler_type,val[0].split('(')[0]])
                         handlerList = [handlerParser.parseHandlers(fileName,handler_type,True)]
 
-                        while None in handlerList:
-                            handlerList.remove(None)
-                
                 # copy the handler object from the dictionary
                 for handlerObj in handlerList:
-                    if handlerObj.name == val[0].split('(')[0]:
-                        
+                    if handlerObj is not None and handlerObj.name == val[0].split('(')[0]:
                         robotObj.handlers[handler_type] = deepcopy(handlerObj)
-                        break
-                # overwrite the parameter values
-                para_list = [x.strip() for x in val[0].split('(')[1].replace(')','').split(',')]
-
-                for methodObj in robotObj.handlers[handler_type].methods:
-                    if methodObj.name == '__init__':
-                        initMethodObj = methodObj
-                        break
-                for para in para_list:
-                    if '=' in para:
-                        para_name,para_value = [x.strip() for x in para.split('=')]
                         
-                        for paraObj in initMethodObj.para:
-                            if para_name == paraObj.name:
-                                paraObj.setValue(para_value,';')
+                        # overwrite the parameter values
+                        para_list = [x.strip() for x in val[0].split('(')[1].replace(')','').split(',')]
+
+                        for methodObj in robotObj.handlers[handler_type].methods:
+                            if methodObj.name == '__init__':
+                                initMethodObj = methodObj
                                 break
+                        for para in para_list:
+                            if '=' in para:
+                                para_name,para_value = [x.strip() for x in para.split('=')]
+                                
+                                for paraObj in initMethodObj.para:
+                                    if para_name == paraObj.name:
+                                        paraObj.setValue(para_value,';')
+                                        break
+                        break
+
         return robotObj
     
                 
@@ -918,10 +919,23 @@ class ConfigFileParser:
             for data in robot_data:
                 try:
                     robotObj = robot_parser.loadRobotData(data)
-                    configObj.robots.append(robotObj)
+                    if robotObj is not None:
+                        configObj.robots.append(robotObj)
                 except IOError: 
-                    if not self.silent: print "ERROR: Cannot parse robot data in %s" % fileName        
-
+                    if not self.silent: print "ERROR: Cannot parse robot data in %s" % fileName 
+                    
+        # if the main robot for this config cannot be loaded, return no config object
+        noRobot = True
+        if configObj.main_robot == '' and len(configObj.robots)>0:
+            noRobot = False
+        if configObj.main_robot != '':
+            for robotObj in configObj.robots:
+                if configObj.main_robot == robotObj.name:
+                    noRobot = False
+                    break
+        if noRobot: 
+            print "WARNING: Cannot load configuration %s, missing main robot object" %fileName
+            return None            
         return configObj
 
     def saveAllConfigFiles(self):

@@ -6,14 +6,14 @@ naoInit.py - Nao Initialization Handler
 
 Initialize the proxies to access Nao modules
 """
-"""
+
 try:
     import naoqi
     from naoqi import ALProxy
 except ImportError:
     print "ERROR: Could not find naoqi Python module for interfacing with the Nao.  Is it installed correctly?"
     raise
-"""
+
 
 class initHandler:
     def __init__(self, proj, calib=False, ip='nao.local',port=9559):
