@@ -5,7 +5,7 @@ CKBotSimDrive.py - Simulated CKBot Drive Handler
 ================================================
 """
 import math
-from lib.simulator.ode.ckbot import CKBotSimHelper
+from simulator.ode.ckbot import CKBotSimHelper
 
 class driveHandler:
 

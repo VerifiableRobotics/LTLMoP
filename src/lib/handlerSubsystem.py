@@ -153,9 +153,9 @@ class HandlerObject:
                 if robotObj.name == robotName:
                     robotFolder = robotObj.type
                     break
-            fileName = '.'.join(['lib.handlers.robots',robotFolder,self.name])
+            fileName = '.'.join(['handlers.robots',robotFolder,self.name])
         else:
-            fileName = '.'.join(['lib.handlers',self.getType(),self.name])
+            fileName = '.'.join(['handlers',self.getType(),self.name])
         return fileName
         
     def getType(self):
@@ -507,7 +507,7 @@ class HandlerParser:
                     for fileName in fileList:
                         for handler_type in self.handler_robotSpecific_type:
                             if fileName.endswith('py') and (not fileName.startswith('_')) and handler_type.lower() in fileName.lower():
-                                h_file = '.'.join(['lib','handlers','robots',robotFolder,fileName.split('.')[0]])
+                                h_file = '.'.join(['handlers','robots',robotFolder,fileName.split('.')[0]])
                                 if handler_type in ['init','locomotionCommand']:
                                     onlyLoadInit = True
                                 else:
@@ -523,7 +523,7 @@ class HandlerParser:
         
         for h_file in handlerFileList:
             if h_file.endswith('.py') and not h_file.startswith('_'):
-                fileName = '.'.join(['lib','handlers',folder,h_file.split('.')[0]])
+                fileName = '.'.join(['handlers',folder,h_file.split('.')[0]])
                 handlerList.append(self.parseHandlers(fileName,folder,onlyLoadInit))
 
         return handlerList
@@ -751,7 +751,7 @@ class RobotFileParser:
                             handlerList = self.handler_dic[handler_type][robotFolder]
                         else:
                             handlerParser = HandlerParser(self.handler_path)
-                            fileName = '.'.join(['lib','handlers','robots',robotFolder,val[0].split('(')[0]])
+                            fileName = '.'.join(['handlers','robots',robotFolder,val[0].split('(')[0]])
                             if handler_type in ['init','locomotionCommand']:
                                 onlyLoadInit = True
                             else:
@@ -764,7 +764,7 @@ class RobotFileParser:
                         handlerList = self.handler_dic[handler_type]
                     else:
                         handlerParser = HandlerParser(self.handler_path)
-                        fileName = '.'.join(['lib','handlers',handler_type,val[0].split('(')[0]])
+                        fileName = '.'.join(['handlers',handler_type,val[0].split('(')[0]])
                         handlerList = [handlerParser.parseHandlers(fileName,handler_type,True)]
                 
                 # copy the handler object from the dictionary

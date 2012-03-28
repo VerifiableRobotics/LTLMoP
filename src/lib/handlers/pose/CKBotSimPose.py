@@ -9,7 +9,7 @@ Reads from the ODE Simulation pose information
 
 import sys
 from numpy import *
-from lib.simulator.ode.ckbot import CKBotSimHelper
+from simulator.ode.ckbot import CKBotSimHelper
 import math
 
 class poseHandler:

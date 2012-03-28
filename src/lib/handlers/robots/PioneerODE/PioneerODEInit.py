@@ -8,7 +8,7 @@ DiffDriveSimInit.py -- Pioneer Simulation Initialization Handler
 import os, sys, time,subprocess
 from numpy import *
 
-from lib.simulator.ode.pioneer import DiffDriveSim
+from simulator.ode.pioneer import DiffDriveSim
 
 class initHandler:
     def __init__(self, proj, initial_region,calibData,calib=False):
