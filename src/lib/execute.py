@@ -20,6 +20,8 @@
 import sys, os, getopt, textwrap
 import threading, subprocess, time
 import fileMethods, regions, fsa, project
+from numpy import *
+from lib.handlers.motionControl.__is_inside import is_inside
 from socket import *
 
 ####################
@@ -144,12 +146,9 @@ def main(argv):
     # Initialize each module #
     ##########################
 
-#    proj.lookupHandlers()
-
     # Import the relevant handlers
     print "Importing handler functions..."
     
-#    proj.runInitialization()
     proj.importHandlers()
 
     #######################
@@ -218,11 +217,24 @@ def main(argv):
 
     ### Figure out where we should start from
 
-    print "WARNING: Initial region auto-detection not yet implemented" # TODO: determine initial region
-    init_region = 0
+    pose = proj.pose_handler.getPose()
+
+    init_region = None
+
+    for i, r in enumerate(proj.rfi.regions):
+        pointArray = [proj.coordmap_map2lab(x) for x in r.getPoints()]
+        vertices = mat(pointArray).T 
+
+        if is_inside([pose[0], pose[1]], vertices):
+            init_region = i
+            break
+
+    if init_region is None:
+        print "Initial pose of ", pose, "not inside any region!"
+        sys.exit(1)
 
     print "Starting from initial region: " + proj.rfi.regions[init_region].name
-    
+
     ### Have the FSA find a valid initial state
 
     # Figure out our initially true outputs
