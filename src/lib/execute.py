@@ -21,7 +21,7 @@ import sys, os, getopt, textwrap
 import threading, subprocess, time
 import fileMethods, regions, fsa, project
 from numpy import *
-from lib.handlers.motionControl.__is_inside import is_inside
+from handlers.motionControl.__is_inside import is_inside
 from socket import *
 
 ####################
