@@ -30,7 +30,7 @@ class naoActuatorHandler:
     ### Available actuator functions: ###
     #####################################
 
-    def faceLEDs(self, state, initial=False):
+    def faceLEDs(self, actuatorVal, initial=False):
         """
         Use Nao's face LED to indicate state of proposition.
         """
@@ -40,7 +40,7 @@ class naoActuatorHandler:
             if self.ledProxy is None:
                 self.ledProxy = self.naoInitHandler.createProxy('ALLeds')
         else:
-            if state == True:
+            if actuatorVal == True:
                self.ledProxy.setIntensity('FaceLeds',1)
             else:
                self.ledProxy.setIntensity('FaceLeds',0)
@@ -57,19 +57,19 @@ class naoActuatorHandler:
                 number = start
                 time.sleep(0.1)
 
-    def countOutLoud(self, start, skip, period, state, initial=False):
+    def countOutLoud(self, start, skip, period, actuatorVal, initial=False):
         if initial:
             if self.ttsProxy is None:
                 self.ttsProxy = self.naoInitHandler.createProxy('ALTextToSpeech')
             countThread = threading.Thread(target = self._countingThread, args = (start, skip, period))
             countThread.start()
         else:
-            if state == True:
+            if actuatorVal == True:
                 self.doCount = True
             else:
                 self.doCount = False
 
-    def sayPhrase(self, phrase, state, initial=False):
+    def sayPhrase(self, phrase, actuatorVal, initial=False):
         """
         Use Nao's test to speech system to speak a word.
 
@@ -79,16 +79,16 @@ class naoActuatorHandler:
             if self.ttsProxy is None:
                 self.ttsProxy = self.naoInitHandler.createProxy('ALTextToSpeech')
         else:
-            if state == True:
+            if actuatorVal == True:
                 self.ttsProxy.say(phrase)
     
-    def playSoundFile(self, filename, state, initial=False):
+    def playSoundFile(self, filename, actuatorVal, initial=False):
         if initial:
             if self.audioProxy is None:
                 self.audioProxy = self.naoInitHandler.createProxy('ALAudioPlayer')
             self.audioFileIDs[filename] = self.audProxy.loadFile(filename)
         else:
-            if state == True:
+            if actuatorVal == True:
                 self.audProxy.play(self.audioFileIDs[filename])
                 # TODO: Make this pause dynamic to the length of the clip
                 time.sleep(1)
@@ -99,7 +99,7 @@ class naoActuatorHandler:
             print "Killing already running behavior: " + str(b)
             self.behaviorProxy.stopBehavior(b)
 
-    def runBehavior(self, startBehaviorName, endBehaviorName, state, initial=False):
+    def runBehavior(self, startBehaviorName, endBehaviorName, actuatorVal, initial=False):
         if initial:
             if self.behaviorProxy is None:
                 self.behaviorProxy = self.naoInitHandler.createProxy('ALBehaviorManager')
@@ -107,7 +107,7 @@ class naoActuatorHandler:
             #if endBehaviorName != "":
             #    self.behaviorProxy.preloadBehavior(endBehaviorName)
         else:
-            if state == True:
+            if actuatorVal == True:
                 self._killBehaviors()
                 self.behaviorProxy.runBehavior(startBehaviorName)
             else:
