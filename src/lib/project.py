@@ -205,7 +205,30 @@ class Project:
 
         fileMethods.writeToFile(filename, data, comments)
 
-    def loadProject(self, spec_file, current_config_name=None):
+    def loadConfig(self, name=None):
+        """
+        Load the config object with name ``name`` (case-insensitive).  If no name is specified, load the one defined as currently selected. 
+        """
+
+        if name is None:
+            try:
+               name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
+            except (KeyError, IndexError):
+                if not self.silent: print "WARNING: No experiment configuration defined"        
+                return None
+
+        self.hsub = handlerSubsystem.HandlerSubsystem(self)
+        self.hsub.loadAllConfigFiles()
+    
+        for c in self.hsub.configs:
+            if c.name.lower() == name.lower():
+                return c
+
+        if not self.silent: print "WARNING: Default experiment configuration of name '%s' could not be found in configs/ directory." % name       
+
+        return None
+
+    def loadProject(self, spec_file):
         """
         Because the spec_file contains references to all other project files, this is all we
         need to know in order to load everything in.
@@ -213,27 +236,12 @@ class Project:
 
         self.spec_data = self.loadSpecFile(spec_file)
 
-        # Figure out the name of the current experiment config if not specified
-        if current_config_name is None:
-            try:
-                current_config_name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
-            except (KeyError, IndexError):
-                if not self.silent: print "WARNING: No experiment configuration defined"        
-                self.currentConfig = None
-            else:
-                self.currentConfig = self.loadExperimentConfig(current_config_name.replace(" ", "_"))
-
+        self.currentConfig = self.loadConfig()
         self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
         self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps()
         self.determineEnabledPropositions()
         
-        
-    def loadExperimentConfig(self, configFileName):
-        self.hSub = handlerSubsystem.HandlerSubsystem(self)
-        configObj = self.hSub.config_parser.loadConfigFile(configFileName)
-        return configObj
-
     def determineEnabledPropositions(self):
         """
         Populate lists ``all_sensors``, ``enabled_sensors``, etc.
@@ -290,99 +298,9 @@ class Project:
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
         self.h_instance = {'init':{},'pose':None,'locomotionCommand':None,'motionControl':None,'drive':None,'sensor':{},'actuator':{}}
 
-        self.hSub.importHandlers(self.currentConfig,all_handler_types)
+        self.hsub.importHandlers(self.currentConfig,all_handler_types)
         self.pose_handler = self.h_instance['pose']
         if not self.silent: print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
         self.loco_handler = self.h_instance['locomotionCommand']
         self.drive_handler = self.h_instance['drive']
         self.motion_handler = self.h_instance['motionControl']
-            
-            
-#            exec("from %s import %sHandler" % (self.h_name[handler], handler)) in locals() # WARNING: This assumes our input data is not malicious...
-#            if handler == 'pose':
-#                self.pose_handler = poseHandler(self, self.shared_data)
-#                if not self.silent: print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
-#            elif handler == 'sensor':
-#                self.sensor_handler = sensorHandler(self, self.shared_data)
-#            elif handler == 'actuator':
-#                self.actuator_handler = actuatorHandler(self, self.shared_data)
-#            elif handler == 'locomotionCommand':
-#                self.loco_handler = locomotionCommandHandler(self, self.shared_data)
-#            elif handler == 'drive':
-#                self.drive_handler = driveHandler(self, self.shared_data)
-#            elif handler == 'motionControl':
-#                self.motion_handler = motionControlHandler(self, self.shared_data)
-#                
-#                
-                
-                
-   
-
-#    def lookupHandlers(self):
-#        """
-#        Figure out which handlers we are going to use, based on the different configurations file settings
-#        """
-
-#        # TODO: Complain nicely instead of just dying when this breaks?
-#        self.h_name = {}
-#        self.h_name['init'] = self.lab_data["InitializationHandler"]
-#        self.h_name['pose'] = self.lab_data["PoseHandler"][0]
-#        self.h_name['sensor'] = self.lab_data["SensorHandler"][0]
-#        self.h_name['actuator'] = self.lab_data["ActuatorHandler"][0]
-#        self.h_name['locomotionCommand'] = self.lab_data["LocomotionCommandHandler"][0]
-#        self.h_name['motionControl'] = self.robot_data["MotionControlHandler"][0]
-#        self.h_name['drive'] = self.robot_data["DriveHandler"][0]   
-    
-#    def runInitialization(self, calib=False):
-#        """
-#        Run the necessary initialization handlers.
-
-#        We treat initialization handlers separately, because there may be more than one.
-#        NOTE: These will be loaded in the same order as they are listed in the lab config file.
-#        """
-
-#        self.shared_data = {}  # This is for storing things like server connection objects, etc.
-#        init_num = 1
-#        self.init_handlers = []
-#        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
-#        for handler in self.h_name['init']:
-#            if not self.silent: print "  -> %s" % handler
-#            # TODO: Is there a more elegant way to do this? This is pretty ugly...
-#            exec("from %s import initHandler as initHandler%d" % (handler, init_num)) in locals() # WARNING: This assumes our input data is not malicious...
-#            exec("self.init_handlers.append(initHandler%d(self, calib=calib))" % (init_num)) in locals()
-#            self.shared_data.update(self.init_handlers[-1].getSharedData())
-#            init_num += 1  # So they don't clobber each other
-
-#        return self.shared_data
-
-
-
-#    def importHandlers(self, list=None):
-#        """
-#        Load in specified handlers.  If no list is given, *all* handlers will be loaded.
-
-#        Note that the order of loading is important, due to inter-handler dependencies.
-#        """
-
-#        if list is None:
-#            list = ['pose','sensor','actuator','locomotionCommand','drive','motionControl']
-
-#        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
-#        # Now do the rest of them
-#        for handler in list:
-#            if not self.silent: print "  -> %s" % self.h_name[handler]
-#            exec("from %s import %sHandler" % (self.h_name[handler], handler)) in locals() # WARNING: This assumes our input data is not malicious...
-#            if handler == 'pose':
-#                self.pose_handler = poseHandler(self, self.shared_data)
-#                if not self.silent: print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
-#            elif handler == 'sensor':
-#                self.sensor_handler = sensorHandler(self, self.shared_data)
-#            elif handler == 'actuator':
-#                self.actuator_handler = actuatorHandler(self, self.shared_data)
-#            elif handler == 'locomotionCommand':
-#                self.loco_handler = locomotionCommandHandler(self, self.shared_data)
-#            elif handler == 'drive':
-#                self.drive_handler = driveHandler(self, self.shared_data)
-#            elif handler == 'motionControl':
-#                self.motion_handler = motionControlHandler(self, self.shared_data)
-#                

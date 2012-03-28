@@ -76,7 +76,6 @@ class handlerConfigDialog(wx.Dialog):
         # end wxGlade
 
         self.proj = parent.proj
-        self.hsub = parent.hsub
 
     def __set_properties(self):
         # begin wxGlade: handlerConfigDialog.__set_properties
@@ -194,21 +193,15 @@ class simSetupDialog(wx.Dialog):
         if not os.path.exists(config_dir):
             os.mkdir(config_dir)
 
-        # Initialize handler subsystem
-        
-        self.hsub = HandlerSubsystem(self.proj)
-
         # Set up the list of configs
         self.list_box_experiment_name.Clear()
         
-        print "Loading config files..."
-        self.hsub.loadAllConfigFiles()
         print "Loading handlers..."
-        self.hsub.loadAllHandlers()
+        self.proj.hsub.loadAllHandlers()
         print "Loading robots..."
-        self.hsub.loadAllRobots()
+        self.proj.hsub.loadAllRobots()
 
-        for cfg in self.hsub.configs:
+        for cfg in self.proj.hsub.configs:
             self.list_box_experiment_name.Append(cfg.name, cfg)
 
         if self.proj.currentConfig is not None:
@@ -220,7 +213,7 @@ class simSetupDialog(wx.Dialog):
             cfg = ConfigObject()
             # TODO: Check for existing untitleds and add a number at the end (steal from reged)
             cfg.name = "Untitled configuration"
-            self.hsub.config_parser.configs.append(cfg)
+            self.proj.hsub.config_parser.configs.append(cfg)
             self.list_box_experiment_name.Append(cfg.name, cfg)
 
         # By default, select the first one
@@ -228,12 +221,6 @@ class simSetupDialog(wx.Dialog):
             self.list_box_experiment_name.SetSelection(0)
 
         self._cfg2dialog(self._getSelectedConfigObject())
-
-        # Check for case where a non-existent config file is referenced in the spec file
-        #if not any([current_config == c.name for c in self.hsub.configs]):
-        #    print "WARNING: Cannot find config '%s' as referenced in spec file.  Ignoring." % current_config
-        #    self.list_box_experiment_name.Select(0)
-        #    self._cfg2dialog(self.list_box_experiment_name.GetClientData(0))
 
     def __set_properties(self):
         # begin wxGlade: simSetupDialog.__set_properties
@@ -367,7 +354,7 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: Check for existing untitleds and add a number at the end (steal from reged)
         cfg.name = "Untitled configuration"
-        self.hsub.configs.append(cfg)
+        self.proj.hsub.configs.append(cfg)
 
         self.list_box_experiment_name.Append(cfg.name, cfg)
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
@@ -381,8 +368,8 @@ class simSetupDialog(wx.Dialog):
         if fileName == "": return
 
         # import the config file
-        cfg = self.hsub.config_parser.loadConfigFile(fileName)        
-        self.hsub.configs.append(cfg)
+        cfg = self.proj.hsub.config_parser.loadConfigFile(fileName)        
+        self.proj.hsub.configs.append(cfg)
         self.list_box_experiment_name.Append(cfg.name, cfg)
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
         self._cfg2dialog(cfg)
@@ -398,7 +385,7 @@ class simSetupDialog(wx.Dialog):
             # TODO: gray out button when no action possible
             pos = self.list_box_experiment_name.GetSelection()
             self.list_box_experiment_name.Delete(pos)
-            self.hsub.configs.pop(pos)
+            self.proj.hsub.configs.pop(pos)
 
             if pos == numel - 1:
                 # If the very last element was deleted, move the selection up one
@@ -488,8 +475,8 @@ class simSetupDialog(wx.Dialog):
 
     def onClickApply(self, event): # wxGlade: simSetupDialog.<event_handler>
         # Save the config files
-        self.hsub.config_parser.configs = self.hsub.configs
-        self.hsub.config_parser.saveAllConfigFiles()
+        self.proj.hsub.config_parser.configs = self.proj.hsub.configs
+        self.proj.hsub.config_parser.saveAllConfigFiles()
 
         # Save the name of the currently active config in the spec file
         self.proj.currentConfig = self._getSelectedConfigObject()
@@ -566,7 +553,6 @@ class addRobotDialog(wx.Dialog):
         # end wxGlade
 
         self.proj = parent.proj
-        self.hsub = parent.hsub
         self.robot = RobotObject()
 
         self.handler_labels = {}
@@ -591,7 +577,7 @@ class addRobotDialog(wx.Dialog):
         # Set up the list of robot types
         self.combo_box_robottype.Clear()
 
-        for r in self.hsub.robots:
+        for r in self.proj.hsub.robots:
             self.combo_box_robottype.Append(r.type)
             if r.type == self.robot.type:
                 self.combo_box_robottype.SetStringSelection(r)
@@ -601,11 +587,11 @@ class addRobotDialog(wx.Dialog):
         for htype in self.robot.handlers.keys():
             self.handler_combos[htype].Clear()
 
-            if htype in self.hsub.handler_parser.handler_robotSpecific_type: 
-                for i, h in enumerate(self.hsub.handler_dic[htype][self.robot.type]):
+            if htype in self.proj.hsub.handler_parser.handler_robotSpecific_type: 
+                for i, h in enumerate(self.proj.hsub.handler_dic[htype][self.robot.type]):
                     self.handler_combos[htype].Insert(h.name, i)
             else:
-                for i, h in enumerate(self.hsub.handler_dic[htype]):
+                for i, h in enumerate(self.proj.hsub.handler_dic[htype]):
                     self.handler_combos[htype].Insert(h.name, i)
 
     def __set_properties(self):
@@ -687,16 +673,16 @@ class addRobotDialog(wx.Dialog):
 
                 # If this handler has default values from the selected robot file, use them
                 # TODO: this will erase any previous config settings...
-                default_robot = [r for r in self.hsub.robots if r.type == self.robot.type][0]
+                default_robot = [r for r in self.proj.hsub.robots if r.type == self.robot.type][0]
                 if default_robot.handlers[htype].name == hname:
                     hobj = default_robot.handlers[htype]
                 else:
                     # Otherwise, just grab the plain handler
                     rname = self.robot.type
-                    if htype in self.hsub.handler_parser.handler_robotSpecific_type: 
-                        hobj = [h for h in self.hsub.handler_dic[htype][rname] if h.name == hname][0]
+                    if htype in self.proj.hsub.handler_parser.handler_robotSpecific_type: 
+                        hobj = [h for h in self.proj.hsub.handler_dic[htype][rname] if h.name == hname][0]
                     else:
-                        hobj = [h for h in self.hsub.handler_dic[htype] if h.name == hname][0]
+                        hobj = [h for h in self.proj.hsub.handler_dic[htype] if h.name == hname][0]
 
                 self.robot.handlers[htype] = hobj
                 break
@@ -714,7 +700,7 @@ class addRobotDialog(wx.Dialog):
             event.Skip()
 
     def onChooseRobot(self, event): # wxGlade: addRobotDialog.<event_handler>
-        self.robot = deepcopy([r for r in self.hsub.robots if r.type == event.GetString()][0])
+        self.robot = deepcopy([r for r in self.proj.hsub.robots if r.type == event.GetString()][0])
         self._robot2dialog(self.robot)
         event.Skip()
 
@@ -764,7 +750,6 @@ class propMappingDialog(wx.Dialog):
 
         self.proj = parent.proj
         self.robots = parent._getSelectedConfigObject().robots
-        self.hsub = parent.hsub
 
         # Set up the list of robots
 
@@ -801,21 +786,21 @@ class propMappingDialog(wx.Dialog):
             if p not in mapping or self.mapping[p].strip() == "":
                 # FIXME: This code is a shining example of why we need a search function
                 
-                m = deepcopy([m for m in self.hsub.handler_dic["sensor"]["share"][0].methods
+                m = deepcopy([m for m in self.proj.hsub.handler_dic["sensor"]["share"][0].methods
                               if m.name == "buttonPress"][0])
                 para = [pa for pa in m.para if pa.name == "button_name"][0]
                 para.setValue(p)
-                self.mapping[p] = self.hsub.method2String(m, "share")
+                self.mapping[p] = self.proj.hsub.method2String(m, "share")
 
         for p in self.proj.all_actuators:
             if p not in mapping or self.mapping[p].strip() == "":
                 # FIXME: This code is a shining example of why we need a search function
                 
-                m = deepcopy([m for m in self.hsub.handler_dic["actuator"]["share"][0].methods
+                m = deepcopy([m for m in self.proj.hsub.handler_dic["actuator"]["share"][0].methods
                               if m.name == "setActuator"][0])
                 para = [pa for pa in m.para if pa.name == "name"][0]
                 para.setValue(p)
-                self.mapping[p] = self.hsub.method2String(m, "share")
+                self.mapping[p] = self.proj.hsub.method2String(m, "share")
 
     def __set_properties(self):
         # begin wxGlade: propMappingDialog.__set_properties
@@ -893,7 +878,7 @@ class propMappingDialog(wx.Dialog):
             rname = self.list_box_robots.GetStringSelection().split(" ")[0]
             if rname == "(Simulated)":
                 rname = "share"
-            method_string = self.hsub.method2String(self.tempMethod, rname)
+            method_string = self.proj.hsub.method2String(self.tempMethod, rname)
             if method_string is None:
                 print "ERROR: Method cannot be mapped to string"
             else:
@@ -917,12 +902,12 @@ class propMappingDialog(wx.Dialog):
         if self.list_box_props.GetStringSelection() in self.proj.all_sensors:
             if self.list_box_robots.GetStringSelection() == "(Simulated)":
                 # TODO: might there be more than one type of handler in share?
-                methods = self.hsub.handler_dic["sensor"]["share"][0].methods
+                methods = self.proj.hsub.handler_dic["sensor"]["share"][0].methods
             else:
                 methods = r.handlers['sensor'].methods
         elif self.list_box_props.GetStringSelection() in self.proj.all_actuators:
             if self.list_box_robots.GetStringSelection() == "(Simulated)":
-                methods = self.hsub.handler_dic["actuator"]["share"][0].methods
+                methods = self.proj.hsub.handler_dic["actuator"]["share"][0].methods
             else:
                 methods = r.handlers['actuator'].methods
         else:
@@ -1023,7 +1008,7 @@ class propMappingDialog(wx.Dialog):
         self.list_box_functions.SetStringSelection(m.group("name"))
 
         #print "matched: ", m.group()
-        self.tempMethod = self.hsub.string2Method(m.group())
+        self.tempMethod = self.proj.hsub.string2Method(m.group())
         drawParamConfigPane(self.panel_method_cfg, self.tempMethod)
         self.Layout()
 

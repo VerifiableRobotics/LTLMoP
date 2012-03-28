@@ -239,12 +239,13 @@ class SpecEditorFrame(wx.Frame):
 
         self.initializeNewSpec()
 
-        global PROCESS_REGED, PROCESS_DOTTY
-        PROCESS_REGED, PROCESS_DOTTY = range(0, len(self.subprocess))
+        global PROCESS_REGED, PROCESS_DOTTY, PROCESS_SIMCONFIG
+        PROCESS_REGED, PROCESS_DOTTY, PROCESS_SIMCONFIG = range(0, len(self.subprocess))
 
         # Null the subprocess values
         self.subprocess[PROCESS_REGED] = None
         self.subprocess[PROCESS_DOTTY] = None
+        self.subprocess[PROCESS_SIMCONFIG] = None
 
         # HACK: This is an undocumented hack you can uncomment to help kill stuck copies of speceditor on windows
         # If in use, requires spec file argument on command line
@@ -256,7 +257,7 @@ class SpecEditorFrame(wx.Frame):
         self.mapDialog = None
         self.proj = project.Project()
         self.decomposedRFI = None
-        self.subprocess = [None] * 2
+        self.subprocess = [None] * 3
         self.dirty = False
 
         # Reset GUI
@@ -756,6 +757,7 @@ class SpecEditorFrame(wx.Frame):
     def onMenuSimulate(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """ Run the simulation with current experiment configuration. """
 
+        # TODO: or check mtime
         if self.dirty:
             response = wx.MessageBox("Specification may have changed since last compile.\nContinue anyways, without recompiling?"
                                     "Warning", wx.YES_NO | wx.CANCEL, self)
@@ -869,6 +871,16 @@ class SpecEditorFrame(wx.Frame):
             if os.path.isfile(self.proj.getFilenamePrefix()+".pdf"):
                 self.appendLog("Export complete!\n", "GREEN")
 
+        elif ID == PROCESS_SIMCONFIG:
+            ###############################
+            # After Config Editor returns #
+            ###############################
+
+            # Reload just the current config object
+            # (no more is necessary because this is the only part of the spec file
+            # that configEditor could modify)
+
+            self.proj.currentConfig = self.proj.loadConfig()
         else:
             print "Unknown PID"
             return
@@ -880,7 +892,17 @@ class SpecEditorFrame(wx.Frame):
     def onMenuConfigSim(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Launch the config editor
         # TODO: Discourage editing of spec while it's open?
-        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"), self.proj.getFilenamePrefix()+".spec"])
+
+        if self.subprocess[PROCESS_SIMCONFIG] is not None: 
+            wx.MessageBox("Simulation Config is already running.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+        self.subprocess[PROCESS_SIMCONFIG] = wx.Process(self, PROCESS_SIMCONFIG)
+        
+        # FIXME: why does stdio not print to the console when we call like this?
+        wx.Execute("python %s %s" % (os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"), self.proj.getFilenamePrefix()+".spec"),
+                    wx.EXEC_ASYNC, self.subprocess[PROCESS_SIMCONFIG])
 
     def _exportDotFile(self):
         aut = fsa.Automaton(self.decomposedRFI.regions, self.proj.regionMapping, None, None, None) 
