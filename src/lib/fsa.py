@@ -45,7 +45,7 @@ class Automaton:
     current state of the automaton when being executed. 
     """
 
-    def __init__ (self, regions, region_mapping, sensor_handler, actuator_handler, motion_handler,h_instance):
+    def __init__ (self, regions, region_mapping, sensor_handler, actuator_handler, motion_handler, h_instance):
         """
         Creates a new automaton.
 

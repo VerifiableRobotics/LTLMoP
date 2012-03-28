@@ -81,13 +81,15 @@ class SpecCompiler(object):
         else:
             text = self.proj.specText
 
-        spec, self.traceback = writeSpec(text, sensorList, regionList, robotPropList)
+        spec, traceback = writeSpec(text, sensorList, regionList, robotPropList)
 
         # TODO: Catch errors here
         adjData = self.parser.proj.rfi.transitions
 
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, spec)
 
+        return traceback
+        
     def _checkForEmptyGaits(self):
         from simulator.ode.ckbot import CKBotLib
 

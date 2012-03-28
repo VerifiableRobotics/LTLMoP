@@ -29,14 +29,26 @@ class SysDummySensorHandler:
     def __init__(self, parent):
         self.parent = parent
 
-    def getSensorValue(self,name):
+    def __getitem__(self, name):
+        if name == "initializing_handler":
+            return {}
+        else:
+            return compile("self.h_instance['sensor'].getSensorValue('%s')" % name, "<string>", "eval")
+
+    def getSensorValue(self, name):
         return self.parent.sensorStates[name]
 
 class EnvDummySensorHandler:
     def __init__(self, parent):
         self.parent = parent
 
-    def getSensorValue(self,name):
+    def __getitem__(self, name):
+        if name == "initializing_handler":
+            return {}
+        else:
+            return compile("self.h_instance['sensor'].getSensorValue('%s')" % name, "<string>", "eval")
+
+    def getSensorValue(self, name):
         m = re.match('^bit(\d+)$', name)
         if m is not None:
             # Handle region encodings specially
@@ -51,12 +63,25 @@ class EnvDummySensorHandler:
 class SysDummyActuatorHandler:
     def __init__(self):
         pass
-    def setActuator(self,name,val):
+
+    def __getitem__(self, name):
+        if name == "initializing_handler":
+            return {}
+        else:
+            return compile("self.h_instance['actuator'].setActuator('%s', new_val)" % name, "<string>", "eval")
+
+    def setActuator(self, name, val):
         pass
 
 class EnvDummyActuatorHandler:
     def __init__(self, parent):
         self.parent = parent
+
+    def __getitem__(self, name):
+        if name == "initializing_handler":
+            return {}
+        else:
+            return compile("self.h_instance['actuator'].setActuator('%s', new_val)" % name, "<string>", "eval")
 
     def setActuator(self,name,val):
         self.parent.sensorStates[name] = val
@@ -133,12 +158,12 @@ class MopsyFrame(wx.Frame):
         self.dummyMotionHandler = DummyMotionHandler()
 
         print "Loading safety constraints..."
-        self.safety_aut = fsa.Automaton(self.proj.rfi.regions, self.proj.regionMapping, self.sysDummySensorHandler, self.sysDummyActuatorHandler, self.dummyMotionHandler) 
+        self.safety_aut = fsa.Automaton(self.proj.rfi.regions, self.proj.regionMapping, self.sysDummySensorHandler, self.sysDummyActuatorHandler, self.dummyMotionHandler, {"sensor": self.sysDummySensorHandler, "actuator": self.sysDummyActuatorHandler, "motionControl":self.dummyMotionHandler}) 
         self.safety_aut.loadFile(self.proj.getFilenamePrefix() + "_safety.aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
         print "Loading environment counter-strategy..."
         self.num_bits = int(numpy.ceil(numpy.log2(len(self.proj.rfi.regions))))  # Number of bits necessary to encode all regions
         region_props = ["bit" + str(n) for n in xrange(self.num_bits)]
-        self.env_aut = fsa.Automaton(self.proj.rfi.regions, self.proj.regionMapping, self.envDummySensorHandler, self.envDummyActuatorHandler, self.dummyMotionHandler)
+        self.env_aut = fsa.Automaton(self.proj.rfi.regions, self.proj.regionMapping, self.envDummySensorHandler, self.envDummyActuatorHandler, self.dummyMotionHandler, {"sensor": self.envDummySensorHandler, "actuator": self.envDummyActuatorHandler, "motionControl":self.dummyMotionHandler})
         # We are being a little tricky here by just reversing the sensor and actuator propositions
         # to create a sort of dual of the usual automaton
         self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.enabled_actuators + self.proj.all_customs + region_props, self.proj.enabled_sensors, [])
