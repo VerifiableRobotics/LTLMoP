@@ -80,7 +80,7 @@ class handlerConfigDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: handlerConfigDialog.__set_properties
         self.SetTitle("Configure XXXhandler")
-        self.label_info.SetFont(wx.Font(10, wx.DEFAULT, wx.ITALIC, wx.NORMAL, 0, ""))
+        self.label_info.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.panel_configs.SetScrollRate(10, 10)
         self.button_OK.SetDefault()
         # end wxGlade
