@@ -10,7 +10,7 @@
 from numpy import *
 from scipy.linalg import norm
 from numpy.matlib import zeros
-import is_inside
+from __is_inside import is_inside
 
 def getController(p, vert, exit, last=False):
 	"""

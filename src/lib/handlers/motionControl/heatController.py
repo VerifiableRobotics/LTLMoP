@@ -7,9 +7,9 @@ heatController.py - Potential Field Region-to-Region Motion Control
 Uses the heat-controller to take a current position, current region, and destination region and return a global velocity vector that will help us get there
 """
 
-import heatControllerHelper
+import __heatControllerHelper as heatControllerHelper
 from numpy import *
-from is_inside import *
+from __is_inside import is_inside
 import time
 
 class motionControlHandler:
