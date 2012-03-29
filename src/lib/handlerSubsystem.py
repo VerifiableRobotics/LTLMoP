@@ -38,16 +38,23 @@ class ParameterObject:
         
         The deli flag defines the deliminator used for list
         """
+        
         if self.type.lower() == 'float':
             # A float type. Allows simple algebra and pi
             # TODO: supports more math
             value.replace("pi","3.1415")
             re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
-            self.value = float(eval(value))
+            try:
+                self.value = float(eval(value))
+            except SyntaxError:
+                pass
         elif self.type.lower() == 'int' or self.type.lower() == 'integer':
-            value.replace("pi","3.1415")
+            # A float type. Allows simple algebra
             re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
-            self.value = int(eval(value))
+            try:
+                self.value = int(eval(value))
+            except SyntaxError:
+                pass
         elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
             if value.lower() in ['1','true','t']:
                 self.value = True
@@ -60,7 +67,6 @@ class ParameterObject:
         elif self.type.lower() == 'listofint' or self.type.lower() == 'listofinteger':
             self.value = [int(eval(x)) for x in value.strip('\'\"[]').split(deli)]
         elif self.type.lower() == 'listoffloat':
-            
             self.value = [float(eval(x)) for x in value.strip('\'\"[]').split(deli)]
         elif self.type.lower() == 'listofbool' or self.type.lower() == 'listofboolean':
             self.value = [bool(x) for x in value.strip('\'\"[]').split(deli)]
@@ -340,7 +346,7 @@ class HandlerSubsystem:
         return '.'.join([robotName,handlerName,methodName])+'('+para_info+')'
         
 
-    def importHandlers(self,configObj,all_handler_types=None):
+    def importHandlers(self,configObj,all_handler_types):
         """
         Figure out which handlers we are going to use, based on the different configurations file settings
         Only one motion/pose/drive/locomotion handler per experiment
@@ -736,7 +742,6 @@ class RobotFileParser:
 
         robotObj = RobotObject(r_name=robot_data['RobotName'][0],r_type=robot_data['Type'][0])      
         robotFolder = robotObj.type
-                
 
         # load handler configs
         for key,val in robot_data.iteritems():
