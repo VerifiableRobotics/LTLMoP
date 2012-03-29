@@ -11,9 +11,9 @@ import textwrap, os, subprocess, time
 from numpy import *
 
 class initHandler:
-    def __init__(self, proj, init_region,calib=False):
+    def __init__(self, proj, init_region):
         """
-        If ``calib`` is ``True``, we'll start the robot at location ``(0, 0)``.
+        If ``init_region`` is ``__origin__``, we'll start the robot at location ``(0, 0)``.
 
         Otherwise, it will begin in the center of the defined initial region.
         """
@@ -21,7 +21,7 @@ class initHandler:
         ### Create Stage config files
         self.init_region = init_region
         print "(INIT) Writing Stage configuration files..."
-        self.writeSimConfig(proj, calib)
+        self.writeSimConfig(proj)
 
         ### Start Stage (Player server)
 
@@ -52,12 +52,14 @@ class initHandler:
         """ Returns nothing """
         return {}  # We have nothing to share
          
-    def writeSimConfig(self, proj, calib):
+    def writeSimConfig(self, proj):
         """
         Generates .world and .cfg files for Stage.
         """
 
         # Choose starting position
+        calib = (self.init_region == '__origin__')
+        
         if calib:
             # Seems like a reasonable place to start, no?
             startpos = array([0,0])

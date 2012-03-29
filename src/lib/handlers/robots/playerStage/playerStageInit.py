@@ -14,7 +14,7 @@ from playerc import *
 import _stage
 
 class initHandler:
-    def __init__(self, proj, host, port,init_region,Enable_Stage,calib=False):
+    def __init__(self, proj, host, port,init_region,Enable_Stage):
         """
         Init handler for bipedal robot
 
@@ -36,7 +36,7 @@ class initHandler:
             
         # initialize state
         if Enable_Stage:
-            _stage.initHandler(proj,init_region,calib)
+            _stage.initHandler(proj,init_region)
 
         # Connect it
         for timeout in range(0,3):
