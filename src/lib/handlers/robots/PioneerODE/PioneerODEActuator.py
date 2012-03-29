@@ -4,7 +4,7 @@
 PioneerODEActuator.py - Simulated Pioneer Robot Actuator Handler
 ===============================================
 """
-class naoActuatorHandler:
+class PioneerODEActuatorHandler:
     def __init__(self, proj, shared_data):
         """
         Simulated Pioneer Robot Actuator Handler

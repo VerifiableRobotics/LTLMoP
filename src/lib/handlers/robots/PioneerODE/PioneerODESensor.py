@@ -5,7 +5,7 @@ PioneerODESensor.py - Sensor handler for the Simulated Pioneer Robot
 ====================================================
 """
 
-class naoSensorHandler:
+class PioneerODESensorHandler:
     def __init__(self, proj, shared_data):
         """
         Sensor handler for the Simulated Pioneer Robot

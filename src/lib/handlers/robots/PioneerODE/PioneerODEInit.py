@@ -11,7 +11,7 @@ from numpy import *
 from simulator.ode.pioneer import DiffDriveSim
 
 class initHandler:
-    def __init__(self, proj, initial_region,calibData,calib=False):
+    def __init__(self, proj, initial_region,calibData):
         """
         Initialization handler for pioneer ode simulated robot.
 
