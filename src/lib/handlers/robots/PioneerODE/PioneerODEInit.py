@@ -11,26 +11,30 @@ from numpy import *
 from simulator.ode.pioneer import DiffDriveSim
 
 class initHandler:
-    def __init__(self, proj, initial_region,calibData):
+    def __init__(self, proj, init_region):
         """
         Initialization handler for pioneer ode simulated robot.
 
         initial_region (region): The name of the region where the simulated robot starts
-        calibData (listoffloat): The calibration data [xscale,yscale,xoffset,yoffset] (default=[0.3;-0.3;0;0])
         """
 
-        # Start in the center of the defined initial region
-        for i,r in enumerate(proj.rfiold.regions):
-            if r.name == initial_region:
-                initial_region = r
-                break
+        
+        if init_region == '__origin__':
+            # if this is for calibration, the robot starts in origin
+            center = [0.0,0.0]
+        else:
+            # Start in the center of the defined initial region
+            for i,r in enumerate(proj.rfiold.regions):
+                if r.name == init_region:
+                    initial_region = r
+                    break
         initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(proj.regionMapping[initial_region.name][0])]
         center = initial_region.getCenter()
     
         # Load the map calibration data and the region file data to feed to the simulator
         #exp_cfg_name = proj.spec_data['SETTINGS']['currentExperimentName'][0]
         #exp_cfg_data = proj.getExperimentConfig(exp_cfg_name)
-        coordmap_map2lab,coordmap_lab2map = proj.getCoordMaps(calibData)
+        coordmap_map2lab,coordmap_lab2map = proj.getCoordMaps()
         region_calib = list(coordmap_map2lab(array([1,1])))
         regionfile = os.path.join(proj.project_root, proj.spec_data['SETTINGS']['RegionFile'][0])
 
