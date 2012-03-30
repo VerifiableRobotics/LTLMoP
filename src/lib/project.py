@@ -237,6 +237,9 @@ class Project:
 
         self.spec_data = self.loadSpecFile(spec_file)
 
+        if self.spec_data is None:
+            return None
+
         self.currentConfig = self.loadConfig()
         self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
