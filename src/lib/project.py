@@ -106,42 +106,25 @@ class Project:
 
         return rfi
 
-    def getCoordMaps(self,calibData=None):
+    def getCoordMaps(self):
         """
         Returns forward (map->lab) and reverse (lab->map) coordinate mapping functions, in that order
-
-        We are currently assuming the transformation is only linear, not affine (TODO).
         """
+
+        if self.currentConfig is None:
+            return (None, None)
+
+        r = self.currentConfig.getRobotByName(self.currentConfig.main_robot)
+        if r.calibrationMatrix is None:
+            print "WARNING: Main robot has no calibration data.  Using identity matrix."
+            T = eye(3)
+        else:
+            T = r.calibrationMatrix
 
         #### Create the coordmap functions
 
-        # Look for transformation values in spec file
-        #try:
-        #    transformValues = exp_cfg_data['Calibration'][0].split(",")
-        #    [xscale, xoffset, yscale, yoffset] = map(float, transformValues)
-        #except KeyError, ValueError:
-        #    if not self.silent: print "ERROR: Please calibrate and update values before running simulation."
-        #    return
-
-        # TODO: actually use calibration!!!!!
-        if calibData==None:
-            xscale = 1
-            yscale = 1
-            xoffset = 0
-            yoffset = 0
-        else:
-            xscale,yscale,xoffset,yoffset=calibData
-        # Create functions for coordinate transformation
-        # (numpy may seem like overkill for this, but we already have it as a dependency anyways...)
-        scale = diag([xscale, yscale])
-        inv_scale = linalg.inv(scale)
-        offset = array([xoffset, yoffset])
-
-        #coordmap_map2lab = lambda pt: (array((a*vstack([mat(pt).T,1]))[0:2]).flatten()) 
-        #coordmap_lab2map = lambda pt: (array((linalg.inv(a)*vstack([mat(pt).T,1]))[0:2]).flatten()) 
-
-        coordmap_map2lab = lambda pt: (dot(scale, array([pt[0], pt[1]])) + offset)
-        coordmap_lab2map = lambda pt: (dot(inv_scale, array([pt[0], pt[1]]) - offset))
+        coordmap_map2lab = lambda pt: (linalg.inv(T) * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
+        coordmap_lab2map = lambda pt: (T * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
 
         return coordmap_map2lab, coordmap_lab2map
 
@@ -236,6 +219,9 @@ class Project:
         """
 
         self.spec_data = self.loadSpecFile(spec_file)
+
+        if self.spec_data is None:
+            return None
 
         self.currentConfig = self.loadConfig()
         self.regionMapping = self.loadRegionMapping()

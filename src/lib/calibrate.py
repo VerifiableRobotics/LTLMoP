@@ -17,6 +17,7 @@
 import wx, sys, os
 import fileMethods, regions, project
 from numpy import *
+import mapRenderer
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -26,7 +27,7 @@ class CalibrateFrame(wx.Frame):
         # begin wxGlade: CalibrateFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.bitmap_map = wx.StaticBitmap(self, -1, wx.NullBitmap)
+        self.panel_map = wx.Panel(self, -1, style=wx.SUNKEN_BORDER)
         self.label_instructions = wx.StaticText(self, -1, "Welcome to the LTLMoP Calibration Tool")
         self.button_go = wx.Button(self, -1, "Begin")
 
@@ -36,40 +37,85 @@ class CalibrateFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onButtonGo, self.button_go)
         # end wxGlade
 
+        self.mapBitmap = None
+        self.robotPos = None
+
         if len(sys.argv) < 2:
             print "You must specify a specification file."
-            print "Usage: %s [spec_file] [exp_config_name]" % sys.argv[0]
+            print "Usage: %s [spec_file]" % sys.argv[0]
             sys.exit(2)
 
         # Load configuration files
 
         self.proj = project.Project()
+        self.proj.setSilent(True)
+        self.proj.loadProject(sys.argv[1])
 
-        if len(sys.argv) == 2:
-            self.proj.loadProject(sys.argv[1])
-        else:
-            self.proj.loadProject(sys.argv[1], exp_cfg_name=sys.argv[2])
+        if self.proj.currentConfig.name != "calibrate":
+            print "(ERROR) Calibration can only be run on a specfication file with a calibration configuration.\nPlease use ConfigEditor to calibrate a configuration."
+            sys.exit(3)
 
         # Initialize the init and pose handlers
 
-        self.proj.lookupHandlers()
         print "Importing handler functions..."
-        self.proj.runInitialization(calib=True)
-        self.proj.importHandlers(['pose'])
+        self.proj.importHandlers(['init','pose'])
 
-        map_filename = self.proj.getBackgroundImagePath()
-        self.setMapImage(map_filename)
-
+        self.panel_map.SetBackgroundColour(wx.WHITE)   
+        self.panel_map.Bind(wx.EVT_PAINT, self.onPaint)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
 
+        self.onResize(None)
+
         # Start timer for blinking
-        self.circlex = None
-        self.circley = None
+        self.robotPos = None
+        self.markerPos = None
         self.timer = wx.Timer(self)
         self.timer.Start(500)
-        self.Bind(wx.EVT_TIMER, self.drawRobot)
+        self.Bind(wx.EVT_TIMER, self.moveRobot)
 
         self.calibrationWizard = self.doCalibration()
+
+    def onResize(self, event):
+        size = self.panel_map.GetSize()
+        self.mapBitmap = wx.EmptyBitmap(size.x, size.y)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=True, memory=True)
+
+        self.Refresh()
+        self.Update()
+
+        if event is not None:
+            event.Skip()
+
+    def onPaint(self, event=None):
+        if self.mapBitmap is None:
+            return
+
+        if event is None:
+            dc = wx.ClientDC(self.panel_map)
+        else:
+            pdc = wx.AutoBufferedPaintDC(self.panel_map)
+            try:
+                dc = wx.GCDC(pdc)
+            except:
+                dc = pdc
+            else:
+                self.panel_map.PrepareDC(pdc)
+
+        self.panel_map.PrepareDC(dc)
+        dc.BeginDrawing()
+
+        # Draw background
+        dc.DrawBitmap(self.mapBitmap, 0, 0)
+
+        # Draw robot
+        if self.robotPos is not None:
+            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
+            dc.DrawCircle(x, y, 15)
+
+        dc.EndDrawing()
+        
+        if event is not None:
+            event.Skip()
 
     def setStepInfo(self, label, button):
         self.label_instructions.SetLabel(label)
@@ -98,13 +144,12 @@ class CalibrateFrame(wx.Frame):
         real_pts = None
         for i, point in enumerate(file_pts.T):
             # Show blinking circle on map
-            self.circlex = point[0,0]
-            self.circley = point[0,1]
+            self.markerPos = point.tolist()[0]
 
             self.setStepInfo('Please place robot at Point %s shown on the map and press [Capture].' % pt_names[i], "Capture")
             yield
 
-            self.circlex = None # Disable blinking circle
+            self.markerPos = None # Disable blinking circle
 
             pose = self.proj.pose_handler.getPose()
 
@@ -132,55 +177,15 @@ class CalibrateFrame(wx.Frame):
         print >> sys.stderr, "CALIB:"+"\t".join(map(str,[xscale, xoffset, yscale, yoffset]))
         yield
 
-    def drawRobot(self, event, state=[False]):
-        if self.circlex is not None and self.circley is not None:
-            memory = wx.MemoryDC()
-            newMap = wx.BitmapFromImage(self.scaledMap)
-            memory.SelectObject(newMap)
-
-            memory.BeginDrawing()
+    def moveRobot(self, event, state=[False]):
+        if self.markerPos is not None:
             if not state[0]:
-                memory.DrawCircle(self.circlex*self.mapScale, self.circley*self.mapScale, 15)
-                state[0] = True
+                self.robotPos = None
             else:
-                state[0] = False
+                self.robotPos = self.markerPos
 
-            memory.EndDrawing()
-            memory.SelectObject(wx.NullBitmap)
-            self.bitmap_map.SetBitmap(newMap)
-
-    def onResize(self, event=None):
-        # Figure out scaling
-        maximumWidth = self.bitmap_map.GetSize().x
-        maximumHeight = self.bitmap_map.GetSize().y
-        windowAspect = 1.0*maximumHeight/maximumWidth
-
-        W = self.originalMap.GetWidth()
-        H = self.originalMap.GetHeight()
-        imgAspect = 1.0*H/W
-
-        if imgAspect >= windowAspect:
-            NewH = maximumHeight
-            self.mapScale = 1.0*NewH/H
-            NewW = W * self.mapScale
-        else:
-            NewW = maximumWidth
-            self.mapScale = 1.0*NewW/W
-            NewH = H * self.mapScale
-
-        self.scaledMap = self.originalMap.Scale(NewW, NewH)
-
-        # Set background
-        self.bitmap_map.SetBitmap(wx.BitmapFromImage(self.scaledMap))
-
-        if event is not None:
-            event.Skip()
-
-    def setMapImage(self, filename):
-        # Load and display the Map
-        self.originalMap = wx.Image(filename, wx.BITMAP_TYPE_PNG)
-        self.onResize()
-
+            self.onPaint()
+            state[0] = not state[0]
 
     def __set_properties(self):
         # begin wxGlade: CalibrateFrame.__set_properties
@@ -194,7 +199,7 @@ class CalibrateFrame(wx.Frame):
         # begin wxGlade: CalibrateFrame.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_1.Add(self.bitmap_map, 1, wx.EXPAND, 0)
+        sizer_1.Add(self.panel_map, 1, wx.EXPAND, 0)
         sizer_1.Add((20, 15), 0, 0, 0)
         sizer_2.Add((15, 20), 0, 0, 0)
         sizer_2.Add(self.label_instructions, 1, 0, 0)
