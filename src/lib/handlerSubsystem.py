@@ -825,6 +825,14 @@ class ConfigObject:
         self.initial_truths = [] # list of initially true propoisitions
         self.main_robot = '' # name of robot for moving in this config
 
+    def getRobotByName(self, name):
+        for r in self.robots:
+            if r.name == name:
+                return r
+
+        print "WARNING: Could not find robot of name '%s' in config '%s'." % (name, self.name)
+        return None
+
 
 class ConfigFileParser:
     """
