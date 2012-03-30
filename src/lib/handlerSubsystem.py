@@ -181,6 +181,7 @@ class RobotObject:
         self.name = r_name  # name of the robot
         self.type = r_type  # type of the robot
         self.handlers = {'drive':driveH, 'init':initH, 'locomotionCommand':locoH, 'motionControl':motionH, 'pose':poseH, 'sensor':sensorH,'actuator':actuatorH} # dictionary of handler object for this robot
+        self.calibrationMatrix = None # 3x3 matrix for converting coordinates, stored as lab->map
 
     
 
@@ -741,6 +742,21 @@ class RobotFileParser:
     def loadRobotData(self,robot_data):
 
         robotObj = RobotObject(r_name=robot_data['RobotName'][0],r_type=robot_data['Type'][0])      
+
+        try:
+            # NOTE: If we cared about security, this would be a terrible idea
+            mat_str = ''.join(robot_data['CalibrationMatrix'])
+            if mat_str.strip() == "": raise KeyError()
+        except KeyError:
+            print "WARNING: No calibration data found for robot '%s'" % robotObj.name
+            robotObj.calibrationMatrix = None
+        else:
+            try:
+                robotObj.calibrationMatrix = eval(mat_str)
+            except SyntaxError:
+                print "WARNING: Invalid calibration data found for robot '%s'. Ignoring." % robotObj.name
+                robotObj.calibrationMatrix = None
+
         robotFolder = robotObj.type
 
         # load handler configs
@@ -991,6 +1007,10 @@ class ConfigFileParser:
             data[header]={}
             data[header]['RobotName'] = robot.name
             data[header]['Type'] = robot.type
+
+            if robot.calibrationMatrix is not None:
+                data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
+
             data[header]['InitHandler'] = robot.handlers['init'].toString()
             data[header]['PoseHandler'] = robot.handlers['pose'].toString()
             data[header]['MotionControlHandler'] = robot.handlers['motionControl'].toString()
@@ -1011,6 +1031,7 @@ class ConfigFileParser:
                     "ActuatorHandler": "Actuator handler file in robots/Type folder",
                     "RobotName": "Robot Name",
                     "Type": "Robot type",
+                    "CalibrationMatrix": "3x3 matrix for converting coordinates, stored as lab->map",
                     "Actuator_Proposition_Mapping": 'Mapping between actuator propositions and actuator handler functions',
                     "Sensor_Proposition_Mapping": "Mapping between sensor propositions and sensor handler functions",
                     "Name": 'Configuration name',
