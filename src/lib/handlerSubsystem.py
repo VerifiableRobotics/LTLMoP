@@ -61,7 +61,7 @@ class ParameterObject:
             elif value.lower() in ['0','false','f']:
                 self.value = False
         elif self.type.lower() == 'region':
-            self.value = str(value)
+            self.value = str(value).strip('\"\'')
         elif self.type.lower() == 'str' or self.type.lower() == 'string':
             self.value = str(value).strip('\"\'')
         elif self.type.lower() == 'listofint' or self.type.lower() == 'listofinteger':
@@ -133,7 +133,7 @@ class HandlerObject:
                 
         method_input = []
         for paraObj in initMethodObj.para:
-            if paraObj.type.lower() == 'str' or paraObj.type.lower() == 'string':
+            if paraObj.type.lower() in ['str', 'string', 'region']:
                 method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
             else:
                 method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
@@ -336,7 +336,7 @@ class HandlerSubsystem:
             if paraObj.value is None:
                 para_list.append( paraObj.name+'='+str(paraObj.default))
             else:
-                if paraObj.type.lower() == 'str' or paraObj.type.lower() == 'string':
+                if paraObj.type.lower() in ['str', 'string', 'region']:
                     para_list.append( paraObj.name+'=\"'+str(paraObj.value)+'\"')
                 else:
                     para_list.append( paraObj.name+'='+str(paraObj.value))
@@ -455,7 +455,7 @@ class HandlerSubsystem:
                             paraObj.setValue(para_pair.split('=',1)[1],';')
                             break
                             
-                    if paraObj.type.lower() == 'str' or paraObj.type.lower() == 'string':
+                    if paraObj.type.lower() in ['str', 'string', 'region']:
                         method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
                     else:
                         method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
