@@ -763,7 +763,7 @@ class addRobotDialog(wx.Dialog):
                 self.handler_combos[htype].SetValue("")
 
             # Disable the "Configure" button if there are no parameters (with an exception for pose)
-            if len(h.getMethodByName("__init__").para) == 0 and h.type != "pose":
+            if h is None or (len(h.getMethodByName("__init__").para) == 0 and h.type != "pose"):
                 self.handler_buttons[htype].Enable(False)
             else:
                 self.handler_buttons[htype].Enable(True)
