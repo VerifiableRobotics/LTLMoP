@@ -9,9 +9,12 @@ from copy import deepcopy
 from handlerSubsystem import *
 from numpy import *
 import subprocess
+import socket
 
 # begin wxGlade: extracode
 # end wxGlade
+
+CALIB_PORT = 23460
 
 def drawParamConfigPane(target, method):
     if target.GetSizer() is not None:
@@ -116,8 +119,20 @@ class handlerConfigDialog(wx.Dialog):
         event.Skip()
 
     def _onClickCalibrate(self, event):
+        event.Skip()
+
         # Check that a region file is associated
-        # Check that an init and pose handler are selected
+        if self.proj.rfi is None:
+            wx.MessageBox("Please define regions before calibrating.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+        
+        # Check that an init handler is selected
+        if self.robot.handlers['init'] is None:
+            wx.MessageBox("Please choose an Initialization Handler before calibrating.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
         # Create a copy of the project in its current state
         proj_copy = deepcopy(self.proj)
 
@@ -128,7 +143,7 @@ class handlerConfigDialog(wx.Dialog):
 
         cfg.name = "calibrate"
         robot.name = "calibrate"
-        robot.handlers['pose']=self.handler
+        robot.handlers['pose'] = self.handler
         robot.handlers['init'].getMethodByName("__init__").getParaByName("init_region").setValue("__origin__")
         cfg.main_robot = robot.name
         cfg.robots.append(robot)
@@ -139,12 +154,44 @@ class handlerConfigDialog(wx.Dialog):
         proj_copy.hsub.config_parser.saveConfigFile(cfg)
 
         print "Running calibration tool..."
-        proc = subprocess.Popen(["python", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp"])
+        proc = subprocess.Popen(["python", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
 
-        # read in results
+        # Listen on socket for return value
+        host = 'localhost'
+        buf = 1024
+        addr = (host, CALIB_PORT)
+
+        UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        UDPSock.settimeout(0.1)
+        UDPSock.bind(addr)
+
+        while proc.returncode is None: 
+            proc.poll()
+            # Wait for and receive a message from the calibration tool
+
+            try:
+                data, addrFrom = UDPSock.recvfrom(1024)
+            except socket.timeout:
+                wx.Yield()
+            else:
+                try:
+                    self.robot.calibrationMatrix = eval(data)
+                except SyntaxError:
+                    print "ERROR: Received invalid data from calibration tool."
+                else:
+                    # Update the display
+                    self._handler2dialog(self.handler)
+
+                break
+
+        print "Connection with calibration tool closed."
+        UDPSock.close()
+
         # delete files
+        os.remove(proj_copy.getFilenamePrefix() + ".spec_calibtmp")
+        os.remove(os.path.join(proj_copy.project_root, "configs", "calibrate.config"))
 
-        event.Skip()
 
     def _handler2dialog(self, handler):
         self.handler = handler

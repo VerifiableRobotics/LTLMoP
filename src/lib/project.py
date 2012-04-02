@@ -121,8 +121,12 @@ class Project:
         else:
             T = r.calibrationMatrix
 
-        #### Create the coordmap functions
+        # Check for singular matrix
+        if abs(linalg.det(T)) < 100*spacing(0):
+            print "WARNING: Singular calibration matrix.  Ignoring, and using identity matrix."
+            T = eye(3)
 
+        #### Create the coordmap functions
         coordmap_map2lab = lambda pt: (linalg.inv(T) * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
         coordmap_lab2map = lambda pt: (T * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
 
@@ -221,13 +225,15 @@ class Project:
         self.spec_data = self.loadSpecFile(spec_file)
 
         if self.spec_data is None:
-            return None
+            return False
 
         self.currentConfig = self.loadConfig()
         self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
         self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps()
         self.determineEnabledPropositions()
+
+        return True
         
     def determineEnabledPropositions(self):
         """

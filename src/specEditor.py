@@ -547,7 +547,7 @@ class SpecEditorFrame(wx.Frame):
     def openFile(self, filename):
         proj = project.Project()
         
-        if proj.loadProject(filename) is None:
+        if not proj.loadProject(filename):
             wx.MessageBox("Cannot open specification file %s" % (filename), "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -762,7 +762,7 @@ class SpecEditorFrame(wx.Frame):
 
         # TODO: or check mtime
         if self.dirty:
-            response = wx.MessageBox("Specification may have changed since last compile.\nContinue anyways, without recompiling?"
+            response = wx.MessageBox("Specification may have changed since last compile.\nContinue anyways, without recompiling?",
                                     "Warning", wx.YES_NO | wx.CANCEL, self)
 
             if response != wx.YES:
