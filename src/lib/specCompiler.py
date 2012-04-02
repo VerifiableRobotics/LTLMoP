@@ -36,7 +36,14 @@ class SpecCompiler(object):
                 # Delete corresponding decomposed regions
                 for sub_r in self.parser.proj.regionMapping[r.name]:
                     del self.parser.proj.rfi.regions[self.parser.proj.rfi.indexOfRegionWithName(sub_r)]
-                # Remove from mapping
+
+                    # Remove decomposed region from any overlapping mappings
+                    for k,v in self.parser.proj.regionMapping.iteritems(): 
+                        if k == r.name: continue
+                        if sub_r in v:
+                            v.remove(sub_r)
+
+                # Remove mapping for the obstacle region
                 del self.parser.proj.regionMapping[r.name]
 
         #self.proj.rfi.regions = filter(lambda r: not (r.isObstacle or r.name == "boundary"), self.proj.rfi.regions)
