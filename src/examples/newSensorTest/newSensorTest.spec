@@ -26,10 +26,10 @@ person, 1
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-others = 
+r3 = p1
 r1 = p3
 r2 = p2
-r3 = p1
+others = 
 
 Spec: # Specification in structured English
 visit r1

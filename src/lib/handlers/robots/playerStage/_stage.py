@@ -9,6 +9,11 @@ Create config files for Stage and start it up (as part of a player server) in a 
 
 import textwrap, os, subprocess, time
 from numpy import *
+from copy import deepcopy
+import wx
+import regions
+reload(regions) # to use wx objects
+import mapRenderer
 
 class initHandler:
     def __init__(self, proj, init_region):
@@ -17,6 +22,8 @@ class initHandler:
 
         Otherwise, it will begin in the center of the defined initial region.
         """
+
+        self.proj = proj 
 
         ### Create Stage config files
         self.init_region = init_region
@@ -52,6 +59,35 @@ class initHandler:
         """ Returns nothing """
         return {}  # We have nothing to share
          
+    def makeBackgroundImage(self):
+        """
+        Write out a png file with the regions.
+        Returns the output filename.
+        """
+
+        # We need to have a wx.App instance to use the wx drawing stuff
+        app = wx.App()
+        wx.InitAllImageHandlers()
+
+        bitmap = wx.EmptyBitmap(640,480)
+        temp_rfi = deepcopy(self.proj.rfi)
+
+        # Set all colors to white because stage background is B/W
+        for r in temp_rfi.regions:
+            r.color.SetFromName('WHITE')
+
+        # Remove boundary
+        i = temp_rfi.indexOfRegionWithName('boundary')
+        if i >= 0: temp_rfi.regions.pop(i)
+        
+        mapRenderer.drawMap(bitmap, temp_rfi, memory=True, highlightList=[r.name for r in temp_rfi.regions])
+        fname = self.proj.getFilenamePrefix() + "_simbg.png"
+        bitmap.SaveFile(fname, wx.BITMAP_TYPE_PNG)
+
+        app.Destroy()
+
+        return fname
+
     def writeSimConfig(self, proj):
         """
         Generates .world and .cfg files for Stage.
@@ -72,8 +108,9 @@ class initHandler:
             initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(proj.regionMapping[initial_region.name][0])]
             startpos = proj.coordmap_map2lab(initial_region.getCenter())
 
-        # Choose an appropriate background image
-        bgFile = proj.getBackgroundImagePath()
+        # Create an appropriate background image
+
+        bgFile = self.makeBackgroundImage()
 
         ####################
         # Stage world file #

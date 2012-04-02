@@ -269,13 +269,6 @@ class Project:
         """
         return os.path.join(self.project_root, self.project_basename)
 
-    def getBackgroundImagePath(self):
-        """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
-        
-        # TODO: remove this and all use of bg image png
-        return self.rfi.thumb
-
-
     def importHandlers(self, all_handler_types=None):
         """
         Figure out which handlers we are going to use, based on the different configurations file settings
