@@ -11,7 +11,7 @@ DriveHandler: # Robot default drive handler with default arguement values
 holonomicDrive(multiplier=1.0,maxspeed=999.0)
 
 InitHandler: # Robot default init handler with default arguement values
-basicSimInit(initial_region=None)
+basicSimInit(init_region=None)
 
 LocomotionCommandHandler: # Robot locomotion command actuator handler with default arguement values
 basicSimLocomotionCommand(speed=1.0)
@@ -20,7 +20,7 @@ MotionControlHandler: # Robot default motion control handler with default arguem
 vectorController()
 
 PoseHandler: # Robot default pose handler with default arguement values
-baiscSimPose()
+basicSimPose()
 
 SensorHandler: # Robot default sensor handler with default arguement values
 basicSimSensor()
