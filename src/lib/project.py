@@ -203,7 +203,7 @@ class Project:
     
         if name is None:
             try:
-               name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
+                name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
             except (KeyError, IndexError):
                 if not self.silent: print "WARNING: No experiment configuration defined"        
                 return None

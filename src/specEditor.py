@@ -885,8 +885,9 @@ class SpecEditorFrame(wx.Frame):
             # Reload just the current config object
             # (no more is necessary because this is the only part of the spec file
             # that configEditor could modify)
-
-            self.proj.currentConfig = self.proj.loadConfig()
+            other_proj = project.Project()
+            other_proj.spec_data = other_proj.loadSpecFile(self.proj.getFilenamePrefix()+".spec")
+            self.proj.currentConfig = other_proj.loadConfig()
         else:
             print "Unknown PID"
             return
