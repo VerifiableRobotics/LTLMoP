@@ -1896,6 +1896,7 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        # auto-compile the specification before analysis 
         self.onMenuCompile(event)        
 
         # instantiate if necessary
@@ -1941,6 +1942,8 @@ class SpecEditorFrame(wx.Frame):
 
             if "Specification is realizable." in dline:   
                 realizable = True            
+                
+                # check for trivial initial-state automaton with no transitions
                 aut = fsa.Automaton(self.parser.proj.rfi.regions, self.parser.proj.regionMapping, None, None, None) 
                 aut.loadFile(fileNamePrefix+".aut", self.list_box_sensors.GetItems(), self.list_box_actions.GetItems(), self.list_box_customs.GetItems())
                 aut.writeDot(fileNamePrefix+".dot")
@@ -1987,7 +1990,7 @@ class SpecEditorFrame(wx.Frame):
             elif "Environment highlighted goal(s) unrealizable." in dline:
                 self.analysisDialog.markFragments("env", "goal", [int(l) for l in (dline.strip()).split('.')[1].split()])
                 self.analysisDialog.markFragments("env", "trans")
-            
+           
         cmd.stdout.close()
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1995,6 +1998,8 @@ class SpecEditorFrame(wx.Frame):
         self.analysisDialog.Show()
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
+        # Opens the counterstrategy visualization interfacs ("Mopsy")
+       
         # TODO: check for failed compilation before allowing this
         subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.fileName])
 

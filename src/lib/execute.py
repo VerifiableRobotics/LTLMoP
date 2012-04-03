@@ -265,7 +265,7 @@ def main(argv):
         #   toc = time.time()
 
         # Update GUI, no faster than 20Hz
-        if time.time() - last_gui_update_time > 0.05:
+        if show_gui and (time.time() - last_gui_update_time > 0.05):
             avg_freq = 0.9*avg_freq + 0.1*1/(toc-tic) # IIR filter
             UDPSockTo.sendto("Running at approximately %dHz..." % int(avg_freq),addrTo)
             pose = proj.pose_handler.getPose(cached=True)[0:2]

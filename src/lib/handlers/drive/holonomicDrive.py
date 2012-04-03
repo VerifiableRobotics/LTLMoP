@@ -18,6 +18,6 @@ class driveHandler:
             exit(-1)
 
     def setVelocity(self, x, y, theta=0):
-        print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
+        #print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
         self.loco.sendCommand([x,y])
 

@@ -252,12 +252,16 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             Requirement = CondParts.group('req')
 
             # Replace any quantifier in the condition clause
-            if QuantifierFlag == "ANY":
-                Condition = Condition.replace("next(QUANTIFIER_PLACEHOLDER)", quant_or_string['next'])
-                Condition = Condition.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
-            elif QuantifierFlag == "ALL":
-                Condition = Condition.replace("next(QUANTIFIER_PLACEHOLDER)", quant_and_string['next'])
-                Condition = Condition.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
+            if "QUANTIFIER_PLACEHOLDER" in Condition:
+                if QuantifierFlag == "ANY":
+                    Condition = Condition.replace("next(QUANTIFIER_PLACEHOLDER)", quant_or_string['next'])
+                    Condition = Condition.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
+                elif QuantifierFlag == "ALL":
+                    Condition = Condition.replace("next(QUANTIFIER_PLACEHOLDER)", quant_and_string['next'])
+                    Condition = Condition.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
+
+                # Since we are only supporting one quantifier per line, skip the requirement parsing below
+                QuantifierFlag = None
 
             # Figure out what the requirement is and parse it
             if SafetyRE.search(Requirement):
