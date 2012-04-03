@@ -427,6 +427,7 @@ class SpecEditorFrame(wx.Frame):
         Ask the user for a region file and then import it.
         """
         filename = wx.FileSelector("Import Region File", default_extension="regions",
+                                  default_filename=".",
                                   wildcard="Region files (*.regions)|*.regions",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if filename == "": return
@@ -493,7 +494,7 @@ class SpecEditorFrame(wx.Frame):
             if not self.askIfUserWantsToSave("opening a different specification"):
                 return
 
-        filename = wx.FileSelector("Open File", default_extension="spec",
+        filename = wx.FileSelector("Open File", default_extension="spec", default_filename=".",
                                   wildcard="Specification files (*.spec)|*.spec",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if filename == "": return
@@ -582,7 +583,8 @@ class SpecEditorFrame(wx.Frame):
         #####################################
 
         self.text_ctrl_spec.AppendText(self.proj.specText)
-        self.updateFromRFI()
+        if self.proj.rfi is not None:
+            self.updateFromRFI()
 
         self.list_box_actions.Set(self.proj.all_actuators)
         self.list_box_actions.SetCheckedStrings(self.proj.enabled_actuators)
