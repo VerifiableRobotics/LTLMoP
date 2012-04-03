@@ -9,7 +9,7 @@ import simulator.basic.basicSimulator as basicSimulator
 class initHandler:
     def __init__(self, proj, init_region):
         """
-        Initialization handler for pioneer ode simulated robot.
+        Initialization handler for basic simulated robot.
 
         init_region (region): The name of the region where the simulated robot starts
         """
