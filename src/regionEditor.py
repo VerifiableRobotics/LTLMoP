@@ -859,75 +859,6 @@ class DrawingFrame(wx.Frame):
         self.drawPanel.PopupMenu(menu, mousePt)
         menu.Destroy()
 
-
-    def makeScreenshot(self, minimal=False):
-        """
-        Write out a png file with the regions overlayed on the background image.
-
-        If minimal is True, only region borders will be drawn (as dotted lines).
-        If minimal is False, the output will look like the editor window.
-
-        Returns the output filename. 
-        """
-
-        # TODO: Make minimal/full an option settable via the GUI
-
-        name, ext = os.path.splitext(os.path.basename(self.fileName))
-
-        memory = wx.MemoryDC()
-
-        # If there's a background image we'll use that size at minimum
-        if self.backgroundImage is not None:
-            x,y = self.backgroundImage.GetSize()
-        else:
-            x = None
-            y = None
-    
-        # Now let's just make sure all the regions fit.
-
-        # Make sure we have defined at least one regoin
-        if len(self.rfi.regions) == 0:
-            return None
-
-        for region in self.rfi.regions:
-            for pt in region.getPoints():
-                if x == None or pt.x > x: x = pt.x
-                if y == None or pt.y > y: y = pt.y
-
-        bitmap = wx.EmptyBitmap(x,y)
-        memory.SelectObject(bitmap)
-
-        memory.BeginDrawing()
-        if self.backgroundImage != None:
-            memory.DrawBitmap(self.backgroundImage, 0, 0, False)
-
-        if minimal:
-            memory.SetBrush(wx.TRANSPARENT_BRUSH)
-            #memory.SetLogicalFunction(wx.INVERT)
-
-            faces = []
-            for obj in self.rfi.regions:
-                for face in obj.getFaces():
-                    if (face[0], face[1]) in faces or (face[1], face[0]) in faces:
-                        continue
-                    faces.append(face)
-                    memory.SetPen(wx.Pen(wx.WHITE, 5, wx.SOLID))
-                    memory.DrawLine(face[0][0], face[0][1], face[1][0], face[1][1])
-                    memory.SetPen(wx.Pen(wx.BLACK, 3, wx.LONG_DASH))
-                    memory.DrawLine(face[0][0], face[0][1], face[1][0], face[1][1])
-        else:
-            if self.needsAdjacencyRecalc:
-                self.recalcAdjacency()
-            #self.drawRegions(memory, memory, drawAdjacencies=False)
-            self.drawRegions(memory, memory)
-
-        memory.EndDrawing()
-        memory.SelectObject(wx.NullBitmap)
-        fname = os.path.join(os.path.dirname(self.fileName),"%s_simbg.png" % name)
-        bitmap.SaveFile(fname, wx.BITMAP_TYPE_PNG)
-
-        return fname
-
     def onPaintEvent(self, event):
         """ Respond to a request to redraw the contents of our drawing panel.
         """
@@ -1579,8 +1510,6 @@ class DrawingFrame(wx.Frame):
     def saveContents(self):
         """ Save the contents of our document to disk.
         """
-
-        self.rfi.thumb = self.makeScreenshot(minimal=False)
 
         self.rfi.writeFile(self.fileName)
 

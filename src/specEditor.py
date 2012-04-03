@@ -259,7 +259,6 @@ class SpecEditorFrame(wx.Frame):
         self.proj = project.Project()
         self.decomposedRFI = None
         self.subprocess = [None] * 3
-        self.dirty = False
        
         # Reset GUI
         self.button_map.Enable(False)
@@ -279,6 +278,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_log.Clear()
 
         self.SetTitle("Specification Editor - Untitled")
+
+        self.dirty = False
 
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
@@ -426,6 +427,7 @@ class SpecEditorFrame(wx.Frame):
         Ask the user for a region file and then import it.
         """
         filename = wx.FileSelector("Import Region File", default_extension="regions",
+                                  default_filename=".",
                                   wildcard="Region files (*.regions)|*.regions",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if filename == "": return
@@ -492,7 +494,7 @@ class SpecEditorFrame(wx.Frame):
             if not self.askIfUserWantsToSave("opening a different specification"):
                 return
 
-        filename = wx.FileSelector("Open File", default_extension="spec",
+        filename = wx.FileSelector("Open File", default_extension="spec", default_filename=".",
                                   wildcard="Specification files (*.spec)|*.spec",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if filename == "": return
@@ -547,7 +549,7 @@ class SpecEditorFrame(wx.Frame):
     def openFile(self, filename):
         proj = project.Project()
         
-        if proj.loadProject(filename) is None:
+        if not proj.loadProject(filename):
             wx.MessageBox("Cannot open specification file %s" % (filename), "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -581,7 +583,8 @@ class SpecEditorFrame(wx.Frame):
         #####################################
 
         self.text_ctrl_spec.AppendText(self.proj.specText)
-        self.updateFromRFI()
+        if self.proj.rfi is not None:
+            self.updateFromRFI()
 
         self.list_box_actions.Set(self.proj.all_actuators)
         self.list_box_actions.SetCheckedStrings(self.proj.enabled_actuators)
@@ -762,7 +765,7 @@ class SpecEditorFrame(wx.Frame):
 
         # TODO: or check mtime
         if self.dirty:
-            response = wx.MessageBox("Specification may have changed since last compile.\nContinue anyways, without recompiling?"
+            response = wx.MessageBox("Specification may have changed since last compile.\nContinue anyways, without recompiling?",
                                     "Warning", wx.YES_NO | wx.CANCEL, self)
 
             if response != wx.YES:
@@ -882,8 +885,9 @@ class SpecEditorFrame(wx.Frame):
             # Reload just the current config object
             # (no more is necessary because this is the only part of the spec file
             # that configEditor could modify)
-
-            self.proj.currentConfig = self.proj.loadConfig()
+            other_proj = project.Project()
+            other_proj.spec_data = other_proj.loadSpecFile(self.proj.getFilenamePrefix()+".spec")
+            self.proj.currentConfig = other_proj.loadConfig()
         else:
             print "Unknown PID"
             return

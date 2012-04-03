@@ -14,10 +14,11 @@
     :Usage: ``calibrate.py [spec_file]``
 """
 
-import wx, sys, os
+import wx, sys, os, socket
 import fileMethods, regions, project
 from numpy import *
 import mapRenderer
+from _transformations import affine_matrix_from_points 
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -44,6 +45,11 @@ class CalibrateFrame(wx.Frame):
             print "You must specify a specification file."
             print "Usage: %s [spec_file]" % sys.argv[0]
             sys.exit(2)
+
+        if len(sys.argv) == 3:
+            self.configEditorPort = ('localhost', int(sys.argv[2]))
+        else:
+            self.configEditorPort = None
 
         # Load configuration files
 
@@ -136,8 +142,8 @@ class CalibrateFrame(wx.Frame):
             else:
                 file_pts = hstack([file_pts, new_pt])
 
-        if file_pts is None or file_pts.shape[1] < 2:
-            wx.MessageBox("Please choose at least two points in Region Editor for calibration.  Quitting.", "Error", wx.OK)
+        if file_pts is None or file_pts.shape[1] < 3:
+            wx.MessageBox("Please choose at least three points in Region Editor for calibration.  Quitting.", "Error", wx.OK)
             sys.exit(0)
 
         # Get real coordinates for calibration points
@@ -163,18 +169,18 @@ class CalibrateFrame(wx.Frame):
             yield
         
         # Calculate transformation:
-        # TODO: Allow for full affine transforms
-        scale = (real_pts[:,0]-real_pts[:,1])/(file_pts[:,0]-file_pts[:,1])
-        xscale = scale[0,0]
-        yscale = scale[1,0]
-        offset = real_pts[:,0]-(diagflat(scale)*file_pts[:,0])
-        xoffset = offset[0,0]
-        yoffset = offset[1,0]
+        T = affine_matrix_from_points(real_pts, file_pts)
 
-        self.setStepInfo("Calibration complete. (xReal = %f*xPixel + %f, yReal = %f*yPixel + %f)" % (xscale, xoffset, yscale, yoffset), "Quit")
+        self.setStepInfo("Calibration complete!", "Quit")
 
-        # Sends the data back to SpecEditor via STDERR
-        print >> sys.stderr, "CALIB:"+"\t".join(map(str,[xscale, xoffset, yscale, yoffset]))
+        # Sends the data back to Config Editor via UDP, or just print
+        output = repr(T)
+
+        if self.configEditorPort is None:
+            print data
+        else:
+            UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+            UDPSock.sendto(output, self.configEditorPort)
         yield
 
     def moveRobot(self, event, state=[False]):

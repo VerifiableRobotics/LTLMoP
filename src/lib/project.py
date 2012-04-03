@@ -121,8 +121,12 @@ class Project:
         else:
             T = r.calibrationMatrix
 
-        #### Create the coordmap functions
+        # Check for singular matrix
+        if abs(linalg.det(T)) < 100*spacing(0):
+            print "WARNING: Singular calibration matrix.  Ignoring, and using identity matrix."
+            T = eye(3)
 
+        #### Create the coordmap functions
         coordmap_map2lab = lambda pt: (linalg.inv(T) * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
         coordmap_lab2map = lambda pt: (T * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
 
@@ -199,7 +203,7 @@ class Project:
     
         if name is None:
             try:
-               name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
+                name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
             except (KeyError, IndexError):
                 if not self.silent: print "WARNING: No experiment configuration defined"        
                 return None
@@ -221,13 +225,15 @@ class Project:
         self.spec_data = self.loadSpecFile(spec_file)
 
         if self.spec_data is None:
-            return None
+            return False
 
         self.currentConfig = self.loadConfig()
         self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
         self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps()
         self.determineEnabledPropositions()
+
+        return True
         
     def determineEnabledPropositions(self):
         """
@@ -262,13 +268,6 @@ class Project:
             then this function will return ``/home/ltlmop/examples/test/test``
         """
         return os.path.join(self.project_root, self.project_basename)
-
-    def getBackgroundImagePath(self):
-        """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
-        
-        # TODO: remove this and all use of bg image png
-        return self.rfi.thumb
-
 
     def importHandlers(self, all_handler_types=None):
         """
