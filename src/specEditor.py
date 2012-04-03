@@ -259,7 +259,6 @@ class SpecEditorFrame(wx.Frame):
         self.proj = project.Project()
         self.decomposedRFI = None
         self.subprocess = [None] * 3
-        self.dirty = False
        
         # Reset GUI
         self.button_map.Enable(False)
@@ -279,6 +278,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_log.Clear()
 
         self.SetTitle("Specification Editor - Untitled")
+
+        self.dirty = False
 
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
