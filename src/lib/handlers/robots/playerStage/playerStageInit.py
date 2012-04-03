@@ -16,7 +16,8 @@ import _stage
 class initHandler:
     def __init__(self, proj, host, port,init_region,Enable_Stage):
         """
-        Init handler for bipedal robot
+        Creates a player client, connects to a specified player server, and instantiates a Position2D proxy object
+        Returns the player client object and Position2D proxy object
 
         host (string): The ip address of player (default="localhost")
         port (int): The port of player (default=6665)
