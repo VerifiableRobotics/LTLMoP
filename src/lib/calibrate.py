@@ -142,8 +142,8 @@ class CalibrateFrame(wx.Frame):
             else:
                 file_pts = hstack([file_pts, new_pt])
 
-        if file_pts is None or file_pts.shape[1] < 2:
-            wx.MessageBox("Please choose at least two points in Region Editor for calibration.  Quitting.", "Error", wx.OK)
+        if file_pts is None or file_pts.shape[1] < 3:
+            wx.MessageBox("Please choose at least three points in Region Editor for calibration.  Quitting.", "Error", wx.OK)
             sys.exit(0)
 
         # Get real coordinates for calibration points
