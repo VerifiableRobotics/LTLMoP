@@ -235,6 +235,8 @@ public class GROneGame {
 		//Construct the BDDs required for fastSlow
 		BDDVarSet sys_slow_prime = Env.getEmptySet();
 		BDDVarSet sys_fast_prime = Env.getEmptySet();
+		BDDVarSet sys_slow_unprime = Env.getEmptySet();
+		BDDVarSet sys_fast_unprime = Env.getEmptySet();
 		BDD slowSame = Env.TRUE();
 		BDD fastSame = Env.TRUE();
 		BDD envSame = Env.TRUE();
@@ -251,9 +253,11 @@ public class GROneGame {
 			if (fieldName.startsWith("<bit")) {
 				slowSame = slowSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));
 				sys_slow_prime = sys_slow_prime.union(thisPrime.support());
+				sys_slow_unprime = sys_slow_unprime.union(thisField.support());				
 			} else {
 				fastSame = fastSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));
 				sys_fast_prime = sys_fast_prime.union(thisPrime.support());
+				sys_fast_unprime = sys_fast_unprime.union(thisField.support());
 			}		
 		}
 
@@ -271,16 +275,15 @@ public class GROneGame {
 		BDD safeStates = sys.trans().exist(env.moduleUnprimeVars().union(sys.modulePrimeVars()));
 		BDD safeNext = Env.unprime(sys.trans().exist(env.modulePrimeVars().union(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()))));
 		
-		System.out.println("safeStates = "+ safeStates);
-		System.out.println("safeNext = "+ safeNext);
-		
-
 		//Check the complete transition
 		BDD exy1 = Env.prime(to).and(sys.trans());	
-
+		
+		
 		//If both types are changing, check both the intermediate state (exy2) and the complete transition (ex1)
-		BDD exy5 = ((exy1.and(safeStates.and(safeNext))).and(slowSame.not()).and(fastSame.not())).exist(sys_prime);
-
+		BDD exy6 = (slowSame.and(Env.prime(safeStates.and(safeNext)))).exist(sys_slow_prime);	
+		
+		BDD exy5 = ((exy1.and(exy6)).and(slowSame.not()).and(fastSame.not())).exist(sys_prime);
+		
 		BDD fs1 = env.trans().imp(exy5).forAll(env_prime);
 		
         //If only one type of controller changes, use old cox
