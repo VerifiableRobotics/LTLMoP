@@ -208,7 +208,7 @@ public class GROneDebug {
 						 explainEnv = 1;
 						 i = 0;
 					 //} else if (counter_exmple.isZero() && !env.justiceAt(i-1).equals(Env.TRUE())) {// && (!prev.isZero())) {
-					 } else if (counter_exmple.isZero() && i > 1) {
+					 } else if (i < env.justiceNum()) {
 						 //if we get here, the env is unrealizable because of the current goal
 						 debugInfo += "Environment highlighted goal(s) unrealizable " + (i-1) + "\n";	
 						 explainEnv = 1;
