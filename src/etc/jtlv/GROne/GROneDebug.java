@@ -248,7 +248,7 @@ public class GROneDebug {
 					 if (g.calculate_counterstrategy(counter_exmple, true, false)) {
 						 debugInfo += "System highlighted goal(s) inconsistent with transition relation " + (i-1) + "\n";
 						 explainSys = 1;
-					 } else {
+					 } else if (i > 1) {
 					 //if we get here, the sys is unrealizable because of the current goal					 				
 						 debugInfo += "System highlighted goal(s) unrealizable " + (i-1) + "\n";
 						 explainSys = 1;		
