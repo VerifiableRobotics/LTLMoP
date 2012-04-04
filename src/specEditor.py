@@ -483,7 +483,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.initializeNewSpec()
 
-        event.Skip()
+        #event.Skip()
 
     def onMenuOpen(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -501,7 +501,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.openFile(filename)
 
-        event.Skip()
+        #event.Skip()
 
     def onMenuSave(self, event=None): # wxGlade: SpecEditorFrame.<event_handler>
         """
