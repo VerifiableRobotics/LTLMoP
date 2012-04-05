@@ -921,7 +921,14 @@ class SpecEditorFrame(wx.Frame):
                     wx.EXEC_ASYNC, self.subprocess[PROCESS_SIMCONFIG])
 
     def _exportDotFile(self):
-        aut = fsa.Automaton(self.decomposedRFI.regions, self.proj.regionMapping, None, None, None, None) 
+        proj_copy = deepcopy(self.proj)
+        proj_copy.rfi = self.decomposedRFI
+        proj_copy.sensor_handler = None
+        proj_copy.actuator_handler = None
+        proj_copy.motion_handler = None
+        proj_copy.h_instance = None
+
+        aut = fsa.Automaton(proj_copy)
 
         aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
         aut.writeDot(self.proj.getFilenamePrefix()+".dot")
