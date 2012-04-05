@@ -948,10 +948,13 @@ class propMappingDialog(wx.Dialog):
         self.list_box_props.Clear()
         
         self.list_box_props.Append("=== Sensors ===")
+        #self.list_box_props.SetItemFont(n, wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        #self.list_box_props.SetItemBackgroundColour(n, wx.Color(100,100,100))
 
         for p in self.proj.all_sensors:
             self.list_box_props.Append(p)
 
+        self.list_box_props.Append("")
         self.list_box_props.Append("=== Actuators ===")
 
         for p in self.proj.all_actuators:
@@ -1029,7 +1032,7 @@ class propMappingDialog(wx.Dialog):
 
     def onSelectProp(self, event): # wxGlade: propMappingDialog.<event_handler>
         # If you've selected a header, not a proposition, then gray out the edit box
-        if self.list_box_props.GetStringSelection().startswith("==="):
+        if self.list_box_props.GetStringSelection().startswith("===") or self.list_box_props.GetStringSelection() == "":
             self.text_ctrl_mapping.Enable(False)
             self.text_ctrl_mapping.SetValue("")
             self.list_box_robots.Enable(False)
