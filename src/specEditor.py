@@ -20,12 +20,63 @@ import project
 import fsa
 import mapRenderer
 from specCompiler import SpecCompiler
+from copy import deepcopy
+import threading, time
 
 ######################### WARNING! ############################
 #         DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.         #
 #   The .wxg file is located in the etc/wxglade/ directory.   #
 ###############################################################
 
+class AsynchronousProcessThread(threading.Thread):
+    def __init__(self, cmd, callback, logFunction, *args, **kwds):
+        """
+        Run a command asynchronously, calling a callback function (if given) upon completion.
+        If a logFunction is given, stdout and stderr will be redirected to it.
+        Otherwise, these streams are printed to the console.
+        """
+
+        self.cmd = cmd
+        self.callback = callback
+        self.logFunction = logFunction
+
+        self.running = False
+
+        threading.Thread.__init__(self, *args, **kwds)
+
+        # Auto-start
+        self.start()
+
+    def run(self):
+        self.running = True
+
+        # Start the process
+        cmd = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+
+        # Sit around while it does its thing
+        while cmd.returncode is None:
+            # Make sure we aren't being interrupted
+            # TODO: This part won't really work, because of the blocking readline() call below...
+            if not self.running:
+                print "Killing process `%s`..." % self.cmd
+                cmd.kill()
+                return
+
+            output = cmd.stdout.readline() # Blocking :(
+
+            # Output to either a RichTextCtrl or the console
+            if self.logFunction is not None:
+                wx.CallAfter(self.logFunction, "\t"+output, "BLACK")
+            else:
+                print output,
+
+            # Check the status of the process
+            cmd.poll() 
+            time.sleep(0.01)
+
+        # Call any callback function
+        if self.callback is not None:
+            wx.CallAfter(self.callback) # thread-safe call
 
 class MapDialog(wx.Dialog):
     """
@@ -236,17 +287,14 @@ class SpecEditorFrame(wx.Frame):
 
         # Set up extra event bindings
         self.Bind(wx.EVT_CLOSE, self.doClose)
-        self.Bind(wx.EVT_END_PROCESS, self.onProcessTerminate)
 
-        self.initializeNewSpec()
+        # Null the subprocess values
+        self.subprocess = [None] * 3
 
         global PROCESS_REGED, PROCESS_DOTTY, PROCESS_SIMCONFIG
         PROCESS_REGED, PROCESS_DOTTY, PROCESS_SIMCONFIG = range(0, len(self.subprocess))
 
-        # Null the subprocess values
-        self.subprocess[PROCESS_REGED] = None
-        self.subprocess[PROCESS_DOTTY] = None
-        self.subprocess[PROCESS_SIMCONFIG] = None
+        self.initializeNewSpec()
         
         # HACK: This is an undocumented hack you can uncomment to help kill stuck copies of speceditor on windows
         # If in use, requires spec file argument on command line
@@ -258,7 +306,7 @@ class SpecEditorFrame(wx.Frame):
         self.mapDialog = None
         self.proj = project.Project()
         self.decomposedRFI = None
-        self.subprocess = [None] * 3
+        self.subprocess = [None] * len(self.subprocess)
        
         # Reset GUI
         self.button_map.Enable(False)
@@ -670,6 +718,8 @@ class SpecEditorFrame(wx.Frame):
         #event.Skip()
 
     def onMenuCompile(self, event, with_safety_aut=False): # wxGlade: SpecEditorFrame.<event_handler>
+        # TODO: Use AsynchronousProcessThread for this too
+
         # Clear the error markers
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
@@ -707,7 +757,6 @@ class SpecEditorFrame(wx.Frame):
         sys.stderr = redir
         
         self.appendLog("Parsing locative prepositions...\n", "BLUE")
-        wx.Yield()
 
         compiler._decompose()
         self.proj = compiler.proj
@@ -718,12 +767,10 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_locphrases.Select(0)
         
         self.appendLog("Creating SMV file...\n", "BLUE")
-        wx.Yield()
 
         compiler._writeSMVFile()
 
         self.appendLog("Creating LTL file...\n", "BLUE")
-        wx.Yield()
 
         self.traceback = compiler._writeLTLFile()
 
@@ -736,7 +783,6 @@ class SpecEditorFrame(wx.Frame):
 
             
         self.appendLog("Creating automaton...\n", "BLUE")
-        wx.Yield()
 
         realizable, output = compiler._synthesize(with_safety_aut)
 
@@ -759,6 +805,7 @@ class SpecEditorFrame(wx.Frame):
         #self.text_ctrl_log.EndBold()
         self.text_ctrl_log.EndTextColour()
         self.text_ctrl_log.ShowPosition(self.text_ctrl_log.GetLastPosition())
+        wx.Yield() # Ensure update
 
     def onMenuSimulate(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """ Run the simulation with current experiment configuration. """
@@ -798,39 +845,7 @@ class SpecEditorFrame(wx.Frame):
         # FIXME: Doesn't change size on Windows??
         self.Layout()
 
-        # Spawn asynchronous subprocess
-        self.subprocess[PROCESS_REGED] = wx.Process(self, PROCESS_REGED)
-        if self.proj.rfi is not None:
-            # If we already have a region file defined, open it up for editing
-            fileName = self.proj.rfi.filename
-            self.lastRegionModTime = os.path.getmtime(fileName)
-            wx.Execute("python regionEditor.py %s" % fileName, wx.EXEC_ASYNC, self.subprocess[PROCESS_REGED])
-        else:
-            # Otherwise let's create a new region file
-            if self.proj.project_basename is None:
-                # First we need a project name, though
-                wx.MessageBox("Please save first to give the project a name.", "Error",
-                            style = wx.OK | wx.ICON_ERROR)
-                self.onMenuSave()
-                if self.proj.project_basename is None:
-                    # If the save was cancelled, forget it
-                    self.button_edit_regions.SetLabel("Edit Regions...")
-                    self.Layout()
-                    self.button_edit_regions.Enable(True)
-                    return
-
-            # We'll name the region file with the same name as our project
-            fileName = self.proj.getFilenamePrefix()+".regions"
-            wx.Execute("python regionEditor.py %s" % fileName, wx.EXEC_ASYNC, self.subprocess[PROCESS_REGED])
-
-    def onProcessTerminate(self, event):
-        ID = event.GetId()
-
-        if ID == PROCESS_REGED:
-            ###############################
-            # After Region Editor returns #
-            ###############################
-
+        def regedCallback():
             # Re-enable the Edit Regions button
             self.button_edit_regions.SetLabel("Edit Regions...")
             self.Layout()
@@ -868,33 +883,31 @@ class SpecEditorFrame(wx.Frame):
                     self.dirty = True
                     self.updateFromRFI()
 
-        elif ID == PROCESS_DOTTY:
-            #######################
-            # After Dotty returns #
-            #######################
+            self.subprocess[PROCESS_REGED] = None
 
-            # TODO: Check mtime to make sure it didn't die
-            if os.path.isfile(self.proj.getFilenamePrefix()+".pdf"):
-                self.appendLog("Export complete!\n", "GREEN")
-
-        elif ID == PROCESS_SIMCONFIG:
-            ###############################
-            # After Config Editor returns #
-            ###############################
-
-            # Reload just the current config object
-            # (no more is necessary because this is the only part of the spec file
-            # that configEditor could modify)
-            other_proj = project.Project()
-            other_proj.spec_data = other_proj.loadSpecFile(self.proj.getFilenamePrefix()+".spec")
-            self.proj.currentConfig = other_proj.loadConfig()
+        # Spawn asynchronous subprocess
+        if self.proj.rfi is not None:
+            # If we already have a region file defined, open it up for editing
+            fileName = self.proj.rfi.filename
+            self.lastRegionModTime = os.path.getmtime(fileName)
+            self.subprocess[PROCESS_REGED] = AsynchronousProcessThread(["python","-u","regionEditor.py",fileName], regedCallback, None)
         else:
-            print "Unknown PID"
-            return
+            # Otherwise let's create a new region file
+            if self.proj.project_basename is None:
+                # First we need a project name, though
+                wx.MessageBox("Please save first to give the project a name.", "Error",
+                            style = wx.OK | wx.ICON_ERROR)
+                self.onMenuSave()
+                if self.proj.project_basename is None:
+                    # If the save was cancelled, forget it
+                    self.button_edit_regions.SetLabel("Edit Regions...")
+                    self.Layout()
+                    self.button_edit_regions.Enable(True)
+                    return
 
-        if self.subprocess[ID] is not None:
-            self.subprocess[ID].Destroy()
-            self.subprocess[ID] = None
+            # We'll name the region file with the same name as our project
+            fileName = self.proj.getFilenamePrefix()+".regions"
+            self.subprocess[PROCESS_REGED] = AsynchronousProcessThread(["python","-u","regionEditor.py",fileName], regedCallback, None)
 
     def onMenuConfigSim(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Launch the config editor
@@ -914,11 +927,16 @@ class SpecEditorFrame(wx.Frame):
                 # If the save was cancelled, forget it
                 return
 
-        self.subprocess[PROCESS_SIMCONFIG] = wx.Process(self, PROCESS_SIMCONFIG)
-        
-        # FIXME: why does stdio not print to the console when we call like this?
-        wx.Execute("python %s %s" % (os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"), self.proj.getFilenamePrefix()+".spec"),
-                    wx.EXEC_ASYNC, self.subprocess[PROCESS_SIMCONFIG])
+        def simConfigCallback():
+            # Reload just the current config object
+            # (no more is necessary because this is the only part of the spec file
+            # that configEditor could modify)
+            other_proj = project.Project()
+            other_proj.spec_data = other_proj.loadSpecFile(self.proj.getFilenamePrefix()+".spec")
+            self.proj.currentConfig = other_proj.loadConfig()
+            self.subprocess[PROCESS_SIMCONFIG] = None
+
+        self.subprocess[PROCESS_SIMCONFIG] = AsynchronousProcessThread(["python","-u",os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
 
     def _exportDotFile(self):
         proj_copy = deepcopy(self.proj)
@@ -951,10 +969,12 @@ class SpecEditorFrame(wx.Frame):
 
         self._exportDotFile()
 
-        self.subprocess[PROCESS_DOTTY] = wx.Process(self, PROCESS_DOTTY)
-        
-        wx.Execute("dot -Tpdf -o%s.pdf %s.dot" % (self.proj.getFilenamePrefix(), self.proj.getFilenamePrefix()),
-                    wx.EXEC_ASYNC, self.subprocess[PROCESS_DOTTY])
+        def dottyCallback():
+            # TODO: Check mtime to make sure it didn't die
+            if os.path.isfile(self.proj.getFilenamePrefix()+".pdf"):
+                self.appendLog("Export complete!\n", "GREEN")
+
+        self.subprocess[PROCESS_DOTTY] = AsynchronousProcessThread(["dot","-Tpdf","-o%s.pdf" % self.proj.getFilenamePrefix(),"%s.dot" % self.proj.getFilenamePrefix()], dottyCallback, None)
 
     def onMenuQuit(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.doClose(event)
