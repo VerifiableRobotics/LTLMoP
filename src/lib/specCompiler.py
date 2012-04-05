@@ -123,6 +123,12 @@ class SpecCompiler(object):
                     err = 1
 
     def _synthesize(self, with_safety_aut=False):
+        # Check that GROneMain, etc. is compiled
+        if not os.path.exists(os.path.join(self.proj.ltlmop_root,"etc","jtlv","GROne","GROneMain.class")):
+            print "Please compile the synthesis Java code first.  For instructions, see etc/jtlv/JTLV_INSTRUCTIONS."
+            # TODO: automatically compile for the user
+            return (False, "")
+
         # Windows uses a different delimiter for the java classpath
         if os.name == "nt":
             delim = ";"
