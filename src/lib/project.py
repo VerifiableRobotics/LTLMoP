@@ -56,7 +56,7 @@ class Project:
         """
 
         if self.spec_data is None:
-            print "ERROR: Cannot load region mapping data before loading a spec file"
+            if not self.silent: print "ERROR: Cannot load region mapping data before loading a spec file"
             return None
 
         try:
@@ -116,14 +116,14 @@ class Project:
 
         r = self.currentConfig.getRobotByName(self.currentConfig.main_robot)
         if r.calibrationMatrix is None:
-            print "WARNING: Main robot has no calibration data.  Using identity matrix."
+            if not self.silent: print "WARNING: Main robot has no calibration data.  Using identity matrix."
             T = eye(3)
         else:
             T = r.calibrationMatrix
 
         # Check for singular matrix
         if abs(linalg.det(T)) < 100*spacing(0):
-            print "WARNING: Singular calibration matrix.  Ignoring, and using identity matrix."
+            if not self.silent: print "WARNING: Singular calibration matrix.  Ignoring, and using identity matrix."
             T = eye(3)
 
         #### Create the coordmap functions
@@ -199,6 +199,7 @@ class Project:
         """
 
         self.hsub = handlerSubsystem.HandlerSubsystem(self)
+        self.hsub.setSilent(self.silent) 
         self.hsub.loadAllConfigFiles()
     
         if name is None:

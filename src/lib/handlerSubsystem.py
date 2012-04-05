@@ -226,6 +226,7 @@ class HandlerSubsystem:
 
     def setSilent(self,silent):
         self.silent = silent
+        self.config_parser.setSilent(silent)
 
     def getRobotByType(self, t):
         for r in self.robots:
@@ -238,7 +239,7 @@ class HandlerSubsystem:
     def getHandler(self, htype, hname, rname=None):
         if htype in self.handler_parser.handler_robotSpecific_type:
             if rname is None:
-                print "WARNING: Handler of type '%s' requires a robot type to be specified for lookup" % (htype)
+                if not self.silent: print "WARNING: Handler of type '%s' requires a robot type to be specified for lookup" % (htype)
                 return None
 
             for h in self.handler_dic[htype][rname]:
@@ -249,7 +250,7 @@ class HandlerSubsystem:
                 if h.name == hname:
                     return h
 
-        print "WARNING: Could not find handler of type '%s' with name '%s'" % (htype, hname)
+        if not self.silent: print "WARNING: Could not find handler of type '%s' with name '%s'" % (htype, hname)
         return None
 
     def string2Method(self,method_string):
@@ -498,7 +499,7 @@ class HandlerParser:
         for handler_type in self.handler_types:
             self.handler_dic[handler_type] = []
             if handler_type not in handlerFolders:
-                if self.silent: print "(Handler Parsor) WARNING: Cannot find %s handler folder..." % handler_type
+                if not self.silent: print "(Handler Parser) WARNING: Cannot find %s handler folder..." % handler_type
             else:
                 if handler_type == 'share':
                     self.handler_dic[handler_type] = self.loadHandler(handler_type,False)
@@ -511,7 +512,7 @@ class HandlerParser:
         self.handler_dic['init'] = {}
         self.handler_dic['locomotionCommand'] = {}
         if 'robots' not in handlerFolders:
-            print "(Handler Parsor) WARNING: Cannot find robot handler folder..."       
+            if not self.silent: print "(Handler Parser) WARNING: Cannot find robot handler folder..."       
         else:
             robotFolderList = os.listdir(os.path.join(self.handler_path,'robots'))
             for robotFolder in robotFolderList:
@@ -562,7 +563,7 @@ class HandlerParser:
         try:
             __import__(handlerFile)
         except ImportError:
-            print "WARNING: Failed to import handler %s" % handlerFile
+            if not self.silent: print "WARNING: Failed to import handler %s" % handlerFile
             return None
 
         handlerModule = sys.modules[handlerFile]
@@ -748,13 +749,13 @@ class RobotFileParser:
             mat_str = ''.join(robot_data['CalibrationMatrix'])
             if mat_str.strip() == "": raise KeyError()
         except KeyError:
-            print "WARNING: No calibration data found for robot '%s'" % robotObj.name
+            if not self.silent: print "WARNING: No calibration data found for robot '%s'" % robotObj.name
             robotObj.calibrationMatrix = None
         else:
             try:
                 robotObj.calibrationMatrix = eval(mat_str)
             except SyntaxError:
-                print "WARNING: Invalid calibration data found for robot '%s'. Ignoring." % robotObj.name
+                if not self.silent: print "WARNING: Invalid calibration data found for robot '%s'. Ignoring." % robotObj.name
                 robotObj.calibrationMatrix = None
 
         robotFolder = robotObj.type
@@ -793,7 +794,7 @@ class RobotFileParser:
                             
                         # return no robot object if any of the robot specific handler cannot be loaded
                         if handlerList[0] == None:
-                            print "WARNING: Cannot load all necessary handlers for robot %s" %robotObj.name
+                            if not self.silent: print "WARNING: Cannot load all necessary handlers for robot %s" %robotObj.name
                             return None
                 else:
                     if self.handler_dic is not None:
@@ -846,7 +847,7 @@ class ConfigObject:
             if r.name == name:
                 return r
 
-        print "WARNING: Could not find robot of name '%s' in config '%s'." % (name, self.name)
+        if not self.silent: print "WARNING: Could not find robot of name '%s' in config '%s'." % (name, self.name)
         return None
 
 
@@ -963,7 +964,7 @@ class ConfigFileParser:
                     noRobot = False
                     break
         if noRobot: 
-            print "WARNING: Cannot load configuration %s, missing main robot object" %fileName
+            if not self.silent: print "WARNING: Cannot load configuration %s, missing main robot object" %fileName
             return None            
         return configObj
 
