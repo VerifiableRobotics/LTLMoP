@@ -44,14 +44,28 @@ class AsynchronousProcessThread(threading.Thread):
 
         threading.Thread.__init__(self, *args, **kwds)
 
+        self.startComplete = threading.Event()
+
         # Auto-start
         self.start()
 
     def run(self):
-        self.running = True
+
+        if os.name == "nt":
+            err_types = (OSError, WindowsError)
+        else:
+            err_types = OSError
 
         # Start the process
-        cmd = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+        try:
+            cmd = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+        except err_types as (errno, strerror):
+            print "ERROR: " + strerror
+            self.startComplete.set()
+            return
+
+        self.running = True
+        self.startComplete.set()
 
         # Sit around while it does its thing
         while cmd.returncode is None:
@@ -982,6 +996,12 @@ class SpecEditorFrame(wx.Frame):
                 self.appendLog("Export complete!\n", "GREEN")
 
         self.subprocess[PROCESS_DOTTY] = AsynchronousProcessThread(["dot","-Tpdf","-o%s.pdf" % self.proj.getFilenamePrefix(),"%s.dot" % self.proj.getFilenamePrefix()], dottyCallback, None)
+
+        self.subprocess[PROCESS_DOTTY].startComplete.wait()
+        if not self.subprocess[PROCESS_DOTTY].running:
+            wx.MessageBox("Dotty could not be executed.\nAre you sure Graphviz is correctly installed?", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
 
     def onMenuQuit(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.doClose(event)
