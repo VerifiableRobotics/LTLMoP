@@ -742,6 +742,13 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
 
+        # Check that there's a boundary region
+        if self.proj.rfi.indexOfRegionWithName("boundary") < 0:
+            wx.MessageBox("Please define a boundary region before compiling.\n(Just add a region named 'boundary' in RegionEditor.)", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+
         # TODO: we could just pass the proj object
         self.proj.writeSpecFile()
         self.dirty = False
