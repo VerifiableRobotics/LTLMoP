@@ -994,6 +994,10 @@ class SpecEditorFrame(wx.Frame):
             # TODO: Check mtime to make sure it didn't die
             if os.path.isfile(self.proj.getFilenamePrefix()+".pdf"):
                 self.appendLog("Export complete!\n", "GREEN")
+            else:
+                self.appendLog("Export failed.\n", "RED")
+
+            self.subprocess[PROCESS_DOTTY] = None
 
         self.subprocess[PROCESS_DOTTY] = AsynchronousProcessThread(["dot","-Tpdf","-o%s.pdf" % self.proj.getFilenamePrefix(),"%s.dot" % self.proj.getFilenamePrefix()], dottyCallback, None)
 
