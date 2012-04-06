@@ -6,7 +6,6 @@ basicSimPose.py - 2D Pose provider for basicSimulator
 """
 
 import sys
-from playerc import *
 from numpy import *
 
 class poseHandler:

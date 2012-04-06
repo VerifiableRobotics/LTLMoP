@@ -15,7 +15,7 @@ class initHandler:
         """
         Initialization handler for pioneer ode simulated robot.
 
-        initial_region (region): The name of the region where the simulated robot starts
+        init_region (region): The name of the region where the simulated robot starts
         """
 
         
