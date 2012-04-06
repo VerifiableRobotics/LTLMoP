@@ -69,6 +69,7 @@ class Automaton:
         self.current_region = None
         self.current_outputs = {}
 
+
     def stateWithName(self, name):
         """
         Find the state with the given name 
@@ -243,6 +244,19 @@ class Automaton:
         # All done, hooray!
         print "Loaded %d states." % len(self.states)
         #self.dumpStates()
+
+        # Check that all necessary sensor and acuator handlers are present
+        for sensor in self.sensors:
+            if sensor not in self.sensor_handler:
+                print "ERROR: No sensor proposition mapping exists for '%s'! Aborting." % sensor
+                return False
+
+        for actuator in self.actuators:
+            if actuator not in self.actuator_handler:
+                print "ERROR: No actuator proposition mapping exists for '%s'! Aborting." % actuator
+                return False
+
+        return True
 
     def getAnnotatedRegionName(self, region_num):
         # annotate any pXXX region names with their human-friendly name

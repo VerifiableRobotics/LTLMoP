@@ -151,16 +151,6 @@ def main(argv):
     
     proj.importHandlers()
 
-    #######################
-    # Load automaton file # 
-    #######################
-    
-    print "Loading automaton..."
-
-    FSA = fsa.Automaton(proj)
-
-    FSA.loadFile(aut_file, proj.enabled_sensors, proj.enabled_actuators, proj.all_customs)
-
     ############################
     # Start status/control GUI #
     ############################
@@ -200,10 +190,22 @@ def main(argv):
         sys.stdout = redir
         sys.stderr = redir
 
+    #######################
+    # Load automaton file # 
+    #######################
+    
+    print "Loading automaton..."
+
+    FSA = fsa.Automaton(proj)
+
+    success = FSA.loadFile(aut_file, proj.enabled_sensors, proj.enabled_actuators, proj.all_customs)
+    if not success: return
+
     #############################
     # Begin automaton execution #
     #############################
     
+
     last_gui_update_time = 0
 
     ### Wait for the initial start command
