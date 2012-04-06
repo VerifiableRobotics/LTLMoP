@@ -1028,7 +1028,7 @@ class SpecEditorFrame(wx.Frame):
         wx.MessageBox("Specification Editor is part of the LTLMoP Toolkit.\n" + \
                       "For more information, please visit http://ltlmop.github.com", "About Specification Editor",
                       style = wx.OK | wx.ICON_INFORMATION)
-        event.Skip()
+        #event.Skip()
 
     def onRegionLabelToggle(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.panel_locmap.Refresh()
