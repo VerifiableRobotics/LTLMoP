@@ -38,6 +38,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         the region names and the list of robot propositions (other than regions). 
     '''
 
+    sensorList = copy.deepcopy(sensorList)
+    robotPropList = copy.deepcopy(robotPropList)
+
     # Prepend "e." or "s." to propositions for JTLV
     for i, sensor in enumerate(sensorList):
         text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
@@ -94,8 +97,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     UnlessRE = re.compile('(?P<req>.+) unless (?P<cond>.+)',re.IGNORECASE)
     IffRE = re.compile('(?P<req>.+) if and only if (?P<cond>.+)',re.IGNORECASE)
     CommentRE = re.compile('^\s*#',re.IGNORECASE)
-    LivenessRE = re.compile('(go to|visit|infinitely often do|infinitely often sense|infinitely often)',re.IGNORECASE)
-    SafetyRE = re.compile('(always|always do |do |always sense |sense )',re.IGNORECASE)
+    LivenessRE = re.compile('^\s*(go to|visit|infinitely often do|infinitely often sense|infinitely often)',re.IGNORECASE)
+    SafetyRE = re.compile('^\s*(always|always do |do|always sense|sense)',re.IGNORECASE)
     StayRE = re.compile('(stay there|stay)',re.IGNORECASE)
     EventRE = re.compile('(?P<prop>[\w\.]+) is set on (?P<setEvent>.+) and reset on (?P<resetEvent>.+)',re.IGNORECASE)
     ToggleRE = re.compile('(?P<prop>[\w\.]+) is toggled (when|on) (?P<toggleEvent>.+)',re.IGNORECASE)
@@ -264,12 +267,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 QuantifierFlag = None
 
             # Figure out what the requirement is and parse it
-            if SafetyRE.search(Requirement):
-                # remove first words
-                Requirement = SafetyRE.sub(' ',Requirement)
-                # and parse requirement
-                ReqFormulaInfo = parseSafety(Requirement,sensorList,allRobotProp,lineInd)
-            elif LivenessRE.search(Requirement):
+            if LivenessRE.search(Requirement):
                 # remove first words
                 Requirement = LivenessRE.sub(' ',Requirement)
 
@@ -317,6 +315,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 else:
                     # parse requirement normally
                     ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
+            elif SafetyRE.search(Requirement):
+                # remove first words
+                Requirement = SafetyRE.sub(' ',Requirement)
+                # and parse requirement
+                ReqFormulaInfo = parseSafety(Requirement,sensorList,allRobotProp,lineInd)
 
             elif StayRE.search(Requirement):
                 ReqFormulaInfo = {}
@@ -409,33 +412,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
             linemap['SysTrans'].append(lineInd)
 
-        # A safety requirement
-        elif SafetyRE.search(line):
-            # remove the first words     
-            SafetyReq = SafetyRE.sub('',line)
-
-            # parse the safety requirement
-            formulaInfo = parseSafety(SafetyReq,sensorList,allRobotProp,lineInd)
-
-            # Replace any quantifier in the requirement
-            if QuantifierFlag == "ANY":
-                print 'ERROR(13): Could not parse the sentence in line '+ str(lineInd)+' :'
-                print line
-                print 'because the ANY quantifier is not currently supported in safety requirements'
-                print ''
-                continue
-            elif QuantifierFlag == "ALL":
-                for r in RegionGroups[quant_group]:
-                    tmp_req = copy.deepcopy(formulaInfo)
-                    tmp_req['formula'] = tmp_req['formula'].replace("next(QUANTIFIER_PLACEHOLDER)", nextify(r))
-                    tmp_req['formula'] = tmp_req['formula'].replace("QUANTIFIER_PLACEHOLDER", r)
-                    spec[tmp_req['type']] = spec[tmp_req['type']] + tmp_req['formula']
-                    linemap[tmp_req['type']].append(lineInd)
-            else:
-                spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
-                linemap[formulaInfo['type']].append(lineInd)
-
-            
         # A 'Go to and stay there' requirement
         elif LivenessRE.search(line) and StayRE.search(line):
             #TODO: quantifier support
@@ -499,6 +475,34 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             else:
                 spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
                 linemap[formulaInfo['type']].append(lineInd)
+
+        # A safety requirement
+        elif SafetyRE.search(line):
+            # remove the first words     
+            SafetyReq = SafetyRE.sub('',line)
+
+            # parse the safety requirement
+            formulaInfo = parseSafety(SafetyReq,sensorList,allRobotProp,lineInd)
+
+            # Replace any quantifier in the requirement
+            if QuantifierFlag == "ANY":
+                print 'ERROR(13): Could not parse the sentence in line '+ str(lineInd)+' :'
+                print line
+                print 'because the ANY quantifier is not currently supported in safety requirements'
+                print ''
+                continue
+            elif QuantifierFlag == "ALL":
+                for r in RegionGroups[quant_group]:
+                    tmp_req = copy.deepcopy(formulaInfo)
+                    tmp_req['formula'] = tmp_req['formula'].replace("next(QUANTIFIER_PLACEHOLDER)", nextify(r))
+                    tmp_req['formula'] = tmp_req['formula'].replace("QUANTIFIER_PLACEHOLDER", r)
+                    spec[tmp_req['type']] = spec[tmp_req['type']] + tmp_req['formula']
+                    linemap[tmp_req['type']].append(lineInd)
+            else:
+                spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
+                linemap[formulaInfo['type']].append(lineInd)
+
+            
         # Cannot parse
         else:
             print 'ERROR(16): Could not parse the sentence in line '+ str(lineInd)+' :'

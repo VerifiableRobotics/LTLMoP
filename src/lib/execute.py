@@ -20,6 +20,8 @@
 import sys, os, getopt, textwrap
 import threading, subprocess, time
 import fileMethods, regions, fsa, project
+from numpy import *
+from handlers.motionControl.__is_inside import is_inside
 from socket import *
 
 ####################
@@ -144,23 +146,20 @@ def main(argv):
     # Initialize each module #
     ##########################
 
-    proj.lookupHandlers()
-
     # Import the relevant handlers
     print "Importing handler functions..."
     
-    proj.runInitialization()
     proj.importHandlers()
 
     #######################
-    # Load automaton file #
+    # Load automaton file # 
     #######################
     
     print "Loading automaton..."
 
-    FSA = fsa.Automaton(proj.rfi.regions, proj.regionMapping, proj.sensor_handler, proj.actuator_handler, proj.motion_handler)
+    FSA = fsa.Automaton(proj)
 
-    FSA.loadFile(aut_file, proj.all_sensors, proj.all_actuators, proj.spec_data['SETTINGS']['Customs'])
+    FSA.loadFile(aut_file, proj.enabled_sensors, proj.enabled_actuators, proj.all_customs)
 
     ############################
     # Start status/control GUI #
@@ -218,21 +217,30 @@ def main(argv):
 
     ### Figure out where we should start from
 
-    if 'InitialRegion' in proj.exp_cfg_data: 
-        init_region = int(proj.exp_cfg_data['InitialRegion'][0])
-        init_region = proj.rfi.indexOfRegionWithName(proj.regionMapping[proj.rfiold.regions[init_region].name][0])
-    else:
-        print "WARNING: Initial region auto-detection not yet implemented" # TODO: determine initial region
-        init_region = 0
+    pose = proj.pose_handler.getPose()
+
+    init_region = None
+
+    for i, r in enumerate(proj.rfi.regions):
+        pointArray = [proj.coordmap_map2lab(x) for x in r.getPoints()]
+        vertices = mat(pointArray).T 
+
+        if is_inside([pose[0], pose[1]], vertices):
+            init_region = i
+            break
+
+    if init_region is None:
+        print "Initial pose of ", pose, "not inside any region!"
+        sys.exit(1)
 
     print "Starting from initial region: " + proj.rfi.regions[init_region].name
-    
+
     ### Have the FSA find a valid initial state
 
     # Figure out our initially true outputs
     init_outputs = []
-    for prop in proj.exp_cfg_data['InitialTruths']:
-        if prop not in proj.all_sensors:
+    for prop in proj.currentConfig.initial_truths:
+        if prop not in proj.enabled_sensors:
             init_outputs.append(prop)
 
     init_state = FSA.chooseInitialState(init_region, init_outputs)

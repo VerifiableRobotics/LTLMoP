@@ -36,8 +36,8 @@ else:
 
     class Point(object):
         def __init__(self, x, y):
-            self.x = x
-            self.y = y
+            self.x = float(x)
+            self.y = float(y)
 
         def __str__(self):
             return "(%f, %f)" % (self.x, self.y)
@@ -110,10 +110,12 @@ else:
                             'YELLOW': (255,255,0),
                             'GREEN': (0,255,0),
                             'BLUE': (0,0,255),
-                            'PURPLE': (255,0,255)}
+                            'PURPLE': (255,0,255),
+                            'WHITE': (255,255,255),
+                            'BLACK': (0,0,0)}
 
-            if name in colorMapping:
-                self.color = colorMapping[name]
+            if name.upper() in colorMapping:
+                self.color = colorMapping[name.upper()]
             else:
                 raise NotImplementedError("Color '%s' not recognized" % name)
             
@@ -145,15 +147,13 @@ class RegionFileInterface:
             * key1 = Region object index
             * key2 = Region object index
             * values = Lists of faces connecting the two regions
-        - thumb (string): relative path of an image file that shows the regions overlayed 
-                          on the background image, made by taking a screenshot
     """
 
-    def __init__(self, background="None", regions=[], transitions=None, thumb=None):
+    def __init__(self, background="None", regions=[], transitions=None):
         self.background = background
         self.regions = regions
         self.transitions = transitions
-        self.thumb = thumb
+        self.filename = None
 
     def setToDefaultName(self, region):
         if region.name is '':
@@ -324,7 +324,6 @@ class RegionFileInterface:
                     "Background": "Relative path of background image file",
                     "Regions": "Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)",
                     "Transitions": "Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)",
-                    "Thumbnail": "Relative path of image file that has region shapes overlayed on background image",
                     "CalibrationPoints": "Vertices to use for map calibration: (vertex_region_name, vertex_index)",
                     "Obstacles": "Names of regions to treat as obstacles"}    
     
@@ -360,7 +359,6 @@ class RegionFileInterface:
         data = {"Background": self.background,
                 "Regions": regionData,
                 "Transitions": transitionData,
-                "Thumbnail": os.path.basename(self.thumb),
                 "CalibrationPoints": calibPoints,
                 "Obstacles": obstacleRegions}
 
@@ -385,8 +383,6 @@ class RegionFileInterface:
             self.background = data["Background"][0]
         except KeyError:
             self.background = "None"
-
-        self.thumb = os.path.join(os.path.split(filename)[0],data["Thumbnail"][0])
 
         self.regions = []
         for region in data["Regions"]:
@@ -421,6 +417,8 @@ class RegionFileInterface:
             for rname in data["Obstacles"]:
                 self.regions[self.indexOfRegionWithName(rname)].isObstacle = True
             
+        self.filename = filename
+
         return True
    
 ############################################################

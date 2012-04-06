@@ -7,16 +7,20 @@ vectorController.py - Vector Addition Motion Controller
 Uses the vector field algorithm developed by Stephen R. Lindemann to calculate a global velocity vector to take the robot from the current region to the next region, through a specified exit face.
 """
 
-import vectorControllerHelper
+import __vectorControllerHelper as vectorControllerHelper
 from numpy import *
-from is_inside import *
+from __is_inside import *
 import time, math
 
 class motionControlHandler:
     def __init__(self, proj, shared_data):
+        """
+        Vector motion planning controller
+        """
+
         # Get references to handlers we'll need to communicate with
-        self.drive_handler = proj.drive_handler
-        self.pose_handler = proj.pose_handler
+        self.drive_handler = proj.h_instance['drive']
+        self.pose_handler = proj.h_instance['pose']
         
         # Get information about regions
         self.rfi = proj.rfi
