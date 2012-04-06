@@ -200,7 +200,12 @@ class handlerConfigDialog(wx.Dialog):
         cfg.name = "calibrate"
         robot.name = "calibrate"
         robot.handlers['pose'] = self.handler
-        robot.handlers['init'].getMethodByName("__init__").getParaByName("init_region").setValue("__origin__")
+
+        # If the inithandler takes an init_region argument (i.e. playerstage, ODE), set it to the origin
+        p = robot.handlers['init'].getMethodByName("__init__").getParaByName("init_region")
+        if p is not None:
+            p.setValue("__origin__")
+
         cfg.main_robot = robot.name
         cfg.robots.append(robot)
         proj_copy.hsub.config_parser.configs.append(cfg)
