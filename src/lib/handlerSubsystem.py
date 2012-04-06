@@ -418,7 +418,14 @@ class HandlerSubsystem:
         # initialize sensor and actuator methods
         # first need to get the method used for sensor and actuator
         
-        for prop,method in configObj.prop_mapping.iteritems():
+        for prop in self.proj.enabled_sensors:
+            if prop in configObj.prop_mapping:
+                method = configObj.prop_mapping[prop]
+            else:
+                # Default to dummysensor
+                print "WARNING: No mapping given for sensor prop '%s', so using default simulated handler." % prop
+                method = "share.dummySensor.buttonPress(button_name='%s')" % prop 
+
             fullExpression = method
             codeList = []
             for m in methodRE.finditer(method):
@@ -429,20 +436,39 @@ class HandlerSubsystem:
                 methodName = m.group('name')
                 para_info = [x.strip() for x in m.group('args').replace(')','').split(',')]
                 
-                if prop in self.proj.all_sensors:
-                    methodEvalString = 'self.h_instance[%s][%s].%s'%('\'sensor\'','\''+robotName+'\'',self.constructMethodString(robotName,'sensor',methodName,para_info))
-                    codeList.append(methodEvalString)
-                elif prop in self.proj.all_actuators:
-                    methodEvalString = 'self.h_instance[%s][%s].%s'%('\'actuator\'','\''+robotName+'\'',self.constructMethodString(robotName,'actuator',methodName,para_info))
-                    codeList.append(methodEvalString)
+                methodEvalString = 'self.h_instance[%s][%s].%s'%('\'sensor\'','\''+robotName+'\'',self.constructMethodString(robotName,'sensor',methodName,para_info))
+                codeList.append(methodEvalString)
                 
                 fullExpression = fullExpression.replace(method_string,methodEvalString)
-            if prop in self.proj.all_sensors:
-                self.proj.sensor_handler['initializing_handler'][prop] = codeList
-                self.proj.sensor_handler[prop]=compile(fullExpression,"<string>","eval")
-            elif prop in self.proj.all_actuators:
-                self.proj.actuator_handler['initializing_handler'][prop] = codeList
-                self.proj.actuator_handler[prop]=compile(fullExpression,"<string>","eval")
+
+            self.proj.sensor_handler['initializing_handler'][prop] = codeList
+            self.proj.sensor_handler[prop]=compile(fullExpression,"<string>","eval")
+
+        for prop in self.proj.enabled_actuators:
+            if prop in configObj.prop_mapping:
+                method = configObj.prop_mapping[prop]
+            else:
+                # Default to dummyactuator
+                print "WARNING: No mapping given for actuator prop '%s', so using default simulated handler." % prop
+                method = "share.dummyActuator.setActuator(name='%s')" % prop 
+
+            fullExpression = method
+            codeList = []
+            for m in methodRE.finditer(method):
+                method_string = m.group('method_string')
+                methodEvalString = ''
+                robotName = m.group('robot')
+                handlerName = m.group('type')
+                methodName = m.group('name')
+                para_info = [x.strip() for x in m.group('args').replace(')','').split(',')]
+                
+                methodEvalString = 'self.h_instance[%s][%s].%s'%('\'actuator\'','\''+robotName+'\'',self.constructMethodString(robotName,'actuator',methodName,para_info))
+                codeList.append(methodEvalString)
+                
+                fullExpression = fullExpression.replace(method_string,methodEvalString)
+
+            self.proj.actuator_handler['initializing_handler'][prop] = codeList
+            self.proj.actuator_handler[prop]=compile(fullExpression,"<string>","eval")
         
     def constructMethodString(self,robotName,handlerName,methodName,para_info):
         """
