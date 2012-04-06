@@ -122,7 +122,7 @@ class Project:
             T = r.calibrationMatrix
 
         # Check for singular matrix
-        if abs(linalg.det(T)) < 100*spacing(0):
+        if abs(linalg.det(T)) < finfo(float).eps:
             if not self.silent: print "WARNING: Singular calibration matrix.  Ignoring, and using identity matrix."
             T = eye(3)
 
