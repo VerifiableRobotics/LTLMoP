@@ -52,8 +52,12 @@ class AsynchronousProcessThread(threading.Thread):
     def kill(self):
         print "Killing process `%s`..." % ' '.join(self.cmd)
         # This should cause the blocking readline() in the run loop to return with an EOF
-        self.process.kill()
-
+        try:
+            self.process.kill()
+        except OSError:
+            # TODO: Figure out what's going on when this (rarely) happens
+            print "Ran into an error killing the process.  Hopefully we just missed it..."
+        
     def run(self):
 
         if os.name == "nt":
