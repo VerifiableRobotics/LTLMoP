@@ -139,7 +139,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             QuantifierParts = QuantifierRE.search(line)
             quant_type = QuantifierParts.group('quantifier') 
             quant_group = QuantifierParts.group('groupName') 
-            print "found quantifier '%s' for group '%s'" % (quant_type, quant_group)
+            #print "found quantifier '%s' for group '%s'" % (quant_type, quant_group)
             if quant_group not in RegionGroups:
                 print 'ERROR(1): Could not parse the sentence in line '+ str(lineInd)+' :'
                 print line
@@ -175,7 +175,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             if groupName[-1] == "s":
                 RegionGroups[groupName[0:-1]] = RegionGroups[groupName]
 
-            print RegionGroups
+            #print RegionGroups
 
         # If the sentence describes the initial state of the environemnt
         elif EnvInitRE.search(line):
