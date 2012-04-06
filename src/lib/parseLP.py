@@ -28,6 +28,7 @@ class parseLP:
 
         # load data
         self.proj = project.Project()
+        self.proj.setSilent(True)
         self.proj.loadProject(spec_file)
         
         # Look for a defined boundary region, and set it aside if available

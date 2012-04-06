@@ -200,7 +200,12 @@ class handlerConfigDialog(wx.Dialog):
         cfg.name = "calibrate"
         robot.name = "calibrate"
         robot.handlers['pose'] = self.handler
-        robot.handlers['init'].getMethodByName("__init__").getParaByName("init_region").setValue("__origin__")
+
+        # If the inithandler takes an init_region argument (i.e. playerstage, ODE), set it to the origin
+        p = robot.handlers['init'].getMethodByName("__init__").getParaByName("init_region")
+        if p is not None:
+            p.setValue("__origin__")
+
         cfg.main_robot = robot.name
         cfg.robots.append(robot)
         proj_copy.hsub.config_parser.configs.append(cfg)
@@ -280,6 +285,11 @@ class handlerConfigDialog(wx.Dialog):
             self.panel_configs.GetSizer().Add(self.sheet, 0, wx.EXPAND | wx.ALL, 5)
             self.panel_configs.GetSizer().Add(button_calibrate, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
             self.Bind(wx.EVT_BUTTON, self._onClickCalibrate, button_calibrate)
+
+            # If this robot has a pre-defined calibration matrix, don't allow for calibration
+            if self.proj.hsub.getRobotByType(self.robot.type).calibrationMatrix is not None:
+                button_calibrate.SetLabel("Calibration is pre-defined by simulator.")
+                button_calibrate.Enable(False)
 
         self.panel_configs.Layout()
         # FIXME: this is a sizing hack, because I can't figure out how to get Fit() to work
@@ -948,10 +958,13 @@ class propMappingDialog(wx.Dialog):
         self.list_box_props.Clear()
         
         self.list_box_props.Append("=== Sensors ===")
+        #self.list_box_props.SetItemFont(n, wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
+        #self.list_box_props.SetItemBackgroundColour(n, wx.Color(100,100,100))
 
         for p in self.proj.all_sensors:
             self.list_box_props.Append(p)
 
+        self.list_box_props.Append("")
         self.list_box_props.Append("=== Actuators ===")
 
         for p in self.proj.all_actuators:
@@ -1029,7 +1042,7 @@ class propMappingDialog(wx.Dialog):
 
     def onSelectProp(self, event): # wxGlade: propMappingDialog.<event_handler>
         # If you've selected a header, not a proposition, then gray out the edit box
-        if self.list_box_props.GetStringSelection().startswith("==="):
+        if self.list_box_props.GetStringSelection().startswith("===") or self.list_box_props.GetStringSelection() == "":
             self.text_ctrl_mapping.Enable(False)
             self.text_ctrl_mapping.SetValue("")
             self.list_box_robots.Enable(False)

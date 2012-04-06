@@ -162,7 +162,7 @@ class RegionFileInterface:
 
     def indexOfRegionWithName(self, name):
         for i, region in enumerate(self.regions):
-            if region.name == name:
+            if region.name.lower() == name.lower():
                 return i
         print 'WARNING: Region "' + name + '" not found.'
         return -1
