@@ -1898,7 +1898,7 @@ class EditRegionDialog(wx.Dialog):
         ##### line 1
 
         self.label1 = wx.StaticText(self, -1, "Name:")
-        self.textCtrl = wx.TextCtrl(self, 1001, "", style=wx.TE_PROCESS_ENTER,
+        self.textCtrl = wx.TextCtrl(self, 1001, "",
                                    validator=TextObjectValidator())
         extent = self.textCtrl.GetFullTextExtent("Hy")
         lineHeight = extent[1] + extent[3]
