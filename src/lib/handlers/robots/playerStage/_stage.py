@@ -7,9 +7,12 @@ stage.py - Stage Simulation Initialization Handler
 Create config files for Stage and start it up (as part of a player server) in a subprocess
 """
 
-import textwrap, os, subprocess, time
+import textwrap, os, subprocess, time, sys
 from numpy import *
 from copy import deepcopy
+
+INSIDE_ANOTHER_WX_APP = ('wx' in sys.modules)
+
 import wx
 import regions
 reload(regions) # to use wx objects
@@ -66,8 +69,11 @@ class initHandler:
         """
 
         # We need to have a wx.App instance to use the wx drawing stuff
-        app = wx.App()
-        wx.InitAllImageHandlers()
+        if not INSIDE_ANOTHER_WX_APP:
+            app = wx.App()
+            wx.InitAllImageHandlers()
+        else:
+            app = None
 
         bitmap = wx.EmptyBitmap(640,480)
         temp_rfi = deepcopy(self.proj.rfi)
@@ -84,7 +90,8 @@ class initHandler:
         fname = self.proj.getFilenamePrefix() + "_simbg.png"
         bitmap.SaveFile(fname, wx.BITMAP_TYPE_PNG)
 
-        app.Destroy()
+        if app is not None:
+            app.Destroy()
 
         return fname
 
@@ -111,6 +118,7 @@ class initHandler:
         # Create an appropriate background image
 
         bgFile = self.makeBackgroundImage()
+        #bgFile = proj.getFilenamePrefix()+"_simbg.png"
 
         ####################
         # Stage world file #
