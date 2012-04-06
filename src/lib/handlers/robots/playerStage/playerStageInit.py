@@ -40,7 +40,7 @@ class initHandler:
             _stage.initHandler(proj,init_region)
 
         # Connect it
-        for timeout in range(0,3):
+        for timeout in range(0,5):
             if self.c.connect() != 0:
                 print playerc_error_str()
                 if timeout < 2:
