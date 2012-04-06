@@ -49,6 +49,11 @@ class AsynchronousProcessThread(threading.Thread):
         # Auto-start
         self.start()
 
+    def kill(self):
+        print "Killing process `%s`..." % ' '.join(self.cmd)
+        # This should cause the blocking readline() in the run loop to return with an EOF
+        self.process.kill()
+
     def run(self):
 
         if os.name == "nt":
@@ -58,7 +63,7 @@ class AsynchronousProcessThread(threading.Thread):
 
         # Start the process
         try:
-            cmd = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+            self.process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
         except err_types as (errno, strerror):
             print "ERROR: " + strerror
             self.startComplete.set()
@@ -68,15 +73,12 @@ class AsynchronousProcessThread(threading.Thread):
         self.startComplete.set()
 
         # Sit around while it does its thing
-        while cmd.returncode is None:
+        while self.process.returncode is None:
             # Make sure we aren't being interrupted
-            # TODO: This part won't really work, because of the blocking readline() call below...
             if not self.running:
-                print "Killing process `%s`..." % self.cmd
-                cmd.kill()
                 return
 
-            output = cmd.stdout.readline() # Blocking :(
+            output = self.process.stdout.readline() # Blocking :(
 
             # Output to either a RichTextCtrl or the console
             if self.logFunction is not None:
@@ -85,7 +87,7 @@ class AsynchronousProcessThread(threading.Thread):
                 print output,
 
             # Check the status of the process
-            cmd.poll() 
+            self.process.poll() 
             time.sleep(0.01)
 
         # Call any callback function
@@ -303,10 +305,9 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.doClose)
 
         # Null the subprocess values
-        self.subprocess = [None] * 3
-
-        global PROCESS_REGED, PROCESS_DOTTY, PROCESS_SIMCONFIG
-        PROCESS_REGED, PROCESS_DOTTY, PROCESS_SIMCONFIG = range(0, len(self.subprocess))
+        self.subprocess = { "Region Editor": None,
+                            "Dotty": None,
+                            "Simulation Configuration": None }
 
         self.initializeNewSpec()
         
@@ -320,7 +321,6 @@ class SpecEditorFrame(wx.Frame):
         self.mapDialog = None
         self.proj = project.Project()
         self.decomposedRFI = None
-        self.subprocess = [None] * len(self.subprocess)
        
         # Reset GUI
         self.button_map.Enable(False)
@@ -676,12 +676,19 @@ class SpecEditorFrame(wx.Frame):
 
         if self.dirty:
             if not self.askIfUserWantsToSave("closing"): return
-        
-        # Detach from any running subprocesses
-        for process in self.subprocess: 
-            if process is not None:
-                process.Detach()
 
+        # Kill any remaining subprocesses
+        for n, p in self.subprocess.iteritems():
+            if p is not None:
+                response = wx.MessageBox("Quitting SpecEditor will also close %s.\nContinue anyways?" % n,
+                                        "Subprocess still running", wx.YES_NO, self)
+
+                if response == wx.YES:
+                    p.kill()
+                    p.join()
+                elif response == wx.NO:
+                    return
+        
         self.Destroy()
 
     def askIfUserWantsToSave(self, action):
@@ -904,14 +911,14 @@ class SpecEditorFrame(wx.Frame):
                     self.dirty = True
                     self.updateFromRFI()
 
-            self.subprocess[PROCESS_REGED] = None
+            self.subprocess["Region Editor"] = None
 
         # Spawn asynchronous subprocess
         if self.proj.rfi is not None:
             # If we already have a region file defined, open it up for editing
             fileName = self.proj.rfi.filename
             self.lastRegionModTime = os.path.getmtime(fileName)
-            self.subprocess[PROCESS_REGED] = AsynchronousProcessThread(["python","-u","regionEditor.py",fileName], regedCallback, None)
+            self.subprocess["Region Editor"] = AsynchronousProcessThread(["python","-u","regionEditor.py",fileName], regedCallback, None)
         else:
             # Otherwise let's create a new region file
             if self.proj.project_basename is None:
@@ -928,13 +935,13 @@ class SpecEditorFrame(wx.Frame):
 
             # We'll name the region file with the same name as our project
             fileName = self.proj.getFilenamePrefix()+".regions"
-            self.subprocess[PROCESS_REGED] = AsynchronousProcessThread(["python","-u","regionEditor.py",fileName], regedCallback, None)
+            self.subprocess["Region Editor"] = AsynchronousProcessThread(["python","-u","regionEditor.py",fileName], regedCallback, None)
 
     def onMenuConfigSim(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Launch the config editor
         # TODO: Discourage editing of spec while it's open?
 
-        if self.subprocess[PROCESS_SIMCONFIG] is not None: 
+        if self.subprocess["Simulation Configuration"] is not None: 
             wx.MessageBox("Simulation Config is already running.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -955,9 +962,9 @@ class SpecEditorFrame(wx.Frame):
             other_proj = project.Project()
             other_proj.spec_data = other_proj.loadSpecFile(self.proj.getFilenamePrefix()+".spec")
             self.proj.currentConfig = other_proj.loadConfig()
-            self.subprocess[PROCESS_SIMCONFIG] = None
+            self.subprocess["Simulation Configuration"] = None
 
-        self.subprocess[PROCESS_SIMCONFIG] = AsynchronousProcessThread(["python","-u",os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
+        self.subprocess["Simulation Configuration"] = AsynchronousProcessThread(["python","-u",os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
 
     def _exportDotFile(self):
         proj_copy = deepcopy(self.proj)
@@ -978,7 +985,7 @@ class SpecEditorFrame(wx.Frame):
                         style = wx.OK | wx.ICON_ERROR)
             return
         
-        if self.subprocess[PROCESS_DOTTY] is not None: 
+        if self.subprocess["Dotty"] is not None: 
             wx.MessageBox("Dotty is already running.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -997,12 +1004,12 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Export failed.\n", "RED")
 
-            self.subprocess[PROCESS_DOTTY] = None
+            self.subprocess["Dotty"] = None
 
-        self.subprocess[PROCESS_DOTTY] = AsynchronousProcessThread(["dot","-Tpdf","-o%s.pdf" % self.proj.getFilenamePrefix(),"%s.dot" % self.proj.getFilenamePrefix()], dottyCallback, None)
+        self.subprocess["Dotty"] = AsynchronousProcessThread(["dot","-Tpdf","-o%s.pdf" % self.proj.getFilenamePrefix(),"%s.dot" % self.proj.getFilenamePrefix()], dottyCallback, None)
 
-        self.subprocess[PROCESS_DOTTY].startComplete.wait()
-        if not self.subprocess[PROCESS_DOTTY].running:
+        self.subprocess["Dotty"].startComplete.wait()
+        if not self.subprocess["Dotty"].running:
             wx.MessageBox("Dotty could not be executed.\nAre you sure Graphviz is correctly installed?", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
