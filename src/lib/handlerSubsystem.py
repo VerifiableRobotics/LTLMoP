@@ -134,7 +134,8 @@ class HandlerObject:
         method_input = []
         for paraObj in initMethodObj.para:
             if paraObj.type.lower() in ['str', 'string', 'region']:
-                method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
+                if paraObj.value is not None:
+                    method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
             else:
                 method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
             # change the deliminator of list into ";"
