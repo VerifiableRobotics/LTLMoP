@@ -281,6 +281,11 @@ class handlerConfigDialog(wx.Dialog):
             self.panel_configs.GetSizer().Add(button_calibrate, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
             self.Bind(wx.EVT_BUTTON, self._onClickCalibrate, button_calibrate)
 
+            # If this robot has a pre-defined calibration matrix, don't allow for calibration
+            if self.proj.hsub.getRobotByType(self.robot.type).calibrationMatrix is not None:
+                button_calibrate.SetLabel("Calibration is pre-defined by simulator.")
+                button_calibrate.Enable(False)
+
         self.panel_configs.Layout()
         # FIXME: this is a sizing hack, because I can't figure out how to get Fit() to work
         a = self.panel_configs.GetSizer().GetMinSize()
