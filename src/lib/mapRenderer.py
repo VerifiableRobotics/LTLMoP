@@ -37,11 +37,11 @@ class DrawableRegion(Region):
         self._privateDraw(dc, self.position, selected, scale, showAlignmentPoints)
 
         if highlight:
-            pdc.SetPen(wx.Pen(wx.BLACK, 3, wx.SOLID))
+            dc.SetPen(wx.Pen(wx.BLACK, 3, wx.SOLID))
             #pdc.SetBrush(wx.Brush(wx.RED, wx.BDIAGONAL_HATCH))
-            pdc.SetBrush(wx.Brush(wx.BLACK, wx.CROSSDIAG_HATCH))
+            dc.SetBrush(wx.Brush(wx.BLACK, wx.CROSSDIAG_HATCH))
 
-            self._privateDraw(pdc, self.position, selected, scale, showAlignmentPoints)
+            self._privateDraw(dc, self.position, selected, scale, showAlignmentPoints)
 
 
     # =====================
