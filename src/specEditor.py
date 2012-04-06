@@ -801,6 +801,12 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Creating LTL file...\n", "BLUE")
 
         self.traceback = compiler._writeLTLFile()
+        
+        if self.traceback is None:
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            self.appendLog("ERROR: Aborting compilation due to syntax error.\n", "RED")
+            return
 
         # Load in LTL file to the LTL tab
         if os.path.exists(self.proj.getFilenamePrefix()+".ltl"):

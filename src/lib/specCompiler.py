@@ -88,9 +88,12 @@ class SpecCompiler(object):
         else:
             text = self.proj.specText
 
-        spec, traceback = writeSpec(text, sensorList, regionList, robotPropList)
+        spec, traceback, failed = writeSpec(text, sensorList, regionList, robotPropList)
 
-        # TODO: Catch errors here
+        # Abort compilation if there were any errors
+        if failed:
+            return None
+
         adjData = self.parser.proj.rfi.transitions
 
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, spec)
@@ -164,7 +167,12 @@ class SpecCompiler(object):
     def compile(self, with_safety_aut=False):
         self._decompose()
         self._writeSMVFile()
-        self._writeLTLFile()
+        tb = self._writeLTLFile()
+
+        if tb is None:
+            print "ERROR: Compilation aborted"
+            return 
+
         #self._checkForEmptyGaits()
         self._synthesize(with_safety_aut)
 
