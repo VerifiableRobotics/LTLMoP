@@ -70,7 +70,11 @@ class sensorHandler:
 
         UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        UDPSock.bind(addr)
+        try:
+            UDPSock.bind(addr)
+        except:
+            print "ERROR: Cannot bind to port.  Try killing all Python processes and trying again."
+            return
         
         while 1: 
             # Wait for and receive a message from the subwindow

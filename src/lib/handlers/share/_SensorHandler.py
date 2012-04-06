@@ -38,7 +38,7 @@ class SensorEditorFrame(wx.Frame):
         self.UDPSock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         # Let everyone know we're ready
         #print "Hello!"
-	self.UDPSock.sendto("Hello!",self.addr)
+        self.UDPSock.sendto("Hello!",self.addr)
         self.UDPSock.close()        
 
     def __set_properties(self):
