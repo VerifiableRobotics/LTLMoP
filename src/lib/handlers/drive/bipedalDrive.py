@@ -25,7 +25,7 @@ class driveHandler:
         minvel (float): If robot is given a velocity less than minvel it doesn't move. Otherwise it turns in place (default=0.3,min=0.2,max=0.4)
         silent (bool): If true, no debug message will be printed (default=True)
         """
-        
+
         # Set constants
         self.maxspeed = maxspeed
         self.maxfreq = maxfreq
@@ -33,20 +33,20 @@ class driveHandler:
         self.angfwd = angfwd
         self.minvel = minvel
         self.silent = silent
-          
+
         try:
             # Get locomotion command handler to be called in setVelocity
-            self.loco = proj.loco_handler
+            self.loco = proj.h_instance['locomotionCommand']
         except NameError:
             if not self.silent: print "(DRIVE) Locomotion Command Handler not found."
-            exit(-1)  
-        try:  
+            exit(-1)
+        try:
             # ?? Get pose handler (don't trust motion controller theta value??
-            self.pose = proj.pose_handler
+            self.pose = proj.h_instance['pose']
         except NameError:
             if not self.silent: print "(DRIVE) Pose Handler not found."
-            exit(-1)  
-        try:  
+            exit(-1)
+        try:
             # ?? Get map coordinate transformation method for printing ??
             self.coordmap = proj.coordmap_lab2map
         except NameError:
@@ -56,8 +56,8 @@ class driveHandler:
     def setVelocity(self, x, y, theta=0):
         #if not self.silent: print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
         #if not self.silent: print "(drive) velocity = %f,%f" % tuple([x,y]) #???#
-        
-       
+
+
         if not self.silent: print >>sys.__stdout__, 180*atan2(y,x)/pi
         # Find direction of where robot should go
         th = numpy.arctan2(y,x)-theta
@@ -66,7 +66,7 @@ class driveHandler:
         while th < -pi:
             th = th+2*pi
         if not self.silent: print >>sys.__stdout__, "(drive) th = "+str(th) #??#
-        
+
         # Set velocities based on where robot should go
         f = self.maxfreq             # Step frequency
         vy = 0                  # Never step sideways
@@ -94,7 +94,7 @@ class driveHandler:
             vx = self.maxspeed       # Walk straight forward
             w = 0
             if not self.silent: print >>sys.__stdout__, "(drive) walking straight" #??#
-        
+
         # Call locomotion handler
         self.loco.sendCommand([vx,vy,w,f])
 

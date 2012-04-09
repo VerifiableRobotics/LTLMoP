@@ -14,6 +14,8 @@ class naoSensorHandler:
         self.sttVocabCounter = 0
 
         self.faceProxy = None
+        self.memProxy = None
+        self.sttProxy = None
 
     ###################################
     ### Available sensor functions: ###
@@ -36,18 +38,19 @@ class naoSensorHandler:
             if self.sttProxy is None:
                 self.sttProxy = self.naoInitHandler.createProxy('ALSpeechRecognition')
 
-                # Close any previous subscriptions that might have been hanging open
-                subs = [x[0] for x in self.sttProxy.getSubscribersInfo()]
-                if "ltlmop_sensorhandler" in subs:
-                    self.sttProxy.unsubscribe("ltlmop_sensorhandler")
-
-                self.sttProxy.setLanguage("English")
-                self.sttProxy.setAudioExpression(False)
-                self.sttProxy.setVisualExpression(True)
-                self.sttProxy.subscribe("ltlmop_sensorhandler")
+            # Close any previous subscriptions that might have been hanging open
+            subs = [x[0] for x in self.sttProxy.getSubscribersInfo()]
+            if "ltlmop_sensorhandler" in subs:
+                self.sttProxy.unsubscribe("ltlmop_sensorhandler")
 
             self.sttVocabulary += [word]
             self.sttProxy.setWordListAsVocabulary(self.sttVocabulary)
+
+            self.sttProxy.setLanguage("English")
+            self.sttProxy.setAudioExpression(False)
+            self.sttProxy.setVisualExpression(True)
+            self.sttProxy.subscribe("ltlmop_sensorhandler")
+
             # Reset the speech recognition register manually
             self.memProxy.insertData("WordRecognized", [])
 
@@ -104,5 +107,5 @@ class naoSensorHandler:
                 self.memProxy = self.naoInitHandler.createProxy('ALMemory')
             return True
         else:
-            return bool(self.memProxy.getData('FrontTactilTouched',0)) 
+            return bool(self.memProxy.getData('FrontTactilTouched',0))
 

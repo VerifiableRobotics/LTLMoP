@@ -13,7 +13,7 @@ import threading
 class naoActuatorHandler:
     def __init__(self, proj, shared_data):
         """
-        
+
         """
         self.naoInitHandler = shared_data['NAO_INIT_HANDLER']
 
@@ -75,13 +75,15 @@ class naoActuatorHandler:
 
         phrase (string): The word to be spoken
         """
+        print "Get another cat!", phrase, actuatorVal, initial
+
         if initial:
             if self.ttsProxy is None:
                 self.ttsProxy = self.naoInitHandler.createProxy('ALTextToSpeech')
         else:
             if actuatorVal == True:
                 self.ttsProxy.say(phrase)
-    
+
     def playSoundFile(self, filename, actuatorVal, initial=False):
         if initial:
             if self.audioProxy is None:
