@@ -35,6 +35,9 @@ class SysDummySensorHandler:
         else:
             return compile("self.sensor_handler.getSensorValue('%s')" % name, "<string>", "eval")
 
+    def __contains__(self, name):
+        return True
+
     def getSensorValue(self, name):
         return self.parent.sensorStates[name]
 
@@ -47,6 +50,9 @@ class EnvDummySensorHandler:
             return {}
         else:
             return compile("self.sensor_handler.getSensorValue('%s')" % name, "<string>", "eval")
+
+    def __contains__(self, name):
+        return True
 
     def getSensorValue(self, name):
         m = re.match('^bit(\d+)$', name)
@@ -70,6 +76,9 @@ class SysDummyActuatorHandler:
         else:
             return compile("self.actuator_handler.setActuator('%s', new_val)" % name, "<string>", "eval")
 
+    def __contains__(self, name):
+        return True
+
     def setActuator(self, name, val):
         pass
 
@@ -82,6 +91,9 @@ class EnvDummyActuatorHandler:
             return {}
         else:
             return compile("self.actuator_handler.setActuator('%s', new_val)" % name, "<string>", "eval")
+
+    def __contains__(self, name):
+        return True
 
     def setActuator(self,name,val):
         self.parent.sensorStates[name] = val

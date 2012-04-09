@@ -246,6 +246,10 @@ class Automaton:
         #self.dumpStates()
 
         # Check that all necessary sensor and acuator handlers are present
+        if self.sensor_handler is None:
+            # We won't be executing anyways
+            return True
+    
         for sensor in self.sensors:
             if sensor not in self.sensor_handler:
                 print "ERROR: No sensor proposition mapping exists for '%s'! Aborting." % sensor
