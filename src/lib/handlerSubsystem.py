@@ -468,7 +468,6 @@ class HandlerSubsystem:
                 fullExpression = fullExpression.replace(method_string,methodEvalString)
 
             self.proj.actuator_handler['initializing_handler'][prop] = codeList
-            print "intitializing %s with %s"% (prop,fullExpression)
             self.proj.actuator_handler[prop]=compile(fullExpression,"<string>","eval")
 
     def constructMethodString(self,robotName,handlerName,methodName,para_info):

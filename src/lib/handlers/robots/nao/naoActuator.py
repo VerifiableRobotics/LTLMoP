@@ -75,8 +75,6 @@ class naoActuatorHandler:
 
         phrase (string): The word to be spoken
         """
-        print "Get another cat!", phrase, actuatorVal, initial
-
         if initial:
             if self.ttsProxy is None:
                 self.ttsProxy = self.naoInitHandler.createProxy('ALTextToSpeech')
