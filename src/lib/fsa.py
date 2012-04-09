@@ -61,7 +61,11 @@ class Automaton:
         # Store references to the handlers
         self.sensor_handler = proj.sensor_handler # handler objects for sensors
         self.actuator_handler = proj.actuator_handler # handler objects for actuators
-        self.motion_handler = proj.h_instance['motionControl'] # region-to-region movement handler
+        if proj.h_instance is not None:
+            # for view automaton and mopsy, h_instance is None
+            self.motion_handler = proj.h_instance['motionControl'] # region-to-region movement handler
+        else:
+            self.motion_handler = None
         self.h_instance = proj.h_instance
 
         # Variables for keeping track of the current state
