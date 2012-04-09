@@ -16,10 +16,65 @@ class naoSensorHandler:
         self.faceProxy = None
         self.memProxy = None
         self.sttProxy = None
+        self.ldmProxy = None
 
     ###################################
     ### Available sensor functions: ###
     ###################################
+    def seeLandMark(self,landMark_id,initial=False):
+        """
+        Use Nao's landmark recognition system to detect radial bar code landmark.
+        For info about avaible bar code, refer to http://www.aldebaran-robotics.com/documentation/naoqi/vision/allandmarkdetection.html#allandmarkdetection
+
+        landMark_id (int): The id number of bar code to detect
+        """
+        if initial:
+
+            # initialize landmark detection
+            if self.ldmProxy == None:
+                self.ldmProxy = self.naoInitHandler.createProxy('ALLandMarkDetection')
+            if self.memProxy is None:
+                self.memProxy = self.naoInitHandler.createProxy('ALMemory')
+
+            ### Initialize land Mark tracking
+            subs = [x[0] for x in self.ldmProxy.getSubscribersInfo()]
+            # Close any previous subscriptions that might have been hanging open
+            if "ltlmop_sensorhandler" in subs:
+                self.ldmProxy.unsubscribe("ltlmop_sensorhandler")
+            self.ldmProxy.subscribe("ltlmop_sensorhandler", 100, 0.0)
+            return True
+        else:
+            val = self.memProxy.getData("LandmarkDetected",0)
+
+            if(val and isinstance(val, list) and len(val) == 2):
+                # We detected naomarks !
+                # For each mark, we can read its shape info and ID.
+
+                # Second Field = array of Mark_Info's.
+                markInfoArray = val[1]
+
+                try:
+                    # Browse the markInfoArray to get info on each detected mark.
+                    for markInfo in markInfoArray:
+
+                        # First Field = Shape info.
+                        markShapeInfo = markInfo[0]
+
+                        # Second Field = Extra info (ie, mark ID).
+                        markExtraInfo = markInfo[1]
+
+                        #print " width %.3f - height %.3f" % (markShapeInfo[3], markShapeInfo[4])
+
+                        #if float(markShapeInfo[3])>0.05 and float(markShapeInfo[4])>0.05:
+                        if landMark_id in markExtraInfo:
+                            return True
+
+                except Exception, e:
+                    print "Naomarks detected, but it seems getData is invalid. ALValue ="
+                    print val
+                    print "Error msg %s" % (str(e))
+            return False
+
 
     def hearWord(self, word, threshold, initial=False):
         """
