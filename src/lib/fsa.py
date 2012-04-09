@@ -61,7 +61,7 @@ class Automaton:
         # Store references to the handlers
         self.sensor_handler = proj.sensor_handler # handler objects for sensors
         self.actuator_handler = proj.actuator_handler # handler objects for actuators
-        self.motion_handler = proj.motion_handler # region-to-region movement handler
+        self.motion_handler = proj.h_instance['motionControl'] # region-to-region movement handler
         self.h_instance = proj.h_instance
 
         # Variables for keeping track of the current state
