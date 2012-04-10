@@ -2,13 +2,13 @@
 # -*- coding: cp1252 -*-
 """
 ================================================================================
-DiffDriveSimLocomotionCommand.py - Pioneer Simulation Locomotion Command Handler
+PioneerODELocomotionCommand.py - Pioneer Simulation Locomotion Command Handler
 ================================================================================
 """
 import socket, sys, time
 
 
-class locomotionCommandHandler:
+class PioneerODELocomotionCommandHandler:
     def __init__(self, proj, shared_data,speed,host,port):
         """
         LocomotionCommand Handler for pioneer ode robot.
