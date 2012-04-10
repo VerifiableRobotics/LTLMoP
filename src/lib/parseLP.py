@@ -72,7 +72,8 @@ class parseLP:
         self.removeSmallRegions()
         
         # decompose any regions with holes or are concave
-        self.decomp()
+        if self.proj.decomp:
+            self.decomp()
 
         # store the regionMapping data to project file
         self.proj.regionMapping = self.newPolysMap

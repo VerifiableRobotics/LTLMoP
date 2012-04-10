@@ -13,7 +13,7 @@ import threading
 class naoActuatorHandler:
     def __init__(self, proj, shared_data):
         """
-        
+
         """
         self.naoInitHandler = shared_data['NAO_INIT_HANDLER']
 
@@ -81,7 +81,7 @@ class naoActuatorHandler:
         else:
             if actuatorVal == True:
                 self.ttsProxy.say(phrase)
-    
+
     def playSoundFile(self, filename, actuatorVal, initial=False):
         if initial:
             if self.audioProxy is None:

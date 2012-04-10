@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ================================================================
-DiffDriveSimInit.py -- Pioneer Simulation Initialization Handler
+PioneerODEInit.py -- Pioneer Simulation Initialization Handler
 ================================================================
 """
 
@@ -10,7 +10,7 @@ from numpy import *
 
 from simulator.ode.pioneer import DiffDriveSim
 
-class initHandler:
+class PioneerODEInitHandler:
     def __init__(self, proj, init_region):
         """
         Initialization handler for pioneer ode simulated robot.
