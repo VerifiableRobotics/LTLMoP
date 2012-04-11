@@ -60,16 +60,19 @@ def patrickSays(msg):
 def openInBrowser(url):
     if sys.platform in ['win32', 'cygwin']:
         cmd = "start"
+        shell = True
     elif sys.platform.startswith('linux'):
         cmd = "xdg-open"
+        shell = False
     elif sys.platform == 'darwin':
         cmd = "open"
+        shell = True
     else:
         print "Sorry, I don't know how to open the default browser on your computer."
         print "You'll need to visit %s on your own :(" % url
         return
 
-    subprocess.Popen([cmd, url], shell=True)
+    subprocess.Popen([cmd, url], shell=shell)
 
 def githubAPICall(path, data=None, method=None):
     """
