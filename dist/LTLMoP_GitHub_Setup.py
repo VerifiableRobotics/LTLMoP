@@ -75,6 +75,20 @@ def openInBrowser(url):
 
     subprocess.Popen([cmd, url], shell=shell)
 
+def runGitCommand(cmd):
+    global ssh_env
+
+    if ssh_env is None:
+        os.system(cmd)
+    else:
+        cmd = subprocess.Popen(["bash", "-c", "%s %s" % (ssh_env, cmd)], shell=True)
+
+        # Wait for subprocess to finish
+        while cmd.returncode is None:
+            cmd.poll()
+            time.sleep(0.1)
+
+
 def githubAPICall(path, data=None, method=None):
     """
     Relies on GitHub API v3
@@ -237,19 +251,17 @@ if __name__ == "__main__":
     # type in their ssh password multiple times
     if sys.platform in ['win32', 'cygwin']:
         print "Now just authenticate once for the rest of this session."
-        print "Please type in your SSH password."
-        cmd = subprocess.Popen(["bash", "-c", "eval `ssh-agent` ssh-add"], shell=True)
+        print "Please type in your SSH password one last time."
+        cmd = subprocess.Popen(["ssh-agent"], stdout=subprocess.PIPE, shell=True)
+        ssh_env = cmd.communicate()[0].replace("\n", " ")
+        cmd = subprocess.Popen(["bash", "-c", "%s ssh-add" % ssh_env], shell=True)
 
         # Wait for subprocess to finish
         while cmd.returncode is None:
             cmd.poll()
             time.sleep(0.1)
-        #os.chdir(os.path.expanduser("~/LTLMoP"))
-        #cmd = subprocess.Popen(["git","push"],shell=True)
-        # Wait for subprocess to finish
-        #while cmd.returncode is None:
-        #    cmd.poll()
-        #    time.sleep(0.1)
+    else:
+        ssh_env = None
 
     print
     print "Great, thanks.  The rest I can do by myself, so sit back and relax."
@@ -309,7 +321,7 @@ if __name__ == "__main__":
         print
         print "Cloning a copy of LTLMoP into your home directory..."
         print "(Tip: If it asks you if you want to continue connecting, type 'yes' and press [Enter])"
-        os.system("git clone git@github.com:%s/LTLMoP.git %s" % (github_username, os.path.expanduser("~/LTLMoP")))
+        runGitCommand("git clone git@github.com:%s/LTLMoP.git %s" % (github_username, os.path.expanduser("~/LTLMoP")))
 
     print
 
@@ -322,11 +334,11 @@ if __name__ == "__main__":
         # Delete all remote branches
         for b in branch_data:
             if b['name'] == "development": continue
-            os.system("git push origin :%s" % b['name'])
+            runGitCommand("git push origin :%s" % b['name'])
 
     print "Adding official repository as `upstream` remote..."
-    os.system("git remote add upstream https://github.com/LTLMoP/LTLMoP.git")
-    os.system("git fetch upstream development")
+    runGitCommand("git remote add upstream https://github.com/LTLMoP/LTLMoP.git")
+    runGitCommand("git fetch upstream development")
 
     patrickSays("Hooray!  All done!  See you around.")
 
