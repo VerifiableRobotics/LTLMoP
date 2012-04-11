@@ -24,6 +24,7 @@ def patrickSays(msg):
     while (len(wrapped_msg) < 2):
         wrapped_msg.append("")
 
+    # This ASCII cat is by 'Hilary'; taken without permission from http://www.doghause.com/ascii.asp
     plain_cat = r"""
           /\___/\**
     /   /  .   . \*
