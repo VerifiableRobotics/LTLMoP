@@ -19,6 +19,7 @@ import os, sys
 import fileMethods
 import re, random, math
 import Polygon, Polygon.Utils, os
+import json
 
 Polygon.setTolerance(0.01)
 
@@ -134,6 +135,18 @@ else:
  handle_BOTTOM_RIGHT,   handle_BOTTOM_LEFT] = range(-1, 4)
 
 ############################################################
+
+class prettierJSONEncoder(json.JSONEncoder):
+    """ Subclass of JSONEncoder that stops indenting after 2 levels """
+
+    def _newline_indent(self, last_indent_level=[None]):
+        if self.current_indent_level > 2 or last_indent_level[0] > 2:
+            last_indent_level[0] = self.current_indent_level
+            return ""
+        else:
+            last_indent_level[0] = self.current_indent_level
+            return super(prettierJSONEncoder, self)._newline_indent()
+
 
 class RegionFileInterface:
     """
@@ -322,14 +335,20 @@ class RegionFileInterface:
                                   "Format details are described at the beginning of each section below.\n" +
                                   "Note that all values are separated by *tabs*.",
                     "Background": "Relative path of background image file",
-                    "Regions": "Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)",
+                    "Regions": "Stored as JSON string",
                     "Transitions": "Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)",
                     "CalibrationPoints": "Vertices to use for map calibration: (vertex_region_name, vertex_index)",
                     "Obstacles": "Names of regions to treat as obstacles"}    
     
         regionData = []
-        for i, region in enumerate(self.regions): 
-            regionData.append("\t".join(map(str, region.getData(thorough=False)))) 
+        for r in self.regions:
+            d = r.getData()
+            # We don't want to store the following two attributes inside the regions
+            del d['alignmentPoints']
+            del d['isObstacle']
+            regionData.append(d)
+        je = prettierJSONEncoder(indent=4)
+        regionData = [je.encode(regionData)]
        
         transitionData = []
         for region1, destinations in enumerate(self.transitions):
@@ -348,8 +367,8 @@ class RegionFileInterface:
 
         calibPoints = []
         for region in self.regions:
-            for index, bool in enumerate(region.alignmentPoints):
-                if bool:
+            for index, isAP in enumerate(region.alignmentPoints):
+                if isAP:
                     calibPoints.append("\t".join([region.name, str(index)]))
 
         calibPointsStr = "\t".join(calibPoints)
@@ -385,11 +404,22 @@ class RegionFileInterface:
             self.background = "None"
 
         self.regions = []
-        for region in data["Regions"]:
-            regionData = region.split("\t");
+        rdata = data["Regions"]
+
+        try:
+            rdata = json.loads("\n".join(rdata))
+            compatMode = False
+        except ValueError:
+            compatMode = True
+
+        for rd in rdata:
             newRegion = Region()
-            newRegion.setData(regionData, thorough=False)    
-            newRegion.alignmentPoints = [False] * len([x for x in newRegion.getPoints()])
+            if compatMode:
+                regionData = rd.split("\t");
+                newRegion.setDataOld(regionData)    
+            else:
+                newRegion.setData(rd)    
+
             self.regions.append(newRegion)
 
         # Make an empty adjacency matrix of size (# of regions) x (# of regions)
@@ -555,77 +585,85 @@ class Region:
         else:
             return dir_CCW
 
-    def getData(self, thorough=True):
+    def getData(self):
         """ Return a copy of the object's internal data.
-            This is used for undo (thorough=True) and to save this region to disk (thorough=False).
+            This is used for undo and to save this region to disk.
         """
 
+        data = {'name': self.name,
+                'position': (self.position.x, self.position.y),
+                'size': (self.size.width, self.size.height),
+                'color': (self.color.Red(), self.color.Green(), self.color.Blue())}
+
         if self.type == reg_RECT:
-            type = "rect"
+            data['type'] = "rect"
         else:
-            type = "poly"
+            data['type'] = "poly"
 
-        expandedPoints = []
-
+        # Only include points if poly; rects are defined by location+dimension
         if self.type == reg_POLY:
-            for i, pt in enumerate(self.pointArray):
-                if thorough:
-                    expandedPoints.extend([pt.x, pt.y, self.alignmentPoints[i]])
-                else:
-                    expandedPoints.extend([pt.x, pt.y])
-        elif self.type == reg_RECT:
-            if thorough:
-                expandedPoints = self.alignmentPoints
+            data['points'] = [(pt.x, pt.y) for pt in self.pointArray]
 
-        if thorough:
-            obstacleState = [self.isObstacle]
-        else:
-            obstacleState = []
+        data['alignmentPoints'] = [i for i, isAP in enumerate(self.alignmentPoints) if isAP]
 
-        return [self.name, type,
-                self.position.x, self.position.y,
-                self.size.width, self.size.height,
-                self.color.Red(),
-                self.color.Green(),
-                self.color.Blue()] + obstacleState + expandedPoints
+        data['isObstacle'] = self.isObstacle
 
-    def setData(self, data, thorough=True):
+        return data
+
+    def setData(self, data):
         """ Set the object's internal data.
 
             'data' is a copy of the object's saved data, as returned by
             getData() above.  This is used for undo and to restore a 
             previously saved region.
         """
-        self.name              = data[0]
+        self.name = data['name']
+        self.position = Point(*data['position'])
+        self.size = Size(*data['size'])
+        self.color = Color(*data['color'])
+
+        if data['type'].lower() == "rect":
+            self.type = reg_RECT
+        else:
+            self.type = reg_POLY
+
+        # Only load pointArray if type is poly
+        if self.type == reg_POLY:
+            self.pointArray = [Point(*pt) for pt in data['points']]
+
+        if 'alignmentPoints' in data:
+            self.alignmentPoints = [(i in data['alignmentPoints']) for i, p in enumerate(self.getPoints())]
+        else:
+            self.alignmentPoints = [False] * len([x for x in self.getPoints()])
+
+        if 'isObstacle' in data:
+            self.isObstacle = data['isObstacle']
+
+    def setDataOld(self, data):
+        """ Set the object's internal data.
+
+            'data' is a copy of the object's saved data, as returned by
+            previous version of region editor.  This function is only for
+            backwards compatibility and will eventually be removed.
+        """
+        self.name = data[0]
 
         if data[1].lower() == "rect":
             self.type = reg_RECT
         else:
             self.type = reg_POLY
 
-        self.position          = Point(int(data[2]), int(data[3]))
-        self.size              = Size(int(data[4]), int(data[5]))
-        self.color             = Color(red=int(data[6]),
+        self.position = Point(int(data[2]), int(data[3]))
+        self.size = Size(int(data[4]), int(data[5]))
+        self.color = Color(red=int(data[6]),
                                          green=int(data[7]),
                                           blue=int(data[8]))
         if self.type == reg_POLY:
             self.pointArray = []
-            if thorough:
-                self.alignmentPoints = []
-                for i in range(10, len(data), 3):
-                    self.pointArray.append(Point(int(data[i]), int(data[i+1])))
-                    self.alignmentPoints.append(data[i+2])
-            else:
-                for i in range(9, len(data), 2):
-                    self.pointArray.append(Point(int(data[i]), int(data[i+1])))
-        elif self.type == reg_RECT:
-            if thorough:
-                self.alignmentPoints = []
-                for i in range(10, len(data), 1):
-                    self.alignmentPoints.append(data[i])
+            for i in range(9, len(data), 2):
+                self.pointArray.append(Point(int(data[i]), int(data[i+1])))
 
-        if thorough:
-            self.isObstacle = data[9]
+        self.alignmentPoints = [False] * len([x for x in self.getPoints()])
 
     def getFaces(self):
         """
