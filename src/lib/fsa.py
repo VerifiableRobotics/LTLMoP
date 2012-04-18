@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 
 """ ======================================
     fsa.py - Finite-State Automaton module
@@ -292,7 +293,7 @@ class Automaton:
 
         # Write the header
         FILE.write('digraph A { \n')
-        FILE.write('\trankdir=TB;\n')
+        FILE.write('\trankdir=LR;\n')
         #FILE.write('\tratio = 0.75;\n')
         FILE.write('\tsize = "8.5,11";\n')
         FILE.write('\toverlap = false;\n')
@@ -302,22 +303,26 @@ class Automaton:
         for state in self.states:
             FILE.write('\ts'+ state.name + ' [style=\"bold\",width=0,height=0, fontsize = 20, label=\"')
             stateRegion = self.regionFromState(state)
-            FILE.write( self.getAnnotatedRegionName(stateRegion) + ' \\n ')
+            FILE.write( self.getAnnotatedRegionName(stateRegion) + '\\n')
             for key in state.outputs.keys():
-                if state.outputs[key] == '1' and not re.match('^bit\d+$',key):
-                    # Only propositions that are TRUE and not bitXs are written in the state
-                    FILE.write( key + ' \\n ')
-            FILE.write( "("+state.rank + ')\\n ')
+                if re.match('^bit\d+$',key): continue
+                if state.outputs[key] == '1':
+                    FILE.write( key + '\\n')
+                else:
+                    FILE.write( '¬' + key + '\\n')
+            #FILE.write( "("+state.rank + ')\\n ')
             FILE.write('\" ];\n')
 
         # Write the transitions with the input labels (only inputs that are true)
         for state in self.states:
             for nextState in state.transitions:
-                FILE.write('\ts'+ state.name +' -> s'+ nextState.name +'[style=\"bold\", arrowsize = 1, fontsize = 20, label=\"')
+                FILE.write('\ts'+ state.name +' -> s'+ nextState.name +'[style=\"bold\", arrowsize = 1.5, fontsize = 20, label=\"')
                 # Check the next state to figure out which inputs have to be on
                 for key in nextState.inputs.keys():
                     if nextState.inputs[key] == '1':
-                        FILE.write( key + ' \\n ')
+                        FILE.write( key + '\\n')
+                    else:
+                        FILE.write( '¬' + key + '\\n')
                 FILE.write('\" ];\n')
 
         FILE.write('} \n')
