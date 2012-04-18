@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ================================================================
-DiffDriveSimInit.py -- Pioneer Simulation Initialization Handler
+PioneerODEInit.py -- Pioneer Simulation Initialization Handler
 ================================================================
 """
 
@@ -10,7 +10,7 @@ from numpy import *
 
 from simulator.ode.pioneer import DiffDriveSim
 
-class initHandler:
+class PioneerODEInitHandler:
     def __init__(self, proj, init_region):
         """
         Initialization handler for pioneer ode simulated robot.
@@ -53,7 +53,7 @@ class initHandler:
         regc =  str(region_calib)
         UDPServer = subprocess.Popen(["python",os.path.join(proj.ltlmop_root,"lib","simulator","ode","pioneer","UDPServer.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
                 
-        drive = subprocess.Popen(["python",os.path.join(proj.ltlmop_root,"lib", "simulator","ode","pioneer", "pioneerSim.py"), regionfile,regc,pose])
+        drive = subprocess.Popen(["python",os.path.join(proj.ltlmop_root,"lib", "simulator","ode","pioneer", "PioneerSim.py"), regionfile,regc,pose])
         
         
     def getSharedData(self):

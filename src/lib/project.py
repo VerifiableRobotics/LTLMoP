@@ -3,7 +3,7 @@
 """ ================================================
     project.py - Abstraction layer for project files
     ================================================
-    
+
     This module exposes an object that allows for simplified loading of the
     various files included in a single project.
 """
@@ -62,20 +62,20 @@ class Project:
         try:
             mapping_data = self.spec_data['SPECIFICATION']['RegionMapping']
         except KeyError:
-            if not self.silent: print "WARNING: Region mapping data undefined"        
+            if not self.silent: print "WARNING: Region mapping data undefined"
             return None
 
         if len(mapping_data) == 0:
-            if not self.silent: print "WARNING: Region mapping data is empty"        
+            if not self.silent: print "WARNING: Region mapping data is empty"
             return None
-        
+
         regionMapping = {}
         for line in mapping_data:
             oldRegionName, newRegionList = line.split('=')
             regionMapping[oldRegionName.strip()] = [n.strip() for n in newRegionList.split(',')]
 
         return regionMapping
-        
+
     def loadRegionFile(self, decomposed=False):
         """
         Returns a Region File Interface object corresponding to the regions file referenced in the spec file
@@ -89,11 +89,11 @@ class Project:
             try:
                 regf_name = os.path.join(self.project_root, self.spec_data['SETTINGS']['RegionFile'][0])
             except (IndexError, KeyError):
-                if not self.silent: print "WARNING: Region file undefined"        
+                if not self.silent: print "WARNING: Region file undefined"
                 return None
 
         if not self.silent: print "Loading region file %s..." % regf_name
-        rfi = regions.RegionFileInterface() 
+        rfi = regions.RegionFileInterface()
 
         if not rfi.readFile(regf_name):
             if not self.silent:
@@ -101,7 +101,7 @@ class Project:
                 if decomposed:
                     print "Are you sure you compiled your specification?"
             return None
-     
+
         if not self.silent: print "  -> Found definitions for %d regions." % len(rfi.regions)
 
         return rfi
@@ -135,12 +135,12 @@ class Project:
     def loadSpecFile(self, spec_file):
         # Figure out where we should be looking for files, based on the spec file name & location
         self.project_root = os.path.abspath(os.path.dirname(spec_file))
-        self.project_basename, ext = os.path.splitext(os.path.basename(spec_file)) 
-        
+        self.project_basename, ext = os.path.splitext(os.path.basename(spec_file))
+
 
         ### Load in the specification file
         if not self.silent: print "Loading specification file %s..." % spec_file
-        spec_data = fileMethods.readFromFile(spec_file)   
+        spec_data = fileMethods.readFromFile(spec_file)
 
         if spec_data is None:
             if not self.silent: print "WARNING: Failed to load specification file"
@@ -149,8 +149,8 @@ class Project:
         try:
             self.specText = '\n'.join(spec_data['SPECIFICATION']['Spec'])
         except KeyError:
-            if not self.silent: print "WARNING: Specification text undefined"        
-        
+            if not self.silent: print "WARNING: Specification text undefined"
+
         return spec_data
 
     def writeSpecFile(self, filename=None):
@@ -160,10 +160,10 @@ class Project:
         else:
             # Update our project paths based on the new filename
             self.project_root = os.path.dirname(os.path.abspath(filename))
-            self.project_basename, ext = os.path.splitext(os.path.basename(filename)) 
+            self.project_basename, ext = os.path.splitext(os.path.basename(filename))
 
         data = {}
-        
+
         data['SPECIFICATION'] = {"Spec": self.specText}
 
         if self.regionMapping is not None:
@@ -176,7 +176,7 @@ class Project:
 
         if self.currentConfig is not None:
             data['SETTINGS']['CurrentConfigName'] = self.currentConfig.name
-    
+
         if self.rfi is not None:
             # Save the path to the region file as relative to the spec file
             # FIXME: relpath has case sensitivity problems on OS X
@@ -195,25 +195,25 @@ class Project:
 
     def loadConfig(self, name=None):
         """
-        Load the config object with name ``name`` (case-insensitive).  If no name is specified, load the one defined as currently selected. 
+        Load the config object with name ``name`` (case-insensitive).  If no name is specified, load the one defined as currently selected.
         """
 
         self.hsub = handlerSubsystem.HandlerSubsystem(self)
-        self.hsub.setSilent(self.silent) 
+        self.hsub.setSilent(self.silent)
         self.hsub.loadAllConfigFiles()
-    
+
         if name is None:
             try:
                 name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
             except (KeyError, IndexError):
-                if not self.silent: print "WARNING: No experiment configuration defined"        
+                if not self.silent: print "WARNING: No experiment configuration defined"
                 return None
 
         for c in self.hsub.configs:
             if c.name.lower() == name.lower():
                 return c
 
-        if not self.silent: print "WARNING: Default experiment configuration of name '%s' could not be found in configs/ directory." % name       
+        if not self.silent: print "WARNING: Default experiment configuration of name '%s' could not be found in configs/ directory." % name
 
         return None
 
@@ -233,21 +233,22 @@ class Project:
         self.rfi = self.loadRegionFile()
         self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps()
         self.determineEnabledPropositions()
+        self.decomp = True # TODO: actually load from proj
 
         return True
-        
+
     def determineEnabledPropositions(self):
         """
         Populate lists ``all_sensors``, ``enabled_sensors``, etc.
         """
-    
+
         # Figure out what sensors are enabled
         self.all_sensors = []
         self.enabled_sensors = []
         for line in self.spec_data['SETTINGS']['Sensors']:
             sensor, val = line.split(',')
             self.all_sensors.append(sensor.strip())
-            if int(val) == 1: 
+            if int(val) == 1:
                 self.enabled_sensors.append(sensor.strip())
 
         # Figure out what actuators are enabled
@@ -256,12 +257,12 @@ class Project:
         for line in self.spec_data['SETTINGS']['Actions']:
             act, val = line.split(',')
             self.all_actuators.append(act.strip())
-            if int(val) == 1: 
+            if int(val) == 1:
                 self.enabled_actuators.append(act.strip())
 
         # Figure out what the custom propositions are
         self.all_customs = self.spec_data['SETTINGS']['Customs']
-    
+
     def getFilenamePrefix(self):
         """ Returns the full path of most project files, minus the extension.
 
@@ -286,8 +287,4 @@ class Project:
         self.h_instance = {'init':{},'pose':None,'locomotionCommand':None,'motionControl':None,'drive':None,'sensor':{},'actuator':{}}
 
         self.hsub.importHandlers(self.currentConfig,all_handler_types)
-        self.pose_handler = self.h_instance['pose']
-        if not self.silent: print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
-        self.loco_handler = self.h_instance['locomotionCommand']
-        self.drive_handler = self.h_instance['drive']
-        self.motion_handler = self.h_instance['motionControl']
+        if not self.silent: print "(POSE) Initial pose: " + str(self.h_instance['pose'].getPose())
