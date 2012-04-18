@@ -131,7 +131,7 @@ class Automaton:
                     self.motion_handler.gotoRegion(self.current_region, self.current_region)  # Stop, in case actuation takes time
                     #self.actuator_handler.setActuator(key, new_val)
                     initial=False
-                    eval(self.actuator_handler[key])
+                    exec(self.actuator_handler[key])
 
                 self.current_outputs[key] = new_val
 

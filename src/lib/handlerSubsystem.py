@@ -452,7 +452,8 @@ class HandlerSubsystem:
                 print "WARNING: No mapping given for actuator prop '%s', so using default simulated handler." % prop
                 method = "share.dummyActuator.setActuator(name='%s')" % prop
 
-            fullExpression = method
+            fullExpression = method.replace(" and ", " ; ")
+            # TODO: Complain about ORs
             codeList = []
             for m in methodRE.finditer(method):
                 method_string = m.group('method_string')
@@ -468,7 +469,7 @@ class HandlerSubsystem:
                 fullExpression = fullExpression.replace(method_string,methodEvalString)
 
             self.proj.actuator_handler['initializing_handler'][prop] = codeList
-            self.proj.actuator_handler[prop]=compile(fullExpression,"<string>","eval")
+            self.proj.actuator_handler[prop]=compile(fullExpression,"<string>","exec")
 
     def constructMethodString(self,robotName,handlerName,methodName,para_info):
         """
