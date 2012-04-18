@@ -178,7 +178,7 @@ class CalibrateFrame(wx.Frame):
         output = repr(T)
 
         if self.configEditorPort is None:
-            print data
+            print output
         else:
             UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             UDPSock.sendto(output, self.configEditorPort)
