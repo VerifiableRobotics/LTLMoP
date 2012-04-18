@@ -4,7 +4,7 @@
 """ ====================================
     specEditor.py - Specification Editor
     ====================================
-    
+
     A development environment for specifications written in structured English,
     allowing for editing, compilation, and execution/simulation
 """
@@ -57,7 +57,7 @@ class AsynchronousProcessThread(threading.Thread):
         except OSError:
             # TODO: Figure out what's going on when this (rarely) happens
             print "Ran into an error killing the process.  Hopefully we just missed it..."
-        
+
     def run(self):
 
         if os.name == "nt":
@@ -91,7 +91,7 @@ class AsynchronousProcessThread(threading.Thread):
                 print output,
 
             # Check the status of the process
-            self.process.poll() 
+            self.process.poll()
             time.sleep(0.01)
 
         # Call any callback function
@@ -103,7 +103,7 @@ class MapDialog(wx.Dialog):
     A simple little dialog that displays the regions on top of the map so that you can
     select a region visually instead of just choosing the name.
     """
-    
+
     # FIXME: Doesn't scroll on Windows???
 
     def __init__(self, parent, *args, **kwds):
@@ -115,7 +115,7 @@ class MapDialog(wx.Dialog):
         self.__set_properties()
         self.__do_layout()
         # end wxGlade
-        
+
         self.parent = parent
 
     def __set_properties(self):
@@ -134,7 +134,7 @@ class MapDialog(wx.Dialog):
         self.Centre()
         # end wxGlade
 
-        self.panel_2.SetBackgroundColour(wx.WHITE)   
+        self.panel_2.SetBackgroundColour(wx.WHITE)
         self.panel_2.Bind(wx.EVT_PAINT, self.drawMap)
 
         # Bind to catch mouse clicks!
@@ -149,7 +149,7 @@ class MapDialog(wx.Dialog):
             if region.name.lower() != "boundary" and region.objectContainsPoint(x, y):
                 self.parent.text_ctrl_spec.AppendText(region.name)
                 self.Close()
-                break 
+                break
 
         event.Skip()
 
@@ -167,7 +167,7 @@ class SpecEditorFrame(wx.Frame):
         # begin wxGlade: SpecEditorFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        
+
         # Menu Bar
         self.frame_1_menubar = wx.MenuBar()
         global MENU_IMPORT_REGION; MENU_IMPORT_REGION = wx.NewId()
@@ -303,16 +303,16 @@ class SpecEditorFrame(wx.Frame):
 
         global MARKER_INIT, MARKER_SAFE, MARKER_LIVE, MARKER_PARSEERROR
         MARKER_INIT, MARKER_SAFE, MARKER_LIVE, MARKER_PARSEERROR = range(4)
-        self.text_ctrl_spec.MarkerDefine(MARKER_INIT,wx.stc.STC_MARK_ARROW,"white","red") 
-        self.text_ctrl_spec.MarkerDefine(MARKER_SAFE,wx.stc.STC_MARK_ARROW,"white","blue") 
-        self.text_ctrl_spec.MarkerDefine(MARKER_LIVE,wx.stc.STC_MARK_ARROW,"white","green") 
-        self.text_ctrl_spec.MarkerDefine(MARKER_PARSEERROR,wx.stc.STC_MARK_BACKGROUND,"red","red") 
-        
+        self.text_ctrl_spec.MarkerDefine(MARKER_INIT,wx.stc.STC_MARK_ARROW,"white","red")
+        self.text_ctrl_spec.MarkerDefine(MARKER_SAFE,wx.stc.STC_MARK_ARROW,"white","blue")
+        self.text_ctrl_spec.MarkerDefine(MARKER_LIVE,wx.stc.STC_MARK_ARROW,"white","green")
+        self.text_ctrl_spec.MarkerDefine(MARKER_PARSEERROR,wx.stc.STC_MARK_BACKGROUND,"red","red")
+
         # Listen for changes to the text
         self.Bind(wx.stc.EVT_STC_CHANGE, self.onSpecTextChange, self.text_ctrl_spec)
-        
+
         # Set up locative phrase map
-        self.panel_locmap.SetBackgroundColour(wx.WHITE)   
+        self.panel_locmap.SetBackgroundColour(wx.WHITE)
         self.panel_locmap.Bind(wx.EVT_PAINT, self.drawLocMap)
 
         # Set up extra event bindings
@@ -324,7 +324,7 @@ class SpecEditorFrame(wx.Frame):
                             "Simulation Configuration": None }
 
         self.initializeNewSpec()
-        
+
         # HACK: This is an undocumented hack you can uncomment to help kill stuck copies of speceditor on windows
         # If in use, requires spec file argument on command line
         #if sys.argv[-1] != "-dontbreak":
@@ -335,7 +335,7 @@ class SpecEditorFrame(wx.Frame):
         self.mapDialog = None
         self.proj = project.Project()
         self.decomposedRFI = None
-       
+
         # Reset GUI
         self.button_map.Enable(False)
         self.button_sensor_remove.Enable(False)
@@ -490,7 +490,7 @@ class SpecEditorFrame(wx.Frame):
         self.proj.specText = self.text_ctrl_spec.GetText()
 
         self.dirty = True
-        
+
     def onMapSelect(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
         Show the map with overlayed regions so that the user can select a region name visually.
@@ -509,7 +509,7 @@ class SpecEditorFrame(wx.Frame):
                                   wildcard="Region files (*.regions)|*.regions",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
         if filename == "": return
-        
+
         rfi = RegionFileInterface()
 
         # Try loading the file
@@ -540,8 +540,8 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_regions.Clear()
         for region in self.proj.rfi.regions:
             if not (region.isObstacle or region.name.lower() == "boundary"):
-                self.list_box_regions.Append(region.name)        
-        
+                self.list_box_regions.Append(region.name)
+
         # Create the map selection dialog
         if self.mapDialog is not None:
             self.mapDialog.Destroy()
@@ -616,7 +616,7 @@ class SpecEditorFrame(wx.Frame):
         # Force a .spec extension.  How mean!!!
         if os.path.splitext(filename)[1] != ".spec":
             filename = filename + ".spec"
-        
+
         # Save data to the file
         self.proj.writeSpecFile(filename)
         self.dirty = False
@@ -626,7 +626,7 @@ class SpecEditorFrame(wx.Frame):
 
     def openFile(self, filename):
         proj = project.Project()
-        
+
         if not proj.loadProject(filename):
             wx.MessageBox("Cannot open specification file %s" % (filename), "Error",
                         style = wx.OK | wx.ICON_ERROR)
@@ -657,7 +657,7 @@ class SpecEditorFrame(wx.Frame):
             ltl = "".join(f.readlines())
             f.close()
             self.text_ctrl_LTL.SetValue(ltl)
- 
+
         #####################################
 
         self.text_ctrl_spec.AppendText(self.proj.specText)
@@ -677,7 +677,7 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_customs.Set(self.proj.all_customs)
         if len(self.proj.all_customs) > 0:
             self.button_custom_remove.Enable(True)
-                    
+
         # Update the window title
         self.SetTitle("Specification Editor - " + self.proj.project_basename + ".spec")
 
@@ -688,7 +688,7 @@ class SpecEditorFrame(wx.Frame):
         self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
     
         self.dirty = False
-    
+
     def doClose(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
         Respond to the "Close" menu command.
@@ -708,7 +708,7 @@ class SpecEditorFrame(wx.Frame):
                     p.join()
                 elif response == wx.NO:
                     return
-        
+
         self.Destroy()
 
     def askIfUserWantsToSave(self, action):
@@ -717,7 +717,7 @@ class SpecEditorFrame(wx.Frame):
             'action' is a string describing the action about to be taken.  If
             the user wants to save the document, it is saved immediately.  If
             the user cancels, we return False.
-            
+
             From pySketch example
         """
 
@@ -772,7 +772,7 @@ class SpecEditorFrame(wx.Frame):
             wx.MessageBox("Please define regions before compiling.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
-    
+
         if self.proj.specText.strip() == "":
             wx.MessageBox("Please write a specification before compiling.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
@@ -803,7 +803,7 @@ class SpecEditorFrame(wx.Frame):
 
         sys.stdout = redir
         sys.stderr = redir
-        
+
         self.appendLog("Parsing locative prepositions...\n", "BLUE")
 
         compiler._decompose()
@@ -813,7 +813,7 @@ class SpecEditorFrame(wx.Frame):
         # Update workspace decomposition listbox
         self.list_box_locphrases.Set(self.proj.regionMapping.keys())
         self.list_box_locphrases.Select(0)
-        
+
         self.appendLog("Creating SMV file...\n", "BLUE")
 
         compiler._writeSMVFile()
@@ -821,7 +821,7 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Creating LTL file...\n", "BLUE")
 
         self.traceback = compiler._writeLTLFile()
-        
+
         if self.traceback is None:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
@@ -835,7 +835,7 @@ class SpecEditorFrame(wx.Frame):
             f.close()
             self.text_ctrl_LTL.SetValue(ltl)
 
-            
+
         self.appendLog("Creating automaton...\n", "BLUE")
 
         realizable, realizableFS, output = compiler._synthesize(with_safety_aut)
@@ -925,7 +925,7 @@ class SpecEditorFrame(wx.Frame):
                     # Try loading the file
                     if not rfi.readFile(fileName):
                         print "ERROR: Could not load newly created region file"
-                        return 
+                        return
 
                     self.proj.rfi = rfi
                     self.dirty = True
@@ -941,7 +941,7 @@ class SpecEditorFrame(wx.Frame):
                     # Try loading the file
                     if not rfi.readFile(fileName):
                         print "ERROR: Could not reload region file"
-                        return 
+                        return
 
                     self.proj.rfi = rfi
                     self.dirty = True
@@ -977,7 +977,7 @@ class SpecEditorFrame(wx.Frame):
         # Launch the config editor
         # TODO: Discourage editing of spec while it's open?
 
-        if self.subprocess["Simulation Configuration"] is not None: 
+        if self.subprocess["Simulation Configuration"] is not None:
             wx.MessageBox("Simulation Config is already running.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -1007,7 +1007,6 @@ class SpecEditorFrame(wx.Frame):
         proj_copy.rfi = self.decomposedRFI
         proj_copy.sensor_handler = None
         proj_copy.actuator_handler = None
-        proj_copy.motion_handler = None
         proj_copy.h_instance = None
 
         aut = fsa.Automaton(proj_copy)
@@ -1020,8 +1019,8 @@ class SpecEditorFrame(wx.Frame):
             wx.MessageBox("Cannot find automaton for viewing.  Please make sure compilation completed successfully.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
-        
-        if self.subprocess["Dotty"] is not None: 
+
+        if self.subprocess["Dotty"] is not None:
             wx.MessageBox("Dotty is already running.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -1080,7 +1079,7 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Running analysis...\n", "BLUE")
 
         (realizable, nonTrivial, to_highlight, output) = compiler._analyze()
-        
+
         self.appendLog(output, "BLACK")
 
         if realizable:
@@ -1101,12 +1100,13 @@ class SpecEditorFrame(wx.Frame):
                     elif h_item[1] == "trans":
                         self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
                     
+
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Opens the counterstrategy visualization interfacs ("Mopsy")
-       
+
         # TODO: check for failed compilation before allowing this
         subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec"])
 
@@ -1156,7 +1156,7 @@ class SpecEditorFrame(wx.Frame):
 
         # Ask the user for a proposition name, suggesting the next available one as default
         name = wx.GetTextFromUser("Name:", "New %s Proposition" % prop_prefix.title(), default_name)
-        
+
         if name != "":
             # If it's valid, add it, select it and enable it
             lb.Insert(name, lb.GetCount())
@@ -1192,7 +1192,7 @@ class SpecEditorFrame(wx.Frame):
         for l in remove_lists:
             if lb.GetStringSelection() in l:
                 l.remove(lb.GetStringSelection())
-        
+
         selection = lb.GetSelection()
         lb.Delete(selection)
 
@@ -1238,7 +1238,7 @@ class RedirectText:
         m = re.search(r"Could not parse the sentence in line (\d+)", string)
         if m:
             self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1))-1,MARKER_PARSEERROR)
-               
+
 
 if __name__ == "__main__":
     SpecEditor = wx.PySimpleApp(0)

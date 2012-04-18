@@ -5,7 +5,7 @@
 """ =====================================================================================
     calibrate.py - A tool for finding the transformation between map and real coordinates
     =====================================================================================
-    
+
     This script helps you experimentally determine the coordinate transformation
     between points on your region map and points in your localization system.
 
@@ -18,7 +18,7 @@ import wx, sys, os, socket
 import fileMethods, regions, project
 from numpy import *
 import mapRenderer
-from _transformations import affine_matrix_from_points 
+from _transformations import affine_matrix_from_points
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -66,7 +66,8 @@ class CalibrateFrame(wx.Frame):
         print "Importing handler functions..."
         self.proj.importHandlers(['init','pose'])
 
-        self.panel_map.SetBackgroundColour(wx.WHITE)   
+        self.panel_map.SetBackgroundColour(wx.WHITE)
+        self.panel_map.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.panel_map.Bind(wx.EVT_PAINT, self.onPaint)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
 
@@ -115,11 +116,11 @@ class CalibrateFrame(wx.Frame):
 
         # Draw robot
         if self.robotPos is not None:
-            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
+            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos)
             dc.DrawCircle(x, y, 15)
 
         dc.EndDrawing()
-        
+
         if event is not None:
             event.Skip()
 
@@ -131,7 +132,7 @@ class CalibrateFrame(wx.Frame):
 
     def doCalibration(self):
         # Load the calibration points from region file
-        
+
         pt_names = []
         file_pts = None
         for [name, index, x, y] in self.proj.rfi.getCalibrationPoints():
@@ -157,7 +158,7 @@ class CalibrateFrame(wx.Frame):
 
             self.markerPos = None # Disable blinking circle
 
-            pose = self.proj.pose_handler.getPose()
+            pose = self.proj.h_instance['pose'].getPose()
 
             new_pt = mat(pose[0:2]).T
             if real_pts is None:
@@ -167,7 +168,7 @@ class CalibrateFrame(wx.Frame):
 
             self.setStepInfo('Read real point %s coordinate of [%f, %f].' % (pt_names[i], pose[0], pose[1]), "Continue")
             yield
-        
+
         # Calculate transformation:
         T = affine_matrix_from_points(real_pts, file_pts)
 
@@ -177,7 +178,7 @@ class CalibrateFrame(wx.Frame):
         output = repr(T)
 
         if self.configEditorPort is None:
-            print data
+            print output
         else:
             UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             UDPSock.sendto(output, self.configEditorPort)

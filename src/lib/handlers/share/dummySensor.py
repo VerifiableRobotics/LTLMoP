@@ -14,27 +14,13 @@ class sensorHandler:
         """
         Start up sensor handler subwindow and create a new thread to listen to it.
         """
-        
+
         # Since we don't want to have to poll the subwindow for each request,
         # we need a data structure to cache sensor states:
         self.sensorValue = {}
         self.proj = proj
         self.sensorListenInitialized = False
-        
 
-        # Create a subprocess
-        print "(SENS) Starting sensorHandler window and listen thread..."
-        self.p_sensorHandler = subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-
-        self.fd_sensorHandler = self.p_sensorHandler.stderr
-
-        # Create new thread to communicate with subwindow
-        sensorListenThread = threading.Thread(target = self._sensorListen)
-        sensorListenThread.start()
-
-        # Block until the sensor listener gets the go-ahead from the subwindow
-        while not self.sensorListenInitialized:
-            time.sleep(0.05) # Yield cpu
 
     def buttonPress(self,button_name,init_value,initial=False):
         """
@@ -45,7 +31,23 @@ class sensorHandler:
         init_value (bool): The initial state of the sensor (default=False)
         """
         if initial:
-            if button_name not in self.sensorValue.keys(): 
+
+            if not self.sensorListenInitialized:
+                # Create a subprocess
+                print "(SENS) Starting sensorHandler window and listen thread..."
+                self.p_sensorHandler = subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+
+                self.fd_sensorHandler = self.p_sensorHandler.stderr
+
+                # Create new thread to communicate with subwindow
+                sensorListenThread = threading.Thread(target = self._sensorListen)
+                sensorListenThread.start()
+
+                # Block until the sensor listener gets the go-ahead from the subwindow
+                while not self.sensorListenInitialized:
+                    time.sleep(0.05) # Yield cpu
+
+            if button_name not in self.sensorValue.keys():
                 self.sensorValue[button_name] = init_value
                 if init_value:
                     self.p_sensorHandler.stdin.write(button_name + ",1\n")
@@ -64,7 +66,7 @@ class sensorHandler:
         Processes messages from the sensor handler subwindow, and updates our cache appropriately
         """
         host = 'localhost'
-        port = 23459    
+        port = 23459
         buf = 1024
         addr = (host,port)
 
@@ -75,8 +77,8 @@ class sensorHandler:
         except:
             print "ERROR: Cannot bind to port.  Try killing all Python processes and trying again."
             return
-        
-        while 1: 
+
+        while 1:
             # Wait for and receive a message from the subwindow
             input,addrFrom = UDPSock.recvfrom(1024)
             if input == '':  # EOF indicates that the connection has been destroyed
@@ -93,7 +95,7 @@ class sensorHandler:
 
             if len(args) != 2:
                 continue
-            
+
             # Update our internal cache
             self.sensorValue[args[0]] = (args[1] == "True")
 

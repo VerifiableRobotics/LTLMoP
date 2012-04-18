@@ -3,7 +3,7 @@
 """ =================================================
     execute.py - Top-level hybrid controller executor
     =================================================
-    
+
     This module executes a hybrid controller for a robot in a simulated or real environment.
 
     :Usage: ``execute.py [-hn] [-a automaton_file] [-s spec_file]``
@@ -60,10 +60,10 @@ def guiListen():
     buf = 1024
     addrFrom = (host,portFrom)
     UDPSockFrom = socket(AF_INET,SOCK_DGRAM)
-    UDPSockFrom.setsockopt(SOL_SOCKET,SO_REUSEADDR,1) 
+    UDPSockFrom.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
     UDPSockFrom.bind(addrFrom)
 
-    while 1: 
+    while 1:
         # Wait for and receive a message from the subwindow
         input,addrFrom = UDPSockFrom.recvfrom(buf)
 
@@ -119,7 +119,7 @@ def main(argv):
             aut_file = arg
         elif opt in ("-s", "--spec-file"):
             spec_file = arg
-    
+
     if aut_file is None:
         print "ERROR: Automaton file needs to be specified."
         usage(argv[0])
@@ -148,7 +148,7 @@ def main(argv):
 
     # Import the relevant handlers
     print "Importing handler functions..."
-    
+
     proj.importHandlers()
 
     ############################
@@ -191,9 +191,9 @@ def main(argv):
         sys.stderr = redir
 
     #######################
-    # Load automaton file # 
+    # Load automaton file #
     #######################
-    
+
     print "Loading automaton..."
 
     FSA = fsa.Automaton(proj)
@@ -204,7 +204,7 @@ def main(argv):
     #############################
     # Begin automaton execution #
     #############################
-    
+
 
     last_gui_update_time = 0
 
@@ -219,13 +219,13 @@ def main(argv):
 
     ### Figure out where we should start from
 
-    pose = proj.pose_handler.getPose()
+    pose = proj.h_instance['pose'].getPose()
 
     init_region = None
 
     for i, r in enumerate(proj.rfi.regions):
         pointArray = [proj.coordmap_map2lab(x) for x in r.getPoints()]
-        vertices = mat(pointArray).T 
+        vertices = mat(pointArray).T
 
         if is_inside([pose[0], pose[1]], vertices):
             init_region = i
@@ -260,13 +260,13 @@ def main(argv):
     while True:
         # Idle if we're not running
         while not runFSA:
-            proj.drive_handler.setVelocity(0,0) 
+            proj.h_instance['drive'].setVelocity(0,0)
             time.sleep(0.05) # We need to sleep to give up the CPU
 
-        tic = time.time() 
+        tic = time.time()
 
         FSA.runIteration()
-        
+
         toc = time.time()
 
         # TODO: Possibly implement max rate-limiting?
@@ -278,7 +278,7 @@ def main(argv):
         if show_gui and (time.time() - last_gui_update_time > 0.05):
             avg_freq = 0.9*avg_freq + 0.1*1/(toc-tic) # IIR filter
             UDPSockTo.sendto("Running at approximately %dHz..." % int(avg_freq),addrTo)
-            pose = proj.pose_handler.getPose(cached=True)[0:2]
+            pose = proj.h_instance['pose'].getPose(cached=True)[0:2]
             UDPSockTo.sendto("POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose))),addrTo)
 
             last_gui_update_time = time.time()

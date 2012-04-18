@@ -11,7 +11,7 @@ MotionControlHandler: # Robot default motion control handler with default argume
 vectorController()
 
 PoseHandler: # Robot default pose handler with default argument values
-viconPose(host='10.0.0.102',port=800,x_VICON_name="Nao:Nao <t-X>",x_VICON_name="Nao:Nao <t-Y>",x_VICON_name="Nao:Nao <a-Z>")
+viconPose(host='10.0.0.102',port=800,x_VICON_name="Nao:Nao <t-X>",y_VICON_name="Nao:Nao <t-Y>",theta_VICON_name="Nao:Nao <a-Z>")
 
 RobotName: # Robot Name
 MAE

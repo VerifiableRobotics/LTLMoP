@@ -160,7 +160,7 @@ if __name__ == "__main__":
         s.printStreamInfo()
         sys.exit(0)
 
-    streams = s.selectStreams(["Time", "Roomba:Roomba <t-X>", "Roomba:Roomba <t-Y>", "Roomba:Roomba <a-Z>"])
+    streams = s.selectStreams(["Time", "Nao:Nao <t-X>", "Nao:Nao <t-Y>", "Nao:Nao <a-Z>"])
     
     s.startStreams(verbose=False)
 
