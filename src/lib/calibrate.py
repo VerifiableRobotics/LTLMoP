@@ -158,7 +158,7 @@ class CalibrateFrame(wx.Frame):
 
             self.markerPos = None # Disable blinking circle
 
-            pose = self.proj.pose_handler.getPose()
+            pose = self.proj.h_instance['pose'].getPose()
 
             new_pt = mat(pose[0:2]).T
             if real_pts is None:
