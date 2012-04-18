@@ -915,7 +915,7 @@ class propMappingDialog(wx.Dialog):
         self.list_box_props = wx.ListBox(self, -1, choices=[], style=wx.LB_SINGLE|wx.LB_ALWAYS_SB)
         self.label_11 = wx.StaticText(self, -1, "Continuous controller mapping:")
         self.text_ctrl_mapping = wx.richtext.RichTextCtrl(self, -1, "")
-        self.button_9 = wx.Button(self, -1, u"        ↑\nInsert/Apply")
+        self.button_9 = wx.Button(self, -1, "        ^\nInsert/Apply")
         self.label_7 = wx.StaticText(self, -1, "Robots:")
         self.list_box_robots = wx.ListBox(self, -1, choices=[])
         self.label_8 = wx.StaticText(self, -1, "Sensors/Actuators:")
