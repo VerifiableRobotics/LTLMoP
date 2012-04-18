@@ -167,21 +167,16 @@ class SpecEditorFrame(wx.Frame):
         # begin wxGlade: SpecEditorFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER|wx.SP_LIVE_UPDATE)
-        self.window_1_pane_2 = wx.Panel(self.window_1, -1)
-        self.notebook_1 = wx.Notebook(self.window_1_pane_2, -1, style=0)
-        self.notebook_1_pane_3 = wx.Panel(self.notebook_1, -1)
-        self.notebook_1_pane_2 = wx.Panel(self.notebook_1, -1)
-        self.notebook_1_pane_1 = wx.Panel(self.notebook_1, -1)
-        self.window_1_pane_1 = wx.Panel(self.window_1, -1)
-        self.panel_1 = wx.ScrolledWindow(self.window_1_pane_1, -1, style=wx.TAB_TRAVERSAL)
         
         # Menu Bar
         self.frame_1_menubar = wx.MenuBar()
         global MENU_IMPORT_REGION; MENU_IMPORT_REGION = wx.NewId()
         global MENU_COMPILE; MENU_COMPILE = wx.NewId()
-        global MENU_SIMCONFIG; MENU_SIMCONFIG = wx.NewId()
+        global MENU_COMPILECONFIG; MENU_COMPILECONFIG = wx.NewId()
+        global MENU_CONVEXIFY; MENU_CONVEXIFY = wx.NewId()
+        global MENU_FASTSLOW; MENU_FASTSLOW = wx.NewId()
         global MENU_SIMULATE; MENU_SIMULATE = wx.NewId()
+        global MENU_SIMCONFIG; MENU_SIMCONFIG = wx.NewId()
         global MENU_ANALYZE; MENU_ANALYZE = wx.NewId()
         global MENU_DOTTY; MENU_DOTTY = wx.NewId()
         global MENU_MOPSY; MENU_MOPSY = wx.NewId()
@@ -204,8 +199,13 @@ class SpecEditorFrame(wx.Frame):
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Edit")
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(MENU_COMPILE, "&Compile\tF5", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu.Append(MENU_SIMCONFIG, "Confi&gure Simulation...\tShift-F6", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu_sub = wx.Menu()
+        wxglade_tmp_menu_sub.Append(MENU_CONVEXIFY, "Decompose workspace into convex regions", "", wx.ITEM_CHECK)
+        wxglade_tmp_menu_sub.Append(MENU_FASTSLOW, "Enable \"fast-slow\" synthesis", "", wx.ITEM_CHECK)
+        wxglade_tmp_menu.AppendMenu(MENU_COMPILECONFIG, "Compilation options", wxglade_tmp_menu_sub, "")
+        wxglade_tmp_menu.AppendSeparator()
         wxglade_tmp_menu.Append(MENU_SIMULATE, "&Simulate\tF6", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.Append(MENU_SIMCONFIG, "Confi&gure Simulation...\tShift-F6", "", wx.ITEM_NORMAL)
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Run")
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(MENU_ANALYZE, "&Analyze\tF8", "", wx.ITEM_NORMAL)
@@ -217,6 +217,9 @@ class SpecEditorFrame(wx.Frame):
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Help")
         self.SetMenuBar(self.frame_1_menubar)
         # Menu Bar end
+        self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D | wx.SP_BORDER | wx.SP_LIVE_UPDATE)
+        self.window_1_pane_1 = wx.Panel(self.window_1, -1)
+        self.panel_1 = wx.ScrolledWindow(self.window_1_pane_1, -1, style=wx.TAB_TRAVERSAL)
         self.label_1 = wx.StaticText(self.panel_1, -1, "Regions:")
         self.list_box_regions = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
         self.button_map = wx.Button(self.panel_1, -1, "Select from Map...")
@@ -233,12 +236,17 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_customs = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
         self.button_custom_add = wx.Button(self.panel_1, wx.ID_ADD, "")
         self.button_custom_remove = wx.Button(self.panel_1, wx.ID_REMOVE, "")
-        self.text_ctrl_log = wx.richtext.RichTextCtrl(self.notebook_1_pane_1, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
-        self.text_ctrl_LTL = wx.TextCtrl(self.notebook_1_pane_2, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
+        self.window_1_pane_2 = wx.Panel(self.window_1, -1)
+        self.notebook_1 = wx.Notebook(self.window_1_pane_2, -1, style=0)
+        self.notebook_1_pane_1 = wx.Panel(self.notebook_1, -1)
+        self.text_ctrl_log = wx.richtext.RichTextCtrl(self.notebook_1_pane_1, -1, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.notebook_1_pane_2 = wx.Panel(self.notebook_1, -1)
+        self.text_ctrl_LTL = wx.TextCtrl(self.notebook_1_pane_2, -1, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.notebook_1_pane_3 = wx.Panel(self.notebook_1, -1)
         self.label_locphrases = wx.StaticText(self.notebook_1_pane_3, -1, "Active locative phrases:")
         self.list_box_locphrases = wx.ListBox(self.notebook_1_pane_3, -1, choices=[], style=wx.LB_ALWAYS_SB)
         self.checkbox_regionlabel = wx.CheckBox(self.notebook_1_pane_3, -1, "Show region names")
-        self.panel_locmap = wx.Panel(self.notebook_1_pane_3, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL|wx.FULL_REPAINT_ON_RESIZE)
+        self.panel_locmap = wx.Panel(self.notebook_1_pane_3, -1, style=wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE)
 
         self.__set_properties()
         self.__do_layout()
@@ -256,8 +264,10 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuCopy, id=wx.ID_COPY)
         self.Bind(wx.EVT_MENU, self.onMenuPaste, id=wx.ID_PASTE)
         self.Bind(wx.EVT_MENU, self.onMenuCompile, id=MENU_COMPILE)
-        self.Bind(wx.EVT_MENU, self.onMenuConfigSim, id=MENU_SIMCONFIG)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_CONVEXIFY)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_FASTSLOW)
         self.Bind(wx.EVT_MENU, self.onMenuSimulate, id=MENU_SIMULATE)
+        self.Bind(wx.EVT_MENU, self.onMenuConfigSim, id=MENU_SIMCONFIG)
         self.Bind(wx.EVT_MENU, self.onMenuAnalyze, id=MENU_ANALYZE)
         self.Bind(wx.EVT_MENU, self.onMenuViewAut, id=MENU_DOTTY)
         self.Bind(wx.EVT_MENU, self.onMenuMopsy, id=MENU_MOPSY)
@@ -342,6 +352,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
         self.text_ctrl_log.Clear()
+        self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
+        self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
 
         self.SetTitle("Specification Editor - Untitled")
 
@@ -376,34 +388,34 @@ class SpecEditorFrame(wx.Frame):
         sizer_11 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_6 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_5.Add(self.label_1, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
-        sizer_5.Add(self.list_box_regions, 2, wx.LEFT|wx.EXPAND, 4)
+        sizer_5.Add(self.label_1, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 4)
+        sizer_5.Add(self.list_box_regions, 2, wx.LEFT | wx.EXPAND, 4)
         sizer_7.Add(self.button_map, 0, wx.TOP, 5)
         sizer_7.Add((5, 20), 0, 0, 0)
         sizer_7.Add(self.button_edit_regions, 0, wx.TOP, 5)
-        sizer_5.Add(sizer_7, 0, wx.LEFT|wx.EXPAND, 4)
-        sizer_5.Add(self.label_1_copy, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
-        sizer_5.Add(self.list_box_sensors, 2, wx.LEFT|wx.EXPAND, 4)
+        sizer_5.Add(sizer_7, 0, wx.LEFT | wx.EXPAND, 4)
+        sizer_5.Add(self.label_1_copy, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 4)
+        sizer_5.Add(self.list_box_sensors, 2, wx.LEFT | wx.EXPAND, 4)
         sizer_6.Add(self.button_sensor_add, 0, wx.TOP, 5)
         sizer_6.Add((5, 20), 0, 0, 0)
         sizer_6.Add(self.button_sensor_remove, 0, wx.TOP, 5)
-        sizer_5.Add(sizer_6, 0, wx.LEFT|wx.EXPAND, 4)
-        sizer_5.Add(self.label_1_copy_1, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
-        sizer_5.Add(self.list_box_actions, 2, wx.LEFT|wx.EXPAND, 4)
+        sizer_5.Add(sizer_6, 0, wx.LEFT | wx.EXPAND, 4)
+        sizer_5.Add(self.label_1_copy_1, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 4)
+        sizer_5.Add(self.list_box_actions, 2, wx.LEFT | wx.EXPAND, 4)
         sizer_11.Add(self.button_actuator_add, 0, wx.TOP, 5)
         sizer_11.Add((5, 20), 0, 0, 0)
         sizer_11.Add(self.button_actuator_remove, 0, wx.TOP, 5)
-        sizer_5.Add(sizer_11, 0, wx.LEFT|wx.EXPAND, 6)
-        sizer_5.Add(self.label_1_copy_2, 0, wx.LEFT|wx.TOP|wx.BOTTOM, 4)
-        sizer_5.Add(self.list_box_customs, 2, wx.LEFT|wx.EXPAND, 4)
+        sizer_5.Add(sizer_11, 0, wx.LEFT | wx.EXPAND, 6)
+        sizer_5.Add(self.label_1_copy_2, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 4)
+        sizer_5.Add(self.list_box_customs, 2, wx.LEFT | wx.EXPAND, 4)
         sizer_8.Add(self.button_custom_add, 0, wx.TOP, 5)
         sizer_8.Add((5, 20), 0, 0, 0)
         sizer_8.Add(self.button_custom_remove, 0, wx.TOP, 5)
-        sizer_5.Add(sizer_8, 0, wx.LEFT|wx.EXPAND, 4)
+        sizer_5.Add(sizer_8, 0, wx.LEFT | wx.EXPAND, 4)
         self.panel_1.SetSizer(sizer_5)
         sizer_4.Add(self.panel_1, 1, wx.EXPAND, 0)
         self.window_1_pane_1.SetSizer(sizer_4)
-        sizer_3.Add(self.text_ctrl_log, 1, wx.ALL|wx.EXPAND, 2)
+        sizer_3.Add(self.text_ctrl_log, 1, wx.ALL | wx.EXPAND, 2)
         self.notebook_1_pane_1.SetSizer(sizer_3)
         sizer_9.Add(self.text_ctrl_LTL, 1, wx.EXPAND, 0)
         self.notebook_1_pane_2.SetSizer(sizer_9)
@@ -423,7 +435,7 @@ class SpecEditorFrame(wx.Frame):
         self.notebook_1.AddPage(self.notebook_1_pane_3, "Workspace Decomposition")
         sizer_2.Add(self.notebook_1, 1, wx.EXPAND, 0)
         self.window_1_pane_2.SetSizer(sizer_2)
-        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 500)
+        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 453)
         sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
@@ -670,6 +682,10 @@ class SpecEditorFrame(wx.Frame):
         self.SetTitle("Specification Editor - " + self.proj.project_basename + ".spec")
 
         self.text_ctrl_spec.EmptyUndoBuffer()
+
+        # Set compilation option checkboxes
+        self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
+        self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
     
         self.dirty = False
     
@@ -827,12 +843,19 @@ class SpecEditorFrame(wx.Frame):
         print "\n"
 
         self.appendLog("\t"+output.replace("\n", "\n\t"))
-        if realizableFS:
-            self.appendLog("Automaton successfully synthesized for slow and fast actions.\n", "GREEN")
-        elif realizable:
-            self.appendLog("Specification is unsynthesizable for slow and fast actions.\n Automaton successfully synthesized for instantaneous actions.\n", "GREEN")
+
+        if self.proj.compile_options['fastslow']:
+            if realizableFS:
+                self.appendLog("Automaton successfully synthesized for slow and fast actions.\n", "GREEN")
+            elif realizable:
+                self.appendLog("Specification is unsynthesizable for slow and fast actions.\n Automaton successfully synthesized for instantaneous actions.\n", "GREEN")
+            else:
+                self.appendLog("ERROR: Specification was unsynthesizable (unrealizable/unsatisfiable) for instantaneous actions.\n", "RED")
         else:
-            self.appendLog("ERROR: Specification was unsynthesizable (unrealizable/unsatisfiable) for instantaneous actions.\n", "RED")
+            if realizable:
+                self.appendLog("Automaton successfully synthesized for instantaneous actions.\n", "GREEN")
+            else:
+                self.appendLog("ERROR: Specification was unsynthesizable (unrealizable/unsatisfiable) for instantaneous actions.\n", "RED")
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1245,6 +1268,11 @@ class SpecEditorFrame(wx.Frame):
         self.dirty = True
 
         event.Skip(False)
+
+    def onMenuSetCompileOptions(self, event):  # wxGlade: SpecEditorFrame.<event_handler>
+        self.proj.compile_options["convexify"] = self.frame_1_menubar.IsChecked(MENU_CONVEXIFY)
+        self.proj.compile_options["fastslow"] = self.frame_1_menubar.IsChecked(MENU_FASTSLOW)
+        self.dirty = True
 
 # end of class SpecEditorFrame
 

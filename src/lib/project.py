@@ -36,6 +36,10 @@ class Project:
         self.all_customs = []
         self.currentConfig = None
 
+        # Compilation options (with defaults)
+        self.compile_options = {"convexify": True,  # Decompose workspace into convex regions
+                                "fastslow": False}  # Enable "fast-slow" synthesis algorithm
+
         # Climb the tree to find out where we are
         p = os.path.abspath(sys.argv[0])
         t = ""
@@ -151,6 +155,14 @@ class Project:
         except KeyError:
             if not self.silent: print "WARNING: Specification text undefined"        
         
+        if 'CompileOptions' in spec_data['SETTINGS']:
+            for l in spec_data['SETTINGS']['CompileOptions']:
+                if ":" not in l:
+                    continue
+
+                k,v = l.split(":", 1)
+                self.compile_options[k.strip().lower()] = (v.strip().lower() in ['true', 't', '1'])
+
         return spec_data
 
     def writeSpecFile(self, filename=None):
@@ -176,6 +188,8 @@ class Project:
 
         if self.currentConfig is not None:
             data['SETTINGS']['CurrentConfigName'] = self.currentConfig.name
+    
+        data['SETTINGS']['CompileOptions'] = "\n".join(["%s: %s" % (k, str(v)) for k,v in self.compile_options.iteritems()])
     
         if self.rfi is not None:
             # Save the path to the region file as relative to the spec file
