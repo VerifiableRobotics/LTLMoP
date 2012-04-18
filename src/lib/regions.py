@@ -486,7 +486,7 @@ class Region:
         self.pointArray        = points
         self.alignmentPoints   = [False] * len([x for x in self.getPoints()])
         self.isObstacle = False
-
+        self.holeList = []
     # =================================
     # == Region Manipulation Methods ==
     # =================================
@@ -603,7 +603,10 @@ class Region:
         # Only include points if poly; rects are defined by location+dimension
         if self.type == reg_POLY:
             data['points'] = [(pt.x, pt.y) for pt in self.pointArray]
-
+            data['holeList'] = []
+            for hole in self.holeList:
+                data['holeList'].append([(pt.x, pt.y) for pt in hole])
+                
         data['alignmentPoints'] = [i for i, isAP in enumerate(self.alignmentPoints) if isAP]
 
         data['isObstacle'] = self.isObstacle
@@ -630,7 +633,9 @@ class Region:
         # Only load pointArray if type is poly
         if self.type == reg_POLY:
             self.pointArray = [Point(*pt) for pt in data['points']]
-
+            self.holeList = []
+            for hole in data['holeList']:
+                self.holeList.append([Point(*pt) for pt in hole]
         if 'alignmentPoints' in data:
             self.alignmentPoints = [(i in data['alignmentPoints']) for i, p in enumerate(self.getPoints())]
         else:

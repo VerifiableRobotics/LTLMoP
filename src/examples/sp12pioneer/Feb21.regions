@@ -12,11 +12,77 @@ boundary	2
 Obstacles: # Names of regions to treat as obstacles
 r3
 
-Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
-r3	rect	599	317	93	219	255	0	0
-r2	rect	972	380	202	202	255	255	0
-r1	rect	72	197	189	196	0	0	255
-boundary	rect	41	37	1163	566	176	0	255
+Regions: # Stored as JSON string
+[
+    {
+        "name": "r3", 
+        "color": [
+            255, 
+            0, 
+            0
+        ], 
+        "position": [
+            476, 
+            220
+        ], 
+        "type": "rect", 
+        "size": [
+            127, 
+            102
+        ]
+    }, 
+    {
+        "name": "r2", 
+        "color": [
+            255, 
+            255, 
+            0
+        ], 
+        "position": [
+            398, 
+            174
+        ], 
+        "type": "rect", 
+        "size": [
+            353, 
+            216
+        ]
+    }, 
+    {
+        "name": "r1", 
+        "color": [
+            0, 
+            0, 
+            255
+        ], 
+        "position": [
+            72, 
+            197
+        ], 
+        "type": "rect", 
+        "size": [
+            189, 
+            196
+        ]
+    }, 
+    {
+        "name": "boundary", 
+        "color": [
+            176, 
+            0, 
+            255
+        ], 
+        "position": [
+            41, 
+            37
+        ], 
+        "type": "rect", 
+        "size": [
+            1163, 
+            566
+        ]
+    }
+]
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
 

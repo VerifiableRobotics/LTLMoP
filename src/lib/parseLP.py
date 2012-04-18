@@ -254,7 +254,7 @@ class parseLP:
                         
         for region in smallRegion:
             #print "remove"+region
-            del self.portionOfRegion[region]
+            del self.portionOfRegion[region]            
             
     def intAllPoints(self,poly):
         """
@@ -276,7 +276,11 @@ class parseLP:
             newRegion.name              = nameOfPortion
             newRegion.color             = wx.Colour()
             newRegion.color.SetFromName(random.choice(['RED','ORANGE','YELLOW','GREEN','BLUE','PURPLE']))
-            newRegion.pointArray        = [wx.Point(*x) for x in Polygon.Utils.pointList(poly)]
+            for i,ct in enumerate(poly):
+                if poly.isHole(i):
+                    newRegion.holeList.append([wx.Point(*x) for x in Polygon.Utils.pointList(Polygon.Polygon(poly[i]))])
+                else:  
+                    newRegion.pointArray = [wx.Point(*x) for x in Polygon.Utils.pointList(Polygon.Polygon(poly[i]))]
             newRegion.alignmentPoints   = [False] * len([x for x in newRegion.getPoints()])    
             newRegion.recalcBoundingBox()
             

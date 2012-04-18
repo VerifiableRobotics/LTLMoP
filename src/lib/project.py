@@ -233,7 +233,7 @@ class Project:
         self.rfi = self.loadRegionFile()
         self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps()
         self.determineEnabledPropositions()
-        self.decomp = True # TODO: actually load from proj
+        self.decomp = False # TODO: actually load from proj
 
         return True
 

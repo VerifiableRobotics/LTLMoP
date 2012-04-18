@@ -26,9 +26,9 @@ homework, 0
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
+others = p1
 r1 = p4
-r2 = p3
-others = p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18
+r2 = p2
 
 Spec: # Specification in structured English
 #Env starts with false
