@@ -55,7 +55,7 @@ Customs: # List of custom propositions
 carrying_item
 
 RegionFile: # Relative path of region description file
-debug.regions
+unsynth.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
 fire,1
@@ -79,94 +79,31 @@ others=p10,p11,p12,p13,p14,p15,p16,p17,p18
 kitchen=p6
 
 Spec: # Specification in simple English
-Env starts with false
-Robot starts with not drop
-If you activated drop and you are sensing fire then do not drop
-If you activated drop and you are sensing fire then do drop
-If you did not activate drop then do drop
+#SIMPLE EXAMPLES OF EACH CASE OF UNSYNTHESIZABILITY:
 
-#Do pick_up if and only if you are sensing hazardous_item
-#Do drop if and only if you were in porch
-#If you are activating pick_up or you activated pick_up then stay there
-#If you are activating drop or you activated drop then stay there
-#If you did not activate pick_up then always not porch
-#Visit porch
+##############################################
+##UNSATISFIABLE
+##############################################
+
+##System safety unsatisfiable -- single step
+#Env starts with false
+#Robot starts in deck
+#Always porch
+
+##Environment safety unsatisfiable -- single step
+#Env starts with false
+#Robot starts in deck
 #Always person and not person
 
 
+##Multi-step unsatisfiability
+Env starts with false
+Robot starts with not drop
+If you activated drop then do not drop
+If you activated drop then do drop
+If you did not activate drop then do drop
 
-
-
-
-
-
-
-
-
-
-
-
-#NON-TRIVIAL EXAMPLES:
-
-#Environment liveness unrealizable
-#Env starts with false
-#Robot starts with false
-#robot starts with false
-#If you were in porch then do not hazardous_item
-#If drop then not drop
-#If drop then drop
-#If not drop then drop
-#Do pick_up if and only if you are sensing hazardous_item
-#Do drop if and only if you were in porch
-#If you are activating pick_up or you activated pick_up then go to porch and stay there
-#If you are activating drop or you activated drop then stay there
-#If you did not activate pick_up then always not porch
-#Visit porch
-#If you were in porch then infinitely often person and not person
-#Go to porch and stay there
-
-##System safety unrealizable
-#Env starts with false
-#Robot starts in porch
-#If you were in porch then do not hazardous_item
-#Do pick_up if and only if you are sensing hazardous_item
-#Do drop if and only if you were in porch
-#If you are activating pick_up or you activated pick_up then stay there
-#If you are activating drop or you activated drop then stay there
-#If you did not activate pick_up then always not porch
-#Visit porch
-##If you were in porch then infinitely often person and not person
-
-
-
-#SIMPLE EXAMPLES OF EACH CASE:
-
-##System liveness unrealizable
-#Env starts with false
-#Robot starts in deck
-#Visit porch
-#If you are sensing person then do not porch
-#Visit person
-
-##Environment liveness unrealizable
-#Env starts with false
-#Robot starts in deck
-#Visit porch
-#If you are sensing person then do not porch
-#Visit not person
-#If you were in deck then do person
-
-##System safety unrealizable
-#Env starts with false
-#Robot starts in deck
-#Always not porch
-#If you are sensing person then do porch
-
-##Environment safety unrealizable
-#Env starts with false
-#Robot starts in deck
-#Always not person
-#If you were in porch then do  person
+##############################################
 
 ##System liveness and safety unsatisfiable
 #Env starts with false
@@ -180,14 +117,44 @@ If you did not activate drop then do drop
 #Always not person
 #Infinitely often person
 
-##System safety unsatisfiable
-#Env starts with false
-#Robot starts in deck
-#Always porch
+##############################################
+##UNREALIZABLE
+##############################################
 
-##Environment safety unsatisfiable
+##System safety unrealizable -- single step
 #Env starts with false
 #Robot starts in deck
-#Always person and not person
+#Always not porch
+#If you are sensing person then do porch
+
+##Environment safety unrealizable -- single step
+#Env starts with false
+#Robot starts in deck
+#Always not person
+#If you were in porch then do  person
+
+##Multi-step unrealizability
+#Do pick_up if and only if you are sensing hazardous_item
+#Do drop if and only if you were in porch
+#If you are activating pick_up or you activated pick_up then stay there
+#If you are activating drop or you activated drop then stay there
+#If you did not activate pick_up then always not porch
+
+
+##############################################
+
+##System liveness unrealizable
+#Env starts with false
+#Robot starts in deck
+#Visit porch
+#If you are sensing person then do not porch
+
+##Environment liveness unrealizable
+#Env starts with false
+#Robot starts in deck
+#Visit porch
+#If you are sensing person then do not porch
+#Visit not person
+#If you were in deck then do person
 
 

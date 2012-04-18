@@ -46,21 +46,20 @@ pioneer_real.robot
 ======== SETTINGS ========
 
 Actions: # List of actions and their state (enabled = 1, disabled = 0)
-pick_up,1
-drop,1
+pick_up,0
+drop,0
 radio,1
 extinguish,0
 
 Customs: # List of custom propositions
-carrying_item
 
 RegionFile: # Relative path of region description file
-debug.regions
+unsynth.regions
 
 Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-fire,0
+fire,1
 person,1
-hazardous_item,1
+hazardous_item,0
 
 currentExperimentName:
 ASL
@@ -79,28 +78,21 @@ others=p10,p11,p12,p13,p14,p15,p16,p17,p18
 kitchen=p6
 
 Spec: # Specification in simple English
+#Simple specification demonstrating liveness unrealizability
+#Environment can win by alternating fire and person
+
 Env starts with false
-Robot starts in deck
 Robot starts with false
-If you were in porch then do person
-If you were in porch then do not hazardous_item
-Do pick_up if and only if you are sensing hazardous_item and you are not activating carrying_item
-Do drop if and only if you are activating carrying_item and you were in porch
-If you are activating pick_up or you activated pick_up then stay there
-If you are activating drop or you activated drop then stay there
-Do radio if and only if you are sensing person
-If you are activating radio or you activated radio then stay there
-If you activated pick_up then do carrying_item
-If you activated drop and you did not activate pick_up then do not carrying_item
-If you activated carrying_item and you did not activate drop then do carrying_item
-If you did not activate carrying_item and you did not activate pick_up then do not carrying_item
-#If you are not activating carrying_item and you are not activating radio then visit dining
-If you are not activating carrying_item and you are not activating radio then visit deck
-always not living
-If you are not activating carrying_item and you are not activating radio then visit living
-If you are not activating carrying_item and you are not activating radio then visit bedroom
-If you are not activating carrying_item and you are not activating radio then visit kitchen
-If you did not activate carrying_item then always not porch
-If you are activating carrying_item and you are not activating radio then visit porch
+Robot starts in deck
+
+Visit porch
+
+if you are sensing fire then do not living
+if you are sensing person then do not kitchen
+always do not radio
+
+always not (fire and person)
+
+Always kitchen or porch or deck or bedroom or dining or living
 
 
