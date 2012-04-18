@@ -191,7 +191,7 @@ if __name__ == "__main__":
             user_data = githubAPICall("/user")
             email_data = githubAPICall("/user/emails")
         except urllib2.HTTPError as e:
-            if e.code == 403:
+            if e.code in [401, 403]:
                 print
                 print "Invalid login!  Let's try this again."
                 print
@@ -344,7 +344,11 @@ if __name__ == "__main__":
 
     print
     print "Your copy of LTLMoP is checked out into %s." % os.path.expanduser("~/LTLMoP")
+    print "Feel free to move the folder to anywhere you'd like."
 
     print "If you want more guidance, please look at the companion tutorial."
 
     # TODO: kill ssh-agent?
+
+    print "Press [Enter] to quit..."
+    raw_input()
