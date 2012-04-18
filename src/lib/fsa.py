@@ -52,6 +52,8 @@ class Automaton:
         You need to pass project instance
         """
 
+        self.proj = proj
+
         self.states = []    # A collection of state objects belonging to the automaton
 
         self.regions = proj.rfi.regions # a list of region objects
@@ -113,7 +115,7 @@ class Automaton:
         if state is None:
             state = self.current_state
 
-        print "Rank: " + state.rank
+        print "Current goal: " + state.rank
 
         for key, output_val in state.outputs.iteritems():
             # Skip any "bitX" region encodings
@@ -147,7 +149,8 @@ class Automaton:
                     # bit0 is MSB
                     region += int(2**(self.num_bits-bit-1))
         except KeyError:
-           region = None
+            print "FATAL: Missing expected proposition 'bit%d' in automaton!" % bit
+            region = None
 
         return region
 
@@ -452,36 +455,33 @@ class Automaton:
             self.last_next_states = next_states
 
             # See what we, as the system, need to do to get to this new state
-            if self.next_region is not None and (self.next_region != self.current_region):
-                ### We're going to a new region
-                print "Heading to region %s..." % self.regions[self.next_region].name
-                # In this case, we can't move into the next state until we've physically reached the new region
-            else:
-                ### The state changed, but the region didn't
-                self.current_state = self.next_state  # We can transition immediately
-                #print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
+            self.transition_contains_motion = self.next_region is not None and (self.next_region != self.current_region)
 
-            # Actuate anything that might be necessary
-            self.updateOutputs(self.next_state)
+            if self.proj.compile_options['fastslow']:
+                # Run actuators before motion
+                self.updateOutputs(self.next_state)
+
+            if self.transition_contains_motion:
+                # We're going to a new region
+                print "Heading to region %s..." % self.regions[self.next_region].name
 
         # Move one step towards the next region (or stay in the same region)
-        # TODO: Use the "last" controllers?
         arrived = self.motion_handler.gotoRegion(self.current_region, self.next_region)
 
-        if arrived:
-            ### The move handler has told us that we have finally reached our destination region
-            # TODO: Finish this check to see whether actually inside next region that we expected:
-            #    # Check what region we're in.
-            #    pt = rev_coordmap(wx.Point(px,py))
-            #    for i, region in enumerate(rfi.regions):
-            #        if region.objectContainsPoint(*pt):
-            #            return i
-            #    return -1
+        # Check for completion of motion
+        if arrived or not self.transition_contains_motion:
+            # TODO: Check to see whether actually inside next region that we expected
 
-            if self.next_region is not None:
+            if self.transition_contains_motion:
                 print "Crossed border from %s to %s!" % (self.regions[self.current_region].name, self.regions[self.next_region].name)
+
+            if not self.proj.compile_options['fastslow']:
+                # Run actuators after motion
+                self.updateOutputs(self.next_state)
+
             self.current_state = self.next_state
             self.current_region = self.next_region
-            #print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
+            #print "Now in state %s (z = %s)" % (self.current_state.name, self.current_state.rank)
+
 
          
