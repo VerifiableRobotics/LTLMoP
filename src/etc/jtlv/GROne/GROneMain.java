@@ -24,15 +24,30 @@ public class GROneMain {
 		// GRParser.just_safety = true;
 
         // Check that we have enough arguments
-        if (args.length < 3) {
-            System.err.println("Usage: java GROneMain [smv_file] [ltl_file] [fast/slow option (1 -- fs, 0 -- not)]");
+        if (args.length < 2) {
+            System.err.println("Usage: java GROneMain <smv_file> <ltl_file> [--fastslow] [--safety]");
             System.exit(1);
         }                
 
+        // Load SMV and LTL files
         Env.loadModule(args[0]);
         Spec[] spcs = Env.loadSpecFile(args[1]);
         
-        boolean fs = Boolean.parseBoolean(args[2]);
+        // Parse extra command-line switches
+        boolean fs = false;
+        boolean gen_safety = false;
+
+        for (int i = 2; i < args.length; i++) {
+            if (args[i].equals("--fastslow")) {
+                fs = true;
+            } else if (args[i].equals("--safety")) {
+                gen_safety = true;
+            } else {
+                System.err.println("Unknown option: " + args[i]);
+                System.err.println("Usage: java GROneMain <smv_file> <ltl_file> [--fastslow] [--safety]");
+                System.exit(1);
+            }
+        }
 
         // Figure out the name of our output file by stripping the spec filename extension and adding .aut
         String out_filename = args[1].replaceAll("\\.[^\\.]+$",".aut");
@@ -101,7 +116,7 @@ public class GROneMain {
 
 		// ** Export safety automaton for counterstrategy visualization
 
-		if (args.length == 3 && args[2].equals("--safety")) {
+		if (gen_safety) {
 			System.out.println("Exporting safety constraints automaton...");
 			PrintStream orig_out = System.out;
 			String safety_filename = args[1].replaceAll("\\.[^\\.]+$","_safety.aut");
