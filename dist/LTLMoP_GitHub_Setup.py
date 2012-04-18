@@ -135,6 +135,40 @@ def githubAPICall(path, data=None, method=None):
     return response
 
 if __name__ == "__main__":
+    # If on Windows, use Git Bash for the shell
+    if sys.platform in ['win32', 'cygwin']:
+        # TODO: Is there a better way to determine whether we're in bash or not?
+        cmd = subprocess.Popen(["ls"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+
+        # Wait for subprocess to finish
+        while cmd.returncode is None:
+            cmd.poll()
+            time.sleep(0.01)
+
+        if cmd.returncode != 0:
+            bash_path = r'C:\Program Files\Git\bin\bash.exe'
+            print "Trying to use Git Bash..."
+            try:
+                cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", 'python "%s"' % (os.path.abspath(__file__))])
+            except:
+                print "Couldn't find Git Bash.  Please install Git for Windows."
+                print "(See http://code.google.com/p/msysgit/)"
+                print
+                print "Press [Enter] to quit..."
+                raw_input()
+                sys.exit(1)
+
+            # Wait for subprocess to finish
+            try:
+                while cmd.returncode is None:
+                    cmd.poll()
+                    time.sleep(0.01)
+            except KeyboardInterrupt:
+                cmd.kill()
+
+            sys.exit(0)
+
+
     patrickSays("Hi! I'm a harmless cat who's going to help you out with Git.")
 
     print
