@@ -24,6 +24,8 @@ class naoActuatorHandler:
         self.behaviorProxy = None
 
         self.doCount = False
+        self.asyncBehaviorFlags = {}
+        self.asyncBehaviorThreads = {}
 
 
     #####################################
@@ -99,20 +101,51 @@ class naoActuatorHandler:
             print "Killing already running behavior: " + str(b)
             self.behaviorProxy.stopBehavior(b)
 
-    def runBehavior(self, startBehaviorName, endBehaviorName, actuatorVal, initial=False):
+    def runBehavior(self, startBehaviorName, endBehaviorName, repeat, repeat_period, actuatorVal, initial=False):
+        """
+        Run a behavior that has been pre-loaded onto Nao with Choregraphe.
+
+        startBehaviorName (string): name of behavior to run when prop goes from False to True
+        endBehaviorName (string): name of [optional] behavior to run when prop goes from True to False (default="")
+        repeat (bool): choose whether to continuously repeat the startBehavior as long as prop is true [asynchronously] (default=False)
+        repeat_period (float): period with which to repeat the action, if `repeat` is True.  Must be longer than the action length.
+        """
+
         if initial:
             if self.behaviorProxy is None:
                 self.behaviorProxy = self.naoInitHandler.createProxy('ALBehaviorManager')
+
             #self.behaviorProxy.preloadBehavior(startBehaviorName)
             #if endBehaviorName != "":
             #    self.behaviorProxy.preloadBehavior(endBehaviorName)
+
+            if repeat: 
+                self.asyncBehaviorFlags[startBehaviorName+","+endBehaviorName] = False
+
+                def actionThread(self):
+                    while True:
+                        if self.asyncBehaviorFlags[startBehaviorName+","+endBehaviorName]:
+                            self._killBehaviors()
+                            self.behaviorProxy.post.runBehavior(startBehaviorName)
+                            time.sleep(repeat_period)
+                        else:
+                            time.sleep(0.1)
+
+                self.asyncBehaviorThreads[startBehaviorName+","+endBehaviorName] = threading.Thread(target = actionThread, args = (self,))
+                self.asyncBehaviorThreads[startBehaviorName+","+endBehaviorName].start()
         else:
             if actuatorVal == True:
-                self._killBehaviors()
-                self.behaviorProxy.runBehavior(startBehaviorName)
-            else:
-                if endBehaviorName != "":
+                if repeat:
+                    self.asyncBehaviorFlags[startBehaviorName+","+endBehaviorName] = True
+                else:
                     self._killBehaviors()
+                    self.behaviorProxy.runBehavior(startBehaviorName)
+            else:
+                if repeat:
+                    self.asyncBehaviorFlags[startBehaviorName+","+endBehaviorName] = False
+
+                self._killBehaviors()
+                if endBehaviorName != "":
                     self.behaviorProxy.runBehavior(endBehaviorName)
 
 
