@@ -860,6 +860,8 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
+        return compiler
+
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_log.BeginTextColour(color)
         #self.text_ctrl_log.BeginBold()
@@ -1067,7 +1069,7 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        self.onMenuCompile(event, with_safety_aut=True)
+        compiler = self.onMenuCompile(event, with_safety_aut=True)
 
         # Redirect all output to the log
         redir = RedirectText(self,self.text_ctrl_log)
@@ -1075,90 +1077,30 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = redir
         sys.stderr = redir
 
-        # Windows uses a different delimiter for the java classpath
-        if os.name == "nt":
-            classpath = os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "jtlv-prompt1.4.0.jar") + ";" + os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "GROne")
-        else:
-            classpath = os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "jtlv-prompt1.4.0.jar") + ":" + os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "GROne")
+        self.appendLog("Running analysis...\n", "BLUE")
 
-        cmd = subprocess.Popen(["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneDebug", self.proj.getFilenamePrefix() + ".smv", self.proj.getFilenamePrefix() + ".ltl", "--safety"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+        (realizable, nonTrivial, to_highlight, output) = compiler._analyze()
         
-        # TODO: Make this output live
-        while cmd.poll():
-            wx.Yield()
-            
-        realizable = False    
-        for dline in cmd.stdout:
-            self.appendLog(dline)
-            if "Specification is realizable." in dline:   
-                realizable = True            
-                
-                # check for trivial initial-state automaton with no transitions
-                self._exportDotFile()
-                f = open(self.proj.getFilenamePrefix()+".dot","r")
-                nonTrivial = False
-            # TODO: There is no reason to be parsing the Dot file for this...
-                for autline in f.readlines():
-                    if "->" in autline:
-                        nonTrivial = True 
-                if nonTrivial:
-                    self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")                    
-                else:
-                    self.appendLog("Synthesized automaton is trivial.\n", "GREEN")
-            
-            # highlight sentences corresponding to identified errors
-            
-            # System unsatisfiability
-            if "System initial condition is unsatisfiable." in dline:
-                for l in self.traceback['SysInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
-            if "System transition relation is unsatisfiable." in dline:
-                for l in self.traceback['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
-            if "System highlighted goal(s) unsatisfiable" in dline:
-                for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.traceback['SysGoals'][int(l)]-1,MARKER_LIVE)           
-            if "System highlighted goal(s) inconsistent with transition relation" in dline:
-                for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.traceback['SysGoals'][int(l)]-1,MARKER_LIVE)           
-                for l in self.traceback['SysTrans']: self.text_ctrl_spec.MarkerAdd(l,MARKER_SAFE)
-            if "System initial condition inconsistent with transition relation" in dline:
-                for l in self.traceback['SysInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
-                for l in self.traceback['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
-           
-            # Environment unsatisfiability
-            if "Environment initial condition is unsatisfiable." in dline:
-                for l in self.traceback['EnvInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
-            if "Environment transition relation is unsatisfiable." in dline:
-                for l in self.traceback['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
-            if "Environment highlighted goal(s) unsatisfiable" in dline:
-                for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.traceback['EnvGoals'][int(l)]-1,MARKER_LIVE)
-            if "Environment highlighted goal(s) inconsistent with transition relation" in dline:
-                for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.traceback['EnvGoals'][int(l)]-1,MARKER_LIVE)           
-                for l in self.traceback['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
-            if "Environment initial condition inconsistent with transition relation" in dline:
-                for l in self.traceback['EnvInit']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_INIT)
-                for l in self.traceback['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1,MARKER_SAFE)
-           
-        
-            # System unrealizability
-            if "System is unrealizable because the environment can force a safety violation" in dline:
-                for l in self.traceback['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
-            if "System highlighted goal(s) unrealizable" in dline:
-                for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.traceback['SysGoals'][int(l)]-1,MARKER_LIVE)           
-                for l in self.traceback['SysTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
-            
-            # Environment unrealizability
-            if "Environment is unrealizable because the system can force a safety violation" in dline:
-                for l in self.traceback['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
-            if "Environment highlighted goal(s) unrealizable" in dline:
-                for l in (dline.strip()).split()[-1:]:
-                    self.text_ctrl_spec.MarkerAdd(self.traceback['EnvGoals'][int(l)]-1,MARKER_LIVE)           
-                for l in self.traceback['EnvTrans']: self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)#self.text_ctrl_spec.MarkerSetBackground(l,"RED")
-            
-          
-        cmd.stdout.close()
+        self.appendLog(output, "BLACK")
+
+        if realizable:
+            if nonTrivial:
+                self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")
+            else:
+                self.appendLog("Synthesized automaton is trivial.\n", "RED")
+
+        for h_item in to_highlight:
+            tb_key = h_item[0].title() + h_item[1].title()
+
+            if h_item[1] == "goals":
+                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)           
+            else:
+                for l in self.traceback[tb_key]:
+                    if h_item[1] == "init":
+                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
+                    elif h_item[1] == "trans":
+                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
+                    
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
