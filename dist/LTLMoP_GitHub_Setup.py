@@ -146,17 +146,29 @@ if __name__ == "__main__":
             time.sleep(0.01)
 
         if cmd.returncode != 0:
-            bash_path = r'C:\Program Files\Git\bin\bash.exe'
             print "Trying to use Git Bash..."
-            try:
-                cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", 'python "%s"' % (os.path.abspath(__file__))])
-            except:
+
+            bash_path = None
+            for ev in ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]:
+                if ev not in os.environ: continue
+
+                bp = os.path.join(os.environ[ev], 'Git', 'bin', 'bash.exe')
+
+                if os.path.exists(bp):
+                    bash_path = bp
+                    break
+
+            if bash_path is None:
                 print "Couldn't find Git Bash.  Please install Git for Windows."
                 print "(See http://code.google.com/p/msysgit/)"
                 print
                 print "Press [Enter] to quit..."
                 raw_input()
                 sys.exit(1)
+
+            print "Found Git Bash at %s" % bash_path
+
+            cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", 'python "%s"' % (os.path.abspath(__file__))])
 
             # Wait for subprocess to finish
             try:
