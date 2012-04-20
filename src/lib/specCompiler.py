@@ -237,7 +237,7 @@ class SpecCompiler(object):
     def _synthesize(self, with_safety_aut=False):
         cmd = self._getGROneCommand("GROneMain")
         if cmd is None:
-            return (False, "")
+            return (False, False, "")
 
         if with_safety_aut:    # Generally used for Mopsy
             cmd.append("--safety")
