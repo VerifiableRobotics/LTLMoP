@@ -1191,8 +1191,9 @@ class DrawingFrame(wx.Frame):
         for obj in self.selection:
             newObj = DrawableRegion(obj.type)
             name = newObj.name
-            newObj.setData(obj.getData())
-            newObj.position = copy.deepcopy(obj.position)
+            old_data = obj.getData()
+            del old_data['alignmentPoints'] # don't duplicate alignmentPoints
+            newObj.setData(old_data)
             newObj.name = name
             objs.append(newObj)
 

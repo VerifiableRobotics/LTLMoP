@@ -19,6 +19,7 @@ import os, sys
 import fileMethods
 import re, random, math
 import Polygon, Polygon.Utils, os
+import json
 
 Polygon.setTolerance(0.01)
 
@@ -134,6 +135,19 @@ else:
  handle_BOTTOM_RIGHT,   handle_BOTTOM_LEFT] = range(-1, 4)
 
 ############################################################
+
+class prettierJSONEncoder(json.JSONEncoder):
+    """ Subclass of JSONEncoder that stops indenting after 2 levels;
+        only seems to work well with python2.6 version, not 2.7 :("""
+
+    def _newline_indent(self, last_indent_level=[None]):
+        if self.current_indent_level > 2 or last_indent_level[0] > 2:
+            last_indent_level[0] = self.current_indent_level
+            return ""
+        else:
+            last_indent_level[0] = self.current_indent_level
+            return super(prettierJSONEncoder, self)._newline_indent()
+
 
 class RegionFileInterface:
     """
@@ -269,7 +283,7 @@ class RegionFileInterface:
         transitionFaces = {} # This is just a list of faces to draw dotted lines on
 
         for obj in self.regions:
-            for face in obj.getFaces():                
+            for face in obj.getFaces(includeHole=True):                
                 if face not in transitionFaces: transitionFaces[face] = []
                 ignore = False
                 for other_obj in transitionFaces[face]:
@@ -322,14 +336,20 @@ class RegionFileInterface:
                                   "Format details are described at the beginning of each section below.\n" +
                                   "Note that all values are separated by *tabs*.",
                     "Background": "Relative path of background image file",
-                    "Regions": "Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)",
+                    "Regions": "Stored as JSON string",
                     "Transitions": "Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)",
                     "CalibrationPoints": "Vertices to use for map calibration: (vertex_region_name, vertex_index)",
                     "Obstacles": "Names of regions to treat as obstacles"}    
     
         regionData = []
-        for i, region in enumerate(self.regions): 
-            regionData.append("\t".join(map(str, region.getData(thorough=False)))) 
+        for r in self.regions:
+            d = r.getData()
+            # We don't want to store the following two attributes inside the regions
+            del d['alignmentPoints']
+            del d['isObstacle']
+            regionData.append(d)
+        je = prettierJSONEncoder(indent=4)
+        regionData = [je.encode(regionData)]
        
         transitionData = []
         for region1, destinations in enumerate(self.transitions):
@@ -348,8 +368,8 @@ class RegionFileInterface:
 
         calibPoints = []
         for region in self.regions:
-            for index, bool in enumerate(region.alignmentPoints):
-                if bool:
+            for index, isAP in enumerate(region.alignmentPoints):
+                if isAP:
                     calibPoints.append("\t".join([region.name, str(index)]))
 
         calibPointsStr = "\t".join(calibPoints)
@@ -385,11 +405,22 @@ class RegionFileInterface:
             self.background = "None"
 
         self.regions = []
-        for region in data["Regions"]:
-            regionData = region.split("\t");
+        rdata = data["Regions"]
+
+        try:
+            rdata = json.loads("\n".join(rdata))
+            compatMode = False
+        except ValueError:
+            compatMode = True
+
+        for rd in rdata:
             newRegion = Region()
-            newRegion.setData(regionData, thorough=False)    
-            newRegion.alignmentPoints = [False] * len([x for x in newRegion.getPoints()])
+            if compatMode:
+                regionData = rd.split("\t");
+                newRegion.setDataOld(regionData)    
+            else:
+                newRegion.setData(rd)    
+
             self.regions.append(newRegion)
 
         # Make an empty adjacency matrix of size (# of regions) x (# of regions)
@@ -456,7 +487,7 @@ class Region:
         self.pointArray        = points
         self.alignmentPoints   = [False] * len([x for x in self.getPoints()])
         self.isObstacle = False
-
+        self.holeList = []
     # =================================
     # == Region Manipulation Methods ==
     # =================================
@@ -516,6 +547,10 @@ class Region:
         if self.type == reg_POLY:    
             # Shift our vertices to align with the new bounding box
             self.pointArray = map(lambda x: x-Point(topLeftX, topLeftY), self.pointArray)
+            # Shift holes vertices to align with the new bounding box
+            for i,hole in enumerate(self.holeList):
+                self.holeList[i] =  map(lambda x: x-Point(topLeftX, topLeftY),self.holeList[i])
+                
 
         # Store the new bounding box
         self.position = self.position + Point(topLeftX, topLeftY)
@@ -555,79 +590,92 @@ class Region:
         else:
             return dir_CCW
 
-    def getData(self, thorough=True):
+    def getData(self):
         """ Return a copy of the object's internal data.
-            This is used for undo (thorough=True) and to save this region to disk (thorough=False).
+            This is used for undo and to save this region to disk.
         """
 
+        data = {'name': self.name,
+                'position': (self.position.x, self.position.y),
+                'size': (self.size.width, self.size.height),
+                'color': (self.color.Red(), self.color.Green(), self.color.Blue())}
+
         if self.type == reg_RECT:
-            type = "rect"
+            data['type'] = "rect"
         else:
-            type = "poly"
+            data['type'] = "poly"
 
-        expandedPoints = []
-
+        # Only include points if poly; rects are defined by location+dimension
         if self.type == reg_POLY:
-            for i, pt in enumerate(self.pointArray):
-                if thorough:
-                    expandedPoints.extend([pt.x, pt.y, self.alignmentPoints[i]])
-                else:
-                    expandedPoints.extend([pt.x, pt.y])
-        elif self.type == reg_RECT:
-            if thorough:
-                expandedPoints = self.alignmentPoints
+            data['points'] = [(pt.x, pt.y) for pt in self.pointArray]
+            data['holeList'] = []
+            for hole in self.holeList:
+                data['holeList'].append([(pt.x, pt.y) for pt in hole])
+                
+        data['alignmentPoints'] = [i for i, isAP in enumerate(self.alignmentPoints) if isAP]
 
-        if thorough:
-            obstacleState = [self.isObstacle]
-        else:
-            obstacleState = []
+        data['isObstacle'] = self.isObstacle
 
-        return [self.name, type,
-                self.position.x, self.position.y,
-                self.size.width, self.size.height,
-                self.color.Red(),
-                self.color.Green(),
-                self.color.Blue()] + obstacleState + expandedPoints
+        return data
 
-    def setData(self, data, thorough=True):
+    def setData(self, data):
         """ Set the object's internal data.
 
             'data' is a copy of the object's saved data, as returned by
             getData() above.  This is used for undo and to restore a 
             previously saved region.
         """
-        self.name              = data[0]
+        self.name = data['name']
+        self.position = Point(*data['position'])
+        self.size = Size(*data['size'])
+        self.color = Color(*data['color'])
+
+        if data['type'].lower() == "rect":
+            self.type = reg_RECT
+        else:
+            self.type = reg_POLY
+
+        # Only load pointArray if type is poly
+        if self.type == reg_POLY:
+            self.pointArray = [Point(*pt) for pt in data['points']]
+            self.holeList = []
+            for hole in data['holeList']:
+                self.holeList.append([Point(*pt) for pt in hole])
+        if 'alignmentPoints' in data:
+            self.alignmentPoints = [(i in data['alignmentPoints']) for i, p in enumerate(self.getPoints())]
+        else:
+            self.alignmentPoints = [False] * len([x for x in self.getPoints()])
+
+        if 'isObstacle' in data:
+            self.isObstacle = data['isObstacle']
+
+    def setDataOld(self, data):
+        """ Set the object's internal data.
+
+            'data' is a copy of the object's saved data, as returned by
+            previous version of region editor.  This function is only for
+            backwards compatibility and will eventually be removed.
+        """
+        self.name = data[0]
 
         if data[1].lower() == "rect":
             self.type = reg_RECT
         else:
             self.type = reg_POLY
 
-        self.position          = Point(int(data[2]), int(data[3]))
-        self.size              = Size(int(data[4]), int(data[5]))
-        self.color             = Color(red=int(data[6]),
+        self.position = Point(int(data[2]), int(data[3]))
+        self.size = Size(int(data[4]), int(data[5]))
+        self.color = Color(red=int(data[6]),
                                          green=int(data[7]),
                                           blue=int(data[8]))
         if self.type == reg_POLY:
             self.pointArray = []
-            if thorough:
-                self.alignmentPoints = []
-                for i in range(10, len(data), 3):
-                    self.pointArray.append(Point(int(data[i]), int(data[i+1])))
-                    self.alignmentPoints.append(data[i+2])
-            else:
-                for i in range(9, len(data), 2):
-                    self.pointArray.append(Point(int(data[i]), int(data[i+1])))
-        elif self.type == reg_RECT:
-            if thorough:
-                self.alignmentPoints = []
-                for i in range(10, len(data), 1):
-                    self.alignmentPoints.append(data[i])
+            for i in range(9, len(data), 2):
+                self.pointArray.append(Point(int(data[i]), int(data[i+1])))
 
-        if thorough:
-            self.isObstacle = data[9]
+        self.alignmentPoints = [False] * len([x for x in self.getPoints()])
 
-    def getFaces(self):
+    def getFaces(self,includeHole=False):
         """
         Wrapper function to allow for iteration over faces of regions.
         A face is a tuple of the two points (in absolute coordinates) that make up the face,
@@ -650,21 +698,45 @@ class Region:
             lastPt = thisPt
 
         yield tuple(sorted((lastPt, firstPt))) # Closing face
+        # also include edges of holes in the get faces for checking adjancency
+        if includeHole:
+            for i,hole in enumerate(self.holeList):
+                lastPt = None
+                for pt in self.getPoints(hole_id=i):
+                    thisPt = (pt.x, pt.y)
+
+                    if lastPt != None:
+                        yield tuple(sorted((lastPt, thisPt)))
+                    else:
+                        firstPt = thisPt
+
+                    lastPt = thisPt
+
+                yield tuple(sorted((lastPt, firstPt))) # Closing face
                 
-    def getPoints(self, relative=False):
+
+
+    def getPoints(self, relative=False, hole_id=None):
         """
         Wrapper function to allow for iteration over the points of a region without
-        worrying about whether it's a RECT or POLY. 
+        worrying about whether it's a RECT or POLY.
+        When hole_id is None, the boundary points of the region will be returned
+        When Otherwise the points of holeList[hole_id] will be returned
         """
 
         if relative:
             offset = Point(0, 0)
         else:
             offset = self.position
-
         if self.type == reg_POLY:
-            for pt in self.pointArray:
-                yield offset + pt
+            if hole_id == None:
+                # using boundary of the region
+                for pt in self.pointArray:
+                    yield offset + pt
+            else:
+                # using holeList[hole_id]
+                for pt in self.holeList[hole_id]:
+                    yield offset + pt
         elif self.type == reg_RECT:
             for pt in [Point(0, 0),
                        Point(self.size.width, 0),
@@ -698,7 +770,6 @@ class Region:
 
             This is used to determine if the user clicked on the object.
         """
-
         # Firstly, ignore any points outside of the object's bounds.
 
         if x < self.position.x: return False
@@ -711,18 +782,23 @@ class Region:
             # point is within their bounds.
             return True
 
+        return self.polyContainsPoint(self.pointArray, x - self.position.x, y - self.position.y) and \
+               not any([self.polyContainsPoint(h_pts, x - self.position.x, y - self.position.y) for h_pts in self.holeList])
+
+    def polyContainsPoint(self, poly_pts, x, y):
+
         # For polygons, we have to check whether the clicked point is
         # inside or outside the polygon.
         # The algorithm used here was taken from:
         # http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
 
         sum = 0
-        n = len(self.pointArray)
+        n = len(poly_pts)
         for i in range(n):
-            v1_y = self.pointArray[i].y-(y-self.position.y)
-            v1_x = self.pointArray[i].x-(x-self.position.x)
-            v2_y = self.pointArray[(i+1)%n].y-(y-self.position.y)
-            v2_x = self.pointArray[(i+1)%n].x-(x-self.position.x)
+            v1_y = poly_pts[i].y - y
+            v1_x = poly_pts[i].x - x
+            v2_y = poly_pts[(i+1)%n].y - y
+            v2_x = poly_pts[(i+1)%n].x - x
             angle_v1 = math.atan2(v1_y, v1_x)
             angle_v2 = math.atan2(v2_y, v2_x)
             angle = angle_v2 - angle_v1
@@ -732,11 +808,7 @@ class Region:
                 angle += 2 * math.pi
             sum += angle
 
-        if abs(sum) < math.pi:
-            return False
-        else:
-            return True
-
+        return not (abs(sum) < math.pi)
 
     def getSelectionHandleContainingPoint(self, x, y, boundFunc=None):
         """ Return the selection handle containing the given point, if any.
