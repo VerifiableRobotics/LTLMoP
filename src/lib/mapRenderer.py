@@ -1,6 +1,7 @@
 import wx
 import sys, os
 from regions import *
+from itertools import chain
 
 #----------------------------------------------------------------------------
 
@@ -61,7 +62,31 @@ class DrawableRegion(Region):
 
         if self.type == reg_POLY:
             scaledPointArray = map(lambda pt: wx.Point(scale*pt.x, scale*pt.y), self.pointArray)
-            dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]], scale*position.x, scale*position.y)
+            if self.holeList == []:
+                dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]], scale*position.x, scale*position.y)
+            else:
+                # To draw with holes, need to draw to a bitmap in memory and then blit, since wxpython doesn't support DrawPolyPolygon...
+                b = wx.EmptyBitmap(scale*self.size.width, scale*self.size.height)
+                b_dc = wx.MemoryDC()
+                b_dc.SelectObject(b)
+                b_dc.BeginDrawing()
+                b_dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
+                b_dc.DrawRectangle(0,0,scale*self.size.width, scale*self.size.height)
+
+                b_dc.SetPen(dc.GetPen())
+                b_dc.SetBrush(dc.GetBrush())
+                b_dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]])
+                for holePts in self.holeList:
+                    b_dc.SetPen(wx.Pen(wx.WHITE, 1, wx.SOLID))
+                    b_dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
+                    scaledPointArray = map(lambda pt: wx.Point(scale*pt.x, scale*pt.y), holePts) 
+                    b_dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]])
+
+                b_dc.EndDrawing()
+                b.SetMaskColour(wx.WHITE)
+                b_dc.SelectObject(wx.NullBitmap)
+                dc.DrawBitmap(b, scale*self.position.x, scale*self.position.y, useMask=True)
+                
         elif self.type == reg_RECT:
             dc.DrawRectangle(scale*position.x, scale*position.y,
                              scale*self.size.width, scale*self.size.height)
