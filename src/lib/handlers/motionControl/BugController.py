@@ -25,14 +25,18 @@ from scipy.linalg import norm
 from math import *
 
 class motionControlHandler:
-    def __init__(self, proj, shared_data):
+    def __init__(self, proj, shared_data,robot_type):
         """
         Bug alogorithm motion planning controller
+        
+        robot_type (int): Which robot is used for execution. pioneer is 1, ODE is 2 (default=1)
         """
 
         # Information about the robot
         ## 1: Pioneer ; 2: 0DE
-        self.system = 1
+        if robot_type not in [1,2]:
+            robot_type = 1
+        self.system = robot_type
                 
         #setting for plotting
         ##figure number
@@ -75,7 +79,7 @@ class motionControlHandler:
         
         self.range             = 0.75     # (m) specify the range of the robot (when the normal circle range cannot detect obstacle)
         self.obsRange          = 0.50     # (m) range that says the robot detects obstacles
-        #self.shift             = 0.20     # 0.15
+        self.shift             = 0.20     # 0.15
 
         
         ## 2: 0DE
