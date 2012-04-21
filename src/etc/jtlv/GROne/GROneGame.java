@@ -29,6 +29,13 @@ public class GROneGame {
 	private BDD player1_winning;
 	private BDD player2_winning;
 	
+	BDD slowSame, fastSame, envSame;
+
+	BDDVarSet sys_slow_prime;
+
+	BDDVarSet sys_fast_prime;		
+
+	
 	// p2_winning in GRGAmes are !p1_winning
 
 	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, int sysJustNum, int envJustNum)
@@ -68,6 +75,39 @@ public class GROneGame {
 			throws GameException {
 		this(env, sys, sys.justiceNum(), env.justiceNum());
 	}
+	
+	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, boolean fastslow)
+			throws GameException {
+		if ((env == null) || (sys == null)) {
+			throw new GameException(
+					"cannot instanciate a GR[1] Game with an empty player.");
+		}
+		
+		//Define system and environment modules, and how many liveness conditions are to be considered. 
+		//The first sysJustNum system livenesses and the first envJustNum environment livenesses will be used
+		this.env = env;
+		this.sys = sys;
+		this.sysJustNum = sys.justiceNum();
+		this.envJustNum = env.justiceNum();
+		
+		// for now I'm giving max_y 50, at the end I'll cut it (and during, I'll
+		// extend if needed. (using vectors only makes things more complicate
+		// since we cannot instantiate vectors with new vectors)
+		x_mem = new BDD[sysJustNum][envJustNum][50];
+		y_mem = new BDD[sysJustNum][50];
+		z_mem = new BDD[sysJustNum];
+		x2_mem = new BDD[sysJustNum][envJustNum][50][50];
+		y2_mem = new BDD[sysJustNum][50];
+		z2_mem = new BDD[50];	
+			
+		
+		this.player2_winning = this.calculate_win_FS();	//(system winning states)
+		this.player1_winning = this.player2_winning.not(); //(environment winning states)
+
+	}
+	
+	
+
 
 	public BDD[][][] x_mem;
 	public BDD[][][][] x2_mem;
@@ -132,6 +172,127 @@ public class GROneGame {
 	 * 
 	 * @return The Player-2 losing states for this game.
 	 */
+	
+	private BDD calculate_win_FS() {	
+		
+		BDD x, y, z;
+		FixPoint<BDD> iterZ, iterY, iterX;
+		int cy = 0;
+
+		z = Env.TRUE();
+		for (iterZ = new FixPoint<BDD>(); iterZ.advance(z);) {
+			for (int j = 0; j < sysJustNum; j++) {
+				cy = 0;
+				y = Env.FALSE();
+				for (iterY = new FixPoint<BDD>(); iterY.advance(y);) {
+					BDD start = sys.justiceAt(j).and(yieldStatesFS(env,sys, z))
+							.or(yieldStatesFS(env,sys, y));
+					y = Env.FALSE();
+					for (int i = 0; i < envJustNum; i++) {
+						BDD negp = env.justiceAt(i).not();
+						x = z.id();
+						for (iterX = new FixPoint<BDD>(); iterX.advance(x);) {
+							x = negp.and(yieldStatesFS(env,sys, x)).or(start);
+						}
+						x_mem[j][i][cy] = x.id();
+						y = y.id().or(x);
+					}
+					y_mem[j][cy] = y.id();
+					cy++;
+					if (cy % 50 == 0) {
+						x_mem = extend_size(x_mem, cy);
+						y_mem = extend_size(y_mem, cy);
+					}
+				}
+				z = y.id();
+				z_mem[j] = z.id();						
+						
+			}
+		}
+		x_mem = extend_size(x_mem, 0);
+		y_mem = extend_size(y_mem, 0);					
+		return z.id();
+	}
+	
+    // COX	
+
+	/*public BDD yieldStates(Module env, Module sys, BDD to) {
+
+		BDDVarSet env_prime = env.modulePrimeVars();
+		BDDVarSet sys_prime = sys.modulePrimeVars();
+		BDD exy1 = (Env.prime(to).and(sys.trans())).exist(sys_slow_prime);		
+		BDD exy3 = Env.unprime(Env.prime(to).and(sys.trans()).and(fastSame).exist(sys_prime));		
+		BDD exy2 = (sys.trans().and(slowSame.and(exy3))).exist(sys_slow_prime);
+		return env.trans().imp((exy1.and(exy2)).exist(sys_fast_prime)).forAll(env_prime);
+	}*/
+
+	
+
+    //COX_FS
+
+	public BDD yieldStatesFS(Module env, Module sys, BDD to) {
+		
+		//Construct the BDDs required for fastSlow
+		BDDVarSet sys_slow_prime = Env.getEmptySet();
+		BDDVarSet sys_fast_prime = Env.getEmptySet();
+		BDDVarSet sys_slow_unprime = Env.getEmptySet();
+		BDDVarSet sys_fast_unprime = Env.getEmptySet();
+		BDD slowSame = Env.TRUE();
+		BDD fastSame = Env.TRUE();
+		BDD envSame = Env.TRUE();
+
+
+		ModuleBDDField [] allFields = sys.getAllFields();				
+		ModuleBDDField thisField, thisPrime;
+		String fieldName;
+
+		for (int i = 0; i < allFields.length; i++) {
+			thisField = allFields[i];
+			thisPrime = thisField.prime();	
+			fieldName = thisPrime.support().toString();
+			if (fieldName.startsWith("<bit")) {
+				slowSame = slowSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));
+				sys_slow_prime = sys_slow_prime.union(thisPrime.support());
+				sys_slow_unprime = sys_slow_unprime.union(thisField.support());				
+			} else {
+				fastSame = fastSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));
+				sys_fast_prime = sys_fast_prime.union(thisPrime.support());
+				sys_fast_unprime = sys_fast_unprime.union(thisField.support());
+			}		
+		}
+
+		allFields = env.getAllFields();			
+		for (int i = 0; i < allFields.length; i++) {
+			thisField = allFields[i];
+			thisPrime = thisField.prime();
+			fieldName = thisPrime.support().toString();			
+			envSame = envSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));			
+		}	
+
+		BDDVarSet env_prime = env.modulePrimeVars();
+		BDDVarSet sys_prime = sys.modulePrimeVars();
+		
+		BDD safeStates = sys.trans().exist(env.moduleUnprimeVars().union(sys.modulePrimeVars()));
+		BDD safeNext = Env.unprime(sys.trans().exist(env.modulePrimeVars().union(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()))));
+		
+		//Check the complete transition
+		BDD exy1 = Env.prime(to).and(sys.trans());	
+		
+		
+		//If both types are changing, check both the intermediate state (exy2) and the complete transition (ex1)
+		BDD exy6 = (slowSame.and(Env.prime(safeStates.and(safeNext)))).exist(sys_slow_prime);	
+		
+		BDD exy5 = ((exy1.and(exy6)).and(slowSame.not()).and(fastSame.not())).exist(sys_prime);
+		
+		BDD fs1 = env.trans().imp(exy5).forAll(env_prime);
+		
+        //If only one type of controller changes, use old cox
+		BDD exy4 = Env.prime(to).and(sys.trans()).and(slowSame.or(fastSame)).exist(sys_prime);
+        BDD fs2 = env.trans().imp(exy4).forAll(env_prime);        
+
+        return fs1.or(fs2);
+	}
+	
 	
 	private BDD calculate_loss() {
 		BDD x, y, z;

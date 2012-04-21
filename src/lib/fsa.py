@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 
 """ ======================================
     fsa.py - Finite-State Automaton module
@@ -51,6 +52,8 @@ class Automaton:
 
         You need to pass project instance
         """
+
+        self.proj = proj
 
         self.states = []    # A collection of state objects belonging to the automaton
 
@@ -113,6 +116,8 @@ class Automaton:
         if state is None:
             state = self.current_state
 
+        print "Current goal: " + state.rank
+
         for key, output_val in state.outputs.iteritems():
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', key): continue
@@ -129,7 +134,7 @@ class Automaton:
                     self.motion_handler.gotoRegion(self.current_region, self.current_region)  # Stop, in case actuation takes time
                     #self.actuator_handler.setActuator(key, new_val)
                     initial=False
-                    eval(self.actuator_handler[key])
+                    exec(self.actuator_handler[key])
 
                 self.current_outputs[key] = new_val
 
@@ -145,7 +150,8 @@ class Automaton:
                     # bit0 is MSB
                     region += int(2**(self.num_bits-bit-1))
         except KeyError:
-           region = None
+            print "FATAL: Missing expected proposition 'bit%d' in automaton!" % bit
+            region = None
 
         return region
 
@@ -287,7 +293,7 @@ class Automaton:
 
         # Write the header
         FILE.write('digraph A { \n')
-        FILE.write('\trankdir=TB;\n')
+        FILE.write('\trankdir=LR;\n')
         #FILE.write('\tratio = 0.75;\n')
         FILE.write('\tsize = "8.5,11";\n')
         FILE.write('\toverlap = false;\n')
@@ -297,22 +303,26 @@ class Automaton:
         for state in self.states:
             FILE.write('\ts'+ state.name + ' [style=\"bold\",width=0,height=0, fontsize = 20, label=\"')
             stateRegion = self.regionFromState(state)
-            FILE.write( self.getAnnotatedRegionName(stateRegion) + ' \\n ')
+            FILE.write( self.getAnnotatedRegionName(stateRegion) + '\\n')
             for key in state.outputs.keys():
-                if state.outputs[key] == '1' and not re.match('^bit\d+$',key):
-                    # Only propositions that are TRUE and not bitXs are written in the state
-                    FILE.write( key + ' \\n ')
-            FILE.write( "("+state.rank + ')\\n ')
+                if re.match('^bit\d+$',key): continue
+                if state.outputs[key] == '1':
+                    FILE.write( key + '\\n')
+                else:
+                    FILE.write( '¬' + key + '\\n')
+            #FILE.write( "("+state.rank + ')\\n ')
             FILE.write('\" ];\n')
 
         # Write the transitions with the input labels (only inputs that are true)
         for state in self.states:
             for nextState in state.transitions:
-                FILE.write('\ts'+ state.name +' -> s'+ nextState.name +'[style=\"bold\", arrowsize = 1, fontsize = 20, label=\"')
+                FILE.write('\ts'+ state.name +' -> s'+ nextState.name +'[style=\"bold\", arrowsize = 1.5, fontsize = 20, label=\"')
                 # Check the next state to figure out which inputs have to be on
                 for key in nextState.inputs.keys():
                     if nextState.inputs[key] == '1':
-                        FILE.write( key + ' \\n ')
+                        FILE.write( key + '\\n')
+                    else:
+                        FILE.write( '¬' + key + '\\n')
                 FILE.write('\" ];\n')
 
         FILE.write('} \n')
@@ -358,6 +368,9 @@ class Automaton:
             if initial:
                 # First see if we can be in the state given our current region
                 if self.regionFromState(state) != self.current_region: continue
+                
+                # Start only with Rank 0 states
+                #if int(state.rank) != 0: continue
 
                 # Now check whether our current output values match those of the state
                 for key, value in state.outputs.iteritems():
@@ -447,37 +460,33 @@ class Automaton:
             self.last_next_states = next_states
 
             # See what we, as the system, need to do to get to this new state
-            if self.next_region is not None and (self.next_region != self.current_region):
-                ### We're going to a new region
-                print "Heading to region %s..." % self.regions[self.next_region].name
-                # In this case, we can't move into the next state until we've physically reached the new region
-            else:
-                ### The state changed, but the region didn't
-                self.current_state = self.next_state  # We can transition immediately
-                #print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
+            self.transition_contains_motion = self.next_region is not None and (self.next_region != self.current_region)
 
-                # Actuate anything that might be necessary
-                self.updateOutputs()
+            if self.proj.compile_options['fastslow']:
+                # Run actuators before motion
+                self.updateOutputs(self.next_state)
+
+            if self.transition_contains_motion:
+                # We're going to a new region
+                print "Heading to region %s..." % self.regions[self.next_region].name
 
         # Move one step towards the next region (or stay in the same region)
-        # TODO: Use the "last" controllers?
         arrived = self.motion_handler.gotoRegion(self.current_region, self.next_region)
 
-        if arrived:
-            ### The move handler has told us that we have finally reached our destination region
-            # TODO: Finish this check to see whether actually inside next region that we expected:
-            #    # Check what region we're in.
-            #    pt = rev_coordmap(wx.Point(px,py))
-            #    for i, region in enumerate(rfi.regions):
-            #        if region.objectContainsPoint(*pt):
-            #            return i
-            #    return -1
+        # Check for completion of motion
+        if arrived or not self.transition_contains_motion:
+            # TODO: Check to see whether actually inside next region that we expected
 
-            if self.next_region is not None:
+            if self.transition_contains_motion:
                 print "Crossed border from %s to %s!" % (self.regions[self.current_region].name, self.regions[self.next_region].name)
+
+            if not self.proj.compile_options['fastslow']:
+                # Run actuators after motion
+                self.updateOutputs(self.next_state)
+
             self.current_state = self.next_state
             self.current_region = self.next_region
-            #print "Now in state %s (rank = %s)" % (self.current_state.name, self.current_state.rank)
+            #print "Now in state %s (z = %s)" % (self.current_state.name, self.current_state.rank)
 
-            # Actuate anything that might be necessary
-            self.updateOutputs()
+
+         

@@ -158,7 +158,7 @@ class CalibrateFrame(wx.Frame):
 
             self.markerPos = None # Disable blinking circle
 
-            pose = self.proj.pose_handler.getPose()
+            pose = self.proj.h_instance['pose'].getPose()
 
             new_pt = mat(pose[0:2]).T
             if real_pts is None:
@@ -178,7 +178,7 @@ class CalibrateFrame(wx.Frame):
         output = repr(T)
 
         if self.configEditorPort is None:
-            print data
+            print output
         else:
             UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             UDPSock.sendto(output, self.configEditorPort)

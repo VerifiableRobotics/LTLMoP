@@ -72,7 +72,7 @@ class parseLP:
         self.removeSmallRegions()
         
         # decompose any regions with holes or are concave
-        if self.proj.decomp:
+        if self.proj.compile_options['convexify']:
             self.decomp()
 
         # store the regionMapping data to project file

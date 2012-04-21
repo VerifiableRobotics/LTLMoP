@@ -260,7 +260,7 @@ def main(argv):
     while True:
         # Idle if we're not running
         while not runFSA:
-            proj.drive_handler.setVelocity(0,0)
+            proj.h_instance['drive'].setVelocity(0,0)
             time.sleep(0.05) # We need to sleep to give up the CPU
 
         tic = time.time()

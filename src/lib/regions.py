@@ -137,7 +137,8 @@ else:
 ############################################################
 
 class prettierJSONEncoder(json.JSONEncoder):
-    """ Subclass of JSONEncoder that stops indenting after 2 levels """
+    """ Subclass of JSONEncoder that stops indenting after 2 levels;
+        only seems to work well with python2.6 version, not 2.7 :("""
 
     def _newline_indent(self, last_indent_level=[None]):
         if self.current_indent_level > 2 or last_indent_level[0] > 2:
@@ -282,7 +283,7 @@ class RegionFileInterface:
         transitionFaces = {} # This is just a list of faces to draw dotted lines on
 
         for obj in self.regions:
-            for face in obj.getFaces():                
+            for face in obj.getFaces(includeHole=True):                
                 if face not in transitionFaces: transitionFaces[face] = []
                 ignore = False
                 for other_obj in transitionFaces[face]:
@@ -546,6 +547,10 @@ class Region:
         if self.type == reg_POLY:    
             # Shift our vertices to align with the new bounding box
             self.pointArray = map(lambda x: x-Point(topLeftX, topLeftY), self.pointArray)
+            # Shift holes vertices to align with the new bounding box
+            for i,hole in enumerate(self.holeList):
+                self.holeList[i] =  map(lambda x: x-Point(topLeftX, topLeftY),self.holeList[i])
+                
 
         # Store the new bounding box
         self.position = self.position + Point(topLeftX, topLeftY)
@@ -635,7 +640,7 @@ class Region:
             self.pointArray = [Point(*pt) for pt in data['points']]
             self.holeList = []
             for hole in data['holeList']:
-                self.holeList.append([Point(*pt) for pt in hole]
+                self.holeList.append([Point(*pt) for pt in hole])
         if 'alignmentPoints' in data:
             self.alignmentPoints = [(i in data['alignmentPoints']) for i, p in enumerate(self.getPoints())]
         else:
@@ -670,7 +675,7 @@ class Region:
 
         self.alignmentPoints = [False] * len([x for x in self.getPoints()])
 
-    def getFaces(self):
+    def getFaces(self,includeHole=False):
         """
         Wrapper function to allow for iteration over faces of regions.
         A face is a tuple of the two points (in absolute coordinates) that make up the face,
@@ -693,21 +698,45 @@ class Region:
             lastPt = thisPt
 
         yield tuple(sorted((lastPt, firstPt))) # Closing face
+        # also include edges of holes in the get faces for checking adjancency
+        if includeHole:
+            for i,hole in enumerate(self.holeList):
+                lastPt = None
+                for pt in self.getPoints(hole_id=i):
+                    thisPt = (pt.x, pt.y)
+
+                    if lastPt != None:
+                        yield tuple(sorted((lastPt, thisPt)))
+                    else:
+                        firstPt = thisPt
+
+                    lastPt = thisPt
+
+                yield tuple(sorted((lastPt, firstPt))) # Closing face
                 
-    def getPoints(self, relative=False):
+
+
+    def getPoints(self, relative=False, hole_id=None):
         """
         Wrapper function to allow for iteration over the points of a region without
-        worrying about whether it's a RECT or POLY. 
+        worrying about whether it's a RECT or POLY.
+        When hole_id is None, the boundary points of the region will be returned
+        When Otherwise the points of holeList[hole_id] will be returned
         """
 
         if relative:
             offset = Point(0, 0)
         else:
             offset = self.position
-
         if self.type == reg_POLY:
-            for pt in self.pointArray:
-                yield offset + pt
+            if hole_id == None:
+                # using boundary of the region
+                for pt in self.pointArray:
+                    yield offset + pt
+            else:
+                # using holeList[hole_id]
+                for pt in self.holeList[hole_id]:
+                    yield offset + pt
         elif self.type == reg_RECT:
             for pt in [Point(0, 0),
                        Point(self.size.width, 0),
@@ -741,7 +770,6 @@ class Region:
 
             This is used to determine if the user clicked on the object.
         """
-
         # Firstly, ignore any points outside of the object's bounds.
 
         if x < self.position.x: return False
@@ -754,18 +782,23 @@ class Region:
             # point is within their bounds.
             return True
 
+        return self.polyContainsPoint(self.pointArray, x - self.position.x, y - self.position.y) and \
+               not any([self.polyContainsPoint(h_pts, x - self.position.x, y - self.position.y) for h_pts in self.holeList])
+
+    def polyContainsPoint(self, poly_pts, x, y):
+
         # For polygons, we have to check whether the clicked point is
         # inside or outside the polygon.
         # The algorithm used here was taken from:
         # http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
 
         sum = 0
-        n = len(self.pointArray)
+        n = len(poly_pts)
         for i in range(n):
-            v1_y = self.pointArray[i].y-(y-self.position.y)
-            v1_x = self.pointArray[i].x-(x-self.position.x)
-            v2_y = self.pointArray[(i+1)%n].y-(y-self.position.y)
-            v2_x = self.pointArray[(i+1)%n].x-(x-self.position.x)
+            v1_y = poly_pts[i].y - y
+            v1_x = poly_pts[i].x - x
+            v2_y = poly_pts[(i+1)%n].y - y
+            v2_x = poly_pts[(i+1)%n].x - x
             angle_v1 = math.atan2(v1_y, v1_x)
             angle_v2 = math.atan2(v2_y, v2_x)
             angle = angle_v2 - angle_v1
@@ -775,11 +808,7 @@ class Region:
                 angle += 2 * math.pi
             sum += angle
 
-        if abs(sum) < math.pi:
-            return False
-        else:
-            return True
-
+        return not (abs(sum) < math.pi)
 
     def getSelectionHandleContainingPoint(self, x, y, boundFunc=None):
         """ Return the selection handle containing the given point, if any.

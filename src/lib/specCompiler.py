@@ -125,12 +125,12 @@ class SpecCompiler(object):
                     print err_message
                     err = 1
 
-    def _synthesize(self, with_safety_aut=False):
+    def _getGROneCommand(self, module):
         # Check that GROneMain, etc. is compiled
         if not os.path.exists(os.path.join(self.proj.ltlmop_root,"etc","jtlv","GROne","GROneMain.class")):
             print "Please compile the synthesis Java code first.  For instructions, see etc/jtlv/JTLV_INSTRUCTIONS."
             # TODO: automatically compile for the user
-            return (False, "")
+            return None
 
         # Windows uses a different delimiter for the java classpath
         if os.name == "nt":
@@ -140,11 +140,110 @@ class SpecCompiler(object):
 
         classpath = delim.join([os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "jtlv-prompt1.4.0.jar"), os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "GROne")])
 
-        cmd = ["java", "-ea", "-Xmx512m", "-cp", classpath, "GROneMain", self.proj.getFilenamePrefix() + ".smv", self.proj.getFilenamePrefix() + ".ltl"]
+        cmd = ["java", "-ea", "-Xmx512m", "-cp", classpath, module, self.proj.getFilenamePrefix() + ".smv", self.proj.getFilenamePrefix() + ".ltl"]
 
-        # Generally used for Mopsy
-        if with_safety_aut:
+        return cmd
+
+    def _analyze(self):
+        cmd = self._getGROneCommand("GROneDebug")
+        if cmd is None:
+            return (False, False, [], "")
+
+        subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+
+        # TODO: Make this output live
+        while subp.poll():
+            time.sleep(0.1)
+
+        realizable = False    
+        nonTrivial = False
+
+        output = ""
+        to_highlight = []
+        for dline in subp.stdout:
+            output += dline
+            if "Specification is realizable." in dline:   
+                realizable = True            
+            
+            ### Highlight sentences corresponding to identified errors ###
+
+            # System unsatisfiability
+            elif "System initial condition is unsatisfiable." in dline:
+                to_highlight.append(("sys", "init"))
+            elif "System transition relation is unsatisfiable." in dline:
+                to_highlight.append(("sys", "trans"))
+            elif "System highlighted goal(s) unsatisfiable" in dline:
+                for l in (dline.strip()).split()[-1:]:
+                    to_highlight.append(("sys", "goals", int(l)))
+            elif "System highlighted goal(s) inconsistent with transition relation" in dline:
+                to_highlight.append(("sys", "trans"))
+                for l in (dline.strip()).split()[-1:]:
+                    to_highlight.append(("sys", "goals", int(l)))
+            elif "System initial condition inconsistent with transition relation" in dline:
+                to_highlight.append(("sys", "init"))
+                to_highlight.append(("sys", "trans"))
+           
+            # Environment unsatisfiability
+            elif "Environment initial condition is unsatisfiable." in dline:
+                to_highlight.append(("env", "init"))
+            elif "Environment transition relation is unsatisfiable." in dline:
+                to_highlight.append(("env", "trans"))
+            elif "Environment highlighted goal(s) unsatisfiable" in dline:
+                for l in (dline.strip()).split()[-1:]:
+                    to_highlight.append(("env", "goals", int(l)))
+            elif "Environment highlighted goal(s) inconsistent with transition relation" in dline:
+                to_highlight.append(("env", "trans"))
+                for l in (dline.strip()).split()[-1:]:
+                    to_highlight.append(("env", "goals", int(l)))
+            elif "Environment initial condition inconsistent with transition relation" in dline:
+                to_highlight.append(("env", "init"))
+                to_highlight.append(("env", "trans"))
+           
+        
+            # System unrealizability
+            elif "System is unrealizable because the environment can force a safety violation" in dline:
+                to_highlight.append(("sys", "trans"))
+            elif "System highlighted goal(s) unrealizable" in dline:
+                to_highlight.append(("sys", "trans"))
+                for l in (dline.strip()).split()[-1:]:
+                    to_highlight.append(("sys", "goals", int(l)))
+            
+            # Environment unrealizability
+            elif "Environment is unrealizable because the system can force a safety violation" in dline:
+                to_highlight.append(("env", "trans"))
+            elif "Environment highlighted goal(s) unrealizable" in dline:
+                to_highlight.append(("env", "trans"))
+                for l in (dline.strip()).split()[-1:]:
+                    to_highlight.append(("env", "goals", int(l)))
+
+        # check for trivial initial-state automaton with no transitions
+        if realizable:
+            proj_copy = deepcopy(self.proj)
+            proj_copy.rfi = self.proj.parser.rfi
+            proj_copy.sensor_handler = None
+            proj_copy.actuator_handler = None
+            proj_copy.h_instance = None
+
+            aut = fsa.Automaton(proj_copy)
+
+            aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
+            
+            nonTrivial = any([s.transitions != [] for s in aut.states])
+
+        subp.stdout.close()
+
+        return (realizable, nonTrivial, to_highlight, output)
+
+    def _synthesize(self, with_safety_aut=False):
+        cmd = self._getGROneCommand("GROneMain")
+        if cmd is None:
+            return (False, False, "")
+
+        if with_safety_aut:    # Generally used for Mopsy
             cmd.append("--safety")
+
+        if self.proj.compile_options["fastslow"]:
+            cmd.append("--fastslow")
 
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
         
@@ -153,16 +252,19 @@ class SpecCompiler(object):
             time.sleep(0.1)
 
         realizable = False
+        realizableFS = False
 
         output = ""
         for line in subp.stdout:
             output += line
             if "Specification is realizable" in line:
-               realizable = True
+                realizable = True
+            if "Specification is realizable with slow and fast actions" in line:
+                realizableFS = True
                
         subp.stdout.close()
 
-        return (realizable, output)
+        return (realizable, realizableFS, output)
 
     def compile(self, with_safety_aut=False):
         self._decompose()

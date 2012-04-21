@@ -135,6 +135,52 @@ def githubAPICall(path, data=None, method=None):
     return response
 
 if __name__ == "__main__":
+    # If on Windows, use Git Bash for the shell
+    if sys.platform in ['win32', 'cygwin']:
+        # TODO: Is there a better way to determine whether we're in bash or not?
+        cmd = subprocess.Popen(["ls"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+
+        # Wait for subprocess to finish
+        while cmd.returncode is None:
+            cmd.poll()
+            time.sleep(0.01)
+
+        if cmd.returncode != 0:
+            print "Trying to use Git Bash..."
+
+            bash_path = None
+            for ev in ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]:
+                if ev not in os.environ: continue
+
+                bp = os.path.join(os.environ[ev], 'Git', 'bin', 'bash.exe')
+
+                if os.path.exists(bp):
+                    bash_path = bp
+                    break
+
+            if bash_path is None:
+                print "Couldn't find Git Bash.  Please install Git for Windows."
+                print "(See http://code.google.com/p/msysgit/)"
+                print
+                print "Press [Enter] to quit..."
+                raw_input()
+                sys.exit(1)
+
+            print "Found Git Bash at %s" % bash_path
+
+            cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", 'python "%s"' % (os.path.abspath(__file__))])
+
+            # Wait for subprocess to finish
+            try:
+                while cmd.returncode is None:
+                    cmd.poll()
+                    time.sleep(0.01)
+            except KeyboardInterrupt:
+                cmd.kill()
+
+            sys.exit(0)
+
+
     patrickSays("Hi! I'm a harmless cat who's going to help you out with Git.")
 
     print
@@ -191,7 +237,7 @@ if __name__ == "__main__":
             user_data = githubAPICall("/user")
             email_data = githubAPICall("/user/emails")
         except urllib2.HTTPError as e:
-            if e.code == 403:
+            if e.code in [401, 403]:
                 print
                 print "Invalid login!  Let's try this again."
                 print
@@ -344,7 +390,11 @@ if __name__ == "__main__":
 
     print
     print "Your copy of LTLMoP is checked out into %s." % os.path.expanduser("~/LTLMoP")
+    print "Feel free to move the folder to anywhere you'd like."
 
     print "If you want more guidance, please look at the companion tutorial."
 
     # TODO: kill ssh-agent?
+
+    print "Press [Enter] to quit..."
+    raw_input()

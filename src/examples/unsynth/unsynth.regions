@@ -19,7 +19,7 @@ kitchen	poly	299	320	220	255	255	0	0	0	0	220	11	220	241	219	249	0	255
 boundary	poly	13	10	1183	729	0	0	255	35	576	0	14	131	17	211	20	420	0	1106	34	1183	616	954	729	402	729
 
 Thumbnail: # Relative path of image file that has region shapes overlayed on background image
-debug_simbg.png
+unsynth_simbg.png
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
 porch	living	299	80	299	320

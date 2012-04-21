@@ -180,7 +180,7 @@ public class GROneDebug {
 			
 		counter_exmple = g.envWinningStates().and(all_init);		 
 		if (counter_exmple.isZero()) {	//no winning environment states		
-			debugInfo += "Specification is realizable.\n";
+			//debugInfo += "Specification is realizable assuming instantaneous actions.\n";
 		}	
 			
 		if (!(env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
