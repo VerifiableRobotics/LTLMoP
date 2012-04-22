@@ -12,6 +12,10 @@ from parseTextFiles import *
 from matrixFunctions import *
 from CKBotSimHelper import *
 
+# needs to add the path of ltlmop_root to sys path
+sys.path.append('../../..')
+import lib.regions
+
 info = """CKBotSim
 
 CKBot Simulator for LTLMoP
@@ -68,12 +72,12 @@ class CKBotSim:
 
 		# If regionfile=0, render the ground as default solid green terrain.
 		# Otherwise, load the regions file specified and draw the region colors on the ground.
-		self.region_data = []
-		self.region_names = []
+        # Initialize the region file interface
+        self.rfi = lib.regions.RegionFileInterface()
 
 		# Load a region file if it has been specified on instantiation.
 		if (regionfile!=None):
-			loadRegionData(self, regionfile)
+            self.rfi.readFile(regionfile)
 			self.region_calib = region_calib
 		
 		# Make obstacles if they exist.
@@ -210,7 +214,7 @@ class CKBotSim:
 		# Draw a quad at the position of the vehicle that extends to the
 		# clipping planes.
 
-		if (self.region_data==[]):
+		if (self.rfi.regions==[]):
 
 			glPushMatrix()
 			glTranslate(x, 0.0, z)
@@ -278,19 +282,18 @@ class CKBotSim:
 			glPopMatrix()	
 	
 			# Render the remaining regions.
-			for row in self.region_data:
-				glPushMatrix()
+            for region in self.rfi.regions:
+                glPushMatrix()
 
-				color = (row[0], row[1], row[2])
-				glMaterialfv(GL_FRONT, GL_SPECULAR, color)
+                glMaterialfv(GL_FRONT, GL_SPECULAR, [x for x in region.color])
 
-				glBegin(GL_POLYGON)
-				for idx in range(3,len(row)):
-					glNormal3f(*normal)
-					glVertex3f(row[idx][0]*self.region_calib[0], 0.01, -row[idx][1]*self.region_calib[1])
-				glEnd()
+                glBegin(GL_POLYGON)
+                for pt in region.getPoints():
+                    glNormal3f(*normal)
+                    glVertex3f(pt[0]*self.region_calib[0], d, -pt[1]*self.region_calib[1])
+                glEnd()
 
-				glPopMatrix()
+                glPopMatrix()
 
 	def _setCamera(self):
 		"""
