@@ -187,8 +187,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             EnvInit = EnvInitRE.sub('',line)
 
             # parse the rest and return it to spec['EnvInit']
-            LTLsubformula = parseInit(EnvInit,sensorList,lineInd)
-            if LTLsubformula == '': failed = True
+            if len(sensorList) == 0:
+                LTLsubformula = ''
+            else:
+                LTLsubformula = parseInit(EnvInit,sensorList,lineInd)
+                if LTLsubformula == '': failed = True
 
             # this shouldn't even be possible, but check just in case:
             if "QUANTIFIER_PLACEHOLDER" in LTLsubformula:
@@ -230,9 +233,12 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 LTLRegSubformula = parseInit(RegInit,regionList + ["QUANTIFIER_PLACEHOLDER"],lineInd)
                 if LTLRegSubformula == '': failed = True
             if ActInit:
-                # parse Actions
-                LTLActSubformula = parseInit(ActInit,robotPropList,lineInd)
-                if LTLActSubformula == '': failed = True
+                if len(robotPropList) == 0:
+                    LTLActSubformula = ''
+                else:
+                    # parse Actions
+                    LTLActSubformula = parseInit(ActInit,robotPropList,lineInd)
+                    if LTLActSubformula == '': failed = True
             
             if QuantifierFlag == "ANY":
                 LTLRegSubformula = LTLRegSubformula.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])
