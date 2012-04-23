@@ -46,4 +46,3 @@ if you are not sensing see_dynamic_obstacle then visit r1
 if you are not sensing see_dynamic_obstacle then visit r2
 if you are sensing see_dynamic_obstacle then stay there
 
-

@@ -96,7 +96,7 @@ class motionControlHandler:
         #build self.ogr with empty contour
         self.ogr = Polygon.Polygon()   #Polygon built from occupancy grid data points
       
-        self.freespace = None               # contains only the boundary
+        #self.freespace = None               # contains only the boundary
         self.previous_current_reg = None    # previous current region   
         self.currentRegionPoly  = None      # current region's polygon
         self.nextRegionPoly    = None       # next region's polygon
@@ -149,7 +149,7 @@ class motionControlHandler:
             self.plotPoly(self.realRobot, 'r')
             self.plotPoly(self.robot, 'b')
             plt.plot(pose[0],pose[1],'bo')
-            #self.plotPioneer(self.original_figure)
+            self.plotPioneer(self.original_figure)
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         
@@ -229,15 +229,21 @@ class motionControlHandler:
                 self.q_g[1] = pt1[1]
                 
                 
-                # Push the goal point to somewhere inside the next region to ensure the robot will get there.
-                if self.proj.rfi.regions[current_reg].name.lower()=='freespace':    
-                    self.q_g = self.q_g+(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*3*self.PioneerLengthHalf   
-                    if not self.nextRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
-                        self.q_g = self.q_g-(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*6*self.PioneerLengthHalf 
-                else:
-                    self.q_g = self.q_g+(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*3*self.PioneerLengthHalf   
-                    if self.currentRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
-                        self.q_g = self.q_g-(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*6*self.PioneerLengthHalf 
+                # Push the goal point to somewhere inside the next region to ensure the robot will get there.(CHECK!!)
+                self.q_g = self.q_g+(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*3*self.PioneerLengthHalf   
+                if not self.nextRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
+                    self.q_g = self.q_g-(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*6*self.PioneerLengthHalf 
+                
+#                if self.proj.rfi.regions[current_reg].name.lower()=='freespace':    
+#                    self.q_g = self.q_g+(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*3*self.PioneerLengthHalf   
+#                    if not self.nextRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
+#                        self.q_g = self.q_g-(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*6*self.PioneerLengthHalf 
+#                else:
+#                    self.q_g = self.q_g+(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*3*self.PioneerLengthHalf   
+#                    if self.currentRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
+#                        self.q_g = self.q_g-(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*6*self.PioneerLengthHalf 
+
+
                         
                 #plot exiting point  
                 if self.PLOT_EXIT == True:
@@ -246,7 +252,7 @@ class motionControlHandler:
                     #plt.plot(q_gBundle[:,0],q_gBundle[:,1],'ko' )   
                     plt.plot(self.q_g[0],self.q_g[1],'ro')
                     plt.plot(pose[0],pose[1],'bo')
-                    self.plotPioneer(self.overlap_figure,1)                   
+                    self.plotPioneer(self.overlap_figure,0)                   
                     
                 if transFace is None:
                     print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
@@ -329,7 +335,7 @@ class motionControlHandler:
                         self.plotPoly(overlap,'g')
                         self.plotPoly(self.m_line,'b')
                         plt.plot(pose[0],pose[1],'bo')
-                        self.plotPioneer(self.overlap_figure,1) 
+                        self.plotPioneer(self.overlap_figure,0) 
                                         
                   
                 else:                ##head towards the q_goal
@@ -434,7 +440,7 @@ class motionControlHandler:
                 self.plotPoly(self.robot, 'b') 
                 self.plotPoly(overlap,'g',3)                  
                 plt.plot(pose[0],pose[1],'bo')
-                self.plotPioneer(self.original_figure,0) 
+                self.plotPioneer(self.original_figure) 
             
             # find the closest point on the obstacle to the robot   
             overlap_len = len(overlap)
@@ -477,7 +483,7 @@ class motionControlHandler:
                 plt.plot(vx,vy,'ko')
                 plt.plot(pt[0],pt[1],'ro')
                 plt.plot(pose[0],pose[1],'bo')
-                self.plotPioneer(self.overlap_figure,1)
+                self.plotPioneer(self.overlap_figure,0)
                      
                 
             ## conditions that the loop will end
@@ -599,7 +605,7 @@ class motionControlHandler:
         
         # check whether robot has arrived at the next region 
         RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
-        departed = not (self.currentRegionPoly+self.nextRegionPoly).covers(RobotPoly)
+        departed = not (self.currentRegionPoly+self.nextRegionPoly).covers(self.realRobot)   ## RoboPoly
         arrived  = self.nextRegionPoly.covers(self.realRobot)
         if arrived:
             self.q_hit_count        = 0
@@ -637,18 +643,13 @@ class motionControlHandler:
         
         if y == 0:
             self.plotPoly(self.map_work,'k')
-            #BoundPolyPoints = asarray(PolyUtils.pointList(self.map_work))
-            #plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+            
         else:
             self.plotPoly(self.all,'k')
-            #BoundPolyPoints = asarray(PolyUtils.pointList(self.all))
-            #plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
         
         if self.system == 1:
             if bool(self.robocomm.getObsPoly()): 
                 self.plotPoly(self.robocomm.getObsPoly(),'k')     
-                #BoundPolyPoints = asarray(PolyUtils.pointList(self.robocomm.getObsPoly()))
-                #plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
         
         plt.xlabel('x')
         plt.ylabel('y')
@@ -698,6 +699,9 @@ class motionControlHandler:
             plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)   
    
     def getOldRegionName(self, regionName):
+        """
+        This function returns the old region name (eg: r1, r2, other etc) when given the new region name (eg: p1, p2..)
+        """
         for oldRegionName,newRegionNames in self.proj.regionMapping.iteritems():
             if regionName in newRegionNames:
                 return oldRegionName
