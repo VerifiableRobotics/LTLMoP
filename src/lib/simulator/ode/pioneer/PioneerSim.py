@@ -5,9 +5,10 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from numpy import *
-import math, time, copy, sys
+import math, time, copy, sys,os
 # needs to add the path of ltlmop_root to sys path
 sys.path.append('../../..')
+sys.path.append('.')
 import lib.regions
 
 info = """DiffDriveSim
