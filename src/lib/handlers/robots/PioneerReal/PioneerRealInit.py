@@ -446,16 +446,16 @@ class _RobotListener(Thread):
         """
         #print 'I GOT DATA',data,[0],data[1]
         # Check for valid data (not null or empty string)
-        #print '**************NOTIFICATION***************',type(RobotCommunicator.WALL_HEADER),type(data[0])
+        #print '**************NOTIFICATION***************',type(_RobotCommunicator.WALL_HEADER),type(data[0])
         if data:
-            #print '**************NOTIFICATION***************',type(RobotCommunicator.WALL_HEADER),type(data[0]),RobotCommunicator.WALL_HEADER==data[0]
+            #print '**************NOTIFICATION***************',type(_RobotCommunicator.WALL_HEADER),type(data[0]),_RobotCommunicator.WALL_HEADER==data[0]
 
             # Check header and assign data appropriately
             # TODO: Check length of data for validity
             #print 'Header',data[0]
-            if data[0] == RobotCommunicator.POSE_HEADER:
-                self.pose = unpack(RobotCommunicator.POSE_FORMAT,data[1:])
-            elif data[0] == RobotCommunicator.SENSOR_HEADER:
+            if data[0] == _RobotCommunicator.POSE_HEADER:
+                self.pose = unpack(_RobotCommunicator.POSE_FORMAT,data[1:])
+            elif data[0] == _RobotCommunicator.SENSOR_HEADER:
 
                 #for i in range(1, len(data)-1, 2):
                 index= unpack('B',data[1])
@@ -464,29 +464,29 @@ class _RobotListener(Thread):
                 self.sensors[index[0]] = value[0]
                 #print 'in csharp: ',[index,value]
 
-            elif data[0] == RobotCommunicator.WAYPOINT_HEADER:
+            elif data[0] == _RobotCommunicator.WAYPOINT_HEADER:
                 self.waypoints = [] # Clear old waypoints
                 for i in range(1, len(data)-16, 16):
-                    x,y = unpack(RobotCommunicator.WAYPOINT_FORMAT,
+                    x,y = unpack(_RobotCommunicator.WAYPOINT_FORMAT,
                                  data[i:i+15])
                     self.waypoints.append((x,y))
-            elif data[0] == RobotCommunicator.DIRECTION_HEADER:
-                self.direction = unpack(RobotCommunicator.DIRECTION_FORMAT,
+            elif data[0] == _RobotCommunicator.DIRECTION_HEADER:
+                self.direction = unpack(_RobotCommunicator.DIRECTION_FORMAT,
                                         data[1:])
-            elif data[0] == RobotCommunicator.ACTUATOR_HEADER:
+            elif data[0] == _RobotCommunicator.ACTUATOR_HEADER:
                 self.actuators = [] # Clear old actuator commands                for i in range(1, len(data)-1):
                 self.actuators.append(unpack(
-                        RobotCommunicator.ACTUATOR_FORMAT,data[i]))
-            elif data[0] == RobotCommunicator.WALL_HEADER:
+                        _RobotCommunicator.ACTUATOR_FORMAT,data[i]))
+            elif data[0] == _RobotCommunicator.WALL_HEADER:
                 self.walls = {} # Clear old wall entries
                 index = unpack('B', data[1])
-                x1,y1,x2,y2 = unpack(RobotCommunicator.WALL_FORMAT,data[2:34])
+                x1,y1,x2,y2 = unpack(_RobotCommunicator.WALL_FORMAT,data[2:34])
                 self.walls = (x1,y1,x2,y2)
                 #print '**************Coordinates***************',(x1,y1,x2,y2)
                 print '****self.walls*********',self.walls
-            elif data[0] == RobotCommunicator.OBS_HEADER:
+            elif data[0] == _RobotCommunicator.OBS_HEADER:
                 index = unpack('B', data[1])
-                add,x1,y1 = unpack(RobotCommunicator.OBS_FORMAT,data[2:26])
+                add,x1,y1 = unpack(_RobotCommunicator.OBS_FORMAT,data[2:26])
                 #print '***********self.obs*************'+','.join(map(str,[add,x1,y1]))
                 self.obs = [add,x1,round(y1,2)]                
                 if add == 1:
@@ -541,8 +541,8 @@ class RobotBroadcaster:
         (x,y,z,yaw,pitch,roll,timestamp)
         """
         x,y,z,yaw,pitch,roll,ts = pose
-        data = RobotCommunicator.POSE_HEADER + \
-               pack(RobotCommunicator.POSE_FORMAT,x,y,z,yaw,pitch,roll,ts)
+        data = _RobotCommunicator.POSE_HEADER + \
+               pack(_RobotCommunicator.POSE_FORMAT,x,y,z,yaw,pitch,roll,ts)
         self.udpSock.sendto(data,self.addr)
 
     def sendSensors(self,sensors):
@@ -557,9 +557,9 @@ class RobotBroadcaster:
         eg. broadcaster.sendSensors({'\x01' : 1, '\x0B' : 0})
             would send two sensor readings: sensor 1 = true, sensor 11 = false
         """
-        data = RobotCommunicator.SENSOR_HEADER
+        data = _RobotCommunicator.SENSOR_HEADER
         for index in sensors:
-            data = data + pack(RobotCommunicator.SENSOR_FORMAT,
+            data = data + pack(_RobotCommunicator.SENSOR_FORMAT,
                                index,sensors[index])
         self.udpSock.sendto(data,self.addr)
 
@@ -570,10 +570,10 @@ class RobotBroadcaster:
         waypoints is a list of tuples, each containing 2 doubles.
         [(x,y), ...]
         """
-        data = RobotCommunicator.WAYPOINT_HEADER
+        data = _RobotCommunicator.WAYPOINT_HEADER
         for waypoint in waypoints:
             x,y = waypoint
-            data = data + pack(RobotCommunicator.WAYPOINT_FORMAT,x,y)
+            data = data + pack(_RobotCommunicator.WAYPOINT_FORMAT,x,y)
         self.udpSock.sendto(data,self.addr)
 
     def sendDirection(self,direction):
@@ -586,8 +586,8 @@ class RobotBroadcaster:
         or (v,w) depending on application.
         """
         x,y = direction
-        data = RobotCommunicator.DIRECTION_HEADER + \
-               pack(RobotCommunicator.DIRECTION_FORMAT,x,y)
+        data = _RobotCommunicator.DIRECTION_HEADER + \
+               pack(_RobotCommunicator.DIRECTION_FORMAT,x,y)
         self.udpSock.sendto(data,self.addr)
 
     def sendActuators(self,actuators):
@@ -601,9 +601,9 @@ class RobotBroadcaster:
         eg. broadcaster.sendActuators('\x02\x12\x0A')
             would make actuators 2, 18, and 10 activate
         """
-        data = RobotCommunicator.ACTUATOR_HEADER
+        data = _RobotCommunicator.ACTUATOR_HEADER
         for actuator in actuators:
-            data = data + pack(RobotCommunicator.ACTUATOR_FORMAT,actuator)
+            data = data + pack(_RobotCommunicator.ACTUATOR_FORMAT,actuator)
         self.udpSock.sendto(data,self.addr)
 
     def sendWalls(self,walls):
@@ -618,9 +618,9 @@ class RobotBroadcaster:
         eg. broadcaster.sendWalls({'\x0A' : (1,3,2,4)})
             would indicate wall 10 has endpoints (1,3) and (2,4)
         """
-        data = RobotCommunicator.WALL_HEADER
+        data = _RobotCommunicator.WALL_HEADER
         for index in walls:
             x1,y1,x2,y2 = walls[index]
-            data = data + pack(RobotCommunicator.WALL_FORMAT,
+            data = data + pack(_RobotCommunicator.WALL_FORMAT,
                                index,x1,y1,x2,y2)
         self.udpSock.sendto(data,self.addr)

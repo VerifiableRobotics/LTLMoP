@@ -10,10 +10,16 @@ class PioneerRealSensorHandler:
         """
         Real Pioneer Robot Sensor handler
         """
+        if self.system == 1:
+            self.robocomm = shared_data['robocomm']
         
-        pass
 
     ###################################
     ### Available sensor functions: ###
     ###################################
-
+    def dynamicObstacles(self):
+    """
+    return a flag sent from Pioneer telling whether there is a dynamic obstacle nearby or not
+    """
+        return self.robocomm.getSTOP()
+            

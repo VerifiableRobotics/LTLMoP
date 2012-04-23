@@ -20,7 +20,7 @@ MotionControlHandler: # Robot default motion control handler with default argume
 vectorController()
 
 PoseHandler: # Robot default pose handler with default argument values
-viconPose()
+viconPose(host='10.0.0.102',port=800,x_VICON_name="spider06:spider06 <t-X>",y_VICON_name="spider06:spider06 <t-Y>",theta_VICON_name="spider06:spider06 <a-Z>")
 
 SensorHandler: # Robot default sensor handler with default argument values
 PioneerRealSensor()

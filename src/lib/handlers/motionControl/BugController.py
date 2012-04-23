@@ -15,8 +15,8 @@ detect obstacles. When the robot has a ﬁnite range (non-zero range) sensor
 from numpy import *
 from is_inside import *
 import Polygon,Polygon.IO 
-from Polygon.Utils import *
-from Polygon.Shapes import *
+import Polygon.Utils as PolyUtils
+import Polygon.Shapes as PolyShapes
 import time, math
 import sys,os
 import matplotlib.pyplot as plt
@@ -56,30 +56,26 @@ class motionControlHandler:
             self.robocomm = shared_data['robocomm']
 
         # Get information about regions
-        self.rfi = proj.rfi
+        self.proj = proj
         self.coordmap_map2lab = proj.coordmap_map2lab
         self.coordmap_lab2map = proj.coordmap_lab2map
         self.last_warning = 0
-
                 
         ###################################
         ########used by Bug algorithm######
         ###################################
 
-
-
-        # PARAMETERS        
-        self.LeftRightFlag     = 1       # originally set to right 1- right, 0 left      
+        # PARAMETERS         
         
         # Pioneer related parameters
-        self.PioneerWidthHalf  = 0.20     # (m) width of Pioneer
-        self.PioneerLengthHalf = 0.25     # (m) lenght of Pioneer
-        self.ratioBLOW         = 0.5      # blow up ratio of the pioneer box                             ######### 5 BOX
+        self.PioneerWidthHalf  = 0.25     # (m) width of Pioneer    #0.20
+        self.PioneerLengthHalf = 0.30     # (m) lenght of Pioneer   #0.25
+        self.ratioBLOW         = 0.7     # blow up ratio of the pioneer box                             ######### 5 BOX
         self.PioneerBackMargin=  self.ratioBLOW*self.PioneerLengthHalf*2    # (in m)
         
-        self.range             = 0.75     # (m) specify the range of the robot (when the normal circle range cannot detect obstacle)
-        self.obsRange          = 0.50     # (m) range that says the robot detects obstacles
-        self.shift             = 0.20     # 0.15
+        self.range             = 2*self.PioneerLengthHalf+0.40     # (m) specify the range of the robot (when the normal circle range cannot detect obstacle)   #0.85
+        self.obsRange          = self.range*0.7     # (m) range that says the robot detects obstacles    #0.25
+        self.shift             = 0.20    # 0.20
 
         
         ## 2: 0DE
@@ -93,15 +89,14 @@ class motionControlHandler:
             
 
         #build self.map with empty contour
-        self.map = Rectangle (1,1)   
-        self.map -= self.map          #Polygon built from the original map
+        self.map = {}                             # dictionary for all the regions
+        self.all = Polygon.Polygon()              # Polygon with all the regions
+        self.map_work = Polygon.Polygon()         # Polygon of the current region and next region considered
 
         #build self.ogr with empty contour
-        self.ogr = Rectangle (1,1)   #Polygon built from occupancy grid data points
-        self.ogr -= self.ogr
+        self.ogr = Polygon.Polygon()   #Polygon built from occupancy grid data points
       
         self.freespace = None               # contains only the boundary
-        self.map_work  = None               # working copy of the map. remove current region and next region
         self.previous_current_reg = None    # previous current region   
         self.currentRegionPoly  = None      # current region's polygon
         self.nextRegionPoly    = None       # next region's polygon
@@ -110,8 +105,6 @@ class motionControlHandler:
         self.boundary_following= False      # tracking whether it is in boundary following mode
         self.m_line            = None       # m-line polygon
         self.trans_matrix      = mat([[0,1],[-1,0]])   # transformation matrix for find the normal to the vector connecting a point on the obstacle to the robot
-        #self.corr_theta        = pi/6
-        #self.corr_matrix       = mat([[cos(self.corr_theta),-sin(self.corr_theta)],[sin(self.corr_theta),cos(self.corr_theta)]])
         self.q_hit_count       = 0
         self.q_hit_Thres       = 1000
         self.prev_follow       = [[],[]]
@@ -120,35 +113,34 @@ class motionControlHandler:
         ## Construct robot polygon (for checking overlap)
         pose = self.pose_handler.getPose()
         self.prev_pose = pose        
-        self.robot = Rectangle(self.obsRange*3,self.PioneerBackMargin)    
-        self.robot.shift(pose[0]-self.obsRange,pose[1]-2*self.PioneerLengthHalf)
-        self.robot = Circle(self.obsRange,(pose[0],pose[1])) - self.robot
+        self.robot = PolyShapes.Rectangle(self.obsRange*3,self.PioneerBackMargin)    
+        self.robot.shift(pose[0]-self.obsRange,pose[1]-2*self.PioneerBackMargin)
+        self.robot = PolyShapes.Circle(self.obsRange,(pose[0],pose[1])) - self.robot
         self.robot.rotate(pose[2]-pi/2,pose[0],pose[1]) 
         self.robot.shift(self.shift*cos(pose[2]),self.shift*sin(pose[2]))
         
         #construct real robot polygon( see if there is overlaping with path to goal
-        self.realRobot = Rectangle(self.PioneerWidthHalf*2.5,self.PioneerLengthHalf*2 )
+        self.realRobot = PolyShapes.Rectangle(self.PioneerWidthHalf*2.5,self.PioneerLengthHalf*2 )
         self.realRobot.shift(pose[0]-self.PioneerWidthHalf*1.25,pose[1]-self.PioneerLengthHalf*1)
         self.realRobot.rotate(pose[2]-pi/2,pose[0],pose[1]) 
                       
-        #constructing map with all the regions included           
-        for region in self.rfi.regions: 
-            if region.name.lower()=='freespace':
-                pointArray = [x for x in region.getPoints()]
-                pointArray = map(self.coordmap_map2lab, pointArray)
-                regionPoints = [(pt[0],pt[1]) for pt in pointArray]
-                freespace    = Polygon(regionPoints)
-                freespace_big= Polygon(regionPoints)                
-                freespace_big.scale(1.2, 1.2)
-                self.freespace = freespace_big -freespace
-                self.map += freespace_big -freespace               #without including freespace
-
-            else:
-                pointArray = [x for x in region.getPoints()]
-                pointArray = map(self.coordmap_map2lab, pointArray)
-                regionPoints = [(pt[0],pt[1]) for pt in pointArray]
-                self.map +=  Polygon(regionPoints)  
-
+        #constructing polygon of different regions (holes being taken care) 
+         
+        for region in self.proj.rfi.regions: 
+            self.map[region.name] = self.createRegionPolygon(region)
+            for n in range(len(region.holeList)): # no of holes           
+                self.map[region.name] -= self.createRegionPolygon(region,n)  
+            if not plt.isinteractive():
+                plt.ion()       
+            plt.hold(True)
+            plt.clf()
+            plt.figure(self.original_figure)       
+            self.plotPoly(self.map[region.name],'r')
+            plt.figure(self.original_figure).canvas.draw()
+        
+        #construct a polygon that included all the regions    
+        for regionName,regionPoly in self.map.iteritems():
+            self.all += regionPoly
                 
         #Plot the robot on the map in figure 1
         if self.PLOT == True:
@@ -157,7 +149,7 @@ class motionControlHandler:
             self.plotPoly(self.realRobot, 'r')
             self.plotPoly(self.robot, 'b')
             plt.plot(pose[0],pose[1],'bo')
-            self.plotPioneer(self.original_figure)
+            #self.plotPioneer(self.original_figure)
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         
@@ -196,59 +188,29 @@ class motionControlHandler:
         if not self.previous_current_reg == current_reg:
             print 'getting into bug alogorithm'
  
-            #clean up the previous self.map
-            self.map_work =  Polygon(self.map)   
-            # create polygon list for regions other than the current_reg and the next_reg. This polygon will be counted as the obstacle if encountered.
-            if not self.rfi.regions[current_reg].name.lower() == 'freespace':
-                pointArray = [x for x in self.rfi.regions[current_reg].getPoints()]
-                pointArray = map(self.coordmap_map2lab, pointArray)
-                regionPoints = [(pt[0],pt[1]) for pt in pointArray]
-                self.map_work -=  Polygon(regionPoints)
+            #clean up the previous self.map_work
+            self.map_work =  Polygon.Polygon()   
             
-            if not self.rfi.regions[next_reg].name.lower() == 'freespace':
-                pointArray = [x for x in self.rfi.regions[next_reg].getPoints()]
-                pointArray = map(self.coordmap_map2lab, pointArray)
-                regionPoints = [(pt[0],pt[1]) for pt in pointArray]
-                self.map_work -=  Polygon(regionPoints)
-
+            # NOTE: Information about region geometry can be found in self.proj.rfi.regions
+            # create polygon list for regions other than the current_reg and the next_reg
+            self.map_work += self.map[self.proj.rfi.regions[current_reg].name]
+            self.map_work += self.map[self.proj.rfi.regions[next_reg].name]
                        
-            # NOTE: Information about region geometry can be found in self.rfi.regions
             # building current polygon and destination polygon
-            pointArray = [x for x in self.rfi.regions[next_reg].getPoints()]
-            pointArray = map(self.coordmap_map2lab, pointArray)
-            regionPoints = [(pt[0],pt[1]) for pt in pointArray]
-            self.nextRegionPoly = Polygon(regionPoints)
-            if self.rfi.regions[next_reg].name.lower()=='freespace':
-                for region in self.rfi.regions:
-                    if region.name.lower() != 'freespace':
-                        pointArray = [x for x in region.getPoints()]
-                        pointArray = map(self.coordmap_map2lab, pointArray)
-                        regionPoints = [(pt[0],pt[1]) for pt in pointArray]
-                        self.nextRegionPoly = self.nextRegionPoly - Polygon(regionPoints)
-
-            pointArray = [x for x in self.rfi.regions[current_reg].getPoints()]
-            pointArray = map(self.coordmap_map2lab, pointArray)
-            regionPoints = [(pt[0],pt[1]) for pt in pointArray]
-            self.currentRegionPoly = Polygon(regionPoints)
-            if self.rfi.regions[current_reg].name.lower()=='freespace':
-                for region in self.rfi.regions:
-                    if region.name.lower() != 'freespace':
-                        pointArray = [x for x in region.getPoints()]
-                        pointArray = map(self.coordmap_map2lab, pointArray)
-                        regionPoints = [(pt[0],pt[1]) for pt in pointArray]
-                        self.currentRegionPoly = self.currentRegionPoly - Polygon(regionPoints)
+            self.nextRegionPoly    = self.map[self.proj.rfi.regions[next_reg].name]
+            self.currentRegionPoly = self.map[self.proj.rfi.regions[current_reg].name]
                         
             #set to zero velocity before finding the tranFace
             self.drive_handler.setVelocity(0, 0)
             if last:
                 transFace = None
             else:
-                print "Current reg is " + str(self.rfi.regions[current_reg].name.lower())
-                print "Next reg is "+ str(self.rfi.regions[next_reg].name.lower())
+                print "Current reg is " + str(self.proj.rfi.regions[current_reg].name.lower())
+                print "Next reg is "+ str(self.proj.rfi.regions[next_reg].name.lower())
                 
                 
-                for i in range(len(self.rfi.transitions[current_reg][next_reg])):
-                    pointArray_transface = [x for x in self.rfi.transitions[current_reg][next_reg][i]]
+                for i in range(len(self.proj.rfi.transitions[current_reg][next_reg])):
+                    pointArray_transface = [x for x in self.proj.rfi.transitions[current_reg][next_reg][i]]
                     transFace = asarray(map(self.coordmap_map2lab,pointArray_transface))
                     bundle_x = (transFace[0,0] +transFace[1,0])/2    #mid-point coordinate x
                     bundle_y = (transFace[0,1] +transFace[1,1])/2    #mid-point coordinate y
@@ -263,13 +225,12 @@ class motionControlHandler:
                         pt1  = tf
                         max_magsq = magsq
                 transFace = 1   
-
                 self.q_g[0] = pt1[0]
                 self.q_g[1] = pt1[1]
                 
                 
-                # Push the goal point to somewhere inside the next region to ensure the robot will go there.
-                if self.rfi.regions[current_reg].name.lower()=='freespace':    
+                # Push the goal point to somewhere inside the next region to ensure the robot will get there.
+                if self.proj.rfi.regions[current_reg].name.lower()=='freespace':    
                     self.q_g = self.q_g+(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*3*self.PioneerLengthHalf   
                     if not self.nextRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
                         self.q_g = self.q_g-(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*6*self.PioneerLengthHalf 
@@ -282,13 +243,13 @@ class motionControlHandler:
                 if self.PLOT_EXIT == True:
                     plt.figure(self.overlap_figure) 
                     plt.clf()                    
-                    plt.plot(q_gBundle[:,0],q_gBundle[:,1],'ko' )   
+                    #plt.plot(q_gBundle[:,0],q_gBundle[:,1],'ko' )   
                     plt.plot(self.q_g[0],self.q_g[1],'ro')
                     plt.plot(pose[0],pose[1],'bo')
                     self.plotPioneer(self.overlap_figure,1)                   
                     
                 if transFace is None:
-                    print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.rfi.regions[current_reg].name, self.rfi.regions[next_reg].name)
+                    print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
         
       
         ##################################################
@@ -305,49 +266,48 @@ class motionControlHandler:
         ############################
         ########### STEP 1##########
         ############################
-        ##Check whether obsRange overlaps with obstacle or the boundary 
+        ##Check whether obsRange overlaps with obstacle or the boundary (overlap returns the part of robot not covered by the region
         
         # for real Pioneer robot
         if self.system == 1:
-            if self.boundary_following == False:
-
+            # motion controller is not in boundary following mode
+            if self.boundary_following == False:        
+            
                 if self.robocomm.getReceiveObs() == False:
-                    overlap = self.robot & ( self.map_work) 
+                    overlap = self.robot - ( self.map_work) 
                 else:                   
-                    overlap = self.robot  & ( self.map_work | self.robocomm.getObsPoly()) 
+                    overlap = self.robot  - ( self.map_work - self.robocomm.getObsPoly()) 
                     
             else: #TRUE
                 # use a robot with full range all around it
-                Robot = Circle(self.obsRange,(pose[0],pose[1]))
+                Robot = PolyShapes.Circle(self.obsRange,(pose[0],pose[1]))
                 Robot.shift(self.shift*cos(pose[2]),self.shift*sin(pose[2]))            
             
                 if self.robocomm.getReceiveObs() == False:
-                    overlap = Robot & ( self.map_work) 
-                else:
-                    
-                    overlap = Robot  & ( self.map_work | self.robocomm.getObsPoly()) 
+                    overlap = Robot - ( self.map_work) 
+                else:                   
+                    overlap = Robot  - ( self.map_work - self.robocomm.getObsPoly()) 
         # for ODE           
         else:
             if self.boundary_following == False:
-                overlap = self.robot  & (self.map_work)
+                overlap = self.robot  - (self.map_work)
             else:#TRUE
-                overlap = Robot  & (self.map_work)
-        
-            
+                overlap = Robot  - (self.map_work)
+
         if self.boundary_following == False:
             if bool(overlap):    ## overlap of obstacles
                 #print "There MAYBE overlap~~ check connection to goal"  
                 
                 # check whether the real robot or and path to goal overlap with the obstacle
-                QGoalPoly= Circle(self.PioneerLengthHalf,(self.q_g[0],self.q_g[1])) 
-                path  = convexHull(self.realRobot + QGoalPoly)
+                QGoalPoly= PolyShapes.Circle(self.PioneerLengthHalf,(self.q_g[0],self.q_g[1])) 
+                path  = PolyUtils.convexHull(self.realRobot + QGoalPoly)
                 if self.system == 1:
                     if self.robocomm.getReceiveObs() == False:
-                        pathOverlap = path & ( self.map_work) 
+                        pathOverlap = path - ( self.map_work) 
                     else:                
-                        pathOverlap = path  & ( self.map_work | self.robocomm.getObsPoly()) 
+                        pathOverlap = path  - ( self.map_work - self.robocomm.getObsPoly()) 
                 else:
-                    pathOverlap = path & ( self.map_work) 
+                    pathOverlap = path - ( self.map_work) 
 
 
                 if bool(pathOverlap):   # there is overlapping, go into bounding following mode
@@ -356,9 +316,9 @@ class motionControlHandler:
                     self.boundary_following = True
                     
                     #Generate m-line polygon
-                    QHitPoly = Circle(self.PioneerLengthHalf/4,(pose[0],pose[1]))
-                    QGoalPoly= Circle(self.PioneerLengthHalf/4,(self.q_g[0],self.q_g[1]))     
-                    self.m_line  = convexHull(QHitPoly + QGoalPoly)                   
+                    QHitPoly = PolyShapes.Circle(self.PioneerLengthHalf/4,(pose[0],pose[1]))
+                    QGoalPoly= PolyShapes.Circle(self.PioneerLengthHalf/4,(self.q_g[0],self.q_g[1]))     
+                    self.m_line  = PolyUtils.convexHull(QHitPoly + QGoalPoly)                   
                     
                     #plot the first overlap
                     if self.PLOT_M_LINE == True:
@@ -421,6 +381,8 @@ class motionControlHandler:
                 x = self.prev_follow[0] -pose[0]
                 y = self.prev_follow[1] -pose[1]
                 angle = atan(y/x) 
+                
+                # convert angle to 2pi
                 if x > 0 and y > 0:
                     angle = angle
                 elif x < 0 and y > 0:
@@ -429,8 +391,8 @@ class motionControlHandler:
                     angle = pi + angle
                 else: 
                     angle = 2*pi + angle
-                
-                
+            
+                # convert pose to 2pi
                 if pose[2] < 0:
                     omega = (2*pi + pose[2])
                 else: 
@@ -446,21 +408,21 @@ class motionControlHandler:
                 #if angle - omega > 0 and angle - omega < pi:
                 if cc < pi:
                     #print "on the left, angle: "+ str(angle) + " omega: "+ str(omega)+ " angle-omega: "+ str(angle-omega)
-                    Robot = Rectangle(self.range*2*j,self.range*2*j)
+                    Robot = PolyShapes.Rectangle(self.range*2*j,self.range*2*j)
                     Robot.shift(pose[0]-self.range*j*2,pose[1]-self.range*j)
                     Robot.rotate(pose[2]-pi/2,pose[0],pose[1])
                     
                 # on the right
                 else: 
                     #print "on the right, angle: "+ str(angle) + " omega: "+ str(omega)+ " angle-omega: "+ str(angle-omega)
-                    Robot = Rectangle(self.range*2*j,self.range*2*j)
+                    Robot = PolyShapes.Rectangle(self.range*2*j,self.range*2*j)
                     Robot.shift(pose[0],pose[1]-self.range*j)
                     Robot.rotate(pose[2]-pi/2,pose[0],pose[1])
                 
                 if self.system == 1:
-                    overlap = Robot & ( self.map_work | self.robocomm.getObsPoly()) 
+                    overlap = Robot - ( self.map_work - self.robocomm.getObsPoly()) 
                 else:
-                    overlap = Robot & ( self.map_work) 
+                    overlap = Robot - ( self.map_work) 
                 
                 self.plotPoly(Robot, 'm',2) 
                 
@@ -486,7 +448,7 @@ class motionControlHandler:
                 bundle_y = (BoundPolyPoints[len(BoundPolyPoints)-1,1] +BoundPolyPoints[0,1])/2    #mid-point coordinate y
                 q_overlap = hstack((q_overlap,vstack((bundle_x,bundle_y))))
             q_overlap = q_overlap.transpose()
-            pt =  self.closest_pt([pose[0],pose[1]], vstack((q_overlap,asarray(pointList(overlap)))))
+            pt =  self.closest_pt([pose[0],pose[1]], vstack((q_overlap,asarray(PolyUtils.pointList(overlap)))))
             self.prev_follow = pt           
             
             #calculate the vector to follow the obstacle
@@ -499,7 +461,7 @@ class motionControlHandler:
             vy = (velocity/norm(velocity)/3)[0,1]
 
             # push or pull the robot towards the obstacle depending on whether the robot is close or far from the obstacle.    
-            turn = pi/4*(distance-0.5*self.obsRange)/(self.obsRange)    ### 5
+            turn = pi/4*(distance-0.5*self.obsRange)/(self.obsRange)    ### add * 0.5 at the back
             corr_matrix       = mat([[cos(turn),-sin(turn)],[sin(turn),cos(turn)]])
             v =  corr_matrix*mat([[vx],[vy]])                                     
             vx = v[0,0]          
@@ -520,7 +482,7 @@ class motionControlHandler:
                 
             ## conditions that the loop will end
             #for 11111
-            RobotPoly = Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))   ####0.05
+            RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))   ####0.05
             arrived  = self.nextRegionPoly.covers(self.realRobot)
             
             #for 33333
@@ -598,15 +560,15 @@ class motionControlHandler:
                             leaving = True
                         
             #Check whether the robot can leave now (the robot has to be closer to the goal than when it is at q_hit to leave)
-            QGoalPoly= Circle(self.PioneerLengthHalf,(self.q_g[0],self.q_g[1])) 
-            path  = convexHull(self.realRobot + QGoalPoly)
+            QGoalPoly= PolyShapes.Circle(self.PioneerLengthHalf,(self.q_g[0],self.q_g[1])) 
+            path  = PolyUtils.convexHull(self.realRobot + QGoalPoly)
             if self.system == 1:
                 if self.robocomm.getReceiveObs() == False:
-                    pathOverlap = path & ( self.map_work) 
+                    pathOverlap = path - ( self.map_work) 
                 else:                
-                    pathOverlap = path  & ( self.map_work | self.robocomm.getObsPoly()) 
+                    pathOverlap = path  - ( self.map_work - self.robocomm.getObsPoly()) 
             else:
-                pathOverlap = path & ( self.map_work) 
+                pathOverlap = path - ( self.map_work) 
 
             if not bool(pathOverlap):
                 print "There is NO MORE obstacles in front for now." 
@@ -622,7 +584,7 @@ class motionControlHandler:
                 else:
                     print "not leaving bug algorithm. difference(-farther) =" + str(norm(self.q_hit-mat(self.q_g).T) - norm(mat([pose[0],pose[1]]).T-mat(self.q_g).T))
             
-
+        """
         # Pass this desired velocity on to the drive handler
         # Check if there are obstacles within 0.35m of the robot, if so, stop the robot
         if self.system == 1:
@@ -630,13 +592,14 @@ class motionControlHandler:
                 vx = 0
                 vy = 0
             self.drive_handler.setVelocity(vx,vy, pose[2])
+        """
             
         # Set the current region as the previous current region(for checking whether the robot has arrived at the next region)
         self.previous_current_reg = current_reg        
         
         # check whether robot has arrived at the next region 
-        RobotPoly = Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
-        departed = not self.currentRegionPoly.covers(RobotPoly)
+        RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
+        departed = not (self.currentRegionPoly+self.nextRegionPoly).covers(RobotPoly)
         arrived  = self.nextRegionPoly.covers(self.realRobot)
         if arrived:
             self.q_hit_count        = 0
@@ -645,7 +608,7 @@ class motionControlHandler:
         if departed and (not arrived) and (time.time()-self.last_warning) > 0.5:
             print "WARNING: Left current region but not in expected destination region"
             # Figure out what region we think we stumbled into
-            for r in self.rfi.regions:
+            for r in self.proj.rfi.regions:
                 pointArray = [self.coordmap_map2lab(x) for x in r.getPoints()]
                 vertices = mat(pointArray).T
 
@@ -673,16 +636,19 @@ class motionControlHandler:
         
         
         if y == 0:
-            BoundPolyPoints = asarray(pointList(self.map_work))
-            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+            self.plotPoly(self.map_work,'k')
+            #BoundPolyPoints = asarray(PolyUtils.pointList(self.map_work))
+            #plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
         else:
-            BoundPolyPoints = asarray(pointList(self.map))
-            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+            self.plotPoly(self.all,'k')
+            #BoundPolyPoints = asarray(PolyUtils.pointList(self.all))
+            #plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
         
         if self.system == 1:
-            if bool(self.robocomm.getObsPoly()):        
-                BoundPolyPoints = asarray(pointList(self.robocomm.getObsPoly()))
-                plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+            if bool(self.robocomm.getObsPoly()): 
+                self.plotPoly(self.robocomm.getObsPoly(),'k')     
+                #BoundPolyPoints = asarray(PolyUtils.pointList(self.robocomm.getObsPoly()))
+                #plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
         
         plt.xlabel('x')
         plt.ylabel('y')
@@ -726,8 +692,30 @@ class motionControlHandler:
         string = string that specify color
         w      = width of the line plotting 
         """
-        BoundPolyPoints = asarray(pointList(c))
-        plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)   
+        for i in range(len(c)):
+            BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(c.contour(i))))
+            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)   
+            plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)   
+   
+    def getOldRegionName(self, regionName):
+        for oldRegionName,newRegionNames in self.proj.regionMapping.iteritems():
+            if regionName in newRegionNames:
+                return oldRegionName
+        print 'Cannot find region with sub-region %s' % regionName
+        return None
     
+    def createRegionPolygon(self,region,hole = None):
+        """
+        This function takes in the region points and make it a Polygon.
+        """
+        if hole == None:
+            pointArray = [x for x in region.getPoints()] 
+        else:
+            pointArray = [x for x in region.getPoints(hole_id = hole)] 
+        pointArray = map(self.coordmap_map2lab, pointArray)
+        regionPoints = [(pt[0],pt[1]) for pt in pointArray]
+        formedPolygon= Polygon.Polygon(regionPoints)
+        return formedPolygon
+ 
         
         
