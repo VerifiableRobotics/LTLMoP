@@ -37,7 +37,7 @@ class motionControlHandler:
         if current_reg == next_reg and not last:
             # No need to move!
             self.drive_handler.setVelocity(0, 0)  # So let's stop
-            return False
+            return True
 
         # Find our current configuration
         pose = self.pose_handler.getPose()

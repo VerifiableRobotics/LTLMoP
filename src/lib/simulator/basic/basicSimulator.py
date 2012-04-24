@@ -29,11 +29,11 @@ class basicSimulator:
         cmd is a 1-by-2 vector represents the velocity
         """
         if self.time == 0.0:
-            self.time = time.time()
+            self.time = time.clock()
         # update the velocity, assume the velocity takes times to change (to avoid local minimum)
         self.curVel = self.inertia*array(cmd)+(1-self.inertia)*self.curVel
-        self.pose[0:2] = self.pose[0:2]+array(self.curVel)*(time.time()-self.time)
-        self.time = time.time()
+        self.pose[0:2] = self.pose[0:2]+array(self.curVel)*(time.clock()-self.time)
+        self.time = time.clock()
         # the orintation is kept the same (rad)
         # TODO: allows more robot models
     

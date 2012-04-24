@@ -263,11 +263,11 @@ def main(argv):
             proj.h_instance['drive'].setVelocity(0,0)
             time.sleep(0.05) # We need to sleep to give up the CPU
 
-        tic = time.time()
+        tic = time.clock()
 
         FSA.runIteration()
 
-        toc = time.time()
+        toc = time.clock()
 
         # TODO: Possibly implement max rate-limiting?
         #while (toc - tic) < 0.05:

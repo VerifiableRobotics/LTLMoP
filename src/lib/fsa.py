@@ -75,6 +75,7 @@ class Automaton:
         self.current_state = None
         self.current_region = None
         self.current_outputs = {}
+        self.arrived = False
 
 
     def stateWithName(self, name):
@@ -470,11 +471,14 @@ class Automaton:
                 # We're going to a new region
                 print "Heading to region %s..." % self.regions[self.next_region].name
 
-        # Move one step towards the next region (or stay in the same region)
-        arrived = self.motion_handler.gotoRegion(self.current_region, self.next_region)
+            self.arrived = False
+
+        if not self.arrived:
+            # Move one step towards the next region (or stay in the same region)
+            self.arrived = self.motion_handler.gotoRegion(self.current_region, self.next_region)
 
         # Check for completion of motion
-        if arrived or not self.transition_contains_motion:
+        if self.arrived:
             # TODO: Check to see whether actually inside next region that we expected
 
             if self.transition_contains_motion:

@@ -480,9 +480,9 @@ class SpecEditorFrame(wx.Frame):
         caller = event.GetEventObject()
 
         if caller is self.list_box_sensors:
-            self.proj.enabled_sensors = self.list_box_sensors.GetCheckedStrings()
+            self.proj.enabled_sensors = list(self.list_box_sensors.GetCheckedStrings())
         elif caller is self.list_box_actions:
-            self.proj.enabled_actuators = self.list_box_actions.GetCheckedStrings()
+            self.proj.enabled_actuators = list(self.list_box_actions.GetCheckedStrings())
 
         self.dirty = True
 
