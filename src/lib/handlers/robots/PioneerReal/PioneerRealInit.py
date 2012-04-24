@@ -12,8 +12,8 @@ from socket import *
 from struct import pack, unpack
 from threading import Thread, Lock, Event
 import Polygon,Polygon.IO 
-from Polygon.Utils import *
-from Polygon.Shapes import *
+import Polygon.Utils as PolyUtils
+import Polygon.Shapes as PolyShapes
 import matplotlib.pyplot as plt
 from numpy import *
 
@@ -85,10 +85,10 @@ class _RobotCommunicator:
 
     # Communication parameters
     LOCAL_IP = "0.0.0.0"
-    #LOCAL_IP = "10.255.255.255"
+    #LOCAL_IP = "10.0.0.96"
     DEFAULT_LISTEN_PORT = 6501
     NETWORK_BROADCAST_IP = "10.255.255.255"
-    #NETWORK_BROADCAST_IP = "192.168.1.1"   #"192.168.1.2"
+    #NETWORK_BROADCAST_IP = "10.0.0.122"
     DEFAULT_BROADCAST_PORT = 6502
     DEFAULT_BUFFER_SIZE = 10240
 
@@ -380,14 +380,13 @@ class _RobotListener(Thread):
         # Communication parameters
         self.addr = (ipAddress,port)
         self.buffer = bufferSize
-        self.udpSock = socket(AF_INET,SOCK_DGRAM)
-        self.lock = Lock()
-        self.close = Event()
+        self.udpSock = socket(AF_INET,SOCK_DGRAM)     
+        self.lock = Lock()                            
+        self.close = Event()                          
                     
         #build self.obsPoly with empty contour
         self.receiveObs = False    # state of first obstacle data from ltlmop (start with false  )  
-        self.obsPoly = Rectangle (1,1)   
-        self.obsPoly -= self.obsPoly      #Polygon built from the occupancy grid
+        self.obsPoly = Polygon.Polygon()     #Polygon built from the occupancy grid
         self.resolX  = 0.1 * 1.05;        #Blow Up by 5 % grid width
         self.resolY  = 0.1 * 1.05;        #Blow Up by 5 % grid height
         self.STOP    = False              #emergency stop when there are obstacles right next to it
@@ -419,18 +418,17 @@ class _RobotListener(Thread):
         """
 
         # Open socket for communication
-        self.udpSock.bind(self.addr)
-
+        self.udpSock.bind(self.addr)    
         # Receive communication until stopped
         while not self.close.isSet():
             data = self.udpSock.recv(self.buffer)
-            self.lock.acquire()
+            self.lock.acquire()                     
             self.processData(data)
-            self.lock.release()
+            self.lock.release()                     
 
 
         # Close socket
-        self.udpSock.close()
+        self.udpSock.close()                
 
     # Stop communication
     def stop(self):
@@ -490,7 +488,7 @@ class _RobotListener(Thread):
                 #print '***********self.obs*************'+','.join(map(str,[add,x1,y1]))
                 self.obs = [add,x1,round(y1,2)]                
                 if add == 1:
-                    a = Rectangle(self.resolX,self.resolY)  
+                    a = PolyShapes.Rectangle(self.resolX,self.resolY)  
                     a.shift(x1,y1) 
                     self.obsPoly += a
                     self.receiveObs = True
@@ -501,7 +499,7 @@ class _RobotListener(Thread):
                     else:
                         self.STOP = False
                 else:
-                    a = Rectangle(self.resolX,self.resolY)  
+                    a = PolyShapes.Rectangle(self.resolX,self.resolY)  
                     a.shift(x1,y1) 
                     self.obsPoly -= a
                     self.receiveObs = True
@@ -522,16 +520,18 @@ class RobotBroadcaster:
     def __init__(self,ipAddress,port,bufferSize):
         # Communication parameters
         self.addr = (ipAddress,port)
-        self.udpSock = socket(AF_INET,SOCK_DGRAM)
-        so_broadcast = True;
-        self.udpSock.setsockopt(SOL_SOCKET,SO_BROADCAST,so_broadcast)
+        self.udpSock = socket(AF_INET,SOCK_DGRAM)                        
+        so_broadcast = True;                                              
+        self.udpSock.setsockopt(SOL_SOCKET,SO_BROADCAST,so_broadcast)   
+
+        
     # Disable communication
     def stop(self):
         """
         Close the socket to end UDP communication.
         """
-        self.udpSock.close()
-
+        self.udpSock.close()            
+        
     # Serialize and send data
     def sendPose(self,pose):
         """

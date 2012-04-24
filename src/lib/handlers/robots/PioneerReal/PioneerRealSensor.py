@@ -21,5 +21,7 @@ class PioneerRealSensorHandler:
         """
         return a flag sent from Pioneer telling whether there is a dynamic obstacle nearby or not
         """
+        if self.robocomm.getSTOP() == True:
+            print  "sensing dyanmic obstacles"
         return self.robocomm.getSTOP()
 

@@ -71,21 +71,20 @@ class motionControlHandler:
         self.PioneerWidthHalf  = 0.25     # (m) width of Pioneer    #0.20
         self.PioneerLengthHalf = 0.30     # (m) lenght of Pioneer   #0.25
         
-        # Pioneer Range related parameters
-        self.range             = 2*self.PioneerLengthHalf+0.40     # (m) specify the range of the robot (when the normal circle range cannot detect obstacle)   #0.85
-        self.obsRange          = self.range*0.7                                 # (m) range that says the robot detects obstacles    #0.25
-        self.shift             = 0.20                                           # How far the range is shifted to ensure it is sensing region in front is bigger    0.20
-        self.boxVertical       = self.obsRange*2                                # box cutting from range of Pioneer
-        self.boxHorizontal     = self.obsRange*2                                 # box cutting from range of Pioneer
-        self.boxVertical_shift = self.boxVertical + self.PioneerLengthHalf/2*1.5     # vertical shifting of box
-        self.boxHorizontal_shift = self.boxHorizontal/2                          # horizontal shifting of the box 
-        
         # Real Robot polygon related parameters
         self.boxRealVertical         = self.PioneerLengthHalf*2
         self.boxRealHorizontal       = self.PioneerWidthHalf*2.5
         self.boxRealVertical_shift   = self.boxRealVertical/2
         self.boxRealHorizontal_shift = self.boxRealHorizontal/2
         
+        # Pioneer Range related parameters
+        self.range             = 2*self.PioneerLengthHalf+0.40     # (m) specify the range of the robot (when the normal circle range cannot detect obstacle)   #0.85
+        self.obsRange          = self.range*0.7                                 # (m) range that says the robot detects obstacles    #0.25
+        self.shift             = 0.20                                           # How far the range is shifted to ensure it is sensing region in front is bigger    0.20
+        self.boxVertical       = self.obsRange*2                                # box cutting from range of Pioneer
+        self.boxHorizontal     = self.obsRange*2                                 # box cutting from range of Pioneer
+        self.boxVertical_shift = self.boxVertical + self.boxRealVertical/2*1.5    # vertical shifting of box
+        self.boxHorizontal_shift = self.boxHorizontal/2                          # horizontal shifting of the box 
         
         ## 2: 0DE
         self.factorODE = 50
@@ -94,6 +93,7 @@ class motionControlHandler:
             self.PioneerLengthHalf      = self.PioneerLengthHalf*self.factorODE    
             self.range                  = self.range*self.factorODE   
             self.obsRange               = self.obsRange*self.factorODE
+            self.shift                  = self.shift*self.factorODE
             self.boxVertical            = self.boxVertical*self.factorODE
             self.boxHorizontal          = self.boxHorizontal*self.factorODE
             self.boxVertical_shift      = self.boxVertical_shift*self.factorODE
@@ -191,7 +191,7 @@ class motionControlHandler:
         if current_reg == next_reg and not last:
             # No need to move!
             self.drive_handler.setVelocity(0, 0)  # So let's stop
-            return False
+            return True
                
         # Check if Vicon has cut out
         if math.isnan(pose[2]):
@@ -246,9 +246,9 @@ class motionControlHandler:
                 
                 
                 # Push the goal point to somewhere inside the next region to ensure the robot will get there.(CHECK!!)
-                self.q_g = self.q_g+(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*3*self.PioneerLengthHalf   
+                self.q_g = self.q_g+(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*3*self.PioneerLengthHalf   
                 if not self.nextRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
-                    self.q_g = self.q_g-(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*6*self.PioneerLengthHalf 
+                    self.q_g = self.q_g-(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*6*self.PioneerLengthHalf 
                 
 #                if self.proj.rfi.regions[current_reg].name.lower()=='freespace':    
 #                    self.q_g = self.q_g+(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*3*self.PioneerLengthHalf   
@@ -496,7 +496,6 @@ class motionControlHandler:
                 plt.clf()    
                 self.plotPoly(self.m_line,'b');
                 self.plotPoly(overlap,'r');                       
-                plt.plot(vx,vy,'ko')
                 plt.plot(pt[0],pt[1],'ro')
                 plt.plot(pose[0],pose[1],'bo')
                 self.plotPioneer(self.overlap_figure,0)
@@ -709,14 +708,18 @@ class motionControlHandler:
     
     def plotPoly(self,c,string,w = 1):
         """
+        Plot polygons inside the boundary
         c = polygon to be plotted with matlabplot
         string = string that specify color
         w      = width of the line plotting 
         """
         for i in range(len(c)):
-            BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(c.contour(i))))
-            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)   
-            plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)   
+            toPlot = Polygon.Polygon(c.contour(i)) & self.all
+            if bool(toPlot):               
+                #BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(c.contour(i))))
+                BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
+                plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)   
+                plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)   
    
     def getOldRegionName(self, regionName):
         """
