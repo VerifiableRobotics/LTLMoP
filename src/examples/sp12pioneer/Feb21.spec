@@ -9,22 +9,22 @@ hmwk_given, 0
 hmwk_taken, 0
 wait_until_given, 0
 wait_until_taken, 0
+stop, 0
 
 CompileOptions:
 convexify: False
 fastslow: False
 
 CurrentConfigName:
-Bug Algorithm with Pioneer
+Bug Algorithm with ODE(Pioneer)
 
 Customs: # List of custom propositions
-carrying_item
 
 RegionFile: # Relative path of region description file
 Feb21.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-see_dynamic_obstacle, 0
+see_dynamic_obstacle, 1
 
 
 ======== SPECIFICATION ========
@@ -41,8 +41,8 @@ Spec: # Specification in structured English
 
 #Always not obs
 
-
+#do stop if and only if you are sensing see_dynamic_obstacle
+if you are sensing  see_dynamic_obstacle then stay there
 if you are not sensing see_dynamic_obstacle then visit r1
 if you are not sensing see_dynamic_obstacle then visit r2
-if you are sensing see_dynamic_obstacle then stay there
 

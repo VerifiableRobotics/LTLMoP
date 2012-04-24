@@ -70,22 +70,38 @@ class motionControlHandler:
         # Pioneer related parameters
         self.PioneerWidthHalf  = 0.25     # (m) width of Pioneer    #0.20
         self.PioneerLengthHalf = 0.30     # (m) lenght of Pioneer   #0.25
-        self.ratioBLOW         = 0.7     # blow up ratio of the pioneer box                             ######### 5 BOX
-        self.PioneerBackMargin=  self.ratioBLOW*self.PioneerLengthHalf*2    # (in m)
         
+        # Pioneer Range related parameters
         self.range             = 2*self.PioneerLengthHalf+0.40     # (m) specify the range of the robot (when the normal circle range cannot detect obstacle)   #0.85
-        self.obsRange          = self.range*0.7     # (m) range that says the robot detects obstacles    #0.25
-        self.shift             = 0.20    # 0.20
-
+        self.obsRange          = self.range*0.7                                 # (m) range that says the robot detects obstacles    #0.25
+        self.shift             = 0.20                                           # How far the range is shifted to ensure it is sensing region in front is bigger    0.20
+        self.boxVertical       = self.obsRange*2                                # box cutting from range of Pioneer
+        self.boxHorizontal     = self.obsRange*2                                 # box cutting from range of Pioneer
+        self.boxVertical_shift = self.boxVertical + self.PioneerLengthHalf/2*1.5     # vertical shifting of box
+        self.boxHorizontal_shift = self.boxHorizontal/2                          # horizontal shifting of the box 
+        
+        # Real Robot polygon related parameters
+        self.boxRealVertical         = self.PioneerLengthHalf*2
+        self.boxRealHorizontal       = self.PioneerWidthHalf*2.5
+        self.boxRealVertical_shift   = self.boxRealVertical/2
+        self.boxRealHorizontal_shift = self.boxRealHorizontal/2
+        
         
         ## 2: 0DE
         self.factorODE = 50
         if  self.system == 2:
-            self.PioneerWidthHalf  = self.PioneerWidthHalf*self.factorODE    
-            self.PioneerLengthHalf = self.PioneerLengthHalf*self.factorODE    
-            self.range             = self.range*self.factorODE   
-            self.obsRange          = self.obsRange*self.factorODE
-            self.PioneerBackMargin= self.PioneerBackMargin*self.factorODE
+            self.PioneerWidthHalf       = self.PioneerWidthHalf*self.factorODE    
+            self.PioneerLengthHalf      = self.PioneerLengthHalf*self.factorODE    
+            self.range                  = self.range*self.factorODE   
+            self.obsRange               = self.obsRange*self.factorODE
+            self.boxVertical            = self.boxVertical*self.factorODE
+            self.boxHorizontal          = self.boxHorizontal*self.factorODE
+            self.boxVertical_shift      = self.boxVertical_shift*self.factorODE
+            self.boxHorizontal_shift    = self.boxHorizontal_shift*self.factorODE
+            self.boxRealVertical        = self.boxRealVertical*self.factorODE
+            self.boxRealHorizontal      = self.boxRealHorizontal*self.factorODE
+            self.boxRealVertical_shift  = self.boxRealVertical_shift*self.factorODE
+            self.boxRealHorizontal_shift= self.boxRealHorizontal_shift*self.factorODE
             
 
         #build self.map with empty contour
@@ -113,15 +129,15 @@ class motionControlHandler:
         ## Construct robot polygon (for checking overlap)
         pose = self.pose_handler.getPose()
         self.prev_pose = pose        
-        self.robot = PolyShapes.Rectangle(self.obsRange*3,self.PioneerBackMargin)    
-        self.robot.shift(pose[0]-self.obsRange,pose[1]-2*self.PioneerBackMargin)
+        self.robot = PolyShapes.Rectangle(self.boxHorizontal,self.boxVertical)
+        self.robot.shift(pose[0]-self.boxHorizontal_shift,pose[1]-self.boxVertical_shift)     
         self.robot = PolyShapes.Circle(self.obsRange,(pose[0],pose[1])) - self.robot
         self.robot.rotate(pose[2]-pi/2,pose[0],pose[1]) 
         self.robot.shift(self.shift*cos(pose[2]),self.shift*sin(pose[2]))
         
         #construct real robot polygon( see if there is overlaping with path to goal
-        self.realRobot = PolyShapes.Rectangle(self.PioneerWidthHalf*2.5,self.PioneerLengthHalf*2 )
-        self.realRobot.shift(pose[0]-self.PioneerWidthHalf*1.25,pose[1]-self.PioneerLengthHalf*1)
+        self.realRobot = PolyShapes.Rectangle(self.boxRealHorizontal,self.boxRealVertical )
+        self.realRobot.shift(pose[0]-self.boxRealHorizontal_shift,pose[1]-self.boxRealVertical_shift)
         self.realRobot.rotate(pose[2]-pi/2,pose[0],pose[1]) 
                       
         #constructing polygon of different regions (holes being taken care) 
@@ -597,12 +613,16 @@ class motionControlHandler:
             if self.robocomm.getSTOP() == True:
                 vx = 0
                 vy = 0
-            self.drive_handler.setVelocity(vx,vy, pose[2])
         """
+        vx = 0
+        vy = 0
+        self.drive_handler.setVelocity(vx,vy, pose[2])
+        
             
         # Set the current region as the previous current region(for checking whether the robot has arrived at the next region)
         self.previous_current_reg = current_reg        
         
+            
         # check whether robot has arrived at the next region 
         RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
         departed = not (self.currentRegionPoly+self.nextRegionPoly).covers(self.realRobot)   ## RoboPoly
