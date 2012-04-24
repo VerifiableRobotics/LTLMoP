@@ -1059,6 +1059,9 @@ class propMappingDialog(wx.Dialog):
             else:
                 self.text_ctrl_mapping.SetValue("")
 
+        # Auto-select the first term
+        self.onClickMapping(None)
+
         if event is not None:
             event.Skip()
 
@@ -1134,22 +1137,26 @@ class propMappingDialog(wx.Dialog):
         event.Skip()
 
     def onClickMapping(self, event):
-        event.Skip()
+        if event is not None:
+            event.Skip()
 
-        if event.GetEventType() in [wx.wxEVT_KEY_DOWN, wx.wxEVT_KEY_UP] and \
-           event.GetKeyCode() not in [wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_HOME, wx.WXK_END, 
-                                      wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_RIGHT, wx.WXK_NUMPAD_UP, wx.WXK_NUMPAD_DOWN]:
-        #                              wx.WXK_BACK, wx.WXK_DELETE]:
-            return
+            if event.GetEventType() in [wx.wxEVT_KEY_DOWN, wx.wxEVT_KEY_UP] and \
+               event.GetKeyCode() not in [wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_HOME, wx.WXK_END, 
+                                          wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_RIGHT, wx.WXK_NUMPAD_UP, wx.WXK_NUMPAD_DOWN]:
+            #                              wx.WXK_BACK, wx.WXK_DELETE]:
+                return
         
-        # TODO: Make backspace work as expected; maybe colorize/bold
+            # TODO: Make backspace work as expected; maybe colorize/bold
 
-        i = self.text_ctrl_mapping.GetInsertionPoint()
+            i = self.text_ctrl_mapping.GetInsertionPoint()
 
-        # Special case for beginning or end of field
-        if i == 0 or i == self.text_ctrl_mapping.GetLastPosition():
-            self.text_ctrl_mapping.SelectNone()
-            return
+            # Special case for beginning or end of field
+            if i == 0 or i == self.text_ctrl_mapping.GetLastPosition():
+                self.text_ctrl_mapping.SelectNone()
+                return
+        else:
+            # Select first term
+            i = 1
 
         s = self.text_ctrl_mapping.GetValue()
 
@@ -1187,11 +1194,13 @@ class propMappingDialog(wx.Dialog):
 
         # Force selection of the entire keyword, and place insertion caret as appropriate
         self.text_ctrl_mapping.SetSelection(m.start(),m.end())
-        if event.GetEventType() in [wx.wxEVT_KEY_DOWN, wx.wxEVT_KEY_UP]:
-            if event.GetKeyCode() in [wx.WXK_LEFT, wx.WXK_HOME, wx.WXK_UP, wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_UP]:
-                self.text_ctrl_mapping.MoveCaret(m.start()-1)
-            elif event.GetKeyCode() in [wx.WXK_RIGHT, wx.WXK_END, wx.WXK_DOWN, wx.WXK_NUMPAD_RIGHT, wx.WXK_NUMPAD_DOWN]:
-                self.text_ctrl_mapping.MoveCaret(m.end()-1)
+
+        if event is not None:
+            if event.GetEventType() in [wx.wxEVT_KEY_DOWN, wx.wxEVT_KEY_UP]:
+                if event.GetKeyCode() in [wx.WXK_LEFT, wx.WXK_HOME, wx.WXK_UP, wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_UP]:
+                    self.text_ctrl_mapping.MoveCaret(m.start()-1)
+                elif event.GetKeyCode() in [wx.WXK_RIGHT, wx.WXK_END, wx.WXK_DOWN, wx.WXK_NUMPAD_RIGHT, wx.WXK_NUMPAD_DOWN]:
+                    self.text_ctrl_mapping.MoveCaret(m.end()-1)
 
         # Load detailed view of keyword below
             
@@ -1203,8 +1212,6 @@ class propMappingDialog(wx.Dialog):
         self.tempMethod = self.proj.hsub.string2Method(m.group())
         drawParamConfigPane(self.panel_method_cfg, self.tempMethod, self.proj)
         self.Layout()
-
-        event.Skip()
 
     def onEditMapping(self, event): # wxGlade: propMappingDialog.<event_handler>
         if not self.text_ctrl_mapping.IsEnabled():
