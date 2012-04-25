@@ -32,6 +32,7 @@ r2 = p6
 others = p1
 
 Spec: # Specification in structured English
+visit r2
 visit r5
 visit r4
 

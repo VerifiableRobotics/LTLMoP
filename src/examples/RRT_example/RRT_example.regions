@@ -226,8 +226,8 @@ Regions: # Stored as JSON string
             0
         ], 
         "position": [
-            538, 
-            455
+            534, 
+            397
         ], 
         "type": "rect", 
         "size": [

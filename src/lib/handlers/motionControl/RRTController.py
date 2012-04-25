@@ -7,7 +7,7 @@ RRTController.py - Rapidly-Exploring Random Trees Motion Controller
 Uses the vector field algorithm developed by Stephen R. Lindemann to calculate a global velocity vector to take the robot from the current region to the next region, through a specified exit face.
 """
 
-import RRTControllerHelper
+import _RRTControllerHelper
 from numpy import *
 from is_inside import *
 import Polygon
@@ -15,21 +15,28 @@ import time, math
 import sys,os
 
 class motionControlHandler:
-    def __init__(self, proj, shared_data):
+    def __init__(self, proj, shared_data,robot_type):
+        """
+        Rapidly-Exploring Random Trees alogorithm motion planning controller
+        
+        robot_type (int): Which robot is used for execution. Nao is 1, STAGE is 2,ODE is 3(default=3)
+        """
+        
         # Get references to handlers we'll need to communicate with
-        self.drive_handler = proj.drive_handler
-        self.pose_handler = proj.pose_handler
+        self.drive_handler = proj.h_instance['drive']
+        self.pose_handler = proj.h_instance['pose']
 
         # Get information about regions
-        self.rfi = proj.rfi
+        self.proj = proj
+        #self.proj.rfi = proj.rfi
         self.coordmap_map2lab = proj.coordmap_map2lab
         self.coordmap_lab2map = proj.coordmap_lab2map
         self.last_warning = 0
         self.previous_next_reg = None
 
         # Store the Rapidly-Exploring Random Tress Built
-        self.RRT_V = None
-        self.RRT_E = None
+        self.RRT_V = None               # array containing all the points on the RRT Tree
+        self.RRT_E = None               # array specifying the connection of points on the Tree
         self.RRT_V_toPass = None
         self.RRT_E_toPass = None
         self.point_to_go = None
@@ -38,9 +45,16 @@ class motionControlHandler:
         self.Velocity    = None
         self.currentRegionPoly = None
         self.nextRegionPoly    = None
+        self.map               = {}
+        self.all               = Polygon.Polygon()
+        
+       
 
         # Information about the robot
-        self.system = 1
+        if robot_type not in [1,2,3]:
+            robot_type = 1
+        self.system = robot_type
+
         ## 1: Nao ; 2: STAGE; 3: 0DE
         if  self.system == 1:
             self.radius = 0.15*1.2
@@ -48,6 +62,14 @@ class motionControlHandler:
             self.radius = 0.1
         elif self.system == 3:
             self.radius = 5
+            
+        for region in self.proj.rfi.regions: 
+            self.map[region.name] = self.createRegionPolygon(region)
+            for n in range(len(region.holeList)): # no of holes           
+                self.map[region.name] -= self.createRegionPolygon(region,n) 
+                
+        for regionName,regionPoly in self.map.iteritems():
+            self.all += regionPoly
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
@@ -74,38 +96,46 @@ class motionControlHandler:
 
         ###This part is run when the robot goes to a new region, otherwise, the original tree will be used.
         if not self.previous_next_reg == current_reg:
+            self.nextRegionPoly    = self.map[self.proj.rfi.regions[next_reg].name]
+            self.currentRegionPoly = self.map[self.proj.rfi.regions[current_reg].name]
 
-            # NOTE: Information about region geometry can be found in self.rfi.regions
+            print "next Region is "+str(self.proj.rfi.regions[next_reg].name)
+            print "Current Region is "+str(self.proj.rfi.regions[current_reg].name)
+            """
+            # NOTE: Information about region geometry can be found in self.proj.rfi.regions
             # if the current region is "freespace", it will remove the other regions from the polygon boundary
-            pointArray = [x for x in self.rfi.regions[next_reg].getPoints()]
+            pointArray = [x for x in self.proj.rfi.regions[next_reg].getPoints()]
             pointArray = map(self.coordmap_map2lab, pointArray)
             regionPoints = [(pt[0],pt[1]) for pt in pointArray]
             #print "regionPoints:", regionPoints
             self.nextRegionPoly = Polygon.Polygon(regionPoints)
-            if self.rfi.regions[next_reg].name.lower()=='freespace':
-                for region in self.rfi.regions:
+            if self.proj.rfi.regions[next_reg].name.lower()=='freespace':
+                for region in self.proj.rfi.regions:
                     if region.name.lower() != 'freespace':
                         pointArray = [x for x in region.getPoints()]
                         pointArray = map(self.coordmap_map2lab, pointArray)
                         regionPoints = [(pt[0],pt[1]) for pt in pointArray]
                         self.nextRegionPoly = self.nextRegionPoly - Polygon.Polygon(regionPoints)
 
-            pointArray = [x for x in self.rfi.regions[current_reg].getPoints()]
+            pointArray = [x for x in self.proj.rfi.regions[current_reg].getPoints()]
             #print "pointArray",pointArray,len(pointArray)
             pointArray = map(self.coordmap_map2lab, pointArray)
             regionPoints = [(pt[0],pt[1]) for pt in pointArray]
             print "regionPoints:", regionPoints
             self.currentRegionPoly = Polygon.Polygon(regionPoints)
-            if self.rfi.regions[current_reg].name.lower()=='freespace':
-                for region in self.rfi.regions:
+            if self.proj.rfi.regions[current_reg].name.lower()=='freespace':
+                for region in self.proj.rfi.regions:
                     if region.name.lower() != 'freespace':
                         pointArray = [x for x in region.getPoints()]
                         pointArray = map(self.coordmap_map2lab, pointArray)
                         regionPoints = [(pt[0],pt[1]) for pt in pointArray]
                         self.currentRegionPoly = self.currentRegionPoly - Polygon.Polygon(regionPoints)
-
+            """
+            pointArray = [x for x in self.proj.rfi.regions[current_reg].getPoints()]
+            #print "pointArray",pointArray,len(pointArray)
+            pointArray = map(self.coordmap_map2lab, pointArray)
             vertices = mat(pointArray).T
-
+            
             #set to zero velocity before tree is generated
             self.drive_handler.setVelocity(0, 0)
             if last:
@@ -121,16 +151,17 @@ class motionControlHandler:
                 # TODO: Why don't we just store this as the index?
                 ##########just trying here
                 q_gBundle = [[],[]]
-                if self.rfi.regions[current_reg].name.lower()=='freespace':
+                """
+                if self.proj.rfi.regions[current_reg].name.lower()=='freespace':
                     isFreespace = True
                 else:
                     isFreespace = False
                 #print "isFreespace", isFreespace
+                """
+                #print "size of array(self.proj.rfi.transitions[current_reg][next_reg])", self.proj.rfi.transitions[current_reg][next_reg],len(self.proj.rfi.transitions[current_reg][next_reg])
 
-                #print "size of array(self.rfi.transitions[current_reg][next_reg])", self.rfi.transitions[current_reg][next_reg],len(self.rfi.transitions[current_reg][next_reg])
-
-                for i in range(len(self.rfi.transitions[current_reg][next_reg])):
-                    pointArray_transface = [x for x in self.rfi.transitions[current_reg][next_reg][i]]
+                for i in range(len(self.proj.rfi.transitions[current_reg][next_reg])):
+                    pointArray_transface = [x for x in self.proj.rfi.transitions[current_reg][next_reg][i]]
                     #print  pointArray_transface
                     transFace = asarray(map(self.coordmap_map2lab,pointArray_transface))
                     #print "RRT Controller 138: transface" ,transFace
@@ -141,7 +172,7 @@ class motionControlHandler:
 
 
                 if transFace is None:
-                    print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.rfi.regions[current_reg].name, self.rfi.regions[next_reg].name)
+                    print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
 
             # Run algorithm to build the Rapid-Exploring Random Trees
             print "149: ok you pass"
@@ -149,7 +180,7 @@ class motionControlHandler:
             ################ WORKS SILLL HERE
             self.RRT_V = None
             self.RRT_E = None
-            self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = RRTControllerHelper.buildTree([pose[0], pose[1]],pose[2], vertices, self.radius,self.system,self.currentRegionPoly,self.nextRegionPoly,isFreespace,q_gBundle)
+            self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = _RRTControllerHelper.buildTree([pose[0], pose[1]],pose[2], vertices, self.radius,self.system,self.currentRegionPoly,self.nextRegionPoly,q_gBundle,self.map,self.all)
 
             # map the lab coordinates back to pixels
 
@@ -166,7 +197,7 @@ class motionControlHandler:
             print s
 
         # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
-        V = RRTControllerHelper.setVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.radius)
+        V = _RRTControllerHelper.setVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.radius)
         self.Velocity = V[0:2,0]
         self.heading = V[2,0]
         self.E_prev = V[3,0]
@@ -184,7 +215,7 @@ class motionControlHandler:
         if departed and (not arrived) and (time.time()-self.last_warning) > 0.5:
             #print "WARNING: Left current region but not in expected destination region"
             # Figure out what region we think we stumbled into
-            for r in self.rfi.regions:
+            for r in self.proj.rfi.regions:
                 pointArray = [self.coordmap_map2lab(x) for x in r.getPoints()]
                 vertices = mat(pointArray).T
 
@@ -195,3 +226,16 @@ class motionControlHandler:
             self.last_warning = time.time()
 
         return arrived
+
+    def createRegionPolygon(self,region,hole = None):
+        """
+        This function takes in the region points and make it a Polygon.
+        """
+        if hole == None:
+            pointArray = [x for x in region.getPoints()] 
+        else:
+            pointArray = [x for x in region.getPoints(hole_id = hole)] 
+        pointArray = map(self.coordmap_map2lab, pointArray)
+        regionPoints = [(pt[0],pt[1]) for pt in pointArray]
+        formedPolygon= Polygon.Polygon(regionPoints)
+        return formedPolygon
