@@ -84,11 +84,11 @@ class _RobotCommunicator:
                             #            --> follow by 0, stop Pioneer
 
     # Communication parameters
-    LOCAL_IP = "0.0.0.0"
-    #LOCAL_IP = "10.0.0.96"
+    #LOCAL_IP = "0.0.0.0"
+    LOCAL_IP = "10.0.0.122"
     DEFAULT_LISTEN_PORT = 6501
-    NETWORK_BROADCAST_IP = "10.255.255.255"
-    #NETWORK_BROADCAST_IP = "10.0.0.122"
+    #NETWORK_BROADCAST_IP = "10.255.255.255"
+    NETWORK_BROADCAST_IP = "10.0.0.96"
     DEFAULT_BROADCAST_PORT = 6502
     DEFAULT_BUFFER_SIZE = 10240
 
