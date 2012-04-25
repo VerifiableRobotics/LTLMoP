@@ -155,10 +155,18 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             quant_or_string = {}
             quant_and_string = {}
-            quant_or_string['current'] = "(" + " | ".join(RegionGroups[quant_group]) + ")"
-            quant_and_string['current'] = "(" + " & ".join(RegionGroups[quant_group]) + ")"
-            quant_or_string['next'] = "(" + " | ".join(map(nextify, RegionGroups[quant_group])) + ")"
-            quant_and_string['next'] = "(" + " & ".join(map(nextify, RegionGroups[quant_group])) + ")"
+            if len(RegionGroups[quant_group]) > 0:
+                quant_and_string['current'] = "(" + " & ".join(RegionGroups[quant_group]) + ")"
+                quant_and_string['next'] = "(" + " & ".join(map(nextify, RegionGroups[quant_group])) + ")"
+                quant_or_string['current'] = "(" + " | ".join(RegionGroups[quant_group]) + ")"
+                quant_or_string['next'] = "(" + " | ".join(map(nextify, RegionGroups[quant_group])) + ")"
+            else:
+                # With an empty group, it's impossible to be in any or all of them
+                quant_and_string['current'] = "FALSE"
+                quant_and_string['next'] = "FALSE"
+                quant_or_string['current'] = "FALSE"
+                quant_or_string['next'] = "FALSE"
+
             #quant_or_string['current'] = replaceLogicOp(quant_or_string['current'])
             #quant_and_string['current'] = replaceLogicOp(quant_and_string['current'])
             #quant_or_string['next'] = replaceLogicOp(quant_or_string['next'])
@@ -174,6 +182,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             RegionGroups[groupName] = re.split(r"\s*,\s*", groupList)
             RegionGroups[groupName] = map(replaceLogicOp, RegionGroups[groupName])
 
+            # 'empty' is a no-op 
+            if 'empty' in RegionGroups[groupName]:
+                RegionGroups[groupName].remove('empty')
+
             # Allow equivalency between basic singular/plural references
             if groupName[-1] == "s":
                 RegionGroups[groupName[0:-1]] = RegionGroups[groupName]
@@ -187,8 +199,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             EnvInit = EnvInitRE.sub('',line)
 
             # parse the rest and return it to spec['EnvInit']
-            LTLsubformula = parseInit(EnvInit,sensorList,lineInd)
-            if LTLsubformula == '': failed = True
+            if len(sensorList) == 0:
+                LTLsubformula = ''
+            else:
+                LTLsubformula = parseInit(EnvInit,sensorList,lineInd)
+                if LTLsubformula == '': failed = True
 
             # this shouldn't even be possible, but check just in case:
             if "QUANTIFIER_PLACEHOLDER" in LTLsubformula:
@@ -230,9 +245,12 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 LTLRegSubformula = parseInit(RegInit,regionList + ["QUANTIFIER_PLACEHOLDER"],lineInd)
                 if LTLRegSubformula == '': failed = True
             if ActInit:
-                # parse Actions
-                LTLActSubformula = parseInit(ActInit,robotPropList,lineInd)
-                if LTLActSubformula == '': failed = True
+                if len(robotPropList) == 0:
+                    LTLActSubformula = ''
+                else:
+                    # parse Actions
+                    LTLActSubformula = parseInit(ActInit,robotPropList,lineInd)
+                    if LTLActSubformula == '': failed = True
             
             if QuantifierFlag == "ANY":
                 LTLRegSubformula = LTLRegSubformula.replace("QUANTIFIER_PLACEHOLDER", quant_or_string['current'])

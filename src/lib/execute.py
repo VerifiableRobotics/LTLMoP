@@ -257,17 +257,23 @@ def main(argv):
 
     avg_freq = 0
 
+    # Choose a timer func with maximum accuracy for given platform
+    if sys.platform in ['win32', 'cygwin']:
+        timer_func = time.clock
+    else:
+        timer_func = time.time
+
     while True:
         # Idle if we're not running
         while not runFSA:
             proj.h_instance['drive'].setVelocity(0,0)
             time.sleep(0.05) # We need to sleep to give up the CPU
 
-        tic = time.time()
+        tic = timer_func()
 
         FSA.runIteration()
 
-        toc = time.time()
+        toc = timer_func()
 
         # TODO: Possibly implement max rate-limiting?
         #while (toc - tic) < 0.05:
