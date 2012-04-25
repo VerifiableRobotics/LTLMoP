@@ -99,7 +99,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     elif system == 2:
         velocity  = 0.06
     elif system == 3:
-        velocity = 1.5    # what is used in RRTControllerHelper.setVelocity    #2
+        velocity = 2    # what is used in RRTControllerHelper.setVelocity    #1.5
     #############tune velocity OMEGA, TIME STEP
     
     BoundPoly  = regionPoly       # Boundary polygon = current region polygon
