@@ -224,10 +224,11 @@ def main(argv):
     init_region = None
 
     for i, r in enumerate(proj.rfi.regions):
-        pointArray = [proj.coordmap_map2lab(x) for x in r.getPoints()]
-        vertices = mat(pointArray).T
+        #pointArray = [proj.coordmap_map2lab(x) for x in r.getPoints()]
+        #vertices = mat(pointArray).T
 
-        if is_inside([pose[0], pose[1]], vertices):
+        #if is_inside([pose[0], pose[1]], vertices):
+        if r.objectContainsPoint(*proj.coordmap_lab2map(pose)):
             init_region = i
             break
 

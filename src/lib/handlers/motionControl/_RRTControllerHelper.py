@@ -99,7 +99,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     elif system == 2:
         velocity  = 0.06
     elif system == 3:
-        velocity = 1    # what is used in RRTControllerHelper.setVelocity    #1
+        velocity = 1.5    # what is used in RRTControllerHelper.setVelocity    #2
     #############tune velocity OMEGA, TIME STEP
     
     BoundPoly  = regionPoly       # Boundary polygon = current region polygon
@@ -138,6 +138,9 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
         u = ((boundingNextPoly[0],boundingNextPoly[2]),(boundingNextPoly[1],boundingNextPoly[2]),(boundingNextPoly[1],boundingNextPoly[3]),(boundingNextPoly[0],boundingNextPoly[3]))
     """
     print "137: hello printing path"
+    if not plt.isinteractive():
+        plt.ion()       
+    plt.hold(True)
     while path == 0:
         #step -1: try connection to q_goal
         #generate path to goal
@@ -217,7 +220,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                 else:
                     plt.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
                 plt.draw()
-                plt.show()
+                #plt.show()
 
             ########################## TO BE ADD BACK
             if connect_goal and abs(theta_orientation - thetaPrev) < pi/3:
@@ -240,12 +243,16 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                 cols = asarray(cols)[0]
             q_g = q_pass[1:,cols]   ###Catherine
             #print >>sys.__stdout__, "199:q_g",q_g
-            
+            q_g = q_g-(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*radius   #org 3
+            if not nextRegionPoly.isInside(q_g[0],q_g[1]):
+                q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*6*radius   #org 3 
+            """
             if trial == 1:
                 q_g = q_g-(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*radius   #org 3
             else:
-                q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*radius   #org 3
-            
+                q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*radius   #org 3      """
+            plt.plot(q_g[0,0],q_g[1,0],'ko')
+            plt.figure(original_figure).canvas.draw()
 
             numOfPoint = floor(norm(V[1:,shape(V)[1]-1]- q_g)/step_size)
             if numOfPoint < 3:
@@ -265,7 +272,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
             Icurrent    = []          # to keep track of the index of the closest point to q_n
 
             while success == 0 and hit_count <= 2:
-                print >>sys.__stdout__, "Helper 253: stuck:", stuck
+                #print >>sys.__stdout__, "Helper 253: stuck:", stuck
                 if stuck > stuck_thres:
                     omega = random.choice(omega_range_abso)
                 else:
@@ -295,7 +302,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                     j = j + 1
 
                 path_all = PolyUtils.convexHull(path_robot)
-                print >>sys.__stdout__, "Keep checking path"
+                #print >>sys.__stdout__, "Keep checking path"
                 in_bound = BoundPoly.covers(path_all)
                 
                 plt.hold(True)
@@ -305,10 +312,9 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                 #plt.plot(x,y,'b')
                 plotPoly(path_all,'r',1)
                 plotMap(original_figure,BoundPoly,allRegions)
-                print >>sys.__stdout__,in_bound
+                #print >>sys.__stdout__,in_bound
                 stuck = stuck + 1
                 if in_bound:
-                    print "adding point"
                     stuck = stuck -5
                     x = []
                     y = []
@@ -383,7 +389,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
         plt.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
     #plt.axis([-10, 110, -10, 110])
     plt.axis ('equal')
-    plt.show()
+    #plt.show()
     
     heading  = E[0,0]
     # parse string for RRT printing in GUI (in format: RRT:E[[1,2,3]]:V[[1,2,3]])

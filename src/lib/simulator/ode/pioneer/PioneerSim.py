@@ -7,8 +7,9 @@ from OpenGL.GLUT import *
 from numpy import *
 import math, time, copy, sys
 # needs to add the path of ltlmop_root to sys path
-sys.path.append('../../..')
-import lib.regions
+sys.path.append('lib')
+import regions
+
 
 info = """DiffDriveSim
 
@@ -51,7 +52,7 @@ class DiffDriveSim:
         # If regionfile=0, render the ground as default solid green terrain.
         # Otherwise, load the regions file specified and draw the region colors on the ground.
         # Initialize the region file interface
-        self.rfi = lib.regions.RegionFileInterface()
+        self.rfi = regions.RegionFileInterface()
 
         # Load a region file if it has been specified on instantiation.
         #regionfile = "examples/sandbox/sandbox.regions"
