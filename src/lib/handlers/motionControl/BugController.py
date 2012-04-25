@@ -613,8 +613,8 @@ class motionControlHandler:
                 vx = 0
                 vy = 0
         """
-        vx = 0
-        vy = 0
+        #vx = 0
+        #vy = 0
         self.drive_handler.setVelocity(vx,vy, pose[2])
         
             
