@@ -4,7 +4,6 @@
     _RRTControllerHelper.py - Randomly Exploring Rapid Tree Controller
     =============================================================
 
-    A Python implementation of the Stephen R. Lindemann algorithm.
 """
 
 from numpy import *
@@ -110,47 +109,34 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     original_figure = 1
 
     #!!! CONTROL SPACE: generate a list of omega for random sampling
-    omegaLowerBound = -math.pi/20
-    omegaUpperBound = math.pi/20
+    omegaLowerBound = -math.pi/20      # upper bound for the value of omega
+    omegaUpperBound = math.pi/20       # lower bound for the value of omega
     omegaStepSize   = 20
     omega_range = linspace(omegaLowerBound,omegaUpperBound,omegaStepSize)
-    omega_range_abso = linspace(omegaLowerBound*4,omegaUpperBound*4,omegaStepSize*4)
-    #print "omega_range", omega_range
+    omega_range_abso = linspace(omegaLowerBound*4,omegaUpperBound*4,omegaStepSize*4)    # range used when stuck > stuck_thres
     edgeX    = []
     edgeY    = []   
 
-    # for freespace, check faces of the next region
-    # for regions other that freespace, check faces of the current region
-    ##### for freespace, check all faces, otherwise do transface
+    # check faces of the current region for goal points
 
     E = [[],[]]
     Other = [[],[]]
     path     = 0          # if path formed then = 1
-    COUNT    = 0
     stuck    = 0          # count for changing the range of sampling omega
     stuck_thres = 300     # threshold for changing the range of sampling omega
-    """
-    if isFreespace:
-        boundingNextPoly = nextRegionPoly.boundingBox()
-        u = ((boundingNextPoly[0],boundingNextPoly[2]),(boundingNextPoly[1],boundingNextPoly[2]),(boundingNextPoly[1],boundingNextPoly[3]),(boundingNextPoly[0],boundingNextPoly[3]))
-    else:
-        boundingNextPoly = regionPoly.boundingBox()
-        u = ((boundingNextPoly[0],boundingNextPoly[2]),(boundingNextPoly[1],boundingNextPoly[2]),(boundingNextPoly[1],boundingNextPoly[3]),(boundingNextPoly[0],boundingNextPoly[3]))
-    """
-    print "137: hello printing path"
+
     if not plt.isinteractive():
         plt.ion()       
     plt.hold(True)
     while path == 0:
-        #step -1: try connection to q_goal
-        #generate path to goal
+        #step -1: try connection to q_goal (generate path to goal)
         goalCheck = 0;
         i = 0
 
+        # pushing possible q_goals into the current region (ensure path is covered by the current region polygon)
         q_pass = [[],[],[]]
         q_pass_dist = []
         q_gBundle = mat(q_gBundle)
-        #print >>sys.__stdout__, "Helper 106: q_gBundle",q_gBundle
         while i < q_gBundle.shape[1]:   ###not sure about shape
             q_g = q_gBundle[:,i]+(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*radius    ##original 2*radius
             trial = 1
@@ -158,7 +144,6 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                 trial = 2
                 q_g = q_gBundle[:,i]-(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*radius    ##original 2*radius
 
-            # print "Helper 176: q_g",q_g,"pose", p, "V[1:,(shape(V)[1]-1)])",V[1:,(shape(V)[1]-1)]
             #forming polygon for path checking
             cross_goal     = cross(vstack((q_g-vstack((V[1,shape(V)[1]-1],V[2,shape(V)[1]-1])),0)).T,hstack((0,0,1)))
             cross_goal       = cross_goal.T
@@ -167,11 +152,10 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
             lowerEdgeG   = hstack((vstack((V[1,shape(V)[1]-1],V[2,shape(V)[1]-1])),q_g)) - hstack((move_vector_goal,move_vector_goal))
             EdgePolyGoal    = Polygon.Polygon((tuple(array(lowerEdgeG[:,0].T)[0]),tuple(array(upperEdgeG[:,0].T)[0]),tuple(array(upperEdgeG[:,1].T)[0]),tuple(array(lowerEdgeG[:,1].T)[0])))
 
-            #print "133 EdgePolyGoal:", EdgePolyGoal
             dist = norm(q_g - V[1:,shape(V)[1]-1])
             connect_goal = BoundPoly.covers(EdgePolyGoal)   #check coverage of path from new point to goal
             #check connection to goal
-            #print "169: check connection to goal"
+            
             """
             if connect_goal:
                 print "connection is true"
@@ -179,6 +163,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                 q_pass = hstack((q_pass,vstack((i,q_g))))
                 q_pass_dist = hstack((q_pass_dist,dist))
             """
+            
             # compare orientation difference
             thetaPrev = V_theta[shape(V)[1]-1]
             theta_orientation = abs(arctan((q_g[1,0]- V[2,shape(V)[1]-1])/(q_g[0,0]- V[1,shape(V)[1]-1])))
@@ -204,12 +189,10 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                         theta_orientation = pi + theta_orientation
                     elif q_g[0,0] > V[1,shape(V)[1]-1]: # foruth quadrant
                         theta_orientation =  2*pi - theta_orientation
-            #print "thetaPrev", thetaPrev, "theta_orientation", theta_orientation
 
             ################################## PRINT PLT #################
             
             if connect_goal :
-                plt.hold(True)
                 plt.suptitle('Randomly-exploring rapid tree', fontsize=12)
                 BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
                 plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
@@ -219,10 +202,8 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                     plt.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
                 else:
                     plt.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                plt.draw()
-                #plt.show()
+                plt.figure(original_figure).canvas.draw()
 
-            ########################## TO BE ADD BACK
             if connect_goal and abs(theta_orientation - thetaPrev) < pi/3:
                 print "connection is true.Path = 1"
                 path = 1
@@ -234,23 +215,16 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
 
         # connection to goal has established
         if path == 1:
-            #print "175:q_pass_dist", q_pass_dist, "min(q_pass_dist)",min(q_pass_dist),"q_pass",q_pass
-            #print "177:", 'shape(q_pass_dist)[0]',shape(q_pass_dist)[0],'shape(q_pass_dist)[1]',shape(q_pass_dist)[1]
             if shape(q_pass_dist)[0] == 1:
                 cols = 0
             else:
                 (cols,) = nonzero(q_pass_dist == min(q_pass_dist))
                 cols = asarray(cols)[0]
             q_g = q_pass[1:,cols]   ###Catherine
-            #print >>sys.__stdout__, "199:q_g",q_g
             q_g = q_g-(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*radius   #org 3
             if not nextRegionPoly.isInside(q_g[0],q_g[1]):
                 q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*6*radius   #org 3 
-            """
-            if trial == 1:
-                q_g = q_g-(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*radius   #org 3
-            else:
-                q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*radius   #org 3      """
+            
             plt.plot(q_g[0,0],q_g[1,0],'ko')
             plt.figure(original_figure).canvas.draw()
 
@@ -266,13 +240,11 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
 
         # path is not formed, try to append points onto the tree
         if path == 0:
-            print >>sys.__stdout__, "260:stuck"
             success     = 0           # whether adding a new point is successful
             hit_count   = 0           # count for regenerating new edge with the same q_rand
             Icurrent    = []          # to keep track of the index of the closest point to q_n
 
             while success == 0 and hit_count <= 2:
-                #print >>sys.__stdout__, "Helper 253: stuck:", stuck
                 if stuck > stuck_thres:
                     omega = random.choice(omega_range_abso)
                 else:
@@ -282,13 +254,11 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
 
                 #!!!! CONTROL SPACE STEP 2 - pick a random point on the tree
                 tree_index = random.choice(array(V[0])[0])
-                ##############print "Helper 197: tree_index", tree_index
                 xPrev     = V[1,tree_index]
                 yPrev     = V[2,tree_index]
                 thetaPrev = V_theta[tree_index]
 
                 j = 1
-
                 #!!!! CONTROL SPACE STEP 3 - Check path of the robot
                 path_robot = PolyShapes.Circle(radius,(xPrev,yPrev))
                 while j <= timeStep:
@@ -302,17 +272,12 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                     j = j + 1
 
                 path_all = PolyUtils.convexHull(path_robot)
-                #print >>sys.__stdout__, "Keep checking path"
                 in_bound = BoundPoly.covers(path_all)
                 
-                plt.hold(True)
-                plt.suptitle('Randomly-exploring rapid tree', fontsize=12)
-                plt.xlabel('x')
-                plt.ylabel('y')
-                #plt.plot(x,y,'b')
+                # plotting
                 plotPoly(path_all,'r',1)
                 plotMap(original_figure,BoundPoly,allRegions)
-                #print >>sys.__stdout__,in_bound
+
                 stuck = stuck + 1
                 if in_bound:
                     stuck = stuck -5
@@ -321,18 +286,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                     for k in  PolyUtils.pointList(path_all):
                         x = hstack((x,k[0]))
                         y = hstack((y,k[1]))
-                    
-                    plt.hold(True)
-                    plt.suptitle('Randomly-exploring rapid tree', fontsize=12)
-                    plt.xlabel('x')
-                    plt.ylabel('y')
-                    plt.plot(x,y,'b')
-                    plt.draw()
-                    
-                    
-                    ###############stuck = stuck + 1
 
-                    #print "connection is true"
                     V = hstack((V,vstack((shape(V)[1],xPrev,yPrev))))
                     V_theta = hstack((V_theta,thetaPrev))
                     E = hstack((E,vstack((tree_index ,shape(V)[1]-1))))
@@ -357,39 +311,22 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
         if trim == 0:
             single = 1;
 
-    #print '357V:',V, 'E:', E
     # generate V to be sent to SimGUI to plot
     V_toPass = V[0:,0]
     E_toPass = [[],[]]
     for i in range(shape(E)[1]):
         V_toPass = hstack((V_toPass,vstack((i,V[1,E[1,i-1]],V[2,E[1,i-1]]))))
         E_toPass = hstack((E_toPass,vstack((i-1,i))))
-    #print '357V_toPass:',V_toPass, 'E_toPass:', E
-
-
-    """
-    heading_row,heading_col = nonzero(E == 0)
-    print "heading_row",heading_row,"heading_col",heading_col
-    if heading_row == 0:
-        heading = E[1,heading_col]
-    else:
-        heading = E[0,heading_col]
-    """
     
     ####print with matlib
-    plt.hold(True)
-    plt.suptitle('Randomly-exploring rapid tree', fontsize=12)
-    plt.xlabel('x')
-    plt.ylabel('y')
+
     BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
     plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
     plt.plot(V[1,:],V[2,:],'b')
     for i in range(shape(E)[1]-1):
         plt.text(V[1,E[0,i]],V[2,E[0,i]], V[0,E[0,i]], fontsize=12)
         plt.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
-    #plt.axis([-10, 110, -10, 110])
-    plt.axis ('equal')
-    #plt.show()
+    plt.figure(original_figure).canvas.draw()
     
     heading  = E[0,0]
     # parse string for RRT printing in GUI (in format: RRT:E[[1,2,3]]:V[[1,2,3]])
@@ -409,12 +346,7 @@ def plotMap(number,currentRegion,allRegions):
         plt.ion()       
     plt.hold(True)
     
-    #plotPoly(mappedRegions,'k')
-    plotPoly(currentRegion,'k')
-   
-    
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plotPoly(currentRegion,'k')    
     plt.figure(number).canvas.draw()
         
 def plotPoly(c,string,w = 1):
@@ -427,7 +359,6 @@ def plotPoly(c,string,w = 1):
     for i in range(len(c)):
         toPlot = Polygon.Polygon(c.contour(i)) 
         if bool(toPlot):               
-            #BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(c.contour(i))))
             BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
             plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)   
             plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)   
