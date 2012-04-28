@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import copy
 from scipy.linalg import norm
 from math import *
+import random
 
 class motionControlHandler:
     def __init__(self, proj, shared_data,robot_type):
@@ -87,7 +88,7 @@ class motionControlHandler:
         self.boxHorizontal_shift = self.boxHorizontal/2                          # horizontal shifting of the box 
         
         ## 2: 0DE
-        self.factorODE = 50
+        self.factorODE = 30    # 30 works better than 50
         if  self.system == 2:
             self.PioneerWidthHalf       = self.PioneerWidthHalf*self.factorODE    
             self.PioneerLengthHalf      = self.PioneerLengthHalf*self.factorODE    
@@ -103,16 +104,11 @@ class motionControlHandler:
             self.boxRealVertical_shift  = self.boxRealVertical_shift*self.factorODE
             self.boxRealHorizontal_shift= self.boxRealHorizontal_shift*self.factorODE
             
-
-        #build self.map with empty contour
         self.map = {}                             # dictionary for all the regions
         self.all = Polygon.Polygon()              # Polygon with all the regions
         self.map_work = Polygon.Polygon()         # Polygon of the current region and next region considered
-
-        #build self.ogr with empty contour
-        self.ogr = Polygon.Polygon()   #Polygon built from occupancy grid data points
+        self.ogr = Polygon.Polygon()              #Polygon built from occupancy grid data points
       
-        #self.freespace = None               # contains only the boundary
         self.previous_current_reg = None    # previous current region   
         self.currentRegionPoly  = None      # current region's polygon
         self.nextRegionPoly    = None       # next region's polygon
@@ -171,7 +167,6 @@ class motionControlHandler:
         
         """
         If ``last`` is True, we will move to the center of the destination region.
-
         Returns ``True`` if we've reached the destination region.
         """
 
@@ -238,34 +233,36 @@ class motionControlHandler:
                 for tf in q_gBundle:
                     magsq = (tf[0] - pose[0])**2 + (tf[1] - pose[1])**2
                     if magsq < max_magsq:
-                        pt1  = tf
-                        max_magsq = magsq
-                transFace = 1   
-                self.q_g[0] = pt1[0]
-                self.q_g[1] = pt1[1]
+                        connection = 0
+                        tf = tf+(tf-asarray(self.currentRegionPoly.center()))/norm(tf-asarray(self.currentRegionPoly.center()))*2.1*self.PioneerLengthHalf   
+                        if not self.nextRegionPoly.covers(PolyShapes.Circle(self.PioneerLengthHalf*2,(tf[0],tf[1]))):  
+                            tf = tf-(tf-asarray(self.currentRegionPoly.center()))/norm(tf-asarray(self.currentRegionPoly.center()))*4.2*self.PioneerLengthHalf 
+                            if self.nextRegionPoly.covers(PolyShapes.Circle(self.PioneerLengthHalf*2,(tf[0],tf[1]))):  
+                                connection = 1
+                        else:
+                            connection = 1
+                        if connection == 1:
+                            pt1  = tf
+                            max_magsq = magsq
+                            transFace = 1   
+                            self.q_g[0] = pt1[0]
+                            self.q_g[1] = pt1[1]
+                        else:
+                            self.q_g[0],self.q_g[1] = self.nextRegionPoly.sample(random.random)
                 
                 
+                """
                 # Push the goal point to somewhere inside the next region to ensure the robot will get there.(CHECK!!)
                 self.q_g = self.q_g+(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*3*self.PioneerLengthHalf   
                 if not self.nextRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
                     self.q_g = self.q_g-(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*6*self.PioneerLengthHalf 
-                
-#                if self.proj.rfi.regions[current_reg].name.lower()=='freespace':    
-#                    self.q_g = self.q_g+(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*3*self.PioneerLengthHalf   
-#                    if not self.nextRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
-#                        self.q_g = self.q_g-(self.q_g-asarray(self.nextRegionPoly.center()))/norm(self.q_g-asarray(self.nextRegionPoly.center()))*6*self.PioneerLengthHalf 
-#                else:
-#                    self.q_g = self.q_g+(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*3*self.PioneerLengthHalf   
-#                    if self.currentRegionPoly.isInside(self.q_g[0],self.q_g[1]):  
-#                        self.q_g = self.q_g-(self.q_g-asarray(self.currentRegionPoly.center()))/norm(self.q_g-asarray(self.currentRegionPoly.center()))*6*self.PioneerLengthHalf 
-
-
+                """
                         
                 #plot exiting point  
                 if self.PLOT_EXIT == True:
                     plt.figure(self.overlap_figure) 
                     plt.clf()                    
-                    #plt.plot(q_gBundle[:,0],q_gBundle[:,1],'ko' )   
+                    plt.plot(q_gBundle[:,0],q_gBundle[:,1],'ko' )   
                     plt.plot(self.q_g[0],self.q_g[1],'ro')
                     plt.plot(pose[0],pose[1],'bo')
                     self.plotPioneer(self.overlap_figure,0)                   
@@ -314,7 +311,7 @@ class motionControlHandler:
             if self.boundary_following == False:
                 overlap = self.robot  - (self.map_work)
             else:#TRUE
-                overlap = Robot  - (self.map_work)
+                overlap = self.robot  - (self.map_work)
 
         if self.boundary_following == False:
             if bool(overlap):    ## overlap of obstacles

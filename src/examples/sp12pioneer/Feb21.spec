@@ -16,7 +16,7 @@ convexify: False
 fastslow: False
 
 CurrentConfigName:
-Bug Algorithm with Pioneer
+Bug Algorithm with ODE(Pioneer)
 
 Customs: # List of custom propositions
 
