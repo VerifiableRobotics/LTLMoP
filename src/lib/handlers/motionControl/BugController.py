@@ -25,6 +25,8 @@ from scipy.linalg import norm
 from math import *
 import random
 import matplotlib.animation as animation
+import thread
+import threading
 
 
 class motionControlHandler:
@@ -44,19 +46,13 @@ class motionControlHandler:
         self.system = robot_type
 
         #setting for plotting
+
+
         ##figure number
         self.original_figure = 1
         self.overlap_figure  = 2
-        plt.figure(self.original_figure)
+        #plt.figure(self.original_figure)
         #plt.figure(self.overlap_figure)
-        """
-        self.fig1 = plt.figure(self.original_figure)
-        self.ax1 = self.fig1.add_subplot(111)
-        self.ax1.grid()
-        self.line1, = self.ax1.plot([], [], 'o-', lw=2)
-        self.line1.set_data([], [])
-        """
-
         self.PLOT              = False    # plot with matplot
         self.PLOT_M_LINE       = False    # plot m-line
         self.PLOT_EXIT         = False    # plot exit point of a region
@@ -130,6 +126,7 @@ class motionControlHandler:
         self.previous_current_reg = None    # previous current region
         self.currentRegionPoly  = None      # current region's polygon
         self.nextRegionPoly    = None       # next region's polygon
+        self.overlap           = None
         self.q_g               = [0,0]      # goal point of the robot heading to
         self.q_hit             = [0,0]      # location where the robot first detect an obstacle
         self.boundary_following= False      # tracking whether it is in boundary following mode
@@ -184,9 +181,11 @@ class motionControlHandler:
             plt.plot(pose[0],pose[1],'bo')
             self.plotPioneer(self.original_figure)
 
-        #ani = animation.FuncAnimation(self.fig1, self.plotPolyAIM ,15,interval=10, blit=True)
-        #plt.show()
-
+        # start using anmination to plot Pioneer
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)
+        self.scope = _Scope(self.ax,self)
+        thread.start_new_thread(self.jplot,())
 
     def gotoRegion(self, current_reg, next_reg, last=False):
 
@@ -221,8 +220,6 @@ class motionControlHandler:
             time.sleep(1)
             return False
 
-        print self.previous_current_reg
-        print current_reg;
         ###This part is run when the robot goes to a new region, otherwise, the original map will be used.
         if not self.previous_current_reg == current_reg:
             print 'getting into bug alogorithm'
@@ -640,6 +637,7 @@ class motionControlHandler:
         """
         #vx = 0
         #vy = 0
+        self.overlap = overlap  # for plotting
         print >>sys.__stdout__, str(vx) + ","+ str(vy)
         self.velocity_count += 1
         if self.velocity_count >=self.velocity_count_thres:
@@ -675,36 +673,22 @@ class motionControlHandler:
 
         return arrived
 
-    """
+
 
     def plotPioneer(self,number,y = 1):
-
+        """
         Plotting regions and obstacles with matplotlib.pyplot
 
         number: figure number (see on top)
         y = 0 : plot self.map_work instead of self.map
+        """
 
-
-        if not plt.isinteractive():
-            plt.ion()
-        plt.hold(True)
-
-
-        if y == 0:
-            self.plotPoly(self.map_work,'k')
-
-        else:
-            self.plotPoly(self.all,'k')
+        self.plotPoly(self.map_work,'k')
+        self.plotPoly(self.all,'k')
 
         if self.system == 1:
             if bool(self.robocomm.getObsPoly()):
                 self.plotPoly(self.robocomm.getObsPoly(),'k')
-
-        plt.xlabel('x')
-        plt.ylabel('y')
-        plt.figure(number).canvas.draw()
-        plt.draw()
-    """
 
     def turnLeft(self,a):
         """
@@ -745,13 +729,14 @@ class motionControlHandler:
         string = string that specify color
         w      = width of the line plotting
         """
-        for i in range(len(c)):
-            toPlot = Polygon.Polygon(c.contour(i)) & self.all
-            if bool(toPlot):
-                #BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(c.contour(i))))
-                BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
-                plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
-                plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+        if bool(c):
+            for i in range(len(c)):
+                toPlot = Polygon.Polygon(c.contour(i)) & self.all
+                if bool(toPlot):
+                    #BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(c.contour(i))))
+                    BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
+                    self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
+                    self.ax.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
 
     def getOldRegionName(self, regionName):
         """
@@ -776,36 +761,39 @@ class motionControlHandler:
         formedPolygon= Polygon.Polygon(regionPoints)
         return formedPolygon
 
+    def data_gen(self):
+        self.plotPioneer(1)
+        self.plotPoly(self.realRobot, 'r')
+        self.plotPoly(self.robot, 'b')
+        pose = self.pose_handler.getPose()
+        self.ax.plot(pose[0],pose[1],'bo')
+        self.ax.plot(self.q_g[0],self.q_g[1],'ro')
+        self.plotPoly(self.overlap,'g')
+        self.plotPoly(self.m_line,'b')
+        yield(pose[0],pose[1])
 
-    def plotPolyAIM(self,y):
-        """
-        Plot polygons inside the boundary
-        c = polygon to be plotted with matlabplot
-        string = string that specify color
-        w      = width of the line plotting
-        """
-        c = self.all
-        """
-        for i in range(len(c)):
-            toPlot = Polygon.Polygon(c.contour(i)) & self.all
-            if bool(toPlot):
-                #BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(c.contour(i))))
-                BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
-                plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
-                plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
-        """
-        BoundPolyPoints = asarray(PolyUtils.pointList(c))
-        tdata = BoundPolyPoints[:,0]
-        ydata = BoundPolyPoints[:,1]
-        #tdata.append(BoundPolyPoints[0,0])
-        #ydata.append(BoundPolyPoints[0,1])
-        self.line1.set_data(tdata,ydata)
 
-        #print self.line1
-        #return self.line1,
-        #data = np.random.rand(2, 25)
-        #self.line1.set_data(data[...,:25])
-        return self.line1,
+    def jplot(self):
+        ani = animation.FuncAnimation(self.fig, self.scope.update, self.data_gen)
+        plt.show()
+
+class _Scope:
+    def __init__(self, ax, motion, maxt=2, dt=0.02):
+        self.i = 0
+        self.ax = ax
+        self.line, = self.ax.plot(1)
+        self.ax.set_ylim(0, 1)
+        self.motion = motion
+
+    def update(self,data):
+        (data1) = self.motion.data_gen()
+        a = data1.next()
+        self.line.set_data(a)
+        self.ax.relim()
+        self.ax.autoscale()
+        return self.line,
+
+
 
 
 
