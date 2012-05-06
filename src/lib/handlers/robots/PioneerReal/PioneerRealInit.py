@@ -11,14 +11,14 @@ import time
 from socket import *
 from struct import pack, unpack
 from threading import Thread, Lock, Event
-import Polygon,Polygon.IO 
+import Polygon,Polygon.IO
 import Polygon.Utils as PolyUtils
 import Polygon.Shapes as PolyShapes
 import matplotlib.pyplot as plt
 from numpy import *
 
 class PioneerRealInitHandler:
-    
+
     def __init__(self, proj,LocalIP,ListenerPort,BroadcasterIP,BroadcasterPort):
         """
         Init Handler for pioneer real robot.
@@ -29,7 +29,7 @@ class PioneerRealInitHandler:
         BroadcasterPort (int)   : Broadcasting Port of the lab  (default=5000)
         """
 
-    
+
         # Get connection settings from robot configuration file
         ipIn = LocalIP                  # IP address (string)
         portIn = ListenerPort           # Port (number)
@@ -85,10 +85,12 @@ class _RobotCommunicator:
 
     # Communication parameters
     #LOCAL_IP = "0.0.0.0"
-    LOCAL_IP = "10.0.0.122"
+    #LOCAL_IP = "10.0.0.122"
+    LOCAL_IP = "10.0.0.107"
     DEFAULT_LISTEN_PORT = 6501
     #NETWORK_BROADCAST_IP = "10.255.255.255"
     NETWORK_BROADCAST_IP = "10.0.0.96"
+
     DEFAULT_BROADCAST_PORT = 6502
     DEFAULT_BUFFER_SIZE = 10240
 
@@ -335,37 +337,37 @@ class _RobotCommunicator:
     def getObsPoly(self):
         """
         Extracts Obstacle Polygon
-        
+
         Returns array of Obstacles Polygon points [[x1,y1],[x2,y2] ...]
-        
+
         """
         #print 'getObsPoly:',self.listener.obsPoly
         return self.listener.obsPoly
-    
-    def getReceiveObs(self):  
-    
+
+    def getReceiveObs(self):
+
         """
         Extracts the flag that first obstacle info from Pioneer has been received
-        
-        Return 
+
+        Return
         True  : obstacle info recevied
         False : obstacle info was never sent to ltlmop
-        """ 
-     
+        """
+
         return self.listener.receiveObs
-        
-    def getSTOP(self):  
-    
+
+    def getSTOP(self):
+
         """
         Emergency stopping flag when there is obstacle right next to Pioneer
-        
+
         Returns
-        
+
         True : if there is an obstacle within 0.35m of Pioneer
         False: there is no obstacle nearby
-        """  
+        """
         return self.listener.STOP
-        
+
 class _RobotListener(Thread):
     """
     Class used to communicate from a robot to LTLMoP. Is designed to be
@@ -380,17 +382,17 @@ class _RobotListener(Thread):
         # Communication parameters
         self.addr = (ipAddress,port)
         self.buffer = bufferSize
-        self.udpSock = socket(AF_INET,SOCK_DGRAM)     
-        self.lock = Lock()                            
-        self.close = Event()                          
-                    
+        self.udpSock = socket(AF_INET,SOCK_DGRAM)
+        self.lock = Lock()
+        self.close = Event()
+
         #build self.obsPoly with empty contour
-        self.receiveObs = False    # state of first obstacle data from ltlmop (start with false  )  
+        self.receiveObs = False    # state of first obstacle data from ltlmop (start with false  )
         self.obsPoly = Polygon.Polygon()     #Polygon built from the occupancy grid
         self.resolX  = 0.1 * 1.05;        #Blow Up by 5 % grid width
         self.resolY  = 0.1 * 1.05;        #Blow Up by 5 % grid height
         self.STOP    = False              #emergency stop when there are obstacles right next to it
-        self.POLTOBS = True 
+        self.POLTOBS = True
 
         # Data fields
         self.pose = ()      # Tuple of doubles (x,y,z,yaw,pitch,roll,timestamp)
@@ -409,7 +411,6 @@ class _RobotListener(Thread):
         self.addObs = [] # adding data to the map
         self.delObs = [] # deleting data in the map
 
-
     # Start communication and receive messages
     def run(self):  #CHANGED FROM run to start
         """
@@ -418,17 +419,17 @@ class _RobotListener(Thread):
         """
 
         # Open socket for communication
-        self.udpSock.bind(self.addr)    
+        self.udpSock.bind(self.addr)
         # Receive communication until stopped
         while not self.close.isSet():
             data = self.udpSock.recv(self.buffer)
-            self.lock.acquire()                     
+            self.lock.acquire()
             self.processData(data)
-            self.lock.release()                     
+            self.lock.release()
 
 
         # Close socket
-        self.udpSock.close()                
+        self.udpSock.close()
 
     # Stop communication
     def stop(self):
@@ -486,25 +487,25 @@ class _RobotListener(Thread):
                 index = unpack('B', data[1])
                 add,x1,y1 = unpack(_RobotCommunicator.OBS_FORMAT,data[2:26])
                 #print '***********self.obs*************'+','.join(map(str,[add,x1,y1]))
-                self.obs = [add,x1,round(y1,2)]                
+                self.obs = [add,x1,round(y1,2)]
                 if add == 1:
-                    a = PolyShapes.Rectangle(self.resolX,self.resolY)  
-                    a.shift(x1,y1) 
+                    a = PolyShapes.Rectangle(self.resolX,self.resolY)
+                    a.shift(x1,y1)
                     self.obsPoly += a
                     self.receiveObs = True
                     #print "add obstacle:" + str(x1) + ","+ str(y1)
                 elif add == 4:
-                    if x1 == 0:    
+                    if x1 == 0:
                         self.STOP = True
                     else:
                         self.STOP = False
                 else:
-                    a = PolyShapes.Rectangle(self.resolX,self.resolY)  
-                    a.shift(x1,y1) 
+                    a = PolyShapes.Rectangle(self.resolX,self.resolY)
+                    a.shift(x1,y1)
                     self.obsPoly -= a
                     self.receiveObs = True
                     #print "del obstacle:"+ str(x1) + ","+ str(y1)
-                
+
 
             else:
                 print "Unexpected or corrupted data packet received."
@@ -520,18 +521,18 @@ class RobotBroadcaster:
     def __init__(self,ipAddress,port,bufferSize):
         # Communication parameters
         self.addr = (ipAddress,port)
-        self.udpSock = socket(AF_INET,SOCK_DGRAM)                        
-        so_broadcast = True;                                              
-        self.udpSock.setsockopt(SOL_SOCKET,SO_BROADCAST,so_broadcast)   
+        self.udpSock = socket(AF_INET,SOCK_DGRAM)
+        so_broadcast = True;
+        self.udpSock.setsockopt(SOL_SOCKET,SO_BROADCAST,so_broadcast)
 
-        
+
     # Disable communication
     def stop(self):
         """
         Close the socket to end UDP communication.
         """
-        self.udpSock.close()            
-        
+        self.udpSock.close()
+
     # Serialize and send data
     def sendPose(self,pose):
         """

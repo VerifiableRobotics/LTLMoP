@@ -1,5 +1,5 @@
 RobotName: # Robot Name
-Pioneer Real
+Wall_E
 
 Type: # Robot type
 PioneerReal
