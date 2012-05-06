@@ -294,7 +294,7 @@ class Project:
         """
 
         if all_handler_types is None:
-            all_handler_types = ['init','pose','sensor','actuator','locomotionCommand','drive','motionControl']
+            all_handler_types = ['init','pose','locomotionCommand','drive','motionControl','sensor','actuator']
 
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
         self.h_instance = {'init':{},'pose':None,'locomotionCommand':None,'motionControl':None,'drive':None,'sensor':{},'actuator':{}}
