@@ -5,10 +5,11 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+alarm, 1
 
 CompileOptions:
 convexify: True
-fastslow: False
+fastslow: True
 
 CurrentConfigName:
 test
@@ -44,20 +45,27 @@ Spec: # Specification in structured English
 # come back to the mission_station for help.
 
 Robot starts in garage
-infinitely often not animals
+# infinitely often not animals
+infinitely often not emergency_alarm
 group forest is forest_1,forest_2,forest_3,forest_4
 
+#standby is set on (rescued and  any forest) and reset on  (garage and emergency_alarm)
 check_in is set on (garage and emergency_alarm) and reset on (station and get_gear)
+#if you are sensing emergency_alarm and you are in garage then stay there
 search is set on (station and get_gear) and reset on (rescued and any forest)
 
 
-If you are not activating (check_in or search) and you are not sensing animals then go to garage and stay there
+if you are sensing emergency_alarm and you are in garage then stay there
 
-Visit station if and only if you are activating check_in and you are not sensing animals
+#Visit station if and only if you are activating check_in
 
-#if you are activating check_in and you are not sensing animals then visit station
+#if you are activating check_in then visit station
 
-Visit all forest if and only if you are activating search and you are not sensing animals
+#if you are activating search then visit all forest
+visit all forest if and only if you are activating search
 
-If you are sensing animals then stay there
+#If you are sensing animals then stay there
+do alarm if and only if you are sensing animals
+
+#If you are activating standby then go to garage
 
