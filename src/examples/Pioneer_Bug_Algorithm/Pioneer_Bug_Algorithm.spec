@@ -8,7 +8,7 @@ Actions: # List of action propositions and their state (enabled = 1, disabled = 
 alarm, 1
 
 CompileOptions:
-convexify: True
+convexify: False
 fastslow: True
 
 CurrentConfigName:
@@ -24,8 +24,8 @@ Pioneer_Bug_Algorithm.regions
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
 animals, 1
 emergency_alarm, 0
-rescued, 1
-get_gear, 1
+rescued, 0
+get_gear, 0
 
 
 ======== SPECIFICATION ========
@@ -37,7 +37,7 @@ forest_1 = p8
 forest_4 = p5
 garage = p4
 station = p2
-others = p9, p10, p11, p12, p13
+others = p1
 
 Spec: # Specification in structured English
 # Pionner and Nao are on a mission to save one of their teammate in the forest. They have a vague idea

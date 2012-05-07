@@ -666,7 +666,8 @@ class motionControlHandler:
 
         # check whether robot has arrived at the next region
         RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
-        departed = not (self.currentRegionPoly+self.nextRegionPoly).covers(self.realRobot)   ## RoboPoly
+        #departed = not (self.currentRegionPoly+self.nextRegionPoly).covers(self.realRobot)   ## RoboPoly
+        departed = not (self.currentRegionPoly).overlaps(self.realRobot)   ## RoboPoly
         arrived  = self.nextRegionPoly.covers(self.realRobot)
         if arrived:
             self.q_hit_count        = 0
