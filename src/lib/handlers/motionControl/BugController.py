@@ -560,7 +560,7 @@ class motionControlHandler:
 
             # 3.m-line reencountered
             elif reachMLine:
-                print >>sys.__stdout__, "m-line overlaps RoboPoly, m-line" + str(norm(self.q_g-self.q_hit)-2*self.obsRange) + " distance: " + str(norm(self.q_g-mat([pose[0],pose[1]]).T))
+                #print >>sys.__stdout__, "m-line overlaps RoboPoly, m-line" + str(norm(self.q_g-self.q_hit)-2*self.obsRange) + " distance: " + str(norm(self.q_g-mat([pose[0],pose[1]]).T))
                 if norm(self.q_g-mat([pose[0],pose[1]]).T) < norm(self.q_g-self.q_hit)-2*self.obsRange:
                     #print "m-line overlaps RoboPoly, m-line" + str(norm(self.q_g-self.q_hit)-2*self.obsRange) + " distance: " + str(norm(self.q_g-mat([pose[0],pose[1]]).T))
                     #print "leaving boundary following mode"
