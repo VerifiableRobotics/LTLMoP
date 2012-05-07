@@ -86,7 +86,7 @@ class actuatorHandler:
                 self.iRobotCommunicator.broadcastToBeagle(data_drop)
                 time.sleep(12)
             else:
-                print 'RESET IT!'
+                # print 'RESET IT!'
                 # reset the arm so it doesn't jam up
                 data_reset = pack('BBBBBBBBBBBBB',3,0,0,0,48,48,48,48,48,48,48,48,2)
                 self.iRobotCommunicator.broadcastToBeagle(data_reset)
@@ -140,7 +140,7 @@ class _TakeOverMotionController(Thread):
             
         print '(TAKEOVER THREAD)going to the pickup location...attemp #',self.pickUpAttempt
         time.sleep(1)
-        print 'Current Pose: ',array(self.oldPose[0:2])
+        #print 'Current Pose: ',array(self.oldPose[0:2])
         self.goToPoint(self.goal)
         self.pose = self.pose_handler.getPose()
         print '(TAKEOVER THREAD)beginning pick up...'
@@ -180,7 +180,7 @@ class _TakeOverMotionController(Thread):
         # do everything you want here
 
     def stop(self):
-        print '(TAKEOVER THREAD) stopping'
+        #print '(TAKEOVER THREAD) stopping'
         self.completed = False
         self.pickUpAttempt = 1
         self.close.set()
@@ -194,7 +194,7 @@ class _TakeOverMotionController(Thread):
         while dist > 0.23 or dist <= 0.2:
             # update current pose on the map
             print 'POSE:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(pose)))
-            if dist > 0.21:
+            if dist > 0.19:
                 Vel = (goal-array(pose[0:2]))/norm(goal-array(pose[0:2]))
                 # send the velocity to the drive handler
                 #print 'forward',(goal-array(pose[0:2]))
@@ -211,7 +211,7 @@ class _TakeOverMotionController(Thread):
             
             pose = self.pose_handler.getPose()
             dist = norm(goal-array(pose[0:2]))
-            print 'dist ', dist
+            #print 'dist ', dist
             time.sleep(0.2)
 
         # adjust angle
