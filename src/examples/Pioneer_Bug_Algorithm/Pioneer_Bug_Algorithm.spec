@@ -19,7 +19,7 @@ search
 check_in
 
 RegionFile: # Relative path of region description file
-Pioneer_Bug_Algorithm.regions
+bug_oldformat.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
 animals, 1
