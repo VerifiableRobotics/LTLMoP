@@ -84,12 +84,13 @@ class _RobotCommunicator:
                             #            --> follow by 0, stop Pioneer
 
     # Communication parameters
-    #LOCAL_IP = "0.0.0.0"
-    #LOCAL_IP = "10.0.0.122"
-    LOCAL_IP = "10.0.0.107"
+    #LOCAL_IP = "0.0.0.0"       # boardcasting local IP
+    #LOCAL_IP = "10.0.0.122"    # Catherine's computer
+    #LOCAL_IP = "10.0.0.107"    # BEE09
+    LOCAL_IP = "10.0.0.190"     # BEE06
     DEFAULT_LISTEN_PORT = 6501
-    #NETWORK_BROADCAST_IP = "10.255.255.255"
-    NETWORK_BROADCAST_IP = "10.0.0.96"
+    #NETWORK_BROADCAST_IP = "10.255.255.255" # lab boardcasting
+    NETWORK_BROADCAST_IP = "10.0.0.96"       # spider06 (Pioneer)
 
     DEFAULT_BROADCAST_PORT = 6502
     DEFAULT_BUFFER_SIZE = 10240

@@ -39,24 +39,26 @@ class motionControlHandler:
         self.velocity_count_thres = 100;
         self.velocity_count = 0;
 
+        #operate_system (int): Which operating system is used for execution. Ubuntu and Mac is 1, Windows is 2
+        if sys.platform in ['win32', 'cygwin']:
+            self.operate_system = 2
+        else:
+            self.operate_system = 1
+
         # Information about the robot
         ## 1: Pioneer ; 2: 0DE
         if robot_type not in [1,2]:
             robot_type = 1
         self.system = robot_type
 
-        #setting for plotting
-
-
-        ##figure number
-        self.original_figure = 1
-        self.overlap_figure  = 2
-        #plt.figure(self.original_figure)
-        #plt.figure(self.overlap_figure)
+        #settings for Ubuntu or Mac plotting (only when you set operate_system = 1)
         self.PLOT              = False    # plot with matplot
         self.PLOT_M_LINE       = False    # plot m-line
         self.PLOT_EXIT         = False    # plot exit point of a region
         self.PLOT_OVERLAP      = False    # plot overlap area with the obstacle
+
+        #settings for Windows (only when you set operate_system = 1)
+        self.PLOT_WINDOWS     = True
 
         # Get references to handlers we'll need to communicate with
         self.drive_handler = proj.h_instance['drive']
@@ -83,8 +85,8 @@ class motionControlHandler:
         self.time_thres = 1;
 
         # Pioneer related parameters
-        self.PioneerWidthHalf  = 0.25     # (m) width of Pioneer    #0.20
-        self.PioneerLengthHalf = 0.30     # (m) lenght of Pioneer   #0.25
+        self.PioneerWidthHalf  = 0.20     #0.25 # (m) width of Pioneer    #0.20
+        self.PioneerLengthHalf = 0.25     #0.30 (m) lenght of Pioneer   #0.25
 
         # Real Robot polygon related parameters
         self.boxRealVertical         = self.PioneerLengthHalf*2
@@ -157,20 +159,29 @@ class motionControlHandler:
             self.map[region.name] = self.createRegionPolygon(region)
             for n in range(len(region.holeList)): # no of holes
                 self.map[region.name] -= self.createRegionPolygon(region,n)
-            """
-            if not plt.isinteractive():
-                plt.ion()
-
-            plt.hold(True)
-            plt.clf()
-            plt.figure(self.original_figure)
-            self.plotPoly(self.map[region.name],'r')
-            plt.figure(self.original_figure).canvas.draw()
-            """
 
         #construct a polygon that included all the regions
         for regionName,regionPoly in self.map.iteritems():
             self.all += regionPoly
+
+
+        #setting for plotting
+        if self.operate_system == 1:
+            if self.PLOT or self.PLOT_OVERLAP == True:
+                self.original_figure = 1
+                plt.figure(self.original_figure)
+
+            if self.PLOT_EXIT or self.PLOT_M_LINE == True:
+                self.overlap_figure  = 2
+                plt.figure(self.overlap_figure)
+
+        else:
+            if self.PLOT_WINDOWS == True:
+                # start using anmination to plot Pioneer
+                self.fig = plt.figure()
+                self.ax = self.fig.add_subplot(111)
+                self.scope = _Scope(self.ax,self)
+                thread.start_new_thread(self.jplot,())
 
         #Plot the robot on the map in figure 1
         if self.PLOT == True:
@@ -180,12 +191,6 @@ class motionControlHandler:
             self.plotPoly(self.robot, 'b')
             plt.plot(pose[0],pose[1],'bo')
             self.plotPioneer(self.original_figure)
-
-        # start using anmination to plot Pioneer
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111)
-        self.scope = _Scope(self.ax,self)
-        thread.start_new_thread(self.jplot,())
 
     def gotoRegion(self, current_reg, next_reg, last=False):
 
@@ -222,7 +227,7 @@ class motionControlHandler:
 
         ###This part is run when the robot goes to a new region, otherwise, the original map will be used.
         if not self.previous_current_reg == current_reg:
-            print 'getting into bug alogorithm'
+            #print 'getting into bug alogorithm'
 
             #clean up the previous self.map_work
             self.map_work =  Polygon.Polygon()
@@ -273,7 +278,12 @@ class motionControlHandler:
                             self.q_g[0] = pt1[0]
                             self.q_g[1] = pt1[1]
                         else:
-                            self.q_g[0],self.q_g[1] = self.nextRegionPoly.sample(random.random)
+                            sample = False
+                            while not sample:
+                                self.q_g[0],self.q_g[1] = self.nextRegionPoly.sample(random.random)
+                                robo = PolyShapes.Circle(self.PioneerLengthHalf,(self.q_g[0],self.q_g[1]))
+                                if not bool(robo - self.nextRegionPoly):
+                                    sample = True
 
 
                 """
@@ -355,7 +365,7 @@ class motionControlHandler:
 
 
                 if bool(pathOverlap):   # there is overlapping, go into bounding following mode
-                    print "There IS overlap"
+                    #print "There IS overlap"
                     self.q_hit  = mat([pose[0],pose[1]]).T
                     self.boundary_following = True
 
@@ -390,7 +400,7 @@ class motionControlHandler:
                         dis_cur  = vstack((self.q_g[0],self.q_g[1]))- mat([pose[0],pose[1]]).T
                         vx = (dis_cur/norm(dis_cur)/3)[0,0]
                         vy = (dis_cur/norm(dis_cur)/3)[1,0]
-                        print "no obstacles 2-ODE true"
+                        #print "no obstacles 2-ODE true"
 
             else:                ##head towards the q_goal
                     if self.system == 1:
@@ -406,7 +416,7 @@ class motionControlHandler:
                         dis_cur  = vstack((self.q_g[0],self.q_g[1]))- mat([pose[0],pose[1]]).T
                         vx = (dis_cur/norm(dis_cur)/3)[0,0]
                         vy = (dis_cur/norm(dis_cur)/3)[1,0]
-                        print "no obstacles 1-ODE true"
+                        #print "no obstacles 1-ODE true"
 
         if self.boundary_following == True:
             self.q_hit_count       += 1
@@ -468,7 +478,7 @@ class motionControlHandler:
                 else:
                     overlap = Robot - ( self.map_work)
 
-                self.plotPoly(Robot, 'm',2)
+                #self.plotPoly(Robot, 'm',2)
 
             ##extra box plotting in figure 1#
             if self.PLOT_OVERLAP == True:
@@ -534,6 +544,7 @@ class motionControlHandler:
             # 1.reached the next region
             if arrived:
                 self.boundary_following = False
+                self.m_line             = None
                 self.q_hit_count       = 0
                 print "arriving at the next region. Exit boundary following mode"
                 vx = 0
@@ -551,9 +562,10 @@ class motionControlHandler:
             elif reachMLine:
                 print >>sys.__stdout__, "m-line overlaps RoboPoly, m-line" + str(norm(self.q_g-self.q_hit)-2*self.obsRange) + " distance: " + str(norm(self.q_g-mat([pose[0],pose[1]]).T))
                 if norm(self.q_g-mat([pose[0],pose[1]]).T) < norm(self.q_g-self.q_hit)-2*self.obsRange:
-                    print "m-line overlaps RoboPoly, m-line" + str(norm(self.q_g-self.q_hit)-2*self.obsRange) + " distance: " + str(norm(self.q_g-mat([pose[0],pose[1]]).T))
-                    print "leaving boundary following mode"
+                    #print "m-line overlaps RoboPoly, m-line" + str(norm(self.q_g-self.q_hit)-2*self.obsRange) + " distance: " + str(norm(self.q_g-mat([pose[0],pose[1]]).T))
+                    #print "leaving boundary following mode"
                     self.boundary_following = False
+                    self.m_line             = None
                     self.q_hit_count       = 0
                     leaving                = False
 
@@ -574,10 +586,10 @@ class motionControlHandler:
 
                         if self.pose_handler.getPose()[2] < 0:
                             omega = (2*pi + self.pose_handler.getPose()[2])
-                            print >>sys.__stdout__,"omega<0: "+ str(omega)
+                            #print >>sys.__stdout__,"omega<0: "+ str(omega)
                         else:
                             omega = self.pose_handler.getPose()[2]
-                            print >>sys.__stdout__,"omega: "+ str(omega)
+                            #print >>sys.__stdout__,"omega: "+ str(omega)
 
 
                         if omega > angle:
@@ -588,15 +600,15 @@ class motionControlHandler:
                         # angle(goal point orientation) on the left of omega(robot orientation)
                         #if angle - omega > 0 and angle - omega < pi:
                         if cc < pi:
-                            print>>sys.__stdout__, "turn left"
+                            #print>>sys.__stdout__, "turn left"
                             vx,vy = self.turnLeft(cc)
 
                         # on the right
                         else:
-                            print>>sys.__stdout__, "turn right"
+                            #print>>sys.__stdout__, "turn right"
                             vx, vy = self.turnRight(2*pi-cc)
 
-                        print>>sys.__stdout__, "omega: "+ str(omega) + " angle: "+ str(angle) + " (omega-angle): " + str(omega-angle)
+                        #print>>sys.__stdout__, "omega: "+ str(omega) + " angle: "+ str(angle) + " (omega-angle): " + str(omega-angle)
                         self.drive_handler.setVelocity(vx,vy, self.pose_handler.getPose()[2])
 
                         if omega - angle < pi/6 and omega - angle > -pi/6:
@@ -614,18 +626,20 @@ class motionControlHandler:
                 pathOverlap = path - ( self.map_work)
 
             if not bool(pathOverlap):
-                print "There is NO MORE obstacles in front for now."
+                #print "There is NO MORE obstacles in front for now."
 
                 # check if the robot is closer to the goal compared with q_hit
                 if norm(self.q_hit-mat(self.q_g).T) > norm(mat([pose[0],pose[1]]).T-mat(self.q_g).T) :
-                    print "The robot is closer than the leaving point. The robot can leave"
+                    #print "The robot is closer than the leaving point. The robot can leave"
                     self.boundary_following = False
+                    self.m_line             = None
                     self.q_hit_count       = 0
                     dis_cur  = vstack((self.q_g[0],self.q_g[1]))- mat([pose[0],pose[1]]).T
                     vx = (dis_cur/norm(dis_cur)/3)[0,0]
                     vy = (dis_cur/norm(dis_cur)/3)[1,0]
                 else:
-                    print "not leaving bug algorithm. difference(-farther) =" + str(norm(self.q_hit-mat(self.q_g).T) - norm(mat([pose[0],pose[1]]).T-mat(self.q_g).T))
+                    lala = 1
+                    #print "not leaving bug algorithm. difference(-farther) =" + str(norm(self.q_hit-mat(self.q_g).T) - norm(mat([pose[0],pose[1]]).T-mat(self.q_g).T))
 
         """
         # Pass this desired velocity on to the drive handler
@@ -638,10 +652,10 @@ class motionControlHandler:
         #vx = 0
         #vy = 0
         self.overlap = overlap  # for plotting
-        print >>sys.__stdout__, str(vx) + ","+ str(vy)
+        #print >>sys.__stdout__, str(vx) + ","+ str(vy)
         self.velocity_count += 1
         if self.velocity_count >=self.velocity_count_thres:
-            print str(vx) + ","+ str(vy)
+            #print str(vx) + ","+ str(vy)
             self.velocity_count = 0
         self.drive_handler.setVelocity(vx,vy, pose[2])
 
@@ -657,6 +671,7 @@ class motionControlHandler:
         if arrived:
             self.q_hit_count        = 0
             self.boundary_following = False
+            self.m_line             = None
 
         if departed and (not arrived) and (time.time()-self.last_warning) > 0.5:
             print "WARNING: Left current region but not in expected destination region"
@@ -682,13 +697,20 @@ class motionControlHandler:
         number: figure number (see on top)
         y = 0 : plot self.map_work instead of self.map
         """
+        if self.operate_system == 1:
+            if not plt.isinteractive():
+                plt.ion()
+            plt.hold(True)
 
-        self.plotPoly(self.map_work,'k')
-        self.plotPoly(self.all,'k')
+        for regionName,regionPoly in self.map.iteritems():
+            self.plotPoly(regionPoly,'k')
 
         if self.system == 1:
             if bool(self.robocomm.getObsPoly()):
                 self.plotPoly(self.robocomm.getObsPoly(),'k')
+
+        if self.operate_system == 1:
+            plt.figure(number).canvas.draw()
 
     def turnLeft(self,a):
         """
@@ -731,12 +753,18 @@ class motionControlHandler:
         """
         if bool(c):
             for i in range(len(c)):
+                #toPlot = Polygon.Polygon(c.contour(i))
                 toPlot = Polygon.Polygon(c.contour(i)) & self.all
                 if bool(toPlot):
-                    #BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(c.contour(i))))
-                    BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
-                    self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
-                    self.ax.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+                    for j in range(len(toPlot)):
+                        #BoundPolyPoints = asarray(PolyUtils.pointList(toPlot.contour(j)))
+                        BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(toPlot.contour(j))))
+                        if self.operate_system == 2:
+                            self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
+                            self.ax.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+                        else:
+                            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
+                            plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
 
     def getOldRegionName(self, regionName):
         """
@@ -762,6 +790,7 @@ class motionControlHandler:
         return formedPolygon
 
     def data_gen(self):
+        self.ax.cla()
         self.plotPioneer(1)
         self.plotPoly(self.realRobot, 'r')
         self.plotPoly(self.robot, 'b')
@@ -771,6 +800,7 @@ class motionControlHandler:
         self.plotPoly(self.overlap,'g')
         self.plotPoly(self.m_line,'b')
         yield(pose[0],pose[1])
+        self.ax.plot(self.prev_follow[0],self.prev_follow[1],'ko')
 
 
     def jplot(self):
