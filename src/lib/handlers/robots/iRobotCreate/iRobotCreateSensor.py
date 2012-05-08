@@ -219,7 +219,11 @@ class sensorHandler:
             # update the communicator so actuator can use this information
             
             self.iRobotCommunicator.updateViconMarkers(markers)
-            
+            target = self.iRobotCommunicator.getTargetMarker()
+            if target is not None:
+                print 'marker:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(target)))
+            elif bool(len(markers)>0) and target is None:
+                print 'marker:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(markers[0])))
             return bool(len(markers)>0)
 
     def arrivedAtMarker(self,initial=False):

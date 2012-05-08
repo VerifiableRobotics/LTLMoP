@@ -20,9 +20,9 @@ new map
 
 Customs: # List of custom propositions
 carrying_marker
-ready4Pickup
 searchmode
-approachingTarget
+retrievemode
+confirmationmode
 
 RegionFile: # Relative path of region description file
 iRobotCreate.regions
@@ -43,6 +43,8 @@ button_play, 0
 button_advance, 0
 markersNearBy, 1
 hasArrived, 1
+confirm, 1
+abort, 1
 
 
 ======== SPECIFICATION ========
@@ -59,19 +61,27 @@ Kitchen = p5
 
 Spec: # Specification in structured English
 group rooms is Bedroom,Kitchen,DiningRoom,LivingRoom,MasterBedroom,Bathroom
+environment starts with not confirm and not abort
+robot starts with searchmode and not carrying_marker and not confirmationmode and not retrievemode and not pickup and not drop and not goToMarker
 
-robot starts with searchmode and not ready4Pickup and not carrying_marker and not approachingTarget
+# search mode
+searchmode is set on (retrievemode and drop) or (abort and confirmationmode) and reset on (markersNearBy and any rooms and not carrying_marker and not goToMarker and not abort )
 
-searchmode is set on drop and reset on (markersNearBy and any rooms)
-approachingTarget is set on (markersNearBy and any rooms) and reset on hasArrived
-ready4Pickup is set on hasArrived and reset on pickup
-carrying_marker is set on pickup and reset on drop
+if you are activating searchmode then visit all rooms
+if you are activating searchmode and not carrying_marker then always not TrashCan
 
+# confirmation mode
+confirmationmode is set on (searchmode and markersNearBy and any rooms and not carrying_marker and not goToMarker and not abort ) and reset on abort or confirm
+if you are activating confirmationmode then stay there
+if you are sensing (abort and confirmationmode) then stay there
 
-if you were activating carrying_marker then always not all room
-if you are activating searchmode and you are not activating pickup then visit all rooms
-visit TrashCan if and only if you are activating carrying_marker and you are not activating pickup
-do goToMarker if and only if you are sensing (markersNearBy and any rooms) and you are not activating carrying_marker
-do pickup if and only if you are activating ready4Pickup and you are not activating carrying_marker
+# retrieve mode
+retrievemode is set on (confirmationmode and confirm) and reset on drop
+
+do goToMarker if and only if you are activating retrievemode and you are not sensing hasArrived and you are not activating carrying_marker
+do pickup if and only if you are activating retrievemode and you are sensing hasArrived  and you are not activating carrying_marker
+
 do drop if and only if you are activating carrying_marker and you are in TrashCan
+if you are activating carrying_marker then visit TrashCan
+carrying_marker is set on pickup and reset on drop
 

@@ -105,7 +105,7 @@ class actuatorHandler:
                 if marker is not None:
                     print 'ACTUATION IS NOW TAKING OVER MOTION CONTROL'
                     print 'Going for ',array(marker)
-                    
+                    print 'marker:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(marker)))
                     self.TakeOver.run(marker[0],marker[1])
             else:
     
@@ -194,6 +194,7 @@ class _TakeOverMotionController(Thread):
         while dist > 0.23 or dist <= 0.2:
             # update current pose on the map
             print 'POSE:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(pose)))
+            print 'marker:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(goal)))
             if dist > 0.19:
                 Vel = (goal-array(pose[0:2]))/norm(goal-array(pose[0:2]))
                 # send the velocity to the drive handler
@@ -283,6 +284,7 @@ class _TakeOverMotionController(Thread):
         while abs(angle2Turn) > 0.05:
             # cap the turning angle between -180 and 180
             print 'POSE:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(pose)))
+            print 'marker:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(goal)))
             
             degrees = int(round(angle2Turn*180/math.pi))
             print 'angle to turn: ',degrees,pose[2],goal_angleFromOrigin

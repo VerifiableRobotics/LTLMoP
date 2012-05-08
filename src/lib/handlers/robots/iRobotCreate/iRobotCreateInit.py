@@ -131,6 +131,7 @@ class _iRobotCreateCommunicator:
         self.arrived = state
         
     def hasArrived(self):
+        self.targetMarker = None
         return self.arrived
         
         
@@ -142,7 +143,10 @@ class _iRobotCreateCommunicator:
             self.targetMarker = self.viconMarkers[0]
             return self.targetMarker
         else:
+            self.targetMarker = None
             return None
+    def getTargetMarker(self):
+        return self.targetMarker
 
     def updatePickUpAttempt(self):
         self.pickUpAttempt += 1
