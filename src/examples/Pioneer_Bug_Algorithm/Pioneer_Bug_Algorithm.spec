@@ -52,6 +52,6 @@ group forest is forest_1,forest_2,forest_3,forest_4
 visit station
 visit all forest
 visit station
-if you are sensing animals then do alarm
 if you are sensing animals then stay there
+if you are sensing animals then do alarm
 
