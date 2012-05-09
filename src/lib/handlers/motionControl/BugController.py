@@ -491,7 +491,8 @@ class motionControlHandler:
                     self.m_line             = None
                     self.drive_handler.setVelocity(vx,vy, pose[2])
                     RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
-                    departed = not self.currentRegionPoly.overlaps(self.realRobot) and (not (self.nextRegionPoly.overlaps(self.realRobot) and not self.nextRegionPoly.covers(self.realRobot)))
+                    departed = not self.currentRegionPoly.overlaps(self.realRobot)
+                    #departed = not self.currentRegionPoly.overlaps(self.realRobot) and (not (self.nextRegionPoly.overlaps(self.realRobot) and not self.nextRegionPoly.covers(self.realRobot)))
                     arrived  = self.nextRegionPoly.covers(self.realRobot)
                     return arrived
 
@@ -554,7 +555,8 @@ class motionControlHandler:
             ## conditions that the loop will end
             #for 11111
             RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))   ####0.05
-            departed = not self.currentRegionPoly.overlaps(self.realRobot) and (not (self.nextRegionPoly.overlaps(self.realRobot) and not self.nextRegionPoly.covers(self.realRobot)))
+            departed = not self.currentRegionPoly.overlaps(self.realRobot)
+            #departed = not self.currentRegionPoly.overlaps(self.realRobot) and (not (self.nextRegionPoly.overlaps(self.realRobot) and not self.nextRegionPoly.covers(self.realRobot)))
             arrived  = self.nextRegionPoly.covers(self.realRobot)
 
             #for 33333
@@ -680,7 +682,8 @@ class motionControlHandler:
 
         # check whether robot has arrived at the next region
         RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
-        departed = not self.currentRegionPoly.overlaps(self.realRobot) and (not (self.nextRegionPoly.overlaps(self.realRobot) and not self.nextRegionPoly.covers(self.realRobot)))
+        #departed = not self.currentRegionPoly.overlaps(self.realRobot) and (not (self.nextRegionPoly.overlaps(self.realRobot) and not self.nextRegionPoly.covers(self.realRobot)))
+        departed = not self.currentRegionPoly.overlaps(self.realRobot)
         arrived  = self.nextRegionPoly.covers(self.realRobot)
         if arrived:
             self.q_hit_count        = 0

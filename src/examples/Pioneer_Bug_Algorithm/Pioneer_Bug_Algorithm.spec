@@ -5,7 +5,7 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-alarm, 1
+alarm, 0
 
 CompileOptions:
 convexify: False
@@ -43,7 +43,7 @@ Spec: # Specification in structured English
 # about where he is. Their mission is to go and confirm the exact location by head-tap and then
 # come back to the mission_station for help.
 
-#Robot starts in garage
+Robot starts in garage
 infinitely often not animals
 group forest is forest_1,forest_2,forest_3
 
@@ -51,5 +51,5 @@ group forest is forest_1,forest_2,forest_3
 visit station
 visit all forest
 if you are sensing animals then stay there
-if you are sensing animals then do alarm
+#if you are sensing animals then do alarm
 
