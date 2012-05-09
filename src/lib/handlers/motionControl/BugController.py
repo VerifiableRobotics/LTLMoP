@@ -479,6 +479,26 @@ class motionControlHandler:
                     overlap = Robot - ( self.map_work)
 
                 #self.plotPoly(Robot, 'm',2)
+                #determines as dynamic obstacles and can be go striaight to the goal point
+                if j >= 2:
+                    dis_cur  = vstack((self.q_g[0],self.q_g[1]))- mat([pose[0],pose[1]]).T
+                    vx = (dis_cur/norm(dis_cur)/3)[0,0]
+                    vy = (dis_cur/norm(dis_cur)/3)[1,0]
+                    overlap = None
+                    self.overlap = overlap
+                    self.q_hit_count        = 0
+                    self.boundary_following = False
+                    self.m_line             = None
+                    self.drive_handler.setVelocity(vx,vy, pose[2])
+                    RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
+                    #departed = not (self.currentRegionPoly+self.nextRegionPoly).covers(self.realRobot)   ## RoboPoly
+                    departed = not self.nextRegionPoly.covers(self.realRobot)   ## RoboPoly
+                    #arrived  = self.nextRegionPoly.covers(self.realRobot)
+                    arrived  = not self.currentRegionPoly.overlaps(self.realRobot)
+                    return arrived
+
+
+
 
             ##extra box plotting in figure 1#
             if self.PLOT_OVERLAP == True:
@@ -515,7 +535,7 @@ class motionControlHandler:
             vy = (velocity/norm(velocity)/3)[0,1]
 
             # push or pull the robot towards the obstacle depending on whether the robot is close or far from the obstacle.
-            turn = pi/4*(distance-0.5*self.obsRange)/(self.obsRange)    ### add * 0.5 at the back
+            turn = pi/4*(distance-0.5*self.obsRange)/(self.obsRange)    ### change to 0.6 from 0.5 for more allowance in following
             corr_matrix       = mat([[cos(turn),-sin(turn)],[sin(turn),cos(turn)]])
             v =  corr_matrix*mat([[vx],[vy]])
             vx = v[0,0]
@@ -536,7 +556,8 @@ class motionControlHandler:
             ## conditions that the loop will end
             #for 11111
             RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))   ####0.05
-            arrived  = self.nextRegionPoly.covers(self.realRobot)
+            arrived = not self.currentRegionPoly.overlaps(self.realRobot)
+            #arrived  = self.nextRegionPoly.covers(self.realRobot)
 
             #for 33333
             reachMLine= self.m_line.overlaps(RobotPoly)
@@ -651,12 +672,7 @@ class motionControlHandler:
         """
         #vx = 0
         #vy = 0
-        self.overlap = overlap  # for plotting
-        #print >>sys.__stdout__, str(vx) + ","+ str(vy)
-        self.velocity_count += 1
-        if self.velocity_count >=self.velocity_count_thres:
-            #print str(vx) + ","+ str(vy)
-            self.velocity_count = 0
+        self.overlap = overlap
         self.drive_handler.setVelocity(vx,vy, pose[2])
 
 
@@ -667,8 +683,9 @@ class motionControlHandler:
         # check whether robot has arrived at the next region
         RobotPoly = PolyShapes.Circle(self.PioneerLengthHalf+0.06,(pose[0],pose[1]))     ###0.05
         #departed = not (self.currentRegionPoly+self.nextRegionPoly).covers(self.realRobot)   ## RoboPoly
-        departed = not (self.currentRegionPoly).overlaps(self.realRobot)   ## RoboPoly
-        arrived  = self.nextRegionPoly.covers(self.realRobot)
+        departed = not self.nextRegionPoly.covers(self.realRobot)   ## RoboPoly
+        arrived  = not self.currentRegionPoly.overlaps(self.realRobot)
+        #arrived  = self.nextRegionPoly.covers(self.realRobot)
         if arrived:
             self.q_hit_count        = 0
             self.boundary_following = False

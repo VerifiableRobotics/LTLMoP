@@ -44,14 +44,13 @@ Spec: # Specification in structured English
 # about where he is. Their mission is to go and confirm the exact location by head-tap and then
 # come back to the mission_station for help.
 
-Robot starts in garage
+#Robot starts in garage
 infinitely often not animals
 group forest is forest_1,forest_2,forest_3,forest_4
 
 
 visit station
 visit all forest
-visit station
 if you are sensing animals then stay there
 if you are sensing animals then do alarm
 
