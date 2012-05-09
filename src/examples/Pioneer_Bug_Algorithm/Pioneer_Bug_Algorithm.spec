@@ -19,7 +19,7 @@ search
 check_in
 
 RegionFile: # Relative path of region description file
-bug_oldformat.regions
+bug_oldformat_1.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
 animals, 1
@@ -31,10 +31,9 @@ get_gear, 0
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-forest_2 = p7
-forest_3 = p6
-forest_1 = p8
-forest_4 = p5
+forest_2 = p6
+forest_3 = p5
+forest_1 = p7
 garage = p4
 station = p2
 others = p1
@@ -46,7 +45,7 @@ Spec: # Specification in structured English
 
 #Robot starts in garage
 infinitely often not animals
-group forest is forest_1,forest_2,forest_3,forest_4
+group forest is forest_1,forest_2,forest_3
 
 
 visit station

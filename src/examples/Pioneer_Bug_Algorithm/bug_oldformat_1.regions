@@ -1,0 +1,89 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+
+Obstacles: # Names of regions to treat as obstacles
+pond
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "garage", 
+        "color": [141, 130, 113], 
+        "holeList": [], 
+        "points": [[193, 108], [0, 115], [1, 1], [121, 0], [187, 1]], 
+        "position": [740, 333], 
+        "type": "poly", 
+        "size": [193, 115]
+    }, 
+    {
+        "name": "station", 
+        "color": [176, 91, 29], 
+        "holeList": [], 
+        "points": [[4, 98], [0, 3], [123, 0], [124, 97]], 
+        "position": [737, 236], 
+        "type": "poly", 
+        "size": [124, 98]
+    }, 
+    {
+        "name": "forest_1", 
+        "color": [41, 243, 227], 
+        "holeList": [], 
+        "points": [[0, 8], [174, 0], [176, 136], [0, 140]], 
+        "position": [48, 91], 
+        "type": "poly", 
+        "size": [176, 140]
+    }, 
+    {
+        "name": "forest_2", 
+        "color": [140, 70, 35], 
+        "holeList": [], 
+        "points": [[176, 0], [176, 113], [0, 127], [0, 4]], 
+        "position": [48, 227], 
+        "type": "poly", 
+        "size": [176, 127]
+    }, 
+    {
+        "name": "forest_3", 
+        "color": [108, 146, 249], 
+        "holeList": [], 
+        "points": [[176, 0], [174, 130], [6, 137], [0, 14]], 
+        "position": [48, 340], 
+        "type": "poly", 
+        "size": [176, 137]
+    }, 
+    {
+        "name": "pond", 
+        "color": [129, 109, 21], 
+        "holeList": [], 
+        "points": [[0, 0], [92, 19], [156, 72], [108, 110], [0, 113]], 
+        "position": [224, 227], 
+        "type": "poly", 
+        "size": [156, 113]
+    }, 
+    {
+        "name": "boundary", 
+        "color": [241, 122, 46], 
+        "holeList": [], 
+        "points": [[0, 43], [174, 35], [871, 0], [879, 278], [885, 385], [692, 392], [174, 414], [6, 421], [0, 298], [0, 175]], 
+        "position": [48, 56], 
+        "type": "poly", 
+        "size": [885, 421]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+garage	station	741	334	861	333
+garage	boundary	927	334	933	441	740	448	933	441
+forest_1	forest_2	48	231	224	227
+forest_1	boundary	48	99	48	231	48	99	222	91
+forest_2	forest_3	48	354	224	340
+forest_2	pond	224	227	224	340
+forest_2	boundary	48	231	48	354
+forest_3	boundary	48	354	54	477	54	477	222	470
+
