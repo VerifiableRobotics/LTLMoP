@@ -383,6 +383,7 @@ class RegionFileInterface:
                 "Obstacles": obstacleRegions}
 
         fileMethods.writeToFile(filename, data, comments)
+        self.filename = filename
 
         return True
 
