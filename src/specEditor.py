@@ -320,6 +320,7 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
         
         # Listen for changes to the text
+        self.text_ctrl_spec.SetModEventMask(self.text_ctrl_spec.GetModEventMask() & ~(wx.stc.STC_MOD_CHANGESTYLE | wx.stc.STC_MOD_CHANGEMARKER))
         self.Bind(wx.stc.EVT_STC_CHANGE, self.onSpecTextChange, self.text_ctrl_spec)
 
         # Set up locative phrase map
@@ -533,6 +534,12 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.Colourise(0,self.text_ctrl_spec.GetTextLength())
 
     def onSpecTextChange(self, event):
+        # If there are any error markers, clear them
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_PARSEERROR)
+
         self.proj.specText = self.text_ctrl_spec.GetText()
 
         self.dirty = True
