@@ -627,12 +627,17 @@ class Region:
             previously saved region.
         """
         self.name = data['name']
-        self.position = Point(*data['position'])
-        self.size = Size(*data['size'])
+        if 'position' in data:
+            self.position = Point(*data['position'])
+        if 'size' in data:
+            self.size = Size(*data['size'])
         self.color = Color(*data['color'])
 
-        if data['type'].lower() == "rect":
-            self.type = reg_RECT
+        if 'type' in data:
+            if data['type'].lower() == "rect":
+                self.type = reg_RECT
+            else:
+                self.type = reg_POLY
         else:
             self.type = reg_POLY
 
