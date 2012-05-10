@@ -315,6 +315,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_WORD, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_WORD, wx.BLUE)
 
+        self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
+        
         # Listen for changes to the text
         self.Bind(wx.stc.EVT_STC_CHANGE, self.onSpecTextChange, self.text_ctrl_spec)
 
