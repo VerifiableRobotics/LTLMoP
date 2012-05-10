@@ -314,6 +314,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_COMMENTLINE, wx.Color(0, 200, 0))
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_WORD, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_WORD, wx.BLUE)
+        self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_STRING, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
+        self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Color(200, 200, 0))
 
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
         
@@ -385,6 +387,14 @@ class SpecEditorFrame(wx.Frame):
         for m in re.finditer("|".join(map(lambda s: "\\b%s\\b"%s, self.proj.enabled_sensors + self.proj.enabled_actuators + self.proj.all_customs + self.list_box_regions.GetItems())), text, re.MULTILINE):
             self.text_ctrl_spec.StartStyling(start+m.start(), 31)
             self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_WORD)
+
+        # Find groups
+        # TODO: Don't search the whole document each time...
+        all_text = self.text_ctrl_spec.GetText()
+        group_names = re.findall("^group\s+(\w*?)\s+is", all_text, re.MULTILINE | re.IGNORECASE)
+        for m in re.finditer("|".join(map(lambda s: "\\b%s\\b"%s, group_names)), text, re.MULTILINE):
+            self.text_ctrl_spec.StartStyling(start+m.start(), 31)
+            self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_STRING)
 
         # Find comment lines
         text = self.text_ctrl_spec.GetTextRange(start,end)
