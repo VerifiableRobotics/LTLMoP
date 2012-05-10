@@ -42,8 +42,8 @@ class ParameterObject:
         if self.type.lower() == 'float':
             # A float type. Allows simple algebra and pi
             # TODO: supports more math
-            value.replace("pi","3.1415")
-            re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
+            value = value.replace("pi","3.1415")
+            value = re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
             try:
                 self.value = float(eval(value))
             except SyntaxError:
