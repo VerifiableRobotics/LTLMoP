@@ -240,12 +240,16 @@ class MopsyFrame(wx.Frame):
             b.Enable(False)
 
         # Set up the logging grid
+        self.history_grid.SetDefaultCellFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
+        self.history_grid.SetLabelFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
+
         colheaders = self.proj.enabled_sensors + ["Region"] + self.proj.enabled_actuators + self.proj.all_customs
         self.history_grid.CreateGrid(0,len(colheaders))
         for i,n in enumerate(colheaders):
             self.history_grid.SetColLabelValue(i," " + n + " ")
             self.history_grid.SetColSize(i,-1)  # Auto-size
         self.history_grid.EnableEditing(False)
+
 
         # Put initial condition into log
         self.appendToHistory()
@@ -322,6 +326,7 @@ class MopsyFrame(wx.Frame):
             else:
                 self.history_grid.SetCellValue(lastrow,i,v)
         self.history_grid.ClearSelection()
+        self.history_grid.AutoSizeRow(lastrow)
         self.history_grid.MakeCellVisible(lastrow,0)
         self.history_grid.ForceRefresh()
         self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+2), 0)
@@ -357,6 +362,8 @@ class MopsyFrame(wx.Frame):
             else:
                 button_container[-1].SetValue(False)
                 button_container[-1].SetBackgroundColour(wx.Colour(255, 0, 0))
+
+            button_container[-1].SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
 
             self.window_1_pane_2.Layout() # Update the frame
             self.Refresh()
