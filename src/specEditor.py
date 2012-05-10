@@ -380,7 +380,7 @@ class SpecEditorFrame(wx.Frame):
 
         # Find propositions
         text = self.text_ctrl_spec.GetTextRange(start,end)
-        for m in re.finditer("|".join(self.proj.enabled_sensors + self.proj.enabled_actuators + self.proj.all_customs + self.list_box_regions.GetItems()), text, re.MULTILINE):
+        for m in re.finditer("|".join(map(lambda s: "\\b%s\\b"%s, self.proj.enabled_sensors + self.proj.enabled_actuators + self.proj.all_customs + self.list_box_regions.GetItems())), text, re.MULTILINE):
             self.text_ctrl_spec.StartStyling(start+m.start(), 31)
             self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_WORD)
 
