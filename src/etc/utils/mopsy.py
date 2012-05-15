@@ -236,8 +236,8 @@ class MopsyFrame(wx.Frame):
         self.populateToggleButtons(self.sizer_prop, self.cust_buttons, custprops)
 
         # Make the env buttons not clickable (TODO: maybe replace with non-buttons)
-        for b in self.env_buttons:
-            b.Enable(False)
+        #for b in self.env_buttons:
+        #    b.Enable(False)
 
         # Set up the logging grid
         self.history_grid.SetDefaultCellFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
@@ -374,6 +374,8 @@ class MopsyFrame(wx.Frame):
 
     def sensorToggle(self, event):
         btn = event.GetEventObject()
+        if btn in self.env_buttons:
+            return
 
         #print btn.GetLabelText() + "=" + str(btn.GetValue())
 
