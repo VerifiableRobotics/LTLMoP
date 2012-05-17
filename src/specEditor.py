@@ -393,6 +393,8 @@ class SpecEditorFrame(wx.Frame):
         # TODO: Don't search the whole document each time...
         all_text = self.text_ctrl_spec.GetText()
         group_names = re.findall("^group\s+(\w*?)\s+is", all_text, re.MULTILINE | re.IGNORECASE)
+        # Allow for singular references too
+        group_names += [n[:-1] for n in group_names if n.endswith("s")]
         for m in re.finditer("|".join(map(lambda s: "\\b%s\\b"%s, group_names)), text, re.MULTILINE):
             self.text_ctrl_spec.StartStyling(start+m.start(), 31)
             self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_STRING)
