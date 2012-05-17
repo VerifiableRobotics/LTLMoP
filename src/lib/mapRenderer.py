@@ -83,8 +83,8 @@ class DrawableRegion(Region):
                     b_dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]])
 
                 b_dc.EndDrawing()
-                b.SetMaskColour(wx.WHITE)
                 b_dc.SelectObject(wx.NullBitmap)
+                b.SetMaskColour(wx.WHITE)
                 dc.DrawBitmap(b, scale*self.position.x, scale*self.position.y, useMask=True)
                 
         elif self.type == reg_RECT:
