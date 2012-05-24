@@ -117,8 +117,6 @@ class Automaton:
         if state is None:
             state = self.current_state
 
-        print "Current goal: " + state.rank
-
         for key, output_val in state.outputs.iteritems():
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', key): continue
@@ -208,9 +206,6 @@ class Automaton:
             for new_condition in m2:
                 var = new_condition.group('var')
                 val = new_condition.group('val')
-
-                # Ignore internal "current goal" propositions
-                if var.startswith('s_'): continue
 
                 # And then put it in the right place!
 
@@ -448,17 +443,20 @@ class Automaton:
             print "(FSA) ERROR: Could not find a suitable state to transition to!"
             return
 
-        # Only allow self-transitions if that is the only option!
-        if len(next_states) > 1 and self.current_state in next_states:
-            next_states.remove(self.current_state)
 
         # See if we're beginning a new transition
         if next_states != self.last_next_states:
             # NOTE: The last_next_states comparison is also to make sure we don't
             # choose a different random next-state each time, in the case of multiple choices
+
+            self.last_next_states = next_states
+
+            # Only allow self-transitions if that is the only option!
+            if len(next_states) > 1 and self.current_state in next_states:
+                next_states.remove(self.current_state)
+
             self.next_state = random.choice(next_states)
             self.next_region = self.regionFromState(self.next_state)
-            self.last_next_states = next_states
 
             # See what we, as the system, need to do to get to this new state
             self.transition_contains_motion = self.next_region is not None and (self.next_region != self.current_region)
@@ -473,12 +471,13 @@ class Automaton:
 
             self.arrived = False
 
+
         if not self.arrived:
             # Move one step towards the next region (or stay in the same region)
             self.arrived = self.motion_handler.gotoRegion(self.current_region, self.next_region)
 
         # Check for completion of motion
-        if self.arrived:
+        if self.arrived and self.next_state != self.current_state:
             # TODO: Check to see whether actually inside next region that we expected
 
             if self.transition_contains_motion:
@@ -490,7 +489,8 @@ class Automaton:
 
             self.current_state = self.next_state
             self.current_region = self.next_region
-            #print "Now in state %s (z = %s)" % (self.current_state.name, self.current_state.rank)
+            self.last_next_states = []  # reset
+            print "Now in state %s (z = %s)" % (self.current_state.name, self.current_state.rank)
 
 
          
