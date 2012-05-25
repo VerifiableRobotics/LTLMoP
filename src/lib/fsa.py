@@ -343,12 +343,12 @@ class Automaton:
             for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
                 if prop in self.sensors:
                     for code in codes:
-                        eval(code)
+                        eval(code, {'self':self,'initial':True})
             for prop,codes in self.actuator_handler['initializing_handler'].iteritems():
                 if prop in self.actuators:
                     new_val = self.current_outputs[prop]
                     for code in codes:
-                        eval(code)
+                        eval(code, {'self':self,'initial':True})
         else:
             state_list = self.current_state.transitions
 
@@ -356,7 +356,7 @@ class Automaton:
         # This is so we don't risk the readings changing in the middle of our state search
         sensor_state = {}
         for sensor in self.sensors:
-            sensor_state[sensor] = eval(self.sensor_handler[sensor])
+            sensor_state[sensor] = eval(self.sensor_handler[sensor], {'self':self,'initial':False})
 
         for state in state_list:
             okay = True
