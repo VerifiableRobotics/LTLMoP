@@ -113,12 +113,6 @@ def githubAPICall(path, data=None, method=None):
     if method == "POST":
         req = urllib2.Request("https://api.github.com"+path, data, headers)
 
-        # Work around GitHub bug where the fork request doesn't send back a 401
-        # From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/267197
-        global github_username, github_password
-        base64string = base64.encodestring('%s:%s' % (github_username, github_password))[:-1]
-        authheader =  "Basic %s" % base64string
-        req.add_header("Authorization", authheader)
     elif method == "PATCH":
         req = urllib2.Request("https://api.github.com"+path, data, headers)
         req.get_method = lambda: "PATCH"
@@ -127,6 +121,13 @@ def githubAPICall(path, data=None, method=None):
     else:
         print "ERROR: Unknown HTTP method %s!" % method
         return None
+
+    # Force sending of authentication headers
+    # From http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/267197
+    global github_username, github_password
+    base64string = base64.encodestring('%s:%s' % (github_username, github_password))[:-1]
+    authheader =  "Basic %s" % base64string
+    req.add_header("Authorization", authheader)
 
     f = urllib2.urlopen(req)
     response = json.load(f) 
