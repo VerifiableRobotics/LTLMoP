@@ -2,9 +2,8 @@
 
 import math,re, os, random
 import Polygon, Polygon.IO, Polygon.Utils
-import wx
 import project
-import regions
+from regions import *
 import itertools
 import decomposition
 
@@ -106,7 +105,7 @@ class parseLP:
                 elif region.name == regionNameB:
                     regionB = region
                     
-            newRegion = regions.findRegionBetween(regionA,regionB,name='between$'+regionNameA+'$and$'+regionNameB+"$")
+            newRegion = findRegionBetween(regionA,regionB,name='between$'+regionNameA+'$and$'+regionNameB+"$")
             self.proj.rfi.regions.append(newRegion)            
             
     def checkOverLapping(self):
@@ -272,19 +271,19 @@ class parseLP:
         # the only different data is regions
         self.proj.rfi.regions = []
         for nameOfPortion,poly in self.portionOfRegion.iteritems():
-            newRegion                   = regions.Region()
+            newRegion                   = Region()
             newRegion.name              = nameOfPortion
-            newRegion.color             = wx.Colour()
+            newRegion.color             = Color()
             newRegion.color.SetFromName(random.choice(['RED','ORANGE','YELLOW','GREEN','BLUE','PURPLE']))
             for i,ct in enumerate(poly):
                 if poly.isHole(i):
-                    newRegion.holeList.append([wx.Point(*x) for x in Polygon.Utils.pointList(Polygon.Polygon(poly[i]))])
+                    newRegion.holeList.append([Point(*x) for x in Polygon.Utils.pointList(Polygon.Polygon(poly[i]))])
                 else:  
-                    newRegion.pointArray = [wx.Point(*x) for x in Polygon.Utils.pointList(Polygon.Polygon(poly[i]))]
+                    newRegion.pointArray = [Point(*x) for x in Polygon.Utils.pointList(Polygon.Polygon(poly[i]))]
             newRegion.alignmentPoints   = [False] * len([x for x in newRegion.getPoints()])    
             newRegion.recalcBoundingBox()
             
-            if newRegion.getDirection() == regions.dir_CCW:
+            if newRegion.getDirection() == dir_CCW:
                 newRegion.pointArray.reverse()
                 
             self.proj.rfi.regions.append(newRegion)
