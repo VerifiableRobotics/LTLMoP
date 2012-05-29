@@ -348,7 +348,7 @@ class Automaton:
                 if prop in self.actuators:
                     new_val = self.current_outputs[prop]
                     for code in codes:
-                        eval(code, {'self':self,'initial':True})
+                        eval(code, {'self':self,'initial':True,'new_val':new_val})
         else:
             state_list = self.current_state.transitions
 
