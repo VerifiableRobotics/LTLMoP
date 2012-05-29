@@ -105,6 +105,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     LivenessRE = re.compile('^\s*(go to|visit|infinitely often do|infinitely often sense|infinitely often)',re.IGNORECASE)
     SafetyRE = re.compile('^\s*(always|always do |do|always sense|sense)',re.IGNORECASE)
     StayRE = re.compile('(stay there|stay)',re.IGNORECASE)
+    AtLeastOnceRE = re.compile('(at least once)',re.IGNORECASE)
     EventRE = re.compile('(?P<prop>[\w\.]+) is set on (?P<setEvent>.+) and reset on (?P<resetEvent>.+)',re.IGNORECASE)
     ToggleRE = re.compile('(?P<prop>[\w\.]+) is toggled (when|on) (?P<toggleEvent>.+)',re.IGNORECASE)
     RegionGroupingRE = re.compile('group (?P<groupName>[\w]+) (is|are) (?P<regions>.+)',re.IGNORECASE)
@@ -348,6 +349,63 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     linemap[CondFormulaInfo['type']].append(lineInd)
                     LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
 
+                # check for "at least once" condition
+                elif AtLeastOnceRE.search(Requirement):
+                    # remove the 'at least once'      
+                    Requirement = Requirement.replace(' at least once','')
+
+                    # parse the liveness requirement
+                    ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
+                    if ReqFormulaInfo['formula'] == '': failed = True
+
+                    # If not SysGoals, then it is an error
+                    if not ReqFormulaInfo['type']=='SysGoals':
+                        print 'ERROR(15): Could not parse the sentence in line '+ str(lineInd)+' :'
+                        print line
+                        print 'because the requirement is not system liveness'
+                        failed = True
+                        continue
+
+                    if CondType == "IFF":
+                        print 'ERROR(15): Could not parse the sentence in line '+ str(lineInd)+' :'
+                        print line
+                        print 'because IFF cannot be used with "at least once"'
+                        failed = True
+                        continue
+
+                    ### example ###
+                    # "if s then visit r1 and a at least once"
+                    # ... becomes ...
+                    # []<>(s->m_r1_a)
+                    # [](next(m_r1_a) <-> (m_r1_a | (next(r1) & next(a))))
+                    
+                    regCond = ReqFormulaInfo['formula'].replace('\t\t\t []<>','')
+                    regCond = regCond.replace('& \n','')
+
+                    if QuantifierFlag == "ANY":
+                        print "not implemented yet"
+                        failed = True
+                    elif QuantifierFlag == "ALL":
+                        iterate_over = RegionGroups[quant_group]
+                    else:
+                        iterate_over = ["total hack"]
+
+                    memPropNames = []
+                    for r in iterate_over:
+                        tmp_req = regCond.replace("next(QUANTIFIER_PLACEHOLDER)", nextify(r))
+                        tmp_req = tmp_req.replace("QUANTIFIER_PLACEHOLDER", r)
+                        
+                        internal_props.append("m" + re.sub("(e|s)\.", "", re.sub("\s+","_",tmp_req.replace("&","").replace("(","").replace(")",""))).rstrip("_"))
+                        memPropNames.append("s."+internal_props[-1])
+
+                        condStayFormula = {}
+                        condStayFormula['formula'] = '\t\t\t [](next({0}) <-> ({0} | ({1}))) & \n'.format(memPropNames[-1], nextify(tmp_req))
+                        condStayFormula['type'] = 'SysTrans'
+
+                        spec[condStayFormula['type']] = spec[condStayFormula['type']] + condStayFormula['formula']
+                        linemap[condStayFormula['type']].append(lineInd)
+
+                    ReqFormulaInfo['formula'] = '\t\t\t []<>(' + ' & '.join(memPropNames) + ') & \n'
                 else:
                     # parse requirement normally
                     ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
@@ -785,11 +843,12 @@ def parseLiveness(sentence,sensorList,allRobotProp,lineInd):
 
         if (prop in sensorList and formulaInfo['type'] == 'SysGoals') or \
            (prop in allRobotProp and formulaInfo['type'] == 'EnvGoals'):
-            print 'ERROR(5): Could not parse the sentence in line '+ str(lineInd)+' containing:'
-            print sentence
-            print 'because both environment and robot propositions are used \n'
-            formulaInfo['type'] = 'EnvGoals' # arbitrary
-            return formulaInfo
+            #print 'ERROR(5): Could not parse the sentence in line '+ str(lineInd)+' containing:'
+            #print sentence
+            #print 'because both environment and robot propositions are used \n'
+            #formulaInfo['type'] = 'EnvGoals' # arbitrary
+            #return formulaInfo
+            pass
 
         if prop in sensorList and formulaInfo['type'] == '':
             formulaInfo['type'] = 'EnvGoals'
