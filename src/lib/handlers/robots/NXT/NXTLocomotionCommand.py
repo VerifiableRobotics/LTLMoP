@@ -22,6 +22,8 @@ MIN = 60
 STRAIGHT_W=3
 MAX_ANGLE = 95
 
+LOW=0
+
 
 class NXTLocomotionCommandHandler:
     def __init__(self, proj, shared_data, leftDriveMotor='PORT_B', rightDriveMotor='PORT_C', steeringMotor='none', leftForward=True, rightForward=True):
@@ -95,19 +97,19 @@ class NXTLocomotionCommandHandler:
             forward(sec,leftPow)            
             self.steerMotor.idle()
         
-        def left(sec, power):
+        def left(leftPow, power):
             self.left.run(power)
             self.right.run(leftPow)
-            sleep(sec)
-            self.left.idle()
-            self.right.idle()
+            #sleep(sec)
+            #self.left.idle()
+            #self.right.idle()
             
-        def right(sec, power):
+        def right(rightPow, power):
             self.left.run(rightPow)
             self.right.run(power)
-            sleep(sec)
-            self.left.idle()
-            self.right.idle()
+            #sleep(sec)
+            #self.left.idle()
+            #self.right.idle()
             
         def idle():
             for motor in self.driveMotors:
@@ -129,12 +131,12 @@ class NXTLocomotionCommandHandler:
             rightPower = 75.0
             powerRange=rightPower-MIN
             while(curDegree>degree+RANGE or curDegree<degree-RANGE):
-                reset=True
+                #reset=True
                 while(curDegree>degree+RANGE):
                     if(abs(curDegree-degree)<30): leftPower=-MIN
                     elif(abs(curDegree-degree)>degreeRange): leftPower = -75
                     else: leftPower = -(((abs(curDegree-degree)/degreeRange)*powerRange)+MIN)
-                    if reset: print 'leftPower: ' + str(leftPower) + ' curDegree: ' + str(curDegree)
+                    #if reset: print 'leftPower: ' + str(leftPower) + ' curDegree: ' + str(curDegree)
                     reset = False
                     self.steerMotor.run(leftPower)
                     lastDegree=curDegree
@@ -143,12 +145,12 @@ class NXTLocomotionCommandHandler:
                     if(self.v==0): break # check for pause...
                 self.steerMotor.idle()
                 curDegree=self.getUsefulTacho(self.steerMotor)
-                reset = True
+                #reset = True
                 while(curDegree<degree-RANGE):
                     if(abs(curDegree-degree)<30): rightPower=MIN
                     elif(abs(curDegree-degree)>degreeRange): rightPower = 75
                     else: rightPower = (((abs(degree-curDegree)/degreeRange)*powerRange)+MIN)
-                    if reset: print 'rightPower: ' + str(rightPower) + ' curDegree: ' + str(curDegree)
+                    #if reset: print 'rightPower: ' + str(rightPower) + ' curDegree: ' + str(curDegree)
                     reset = False
                     self.steerMotor.run(rightPower)
                     lastDegree=curDegree
@@ -162,14 +164,26 @@ class NXTLocomotionCommandHandler:
             print 'at degree: ' + str(self.getUsefulTacho(self.steerMotor))
     
         def difDrive():
+            angle = self.angle*180/pi
+            #print 'angle='+str(angle)+' w='+str(self.angle)
+            leftPow = -70
+            if self.leftForward: leftPow = 70
+            rightPow = -70
+            if self.rightForward: rightPow = 70
             if(self.v==0):
-                idle()
-            elif self.angle>5:
-                left(1,leftPow*self.angle/360)
-            elif self.angle<5:
-                right(1,rightPow*self.angle/360)
+                idle() #pause...
+            elif angle>5: #left turning arc
+                if(leftPow>0): arcPower=((leftPow-LOW)*(29-abs(angle))/29)+LOW
+                else: arcPower=((leftPow+LOW)*(29-abs(angle))/29)-LOW
+                print 'w='+str(angle)+' arcPower='+str(arcPower)+' leftPower='+str(leftPow)
+                left(leftPow,arcPower)
+            elif angle<5: #right tuning arc
+                if(rightPow>0): arcPower=((rightPow-LOW)*(29-abs(angle))/29)+LOW
+                else: arcPower=((rightPow+LOW)*(29-abs(angle))/29)-LOW
+                print 'w='+str(angle)+' arcPower='+str(arcPower)+' rightPower='+str(rightPow)
+                right(rightPow,arcPower)                
             else:
-                forward(1,leftPow)
+                go(leftPow)
         
         def nonDifDrive():
             """
@@ -218,8 +232,9 @@ class NXTLocomotionCommandHandler:
         vy=cmd[1]
         theta = pose[2]+(pi/2)
         self.v = cos(theta)*vx+sin(theta)*vy # magnitude of v
-        self.angle = (1/.6)*(-sin(theta)*vx + cos(theta)*vy)
         if(self.differentialDrive):
+            theta=theta-pi
+            self.angle = (1/.6)*(-sin(theta)*vx + cos(theta)*vy)
             difDrive()
         else:
             #print 'gloabal center: ' + str(self.tacho)
