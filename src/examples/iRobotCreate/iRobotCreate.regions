@@ -1,0 +1,101 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+Bedroom	1
+Kitchen	1
+LivingRoom	1
+
+Obstacles: # Names of regions to treat as obstacles
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "Bedroom", 
+        "color": [255, 0, 0], 
+        "holeList": [], 
+        "points": [[35, 0], [193, 119], [0, 119]], 
+        "position": [490, 369], 
+        "type": "poly", 
+        "size": [193, 119]
+    }, 
+    {
+        "name": "TrashCan", 
+        "color": [176, 0, 255], 
+        "holeList": [], 
+        "points": [[0, 1], [62, 0], [62, 70], [0, 70]], 
+        "position": [621, 278], 
+        "type": "poly", 
+        "size": [62, 70]
+    }, 
+    {
+        "name": "Kitchen", 
+        "color": [255, 255, 128], 
+        "position": [532, 115], 
+        "type": "rect", 
+        "size": [151, 96]
+    }, 
+    {
+        "name": "DiningRoom", 
+        "color": [255, 0, 128], 
+        "holeList": [], 
+        "points": [[0, 0], [27, 0], [43, 0], [44, 0], [71, 0], [116, 0], [145, 0], [165, 0], [181, 0], [181, 96], [181, 152], [0, 152]], 
+        "position": [351, 115], 
+        "type": "poly", 
+        "size": [181, 152]
+    }, 
+    {
+        "name": "LivingRoom", 
+        "color": [0, 255, 0], 
+        "holeList": [], 
+        "points": [[0, 151], [0, 0], [1, 0], [142, 0], [164, 0], [181, 0], [198, 0], [203, 0], [204, 0], [204, 152], [0, 152]], 
+        "position": [147, 115], 
+        "type": "poly", 
+        "size": [204, 152]
+    }, 
+    {
+        "name": "MasterBedroom", 
+        "color": [128, 255, 255], 
+        "holeList": [], 
+        "points": [[0, 23], [0, 0], [0, 0], [193, 25], [193, 25], [193, 145], [192, 145], [169, 145], [168, 145], [0, 145]], 
+        "position": [147, 343], 
+        "type": "poly", 
+        "size": [193, 145]
+    }, 
+    {
+        "name": "Bathroom", 
+        "color": [0, 0, 255], 
+        "holeList": [], 
+        "points": [[0, 0], [185, 1], [150, 120], [138, 120], [54, 120], [32, 120], [0, 120]], 
+        "position": [340, 368], 
+        "type": "poly", 
+        "size": [185, 120]
+    }, 
+    {
+        "name": "boundary", 
+        "color": [0, 0, 255], 
+        "holeList": [], 
+        "points": [[0, 251], [0, 228], [0, 153], [0, 152], [0, 151], [0, 0], [1, 0], [142, 0], [164, 0], [181, 0], [198, 0], [203, 0], [204, 0], [231, 0], [247, 0], [248, 0], [275, 0], [320, 0], [349, 0], [369, 0], [385, 0], [536, 0], [536, 96], [536, 163], [536, 233], [536, 373], [343, 373], [331, 373], [247, 373], [225, 373], [193, 373], [192, 373], [169, 373], [168, 373], [0, 373]], 
+        "position": [147, 115], 
+        "type": "poly", 
+        "size": [536, 373]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+Bedroom	Bathroom	490	488	525	369
+Bedroom	boundary	490	488	683	488
+TrashCan	boundary	683	278	683	348
+Kitchen	DiningRoom	532	115	532	211
+Kitchen	boundary	683	115	683	211	532	115	683	115
+DiningRoom	LivingRoom	351	115	351	267
+DiningRoom	boundary	394	115	395	115	378	115	394	115	467	115	496	115	395	115	422	115	422	115	467	115	516	115	532	115	496	115	516	115	351	115	378	115
+LivingRoom	boundary	345	115	350	115	147	115	147	266	328	115	345	115	311	115	328	115	147	115	148	115	289	115	311	115	350	115	351	115	147	266	147	267	148	115	289	115
+MasterBedroom	Bathroom	340	368	340	488
+MasterBedroom	boundary	316	488	339	488	315	488	316	488	339	488	340	488	147	366	147	488	147	488	315	488	147	343	147	366
+Bathroom	boundary	372	488	394	488	478	488	490	488	340	488	372	488	394	488	478	488
+
