@@ -15,13 +15,14 @@ import time, math
 import sys,os
 
 class motionControlHandler:
-    def __init__(self, proj, shared_data,robot_type):
+    def __init__(self, proj, shared_data,robot_type,max_angle):
         """
         Rapidly-Exploring Random Trees alogorithm motion planning controller
-        
+
         robot_type (int): Which robot is used for execution. Nao is 1, STAGE is 2,ODE is 3(default=3)
+        max_angle (float): The difference in angle between the two nodes allowed. The value should be between 0 to 6.28 = 2*pi (default=1.047)
         """
-        
+
         # Get references to handlers we'll need to communicate with
         self.drive_handler = proj.h_instance['drive']
         self.pose_handler = proj.h_instance['pose']
@@ -47,11 +48,17 @@ class motionControlHandler:
         self.nextRegionPoly    = None
         self.map               = {}
         self.all               = Polygon.Polygon()
-    
+
         # Information about the robot
         if robot_type not in [1,2,3]:
             robot_type = 1
         self.system = robot_type
+
+        if max_angle > 2*pi:
+            max_angle = 2*pi
+        if max_angle < 0:
+            max_angle = 0
+        self.max_angle_allowed = max_angle
 
         ## 1: Nao ; 2: STAGE; 3: 0DE
         if  self.system == 1:
@@ -60,12 +67,12 @@ class motionControlHandler:
             self.radius = 0.1
         elif self.system == 3:
             self.radius = 5
-            
-        for region in self.proj.rfi.regions: 
+
+        for region in self.proj.rfi.regions:
             self.map[region.name] = self.createRegionPolygon(region)
-            for n in range(len(region.holeList)): # no of holes           
-                self.map[region.name] -= self.createRegionPolygon(region,n) 
-                
+            for n in range(len(region.holeList)): # no of holes
+                self.map[region.name] -= self.createRegionPolygon(region,n)
+
         for regionName,regionPoly in self.map.iteritems():
             self.all += regionPoly
 
@@ -103,7 +110,7 @@ class motionControlHandler:
             pointArray = [x for x in self.proj.rfi.regions[current_reg].getPoints()]
             pointArray = map(self.coordmap_map2lab, pointArray)
             vertices = mat(pointArray).T
-            
+
             #set to zero velocity before tree is generated
             self.drive_handler.setVelocity(0, 0)
             if last:
@@ -129,7 +136,7 @@ class motionControlHandler:
             # Run algorithm to build the Rapid-Exploring Random Trees
             self.RRT_V = None
             self.RRT_E = None
-            self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = _RRTControllerHelper.buildTree([pose[0], pose[1]],pose[2], vertices, self.radius,self.system,self.currentRegionPoly,self.nextRegionPoly,q_gBundle,self.map,self.all)
+            self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = _RRTControllerHelper.buildTree([pose[0], pose[1]],pose[2], vertices, self.radius,self.system,self.currentRegionPoly,self.nextRegionPoly,q_gBundle,self.map,self.all,self.max_angle_allowed)
 
             # map the lab coordinates back to pixels
             V_tosend = array(mat(self.RRT_V[1:,:])).T
@@ -175,9 +182,9 @@ class motionControlHandler:
         This function takes in the region points and make it a Polygon.
         """
         if hole == None:
-            pointArray = [x for x in region.getPoints()] 
+            pointArray = [x for x in region.getPoints()]
         else:
-            pointArray = [x for x in region.getPoints(hole_id = hole)] 
+            pointArray = [x for x in region.getPoints(hole_id = hole)]
         pointArray = map(self.coordmap_map2lab, pointArray)
         regionPoints = [(pt[0],pt[1]) for pt in pointArray]
         formedPolygon= Polygon.Polygon(regionPoints)

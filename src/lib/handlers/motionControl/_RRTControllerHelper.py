@@ -61,7 +61,7 @@ def setVelocity(p, V, E, heading,E_prev,radius, last=False):
 
     return Vel
 
-def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappedRegions,allRegions, last=False):
+def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappedRegions,allRegions,max_angle_allowed, last=False):
 
     """
     This function builds the RRT tree
@@ -74,15 +74,19 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     q_gBundle: coordinates of q_goals that the robot can reach
     mappedRegions: region polygons
     allRegions: polygon that includes all the region
+    max_angle_allowed: the difference in angle between the two nodes allowed (between 0 to 2*pi)
     """
+
+    max_angle = max_angle_allowed
+
     ## 1: Nao ; 2: STAGE ;  3: ODE
     if system == 1:    ## Nao
         step_size  = 0.2          	#set the step_size for points be 1/5 of the norm from   ORIGINAL = 0.4
     elif system == 2:
         step_size  = 0.5
     elif system == 3:
-        step_size  = 15               
-    
+        step_size  = 15
+
     if system == 1:    ## Nao
         timeStep = 5   #time step for calculation of x, y position
     elif system == 2:
@@ -90,7 +94,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     elif system == 3:
         timeStep = 10  #time step for calculation of x, y position    #10
     #############tune velocity OMEGA, TIME STEP
-    
+
     #fix velocity
     ## 1: Nao ; 2: STAGE ;  3: ODE
     if system == 1:    ## Nao
@@ -100,7 +104,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     elif system == 3:
         velocity = 2    # what is used in RRTControllerHelper.setVelocity    #1.5
     #############tune velocity OMEGA, TIME STEP
-    
+
     BoundPoly  = regionPoly       # Boundary polygon = current region polygon
     radius     = R
     q_init     = mat(p).T
@@ -115,7 +119,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     omega_range = linspace(omegaLowerBound,omegaUpperBound,omegaStepSize)
     omega_range_abso = linspace(omegaLowerBound*4,omegaUpperBound*4,omegaStepSize*4)    # range used when stuck > stuck_thres
     edgeX    = []
-    edgeY    = []   
+    edgeY    = []
 
     # check faces of the current region for goal points
 
@@ -126,7 +130,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     stuck_thres = 300     # threshold for changing the range of sampling omega
 
     if not plt.isinteractive():
-        plt.ion()       
+        plt.ion()
     plt.hold(True)
     while path == 0:
         #step -1: try connection to q_goal (generate path to goal)
@@ -155,7 +159,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
             dist = norm(q_g - V[1:,shape(V)[1]-1])
             connect_goal = BoundPoly.covers(EdgePolyGoal)   #check coverage of path from new point to goal
             #check connection to goal
-            
+
             """
             if connect_goal:
                 print "connection is true"
@@ -163,7 +167,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                 q_pass = hstack((q_pass,vstack((i,q_g))))
                 q_pass_dist = hstack((q_pass_dist,dist))
             """
-            
+
             # compare orientation difference
             thetaPrev = V_theta[shape(V)[1]-1]
             theta_orientation = abs(arctan((q_g[1,0]- V[2,shape(V)[1]-1])/(q_g[0,0]- V[1,shape(V)[1]-1])))
@@ -191,7 +195,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                         theta_orientation =  2*pi - theta_orientation
 
             ################################## PRINT PLT #################
-            
+
             if connect_goal :
                 plt.suptitle('Randomly-exploring rapid tree', fontsize=12)
                 BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
@@ -204,7 +208,8 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
                     plt.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
                 plt.figure(original_figure).canvas.draw()
 
-            if connect_goal and abs(theta_orientation - thetaPrev) < pi/3:
+            if connect_goal and abs(theta_orientation - thetaPrev) < max_angle:
+                #if connect_goal and abs(theta_orientation - thetaPrev) < pi/3:
                 print "connection is true.Path = 1"
                 path = 1
                 q_pass = hstack((q_pass,vstack((i,q_g))))
@@ -223,8 +228,8 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
             q_g = q_pass[1:,cols]   ###Catherine
             q_g = q_g-(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*radius   #org 3
             if not nextRegionPoly.isInside(q_g[0],q_g[1]):
-                q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*6*radius   #org 3 
-            
+                q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*6*radius   #org 3
+
             plt.plot(q_g[0,0],q_g[1,0],'ko')
             plt.figure(original_figure).canvas.draw()
 
@@ -273,7 +278,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
 
                 path_all = PolyUtils.convexHull(path_robot)
                 in_bound = BoundPoly.covers(path_all)
-                
+
                 # plotting
                 plotPoly(path_all,'r',1)
                 plotMap(original_figure,BoundPoly,allRegions)
@@ -317,7 +322,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     for i in range(shape(E)[1]):
         V_toPass = hstack((V_toPass,vstack((i,V[1,E[1,i-1]],V[2,E[1,i-1]]))))
         E_toPass = hstack((E_toPass,vstack((i-1,i))))
-    
+
     ####print with matlib
 
     BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
@@ -327,7 +332,7 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
         plt.text(V[1,E[0,i]],V[2,E[0,i]], V[0,E[0,i]], fontsize=12)
         plt.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
     plt.figure(original_figure).canvas.draw()
-    
+
     heading  = E[0,0]
     # parse string for RRT printing in GUI (in format: RRT:E[[1,2,3]]:V[[1,2,3]])
     V = array(V)
@@ -337,31 +342,31 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
 
 def plotMap(number,currentRegion,allRegions):
     """
-    Plotting regions and obstacles with matplotlib.pyplot 
-    
+    Plotting regions and obstacles with matplotlib.pyplot
+
     number: figure number (see on top)
     """
-    
+
     if not plt.isinteractive():
-        plt.ion()       
+        plt.ion()
     plt.hold(True)
-    
-    plotPoly(currentRegion,'k')    
+
+    plotPoly(currentRegion,'k')
     plt.figure(number).canvas.draw()
-        
+
 def plotPoly(c,string,w = 1):
     """
     Plot polygons inside the boundary
     c = polygon to be plotted with matlabplot
     string = string that specify color
-    w      = width of the line plotting 
+    w      = width of the line plotting
     """
     for i in range(len(c)):
-        toPlot = Polygon.Polygon(c.contour(i)) 
-        if bool(toPlot):               
+        toPlot = Polygon.Polygon(c.contour(i))
+        if bool(toPlot):
             BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
-            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)   
-            plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)   
-   
+            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
+            plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+
 
 
