@@ -158,10 +158,9 @@ def drawMap(target, rfi, scaleToFit=True, drawLabels=True, highlightList=[], dee
             dc = wx.GCDC(pdc)
         except:
             dc = pdc
-        else:
-            target.PrepareDC(pdc)
 
-        target.PrepareDC(dc)
+        if isinstance(target, wx.ScrolledWindow):
+            target.PrepareDC(dc)
 
     dc.BeginDrawing()
 

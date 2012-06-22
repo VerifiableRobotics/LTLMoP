@@ -311,11 +311,11 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.Bind(wx.stc.EVT_STC_STYLENEEDED, self.onStyleNeeded)
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_DEFAULT, wx.Font(12, wx.SWISS, wx.NORMAL, wx.NORMAL, False, u'Consolas'))
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_COMMENTLINE, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
-        self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_COMMENTLINE, wx.Color(0, 200, 0))
+        self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_COMMENTLINE, wx.Colour(0, 200, 0))
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_WORD, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_WORD, wx.BLUE)
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_STRING, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
-        self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Color(200, 200, 0))
+        self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Colour(200, 200, 0))
 
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
         

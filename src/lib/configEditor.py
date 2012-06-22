@@ -792,7 +792,7 @@ class addRobotDialog(wx.Dialog):
         # begin wxGlade: addRobotDialog.__do_layout
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
         sizer_11 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_9 = wx.FlexGridSizer(1, 3, 2, 7)
+        sizer_9 = wx.FlexGridSizer(0, 3, 2, 7)
         sizer_8 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_7.Add(self.label_3, 0, wx.ALL, 5)
@@ -895,7 +895,7 @@ class addRobotDialog(wx.Dialog):
             event.Skip()
 
     def onChooseRobot(self, event): # wxGlade: addRobotDialog.<event_handler>
-        self.robot = deepcopy([r for r in self.proj.hsub.robots if r.type == event.GetString()][0])
+        self.robot = deepcopy(self.proj.hsub.getRobotByType(event.GetEventObject().GetValue()))
         self._robot2dialog(self.robot)
         event.Skip()
 

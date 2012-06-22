@@ -589,7 +589,7 @@
                 <option>1</option>
                 <object class="wxFlexGridSizer" name="sizer_9" base="EditFlexGridSizer">
                     <hgap>7</hgap>
-                    <rows>1</rows>
+                    <rows>0</rows>
                     <growable_cols>1</growable_cols>
                     <cols>3</cols>
                     <vgap>2</vgap>

@@ -51,7 +51,7 @@ class SimGUI_Frame(wx.Frame):
         self.window_1_pane_1.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.mapBitmap = None
 
-        self.Bind(wx.EVT_PAINT, self.onPaint)
+        self.window_1_pane_1.Bind(wx.EVT_PAINT, self.onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBG)
 
         # Make status bar at bottom.
@@ -236,10 +236,7 @@ class SimGUI_Frame(wx.Frame):
                 dc = wx.GCDC(pdc)
             except:
                 dc = pdc
-            else:
-                self.window_1_pane_1.PrepareDC(pdc)
 
-        self.window_1_pane_1.PrepareDC(dc)
         dc.BeginDrawing()
 
         # Draw background
