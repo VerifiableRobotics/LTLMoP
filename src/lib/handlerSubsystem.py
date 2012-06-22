@@ -258,12 +258,13 @@ class HandlerSubsystem:
         """
         Return the method object according to the input string
         """
+
         if self.handler_dic is None:
             print "ERROR: Cannot find handler dictionary, please load all handlers first."
             return
 
         method_info,para_info = method_string.split('(')
-        para_info = [x.strip() for x in para_info.replace(')','').split(',')]
+        para_info = para_info.replace(')','')
 
         items = method_info.split('.')
         methodObj = MethodObject()
@@ -302,13 +303,12 @@ class HandlerSubsystem:
                     methodObj = method_obj
                     break
 
-            for para_pair in para_info:
-                if '=' in para_pair:
-                    para_name,para_value = [x.strip() for x in para_pair.split('=')]
-                    for paraObj in methodObj.para:
-                        if paraObj.name == para_name:
-                            paraObj.setValue(para_value)
-                            break
+            for para_name, para_value in re.findall(r'(?P<key>\w+)\s*=\s*(?P<val>"[^"]*"|\'[^\']*\'|[^,]+)', para_info):
+                para_value = para_value.strip("\"\'")
+                for paraObj in methodObj.para:
+                    if paraObj.name == para_name:
+                        paraObj.setValue(para_value)
+                        break
         else:
             print "ERROR: Cannot recognize method %s, please spicify which handler it belongs to." %method_info
             return
