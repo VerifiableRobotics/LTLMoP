@@ -71,9 +71,9 @@ class ParameterObject:
                 logging.error("Invalid region value: {0}".format(value))
         elif self.type.lower() in ['str','string']:
             try:
-                self.value = ast.literal_eval(value)
+                self.value = str(value).strip('\"\'') 
             except ValueError:
-                logging.error("Invalid string  value: {0}".format(value))
+                logging.error("Invalid string value: {0}".format(value))
         elif self.type.lower() == 'choice':
             try:
                 self.value = ast.literal_eval(value)
@@ -185,7 +185,11 @@ class HandlerSubsystem:
         if loggerLevel == 'error':
             logging.basicConfig(format=log_format,level=logging.ERROR)
         elif loggerLevel == 'warning':
-            loggingg.basicConfig(format=log_format,level=logging.WARNING)
+            logging.basicConfig(format=log_format,level=logging.WARNING)
+        elif loggerLevel == 'info':
+            logging.basicConfig(format=log_format,level=logging.INFO)
+        elif loggerLevel == 'debug':
+            logging.basicConfig(format=log_format,level=logging.DEBUG)
 
         self.handler_dic = None
         self.robots = None
@@ -585,7 +589,7 @@ class HandlerParser:
         numRE = re.compile('(?P<key>[^=]+)=(?P<val>[^,]+),?',re.IGNORECASE)
 
         # Try to load the handler file
-        logging.info(" -> Loading handler: %s" % handlerFile)
+        logging.debug(" -> Loading handler: %s" % handlerFile)
         try:
             __import__(handlerFile)
         except ImportError as import_error:
@@ -656,7 +660,7 @@ class HandlerParser:
                                             if pair[0].lower() == 'default':
                                                 paraObj.default = pair[1]
                                                 paraObj.resetValue()
-                                            elif pair[0].lower == 'min':
+                                            elif pair[0].lower() == 'min':
                                                 paraObj.min = pair[1]
                                             elif pair[0].lower() == 'max':
                                                 paraObj.max = pair[1]
@@ -1067,13 +1071,13 @@ if __name__ == '__main__':
     proj = project.Project()
     proj.ltlmop_root = '/home/jim/Desktop/ltlmop_git/src'
     proj.project_root = '/home/jim/Desktop/ltlmop_git/src/examples/newSensorTest'
-    h = HandlerSubsystem(proj)
+    h = HandlerSubsystem(proj,loggerLevel='warning')
     h.loadAllHandlers()
     #h.loadAllRobots()
     #h.loadAllConfigFiles()
 
 
-    h.handler_parser.printHandler()
+    #h.handler_parser.printHandler()
     #print h.configs[0].robots[0].handlers['sensor'].methods
 
     #testStringBefore = 'share.dummySensor.buttonPress(button_name="Wave")'
