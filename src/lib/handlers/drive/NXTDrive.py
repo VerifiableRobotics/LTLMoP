@@ -25,16 +25,10 @@ class driveHandler:
 
         #self.d = d
     def setVelocity(self, x, y, theta=0):
-        #Defining the velocity to send to the NXT
+        """Defining the velocity to send to the NXT"""        
         c = .29 #scaling costant / don't run into things constant
         vx = c*x
         vy = c*y
-        #The following was used for differentila drive and is confusing
-        #w = (1/self.d)*(-sin(theta)*vx + cos(theta)*vy)
-        #Essentially speed
-        #v = cos(theta)*vx + sin(theta)*vy
-        #get wanted direction vector
-        #phi = 180*atan2(vy/vx)/pi
-        #send speed and direction
+        
         self.loco.sendCommand([vx,vy])
 

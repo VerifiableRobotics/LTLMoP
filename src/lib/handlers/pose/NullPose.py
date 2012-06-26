@@ -10,13 +10,15 @@ from numpy import *
 from regions import *
 
 class poseHandler:
-    def __init__(self, proj, shared_data):
+    def __init__(self, proj, shared_data, initial_region):
         """
         Null pose handler - used for single region operation without Vicon
+        
+        initial_region (region): Starting position for robot
         """
         
-        r = proj.rfi.indexOfRegionWithName(boundary)
-        center = proj.rfi.regions[r].getCenter()
+        r = proj.rfiold.indexOfRegionWithName(initial_region)
+        center = proj.rfiold.regions[r].getCenter()
         self.x = center[0]
         self.y = center[1]
         self.theta = 0
