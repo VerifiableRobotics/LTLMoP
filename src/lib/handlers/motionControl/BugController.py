@@ -57,7 +57,7 @@ class motionControlHandler:
         self.PLOT_EXIT         = False    # plot exit point of a region
         self.PLOT_OVERLAP      = False    # plot overlap area with the obstacle
 
-        #settings for Windows (only when you set operate_system = 1)
+        #settings for Windows (only when you set operate_system = 2)
         self.PLOT_WINDOWS     = True
 
         # Get references to handlers we'll need to communicate with

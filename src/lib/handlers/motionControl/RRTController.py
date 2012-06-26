@@ -15,12 +15,13 @@ import time, math
 import sys,os
 
 class motionControlHandler:
-    def __init__(self, proj, shared_data,robot_type,max_angle):
+    def __init__(self, proj, shared_data,robot_type,max_angle,plotting):
         """
         Rapidly-Exploring Random Trees alogorithm motion planning controller
 
         robot_type (int): Which robot is used for execution. Nao is 1, STAGE is 2,ODE is 3(default=3)
         max_angle (float): The difference in angle between the two nodes allowed. The value should be between 0 to 6.28 = 2*pi (default=1.047)
+        plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
         """
 
         # Get references to handlers we'll need to communicate with
@@ -59,6 +60,7 @@ class motionControlHandler:
         if max_angle < 0:
             max_angle = 0
         self.max_angle_allowed = max_angle
+        self.plotting          = plotting
 
         ## 1: Nao ; 2: STAGE; 3: 0DE
         if  self.system == 1:
@@ -136,7 +138,8 @@ class motionControlHandler:
             # Run algorithm to build the Rapid-Exploring Random Trees
             self.RRT_V = None
             self.RRT_E = None
-            self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = _RRTControllerHelper.buildTree([pose[0], pose[1]],pose[2], vertices, self.radius,self.system,self.currentRegionPoly,self.nextRegionPoly,q_gBundle,self.map,self.all,self.max_angle_allowed)
+            self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = _RRTControllerHelper.buildTree([pose[0], pose[1]],pose[2], vertices,\
+                self.radius,self.system,self.currentRegionPoly, self.nextRegionPoly,q_gBundle,self.map,self.all,self.max_angle_allowed, self.plotting)
 
             # map the lab coordinates back to pixels
             V_tosend = array(mat(self.RRT_V[1:,:])).T

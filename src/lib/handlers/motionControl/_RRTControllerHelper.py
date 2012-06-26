@@ -19,6 +19,9 @@ import Polygon.Shapes as PolyShapes
 import matplotlib.pyplot as plt
 from math import sqrt, fabs , pi
 import random
+import matplotlib.animation as animation
+import thread
+import threading
 
 distance_from_next = 0       #set to 1 if wants to print distance from next point, set o otherwise
 system_print       = 0       #set to 1 to print to terminal
@@ -28,6 +31,13 @@ check_E_print      = 0       #set to 1 to print check edge appending
 step56             = 0       #set to 1 to print check for step 5 and 6
 finish_print       = 0       #set to 1 to print finish E and V before trimming
 move_goal          = 0       #set to 1 when move goal testing
+
+#def __init__(self, ax, motion, maxt=2, dt=0.02):
+#    #operate_system (int): Which operating system is used for execution. Ubuntu and Mac is 1, Windows is 2
+#    if sys.platform in ['win32', 'cygwin']:
+#        self.operate_system = 2
+#    else:
+#        self.operate_system = 1
 
 def setVelocity(p, V, E, heading,E_prev,radius, last=False):
     """
@@ -61,7 +71,7 @@ def setVelocity(p, V, E, heading,E_prev,radius, last=False):
 
     return Vel
 
-def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappedRegions,allRegions,max_angle_allowed, last=False):
+def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappedRegions,allRegions,max_angle_allowed, plotting, last=False):
 
     """
     This function builds the RRT tree
@@ -78,6 +88,15 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     """
 
     max_angle = max_angle_allowed
+
+
+
+    if self.operate_system == 2:
+        # start using anmination to plot Pioneer
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)
+        self.scope = _Scope(self.ax,self)
+        thread.start_new_thread(self.jplot,())
 
     ## 1: Nao ; 2: STAGE ;  3: ODE
     if system == 1:    ## Nao
@@ -367,6 +386,40 @@ def plotPoly(c,string,w = 1):
             BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
             plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
             plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+
+def data_gen(self):
+    self.ax.cla()
+    self.plotPioneer(1)
+    self.plotPoly(self.realRobot, 'r')
+    self.plotPoly(self.robot, 'b')
+    pose = self.pose_handler.getPose()
+    self.ax.plot(pose[0],pose[1],'bo')
+    self.ax.plot(self.q_g[0],self.q_g[1],'ro')
+    self.plotPoly(self.overlap,'g')
+    self.plotPoly(self.m_line,'b')
+    yield(pose[0],pose[1])
+    self.ax.plot(self.prev_follow[0],self.prev_follow[1],'ko')
+
+
+def jplot(self):
+    ani = animation.FuncAnimation(self.fig, self.scope.update, self.data_gen)
+    plt.show()
+
+class _Scope:
+    def __init__(self, ax, motion, maxt=2, dt=0.02):
+        self.i = 0
+        self.ax = ax
+        self.line, = self.ax.plot(1)
+        self.ax.set_ylim(0, 1)
+        self.motion = motion
+
+    def update(self,data):
+        (data1) = self.motion.data_gen()
+        a = data1.next()
+        self.line.set_data(a)
+        self.ax.relim()
+        self.ax.autoscale()
+        return self.line,
 
 
 
