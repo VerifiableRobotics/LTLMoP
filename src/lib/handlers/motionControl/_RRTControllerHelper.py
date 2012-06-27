@@ -32,13 +32,6 @@ step56             = 0       #set to 1 to print check for step 5 and 6
 finish_print       = 0       #set to 1 to print finish E and V before trimming
 move_goal          = 0       #set to 1 when move goal testing
 
-#def __init__(self, ax, motion, maxt=2, dt=0.02):
-#    #operate_system (int): Which operating system is used for execution. Ubuntu and Mac is 1, Windows is 2
-#    if sys.platform in ['win32', 'cygwin']:
-#        self.operate_system = 2
-#    else:
-#        self.operate_system = 1
-
 def setVelocity(p, V, E, heading,E_prev,radius, last=False):
     """
     This function calculates the velocity for the robot with RRT.
@@ -71,7 +64,8 @@ def setVelocity(p, V, E, heading,E_prev,radius, last=False):
 
     return Vel
 
-def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappedRegions,allRegions,max_angle_allowed, plotting, last=False):
+def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,\
+mappedRegions,allRegions,max_angle_allowed, plotting, operate_system,ax, last=False):
 
     """
     This function builds the RRT tree
@@ -85,18 +79,20 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
     mappedRegions: region polygons
     allRegions: polygon that includes all the region
     max_angle_allowed: the difference in angle between the two nodes allowed (between 0 to 2*pi)
+    plotting: 1 if plotting is enabled, 0- disabled
+    operate_system: Which operating system is used for execution. Ubuntu and Mac is 1, Windows is 2
+    ax: plot for windows
     """
 
     max_angle = max_angle_allowed
-
-
-
-    if self.operate_system == 2:
+    """
+    if operate_system == 2:
         # start using anmination to plot Pioneer
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111)
         self.scope = _Scope(self.ax,self)
         thread.start_new_thread(self.jplot,())
+    """
 
     ## 1: Nao ; 2: STAGE ;  3: ODE
     if system == 1:    ## Nao
@@ -216,16 +212,29 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
             ################################## PRINT PLT #################
 
             if connect_goal :
-                plt.suptitle('Randomly-exploring rapid tree', fontsize=12)
-                BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
-                plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
-                plt.xlabel('x')
-                plt.ylabel('y')
-                if shape(V)[1] <= 2:
-                    plt.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                else:
-                    plt.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                plt.figure(original_figure).canvas.draw()
+                if plotting == True:
+                    if operate_system == 1:
+                        plt.suptitle('Randomly-exploring rapid tree', fontsize=12)
+                        BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
+                        plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+                        plt.xlabel('x')
+                        plt.ylabel('y')
+                        if shape(V)[1] <= 2:
+                            plt.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
+                        else:
+                            plt.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
+                        plt.figure(original_figure).canvas.draw()
+                    else:
+                        ax.suptitle('Randomly-exploring rapid tree', fontsize=12)
+                        BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
+                        ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+                        ax.xlabel('x')
+                        ax.ylabel('y')
+                        if shape(V)[1] <= 2:
+                            ax.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
+                        else:
+                            ax.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
+
 
             if connect_goal and abs(theta_orientation - thetaPrev) < max_angle:
                 #if connect_goal and abs(theta_orientation - thetaPrev) < pi/3:
@@ -249,8 +258,13 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
             if not nextRegionPoly.isInside(q_g[0],q_g[1]):
                 q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*6*radius   #org 3
 
-            plt.plot(q_g[0,0],q_g[1,0],'ko')
-            plt.figure(original_figure).canvas.draw()
+            if plotting == True:
+                if operate_system == 1:
+                    plt.plot(q_g[0,0],q_g[1,0],'ko')
+                    plt.figure(original_figure).canvas.draw()
+                else:
+                    ax.plot(q_g[0,0],q_g[1,0],'ko')
+
 
             numOfPoint = floor(norm(V[1:,shape(V)[1]-1]- q_g)/step_size)
             if numOfPoint < 3:
@@ -343,14 +357,22 @@ def buildTree(p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,mappe
         E_toPass = hstack((E_toPass,vstack((i-1,i))))
 
     ####print with matlib
-
-    BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
-    plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
-    plt.plot(V[1,:],V[2,:],'b')
-    for i in range(shape(E)[1]-1):
-        plt.text(V[1,E[0,i]],V[2,E[0,i]], V[0,E[0,i]], fontsize=12)
-        plt.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
-    plt.figure(original_figure).canvas.draw()
+    if plotting ==True:
+        if operate_system == 1:
+            BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
+            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+            plt.plot(V[1,:],V[2,:],'b')
+            for i in range(shape(E)[1]-1):
+                plt.text(V[1,E[0,i]],V[2,E[0,i]], V[0,E[0,i]], fontsize=12)
+                plt.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
+            plt.figure(original_figure).canvas.draw()
+        else:
+            BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
+            ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+            ax.plot(V[1,:],V[2,:],'b')
+            for i in range(shape(E)[1]-1):
+                ax.text(V[1,E[0,i]],V[2,E[0,i]], V[0,E[0,i]], fontsize=12)
+                ax.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
 
     heading  = E[0,0]
     # parse string for RRT printing in GUI (in format: RRT:E[[1,2,3]]:V[[1,2,3]])
@@ -380,12 +402,20 @@ def plotPoly(c,string,w = 1):
     string = string that specify color
     w      = width of the line plotting
     """
-    for i in range(len(c)):
-        toPlot = Polygon.Polygon(c.contour(i))
-        if bool(toPlot):
-            BoundPolyPoints = asarray(PolyUtils.pointList(toPlot))
-            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
-            plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+    if bool(c):
+        for i in range(len(c)):
+            #toPlot = Polygon.Polygon(c.contour(i))
+            toPlot = Polygon.Polygon(c.contour(i)) & self.all
+            if bool(toPlot):
+                for j in range(len(toPlot)):
+                    #BoundPolyPoints = asarray(PolyUtils.pointList(toPlot.contour(j)))
+                    BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(toPlot.contour(j))))
+                    if self.operate_system == 2:
+                        ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
+                        ax.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+                    else:
+                        plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
+                        plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
 
 def data_gen(self):
     self.ax.cla()

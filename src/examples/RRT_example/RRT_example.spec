@@ -27,12 +27,11 @@ RegionMapping: # Mapping between region names and their decomposed counterparts
 r4 = p4
 r5 = p3
 r6 = p2
-r1 = p7
-r2 = p6
+r1 = p6
 others = p1
 
 Spec: # Specification in structured English
-
+#visit r2
 visit r5
 visit r4
 
