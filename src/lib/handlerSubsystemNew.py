@@ -558,17 +558,25 @@ class HandlerParser:
                                 self.handler_dic[handler_type][robotFolder] = [self.parseHandlers(h_file,handler_type,onlyLoadInit)]
 
     def loadHandler(self,folder,onlyLoadInit=False):
+        """
+        Load all handler files within the given folder
+        If onlyLoadInit is True, only the info of __init__ method will be loaded
 
+        return a list of handler objects
+        """
+        # the list of handler objects that will be returned
         handlerList = []
 
         path = os.path.join(self.handler_path,folder)
         handlerFileList = os.listdir(path)
 
         for h_file in handlerFileList:
+            # ignore the file starts with underscore or not a .py file
             if h_file.endswith('.py') and not h_file.startswith('_'):
                 fileName = '.'.join(['handlers',folder,h_file.split('.')[0]])
                 h_obj = self.parseHandlers(fileName,folder,onlyLoadInit)
                 if h_obj is not None:
+                    # only append the handler in the list if it is correctly imported
                     handlerList.append(h_obj)
 
         return handlerList
