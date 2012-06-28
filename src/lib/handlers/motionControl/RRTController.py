@@ -9,7 +9,7 @@ Uses the vector field algorithm developed by Stephen R. Lindemann to calculate a
 
 import _RRTControllerHelper
 from numpy import *
-from is_inside import *
+from __is_inside import *
 import Polygon
 import time, math
 import sys,os
