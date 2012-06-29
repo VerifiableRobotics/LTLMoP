@@ -75,6 +75,8 @@ class NXTLocomotionCommandHandler:
             if(steeringMotor=='PORT_C'): self.steerMotor = Motor(self.nxt.brick, PORT_C)
             self.tacho = self.getUsefulTacho(self.steerMotor)
         
+        self.once=True        
+        
     def sendCommand(self, cmd):
         """     
         Send movement command to the NXT
@@ -173,33 +175,24 @@ class NXTLocomotionCommandHandler:
             Methodology behind a differential drive.  It uses omega (angle) the turning velocity.
             '''
             angle = self.angle*180/pi
-            #print 'angle='+str(angle)+' w='+str(self.angle)
-            leftPow = -70                           #max powers
-            if self.leftForward: leftPow = 70
-            rightPow = -70
-            if self.rightForward: rightPow = 70
-            try:
-                self.pose.setPose()
-            except:
-                pass
+            if angle > 0 or angle < 0:
+                print 'angle='+str(angle)+' w='+str(self.angle)
+            leftPow = -75                           #max powers
+            if self.leftForward: leftPow = 75
+            rightPow = -75
+            if self.rightForward: rightPow = 75
             if(self.v==0):
                 idle()                              #pause...
-            elif angle>2:                           #left turning arc
-                if(leftPow>0): arcPower=((leftPow-LOW)*(29-abs(angle))/29)+LOW # scaled power based on required omega
-                else: arcPower=((leftPow+LOW)*(29-abs(angle))/29)-LOW
-                #print 'w='+str(angle)+' arcPower='+str(arcPower)+' leftPower='+str(leftPow)
+            elif angle>.5:                           #left turning arc
+                if(leftPow>0): arcPower=((leftPow-LOW)*(90-abs(angle))/90)+LOW # scaled power based on required omega
+                else: arcPower=((leftPow+LOW)*(90-abs(angle))/90)-LOW
                 left(leftPow,arcPower)
-            elif angle<2:                           #right tuning arc
-                if(rightPow>0): arcPower=((rightPow-LOW)*(29-abs(angle))/29)+LOW
-                else: arcPower=((rightPow+LOW)*(29-abs(angle))/29)-LOW
-                #print 'w='+str(angle)+' arcPower='+str(arcPower)+' rightPower='+str(rightPow)
+            elif angle<-.5:                           #right tuning arc
+                if(rightPow>0): arcPower=((rightPow-LOW)*(90-abs(angle))/90)+LOW
+                else: arcPower=((rightPow+LOW)*(90-abs(angle))/90)-LOW
                 right(rightPow,arcPower)                
             else:
                 go(leftPow)                         #straight
-            try:
-                self.pose.killPose()
-            except:
-                pass
         
         def nonDifDrive():
             '''
@@ -211,10 +204,7 @@ class NXTLocomotionCommandHandler:
             while(angle>180): angle-=360 
             while(angle<-180): angle+=360
             phi = atan2(vy,vx)*180/pi               #Direction to POI
-            try:
-                self.pose.setPose()
-            except:
-                pass
+
             if(self.v==0):                          #pause command sent
                 idle()
             elif(phi+360-angle<angle-phi):          #quadrant 3 angle and quadrant 2 phi
@@ -244,21 +234,24 @@ class NXTLocomotionCommandHandler:
                 goToDegree(degree)
             if(self.v!=0):                          #run drive motors
                 go(leftPow*.65)
-            try:
-                self.pose.killPose()
-            except:
-                pass
             
         
         #convertToUseful(cmd[0],cmd[1])
         pose = self.pose.getPose()                  #get pose from vicon
         vx=cmd[0]                                   #decompose velocity
         vy=cmd[1]
-        theta = pose[2]+(pi/2)                      #get facing angle (account for vicon axes)
+        theta = pose[2]+(pi)                      #get facing angle (account for vicon axes)
         self.v = cos(theta)*vx+sin(theta)*vy        #magnitude of v
+        if self.once:
+            self.pose.setPose()
+            self.once=False
         if(self.differentialDrive):                 #handles differential drive
             theta=theta-pi                          #orient angle for reverse direction of travel
-            self.angle = (1/.6)*(-sin(theta)*vx + cos(theta)*vy)    # omega
+            #self.angle = (1/.6)*(-sin(theta)*vx + cos(theta)*vy)    # omega
+            self.angle = atan2(vy/.29,vx/.29) - theta
+            print 'Vx: '+str(vx/.29)+' Vy: '+str(vy/.29)+' theta: '+str(theta)
+            while self.angle>pi: self.angle-=2*pi
+            while self.angle<-pi: self.angle+=2*pi
             difDrive()
         else:                                       #handles car type drive
             #print 'gloabal center: ' + str(self.tacho)

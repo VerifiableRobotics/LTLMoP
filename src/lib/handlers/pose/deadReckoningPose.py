@@ -59,6 +59,11 @@ class poseHandler:
         self.act=proj.h_instance['actuator']
         
         self.actuating=False
+        
+        f = open('log.txt','w')
+        f.close()
+        g = open('raw.txt','w')
+        g.close()
 
     def getPose(self, cached=False):
         
@@ -128,7 +133,6 @@ def updatePosition(self, curDegree, baseDegree, gearRatio, wheelDiameter, direct
     #curDegree is the tachometer reading at time t(n)
     #baseDegree is the tachometer reading at time t(n-1)
     #distance-the total degrees traveled converted to rotations in wheel times the circumference
-    self.steerAngle = self.act.steerAngle
     distance=(curDegree-baseDegree)*gearRatio*pi/180*wheelDiameter/2
     if self.steerAngle==0: #going straight
         if direction:
@@ -166,8 +170,8 @@ def updatePosDD(self,curLeft,baseLeft,curRight,baseRight,gearRatio,wheelDiameter
     """
     Update position for differential drive type robot using dead reckoning
     """
-    slipConstant=.7 # generall error summed up as slip
-    smallThetaConstant=10 # small numbers get rounded and this fixes that problem
+    slipConstant=2.5 # generall error summed up as slip
+    smallThetaConstant=15 # small numbers get rounded and this fixes that problem
     #curRight/curLeft are the current tachometer readings on the right/left motors in degrees
     #baseRight/baseLeft are the previous tachometer readings on the right/left motors in degrees
     #distance is the path distance of travel
@@ -224,7 +228,7 @@ def positionLog(self, distance, dtheta=0):
         vString=str(curVic[0])+','+str(curVic[1])+','+str(curVic[2])
         f.write(vString+'\n') #log x,y,theta for vicon
         g = open('raw.txt','a')
-        g.write(str(distance)+','+str(self.act.steerAngle*pi/180))
+        g.write(str(distance)+','+str(self.steerAngle*pi/180))
         g.write(','+vString+','+str(dtheta)+'\n') #log input data to test fromulas
         g.close()
     f.close()
