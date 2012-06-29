@@ -9,30 +9,39 @@ import sys, time
 from numpy import *
 from regions import *
 import _pyvicon
-from math import pi
+from math import pi, sin, cos
 import thread
+from time import sleep
+from nxt.motor import Motor, PORT_A, PORT_B, PORT_C
 
 class poseHandler:
-    def __init__(self, proj, shared_data, differentialDrive=True, compareAgainstVicon=False, track=.119, wheelBase=.178):
+    def __init__(self, proj, shared_data, compareAgainstVicon=False, track=.119, wheelBase=.178, driveWheelTeeth=1, driveMotorTeeth=1, wheelDiameter=.0415, startX=0.0, startY=0.0, startTheta=1.5708):
         """
         Pose handler for dead reckoning
-        
-        differentialDrive (bool): Whether the robot is differential Drive (default=True)
+
         compareAgainstVicon (bool): Whether Vicon data is to be compared during this simulation (default=False)
         track (float): The distance in meters between the left and right wheels on the robot (default=.119)
         wheelBase (float): The distance in meters between the front and back wheels on the robot (default=.178)
+        driveWheelTeeth (int): The teeth on the gear that is directly connected to the drive wheels [1 implies none] (default=1)
+        driveMotorTeeth (int): The teeth on the gear attached to the drive motor [1 implies none] (default=1)
+        wheelDiameter (float): The diameter of the drive wheels on the robot (default=.0415)
+        startX (float): The starting x position of the robot (default=0.0)
+        startY (float): The starting y position of the robot (default=0.0)
+        startTheta (float): The starting facing angle of the robot (default=1.5708)
         """
         
-        r = 0 # initial region
-        #start in center of inital region
-        center = proj.rfi.regions[r].getCenter()
-        self.x = center[0] 
-        self.y = center[1]
-        self.theta = pi/2 #start facing in the positive y direction
-        self.dd=differentialDrive 
+        self.proj=proj
+        
+        self.x = startX
+        self.y = startY
+        self.theta = startTheta #start facing in the positive y direction
         self.track=track
         self.wheelBase=wheelBase
+        self.wheelDiameter=wheelDiameter
+        self.gearRatio=float(driveMotorTeeth/driveWheelTeeth)
         self.base=self.getPose() #a starting pose for the robot
+        
+        self.steerAngle=0
             
         print 'Current Pose: '+str(self.x)+','+str(self.y)+','+str(self.theta)
         
@@ -44,17 +53,12 @@ class poseHandler:
             self.s.selectStreams(['Time', "NXT:NXT <t-X>","NXT:NXT <t-Y>","NXT:NXT <a-Z>"])
             self.s.startStreams()
             while self.s.getData() is None: pass
-            self.vPose = s.getData()
-        
-        #get motor setup from locomotion
-        self.loco=proj.h_instance['locomotion']
-        self.driveMotors()=self.loco.driveMotors()
-        self.steerMotor=self.loco.steerMotor
+            self.vPose = self.s.getData()
         
         #get values from actuator that determine position
-        ''' this is probably broken '''
         self.act=proj.h_instance['actuator']
-        thread.start_new_thread(positionThread,(self, self.act.gearRatio, self.act.wheelDiameter, self.act.direction))
+        
+        self.actuating=False
 
     def getPose(self, cached=False):
         
@@ -63,6 +67,26 @@ class poseHandler:
         o=self.theta
 
         return array([x, y, o])
+        
+    def setPose(self, cached=False):
+        #get motor setup from locomotion
+        self.loco=self.proj.h_instance['locomotionCommand']
+        self.driveMotors=self.loco.driveMotors
+        self.steerMotor=self.loco.steerMotor
+        self.direction=self.loco.leftForward
+        self.dd=self.loco.differentialDrive
+        self.actuating=True
+        thread.start_new_thread(positionThread,(self, self.gearRatio, self.wheelDiameter, self.direction))
+    
+    def killPose(self, cached=False):
+        self.actuating=False
+        
+    def updateSteerAngle(self, curDegree, baseDegree):
+        """
+        For a car type robot, this function updates the angle of the steering wheels
+        """
+        self.steerAngle+=(curDegree-baseDegree)/self.gearRatio
+        print 'Steering angle is '+str(self.steerAngle)  
 
 def getUsefulTacho(motor):
     """
@@ -70,7 +94,7 @@ def getUsefulTacho(motor):
     usability for those measurements
     """
     tacho = tuple(int(n) for n in str(motor.get_tacho()).strip('()').split(','))
-    return tacho[0]
+    return tacho[0] 
     
 def positionThread(self, gearRatio, wheelDiameter, direction):
     """
@@ -78,7 +102,7 @@ def positionThread(self, gearRatio, wheelDiameter, direction):
     the main thread does not have to worry about writing to files and other 
     time consuming tasks
     """
-    while True:
+    while self.actuating:
         if self.dd:
             baseLeft=getUsefulTacho(self.driveMotors[0])
             baseRight=getUsefulTacho(self.driveMotors[1])
@@ -191,7 +215,7 @@ def positionLog(self, distance, dtheta=0):
     curString = str(curLoc[0])+','+str(curLoc[1])+','+str(curLoc[2])+','
     f.write(curString) #log x,y,theta for dead reckoning
     if self.compareAgainstVicon:
-        rawPose = self.getData()
+        rawPose = self.s.getData()
         rawPose[3]+=pi/2
         rawPose[3]=orient(rawPose[3])
         self.vPose[3]=orient(self.vPose[3])
