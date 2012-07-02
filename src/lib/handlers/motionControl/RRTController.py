@@ -34,8 +34,8 @@ class motionControlHandler:
         """
         Rapidly-Exploring Random Trees alogorithm motion planning controller
 
-        robot_type (int): Which robot is used for execution. Nao is 1, STAGE is 2,ODE is 3(default=3)
-        max_angle (float): The difference in angle between the two nodes allowed. The value should be between 0 to 6.28 = 2*pi (default=1.047)
+        robot_type (int): Which robot is used for execution. Nao is 1, STAGE is 2, ODE is 3, Pioneer is 4(default=3)
+        max_angle (float): The biggest difference in angle between two nodes. The value should be within 0 to 6.28 = 2*pi. Default set to 1.047 = pi/3 (default=1.047)
         plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
         """
 
@@ -84,13 +84,16 @@ class motionControlHandler:
             self.plotting          = False
 
         print "plotting is " + str(self.plotting)
-        ## 1: Nao ; 2: STAGE; 3: 0DE
+        ## 1: Nao ; 2: STAGE; 3: 0DE; 4: Pioneer
         if  self.system == 1:
             self.radius = 0.15*1.2
         elif self.system == 2:
             self.radius = 0.1
         elif self.system == 3:
             self.radius = 5
+        elif self.system == 4:
+            self.radius = 10
+            self.system = 1
 
         #operate_system (int): Which operating system is used for execution.
         #Ubuntu and Mac is 1, Windows is 2
@@ -111,7 +114,7 @@ class motionControlHandler:
         for regionName,regionPoly in self.map.iteritems():
             self.all += regionPoly
 
-        if self.operate_system == 2:
+        if self.operate_system == 2 and self.plotting ==True:
             # start using anmination to plot Pioneer
             self.fig = plt.figure()
             self.ax = self.fig.add_subplot(111)
@@ -178,9 +181,15 @@ class motionControlHandler:
             # Run algorithm to build the Rapid-Exploring Random Trees
             self.RRT_V = None
             self.RRT_E = None
-            if self.operate_system == 1:
+            if self.operate_system == 2:
+                if self.plotting == True:
+                    self.ax.cla()
+                else:
+                    self.ax = None
+
+            else:
                 self.ax = None
-            self.ax.cla()
+
             self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = self.buildTree(\
             [pose[0], pose[1]],pose[2], vertices,self.radius,self.system,self.currentRegionPoly, self.nextRegionPoly,q_gBundle,\
             self.map,self.all,self.max_angle_allowed, self.plotting,self.operate_system)
@@ -287,7 +296,7 @@ class motionControlHandler:
         mappedRegions: region polygons
         allRegions: polygon that includes all the region
         max_angle_allowed: the difference in angle between the two nodes allowed (between 0 to 2*pi)
-        plotting: 1 if plotting is enabled, 0- disabled
+        plotting: True if plotting is enabled, False- disabled
         operate_system: Which operating system is used for execution. Ubuntu and Mac is 1, Windows is 2
         """
         finish_print       = 0       #set to 1 to print finish E and V before trimming
@@ -345,9 +354,11 @@ class motionControlHandler:
         stuck    = 0          # count for changing the range of sampling omega
         stuck_thres = 300     # threshold for changing the range of sampling omega
 
-        if not plt.isinteractive():
-            plt.ion()
-        plt.hold(True)
+        print "plotting is " + str(plotting)
+        if plotting == True:
+            if not plt.isinteractive():
+                plt.ion()
+            plt.hold(True)
 
         while path == 0:
             #step -1: try connection to q_goal (generate path to goal)
