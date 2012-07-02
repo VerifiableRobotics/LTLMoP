@@ -39,7 +39,7 @@ class poseHandler:
         self.wheelBase=wheelBase
         self.wheelDiameter=wheelDiameter
         self.gearRatio=float(driveMotorTeeth/driveWheelTeeth)
-        self.base=self.getPose() #a starting pose for the robot
+        self.base=array([self.x,self.y,self.theta]) #a starting pose for the robot
         
         self.steerAngle=0
             
@@ -69,7 +69,7 @@ class poseHandler:
         
         x=self.x
         y=self.y
-        o=self.theta
+        o=orient(self.theta-pi/2) #fix irregular vicon pose
 
         return array([x, y, o])
         
