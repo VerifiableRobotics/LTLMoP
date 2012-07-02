@@ -131,7 +131,7 @@ class motionControlHandler:
         if current_reg == next_reg and not last:
             # No need to move!
             self.drive_handler.setVelocity(0, 0)  # So let's stop
-            return False
+            return True
 
         # Find our current configuration
         pose = self.pose_handler.getPose()
@@ -145,12 +145,12 @@ class motionControlHandler:
             return False
 
         ###This part is run when the robot goes to a new region, otherwise, the original tree will be used.
-        if not self.previous_next_reg == current_reg:
+        if not self.previous_next_reg == next_reg:
             self.nextRegionPoly    = self.map[self.proj.rfi.regions[next_reg].name]
             self.currentRegionPoly = self.map[self.proj.rfi.regions[current_reg].name]
 
-            print "next Region is "+str(self.proj.rfi.regions[next_reg].name)
-            print "Current Region is "+str(self.proj.rfi.regions[current_reg].name)
+            #print "next Region is "+str(self.proj.rfi.regions[next_reg].name)
+            #print "Current Region is "+str(self.proj.rfi.regions[current_reg].name)
 
             pointArray = [x for x in self.proj.rfi.regions[current_reg].getPoints()]
             pointArray = map(self.coordmap_map2lab, pointArray)
@@ -203,14 +203,14 @@ class motionControlHandler:
             V_tosend = mat(V_tosend).T
             s = 'RRT:E'+"["+str(list(self.RRT_E[0]))+","+str(list(self.RRT_E[1]))+"]"+':V'+"["+str(list(self.RRT_V[0]))+","+str(list(V_tosend[0]))+","+str(list(V_tosend[1]))+"]"+':T'+"["+str(list(q_gBundle[0]))+","+str(list(q_gBundle[1]))+"]"
 
-            print s
+            #print s
 
         # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
         V = self.setVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.radius)
         self.Velocity = V[0:2,0]
         self.heading = V[2,0]
         self.E_prev = V[3,0]
-        self.previous_next_reg = current_reg
+        self.previous_next_reg = next_reg
 
         # Pass this desired velocity on to the drive handler
         self.drive_handler.setVelocity(V[0,0], V[1,0], pose[2])
@@ -449,7 +449,7 @@ class motionControlHandler:
 
                 if connect_goal and abs(theta_orientation - thetaPrev) < max_angle:
                     #if connect_goal and abs(theta_orientation - thetaPrev) < pi/3:
-                    print "connection is true.Path = 1"
+                    #print "connection is true.Path = 1"
                     path = 1
                     q_pass = hstack((q_pass,vstack((i,q_g))))
                     q_pass_dist = hstack((q_pass_dist,dist))
