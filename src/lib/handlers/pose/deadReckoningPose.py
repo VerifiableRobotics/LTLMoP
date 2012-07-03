@@ -79,6 +79,7 @@ class poseHandler:
         self.driveMotors=self.loco.driveMotors
         self.steerMotor=self.loco.steerMotor
         self.direction=self.loco.leftForward
+        self.steeringRatio=self.loco.steeringRatio
         self.dd=self.loco.differentialDrive
         self.actuating=True
         thread.start_new_thread(positionThread,(self, self.gearRatio, self.wheelDiameter, self.direction))
@@ -90,7 +91,7 @@ class poseHandler:
         """
         For a car type robot, this function updates the angle of the steering wheels
         """
-        self.steerAngle+=(curDegree-baseDegree)/self.gearRatio
+        self.steerAngle+=(curDegree-baseDegree)/self.steeringRatio
         print 'Steering angle is '+str(self.steerAngle)  
 
 def getUsefulTacho(motor):
@@ -133,7 +134,7 @@ def updatePosition(self, curDegree, baseDegree, gearRatio, wheelDiameter, direct
     #curDegree is the tachometer reading at time t(n)
     #baseDegree is the tachometer reading at time t(n-1)
     #distance-the total degrees traveled converted to rotations in wheel times the circumference
-    distance=(curDegree-baseDegree)*gearRatio*pi/180*wheelDiameter/2
+    distance=(curDegree-baseDegree)*gearRatio*pi/180*wheelDiameter/2*1.6
     if self.steerAngle==0: #going straight
         if direction:
             self.x+=distance*cos(self.theta)
