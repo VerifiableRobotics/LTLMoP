@@ -1,0 +1,61 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+
+Obstacles: # Names of regions to treat as obstacles
+gap3
+gap4
+gap2
+gap1
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+gap3	poly	721	439	64	42	144	144	144	1	42	0	1	64	0
+gap4	poly	88	416	67	54	144	144	144	67	53	0	0	67	6	67	53	67	54
+boundary	poly	84	46	701	435	255	0	0	7	1	73	0	375	0	633	1	698	5	699	163	701	393	638	435	71	424	71	423	4	370	0	182
+z2	poly	717	47	66	162	0	0	255	0	0	65	4	66	162	1	161
+z3	poly	718	208	67	232	255	255	0	0	80	0	24	0	23	0	0	65	1	67	231	3	232
+z4	poly	84	222	74	200	128	255	0	71	200	4	194	0	6	73	0	74	43
+r1	poly	157	46	303	156	0	255	0	0	0	302	0	303	155	0	156
+mesh	poly	459	46	259	162	204	50	50	0	0	258	1	259	162	1	155
+gap2	poly	157	201	561	87	128	128	128	303	0	561	7	561	30	561	31	561	87	1	64	0	21	0	1
+gap1	poly	155	422	567	60	0	0	255	0	0	0	47	0	48	567	59	567	60	567	59	566	18
+slope	poly	155	265	566	175	204	50	50	3	0	563	23	566	175	0	157
+z1	poly	84	46	73	182	0	0	255	73	156	73	176	0	182	7	1	73	0
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+SpiderFieldWorking_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+gap3	boundary	722	481	785	439
+gap3	z3	721	440	785	439
+gap3	gap1	721	440	722	481
+gap4	boundary	155	469	155	470	88	416	155	469
+gap4	z4	88	416	155	422
+gap4	gap1	155	422	155	469	155	469	155	470
+boundary	z2	782	51	783	209	717	47	782	51
+boundary	z3	783	209	785	439
+boundary	z4	84	228	88	416
+boundary	r1	157	46	459	46
+boundary	mesh	459	46	717	47
+boundary	gap1	155	470	722	481	155	469	155	470
+boundary	z1	91	47	157	46	84	228	91	47
+z2	z3	718	208	783	209
+z2	mesh	717	47	718	208
+z3	gap2	718	208	718	231	718	231	718	232	718	232	718	288
+z3	slope	718	288	721	440
+z4	gap2	157	222	158	265
+z4	slope	155	422	158	265
+z4	z1	84	228	157	222
+r1	mesh	459	46	460	201
+r1	gap2	157	202	460	201
+r1	z1	157	46	157	202
+mesh	gap2	460	201	718	208
+gap2	slope	158	265	718	288
+gap2	z1	157	202	157	222
+gap1	slope	155	422	721	440
+

@@ -383,6 +383,7 @@ class RegionFileInterface:
                 "Obstacles": obstacleRegions}
 
         fileMethods.writeToFile(filename, data, comments)
+        self.filename = filename
 
         return True
 
@@ -431,8 +432,8 @@ class RegionFileInterface:
             region2 = self.indexOfRegionWithName(transData[1])
             faces = []
             for i in range(2, len(transData), 4):
-                p1 = Point(int(transData[i]), int(transData[i+1]))
-                p2 = Point(int(transData[i+2]), int(transData[i+3]))
+                p1 = Point(float(transData[i]), float(transData[i+1]))
+                p2 = Point(float(transData[i+2]), float(transData[i+3]))
                 faces.append(tuple(sorted((p1, p2))))
                 
             # During adjacency matrix reconstruction, we'll mirror over the diagonal
@@ -626,12 +627,17 @@ class Region:
             previously saved region.
         """
         self.name = data['name']
-        self.position = Point(*data['position'])
-        self.size = Size(*data['size'])
+        if 'position' in data:
+            self.position = Point(*data['position'])
+        if 'size' in data:
+            self.size = Size(*data['size'])
         self.color = Color(*data['color'])
 
-        if data['type'].lower() == "rect":
-            self.type = reg_RECT
+        if 'type' in data:
+            if data['type'].lower() == "rect":
+                self.type = reg_RECT
+            else:
+                self.type = reg_POLY
         else:
             self.type = reg_POLY
 

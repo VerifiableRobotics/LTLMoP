@@ -20,6 +20,9 @@ from wx.lib.buttons import GenBitmapButton
 from lib.regions import *
 from lib.mapRenderer import DrawableRegion
 
+import Polygon, Polygon.Utils
+Polygon.setTolerance(0.1)
+
 ####################################################################
 # TODO:
 #   - backport new pysketch bugfixes so it will work well on OS X
@@ -42,11 +45,11 @@ SNAP_RADIUS = 10
 
 # Menu item IDs:
 
-[menu_SETBG,        menu_UNDO,
+[menu_SETBG,        menu_UNDO,          menu_MAKE_BOUNDARY,
  menu_SELECT_ALL,   menu_DUPLICATE,     menu_EDIT_REGION,
  menu_DELETE,       menu_SELECT,        menu_RECT,
  menu_POLY,         menu_ADD_PT,        menu_DEL_PT,
- menu_CALIB_PT,     menu_ABOUT] = [wx.NewId() for i in range(13)]
+ menu_CALIB_PT,     menu_ABOUT] = [wx.NewId() for i in range(14)]
 
 # Timer IDs:
 
@@ -144,6 +147,8 @@ class DrawingFrame(wx.Frame):
         self.toolsMenu.Append(menu_ADD_PT,   "&Create Point\tC", kind=wx.ITEM_CHECK)
         self.toolsMenu.Append(menu_DEL_PT,   "&Delete Point\tD", kind=wx.ITEM_CHECK)
         self.toolsMenu.Append(menu_CALIB_PT, "&Toggle Calibration Points\tT", kind=wx.ITEM_CHECK)
+        self.toolsMenu.AppendSeparator()
+        self.toolsMenu.Append(menu_MAKE_BOUNDARY, "Create minimal boundary polygon")
 
         menuBar.Append(self.toolsMenu, "&Tools")
 
@@ -206,6 +211,7 @@ class DrawingFrame(wx.Frame):
         (menu_ADD_PT,    self.doChooseAddPtTool),
         (menu_DEL_PT,    self.doChooseDelPtTool),
         (menu_CALIB_PT,  self.doChooseCalibPtTool),
+        (menu_MAKE_BOUNDARY,  self.doMakeBoundary),
 
         (menu_ABOUT, self.doShowAbout)]
 
@@ -1203,6 +1209,21 @@ class DrawingFrame(wx.Frame):
         self.dirty = True
         self.needsAdjacencyRecalc = True
         self._adjustMenus()
+
+    def doMakeBoundary(self, event):
+        if self.rfi.indexOfRegionWithName("boundary") != -1:
+            wx.MessageBox("Boundary already exists.", "Error", 
+                           style = wx.OK | wx.ICON_ERROR)
+            return
+
+        bound_poly = Polygon.Polygon()
+        for r in self.rfi.regions:
+            points = [(pt.x,pt.y) for pt in r.getPoints()]
+            bound_poly += Polygon.Polygon(points)
+
+        bound_poly = Polygon.Utils.prunePoints(Polygon.Polygon([(int(pt[0]),int(pt[1])) for pt in bound_poly[0]]))
+        self.createPoly([Point(*pt) for pt in bound_poly[0]])
+        self.selection[0].name = "boundary"
 
     def doEditRegion(self, event=None):
         """ Respond to the "Edit Region" menu command.

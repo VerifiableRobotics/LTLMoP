@@ -83,8 +83,8 @@ class DrawableRegion(Region):
                     b_dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]])
 
                 b_dc.EndDrawing()
-                b.SetMaskColour(wx.WHITE)
                 b_dc.SelectObject(wx.NullBitmap)
+                b.SetMaskColour(wx.WHITE)
                 dc.DrawBitmap(b, scale*self.position.x, scale*self.position.y, useMask=True)
                 
         elif self.type == reg_RECT:
@@ -158,10 +158,9 @@ def drawMap(target, rfi, scaleToFit=True, drawLabels=True, highlightList=[], dee
             dc = wx.GCDC(pdc)
         except:
             dc = pdc
-        else:
-            target.PrepareDC(pdc)
 
-        target.PrepareDC(dc)
+        if isinstance(target, wx.ScrolledWindow):
+            target.PrepareDC(dc)
 
     dc.BeginDrawing()
 

@@ -844,6 +844,7 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
 
     NotFlag = False
     NextFlag = False
+    EdgeType = None
 
     PropList = sensorList + allRobotProp
     tempFormula = ''

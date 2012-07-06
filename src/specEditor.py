@@ -293,7 +293,6 @@ class SpecEditorFrame(wx.Frame):
 
         # Create the StyledTextControl for the specification area manually, since wxGlade doesn't support it
         self.text_ctrl_spec = wx.stc.StyledTextCtrl(self.window_1_pane_1, -1, style=wx.TE_PROCESS_ENTER|wx.TE_PROCESS_TAB|wx.TE_MULTILINE|wx.WANTS_CHARS)
-        self.text_ctrl_spec.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.window_1_pane_1.GetSizer().Insert(0, self.text_ctrl_spec, 2, wx.EXPAND, 0)
         self.window_1_pane_1.GetSizer().Layout()
 
@@ -308,7 +307,20 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDefine(MARKER_LIVE,wx.stc.STC_MARK_ARROW,"white","green")
         self.text_ctrl_spec.MarkerDefine(MARKER_PARSEERROR,wx.stc.STC_MARK_BACKGROUND,"red","red")
 
+        self.text_ctrl_spec.SetLexer(wx.stc.STC_LEX_CONTAINER)
+        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_STYLENEEDED, self.onStyleNeeded)
+        self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_DEFAULT, wx.Font(12, wx.SWISS, wx.NORMAL, wx.NORMAL, False, u'Consolas'))
+        self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_COMMENTLINE, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
+        self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_COMMENTLINE, wx.Colour(0, 200, 0))
+        self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_WORD, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
+        self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_WORD, wx.BLUE)
+        self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_STRING, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
+        self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Colour(200, 200, 0))
+
+        self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
+        
         # Listen for changes to the text
+        self.text_ctrl_spec.SetModEventMask(self.text_ctrl_spec.GetModEventMask() & ~(wx.stc.STC_MOD_CHANGESTYLE | wx.stc.STC_MOD_CHANGEMARKER))
         self.Bind(wx.stc.EVT_STC_CHANGE, self.onSpecTextChange, self.text_ctrl_spec)
 
         # Set up locative phrase map
@@ -358,6 +370,40 @@ class SpecEditorFrame(wx.Frame):
         self.SetTitle("Specification Editor - Untitled")
 
         self.dirty = False
+
+    def onStyleNeeded(self, e):
+        start = self.text_ctrl_spec.GetEndStyled()    # this is the first character that needs styling
+        end = e.GetPosition()          # this is the last character that needs styling
+
+        # Move back to the beginning of the line because apparently we aren't guaranteed to process line-wise chunks
+        while start > 1 and self.text_ctrl_spec.GetCharAt(start-1) != "\n":
+            start -= 1
+
+        # Set everything to the default style
+        self.text_ctrl_spec.StartStyling(start, 31)
+        self.text_ctrl_spec.SetStyling(end-start, wx.stc.STC_P_DEFAULT)
+
+        # Find propositions
+        text = self.text_ctrl_spec.GetTextRange(start,end)
+        for m in re.finditer("|".join(map(lambda s: "\\b%s\\b"%s, self.proj.enabled_sensors + self.proj.enabled_actuators + self.proj.all_customs + self.list_box_regions.GetItems())), text, re.MULTILINE):
+            self.text_ctrl_spec.StartStyling(start+m.start(), 31)
+            self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_WORD)
+
+        # Find groups
+        # TODO: Don't search the whole document each time...
+        all_text = self.text_ctrl_spec.GetText()
+        group_names = re.findall("^group\s+(\w*?)\s+is", all_text, re.MULTILINE | re.IGNORECASE)
+        # Allow for singular references too
+        group_names += [n[:-1] for n in group_names if n.endswith("s")]
+        for m in re.finditer("|".join(map(lambda s: "\\b%s\\b"%s, group_names)), text, re.MULTILINE):
+            self.text_ctrl_spec.StartStyling(start+m.start(), 31)
+            self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_STRING)
+
+        # Find comment lines
+        text = self.text_ctrl_spec.GetTextRange(start,end)
+        for m in re.finditer("^#.*?\n", text, re.MULTILINE):
+            self.text_ctrl_spec.StartStyling(start+m.start(), 31)
+            self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_COMMENTLINE)
 
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
@@ -472,7 +518,7 @@ class SpecEditorFrame(wx.Frame):
             # Only allow adding of enabled propositions
             return
 
-        self.text_ctrl_spec.AppendText(caller.GetStringSelection())
+        self.text_ctrl_spec.InsertText(self.text_ctrl_spec.GetCurrentPos(), caller.GetStringSelection())
 
         event.Skip()
 
@@ -486,7 +532,16 @@ class SpecEditorFrame(wx.Frame):
 
         self.dirty = True
 
+        # Force document relexing
+        self.text_ctrl_spec.Colourise(0,self.text_ctrl_spec.GetTextLength())
+
     def onSpecTextChange(self, event):
+        # If there are any error markers, clear them
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
+        self.text_ctrl_spec.MarkerDeleteAll(MARKER_PARSEERROR)
+
         self.proj.specText = self.text_ctrl_spec.GetText()
 
         self.dirty = True
@@ -548,6 +603,9 @@ class SpecEditorFrame(wx.Frame):
 
         self.mapDialog = MapDialog(frame_1, frame_1)
         frame_1.button_map.Enable(True)
+
+        # Force document relexing
+        self.text_ctrl_spec.Colourise(0,self.text_ctrl_spec.GetTextLength())
 
 
     def onMenuNew(self, event): # wxGlade: SpecEditorFrame.<event_handler>
@@ -893,7 +951,7 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = redir
         sys.stderr = redir
 
-        subprocess.Popen(["python", os.path.join("lib","execute.py"), "-a", self.proj.getFilenamePrefix() + ".aut", "-s", self.proj.getFilenamePrefix() + ".spec"])
+        subprocess.Popen(["python", "-u", os.path.join("lib","execute.py"), "-a", self.proj.getFilenamePrefix() + ".aut", "-s", self.proj.getFilenamePrefix() + ".spec"])
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1172,6 +1230,9 @@ class SpecEditorFrame(wx.Frame):
 
         event.Skip(False)
 
+        # Force document relexing
+        self.text_ctrl_spec.Colourise(0,self.text_ctrl_spec.GetTextLength())
+
     def onPropRemove(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
         Remove the selected proposition from the list.
@@ -1210,6 +1271,9 @@ class SpecEditorFrame(wx.Frame):
         self.dirty = True
 
         event.Skip(False)
+
+        # Force document relexing
+        self.text_ctrl_spec.Colourise(0,self.text_ctrl_spec.GetTextLength())
 
     def onMenuSetCompileOptions(self, event):  # wxGlade: SpecEditorFrame.<event_handler>
         self.proj.compile_options["convexify"] = self.frame_1_menubar.IsChecked(MENU_CONVEXIFY)
