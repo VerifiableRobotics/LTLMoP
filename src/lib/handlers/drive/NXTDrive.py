@@ -26,9 +26,8 @@ class driveHandler:
         #self.d = d
     def setVelocity(self, x, y, theta=0):
         """Defining the velocity to send to the NXT"""        
-        c = .29 #scaling costant / don't run into things constant
-        vx = c*x
-        vy = c*y
+        vx = x
+        vy = y
         
         self.loco.sendCommand([vx,vy])
 

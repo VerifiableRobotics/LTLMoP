@@ -30,6 +30,7 @@ class poseHandler:
         startTheta (float): The starting facing angle of the robot (default=1.5708)
         """
         
+        # definition of globals
         self.proj=proj
         
         self.x = startX
@@ -40,8 +41,7 @@ class poseHandler:
         self.wheelDiameter=wheelDiameter
         self.gearRatio=float(driveMotorTeeth/driveWheelTeeth)
         self.base=array([self.x,self.y,self.theta]) #a starting pose for the robot
-        
-        self.steerAngle=0
+        self.steerAngle=0 #start with wheels straight on car type bot
             
         print 'Current Pose: '+str(self.x)+','+str(self.y)+','+str(self.theta)
         
@@ -55,11 +55,13 @@ class poseHandler:
             while self.s.getData() is None: pass
             self.vPose = self.s.getData()
         
-        #get values from actuator that determine position
+        #know if actuation is causing movement
         self.act=proj.h_instance['actuator']
         
+        #to clarify when actuating movement is happening
         self.actuating=False
         
+        #clear log files for location writing
         f = open('log.txt','w')
         f.close()
         g = open('raw.txt','w')
@@ -74,6 +76,10 @@ class poseHandler:
         return array([x, y, o])
         
     def setPose(self, cached=False):
+        """
+        This is called once at the beginning of locomotion.  It allows for constant feedback 
+        from the tachometers on the motors
+        """
         #get motor setup from locomotion
         self.loco=self.proj.h_instance['locomotionCommand']
         self.driveMotors=self.loco.driveMotors
@@ -82,14 +88,19 @@ class poseHandler:
         self.steeringRatio=self.loco.steeringRatio
         self.dd=self.loco.differentialDrive
         self.actuating=True
+        #new thread for measuring location
         thread.start_new_thread(positionThread,(self, self.gearRatio, self.wheelDiameter, self.direction))
     
     def killPose(self, cached=False):
+        """
+        This is in case the position handling thread created in setPose above needs to be killed
+        """
         self.actuating=False
         
     def updateSteerAngle(self, curDegree, baseDegree):
         """
-        For a car type robot, this function updates the angle of the steering wheels
+        For a car type robot, this function updates the angle of the steering wheels.
+        This is mostly only called from locomotion.  
         """
         self.steerAngle+=(curDegree-baseDegree)/self.steeringRatio
         print 'Steering angle is '+str(self.steerAngle)  
@@ -108,8 +119,8 @@ def positionThread(self, gearRatio, wheelDiameter, direction):
     the main thread does not have to worry about writing to files and other 
     time consuming tasks
     """
-    while self.actuating:
-        if self.dd:
+    while self.actuating: #as long as something has not requested to kill this thread function
+        if self.dd: # differential drive
             baseLeft=getUsefulTacho(self.driveMotors[0])
             baseRight=getUsefulTacho(self.driveMotors[1])
             sleep(.5)
@@ -117,7 +128,7 @@ def positionThread(self, gearRatio, wheelDiameter, direction):
             curRight=getUsefulTacho(self.driveMotors[1])
             if curLeft+curRight-baseRight-baseLeft!=0:
                 updatePosDD(self,curLeft,baseLeft,curRight,baseRight,gearRatio,wheelDiameter,direction)
-        else:
+        else: # not differential drive
             baseDegree=getUsefulTacho(self.driveMotors[0])
             sleep(.5)
             curDegree=getUsefulTacho(self.driveMotors[0])
@@ -128,7 +139,7 @@ def updatePosition(self, curDegree, baseDegree, gearRatio, wheelDiameter, direct
     """
     This function updates the position of the robot using dead reckoning algorithms.  
     The primary tool for this analysis is the tachometer on the motors and the type
-    of robot that has been specified.
+    of robot that has been specified. This is for a car-type robot.  
     """
     #distance is the traveled path length
     #curDegree is the tachometer reading at time t(n)
@@ -169,7 +180,7 @@ def updatePosition(self, curDegree, baseDegree, gearRatio, wheelDiameter, direct
 
 def updatePosDD(self,curLeft,baseLeft,curRight,baseRight,gearRatio,wheelDiameter,direction):
     """
-    Update position for differential drive type robot using dead reckoning
+    Update position for differential drive type robot using dead reckoning.
     """
     slipConstant=2.5 # generall error summed up as slip
     smallThetaConstant=15 # small numbers get rounded and this fixes that problem
