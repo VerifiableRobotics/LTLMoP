@@ -26,13 +26,14 @@ LOW=0
 
 
 class NXTLocomotionCommandHandler:
-    def __init__(self, proj, shared_data, leftDriveMotor='PORT_B', rightDriveMotor='PORT_C', steeringMotor='none', leftForward=True, rightForward=True):
+    def __init__(self, proj, shared_data, leftDriveMotor='PORT_B', rightDriveMotor='PORT_C', steeringMotor='none', steeringGearRatio=1.0, leftForward=True, rightForward=True):
         """
-        Locomotion Command handler for Mindstorms.
+        Locomotion Command handler for NXT Mindstorms.
         
         leftDriveMotor (str): The motor that drives the left side (default='PORT_B')
         rightDriveMotor (str): The motor that drives the right side (default='PORT_C')
         steeringMotor (str): The motor that controls steering, if applicable (default='none')
+        steeringGearRatio (float): The gear ratio on the steering control (default=1.0)
         leftForward (bool): Whether forward direction is positive power for the left drive motor (default=True)
         rightForward (bool): Whether forward direction is positive power for the right drive motor (default=True)
         """
@@ -74,8 +75,9 @@ class NXTLocomotionCommandHandler:
             if(steeringMotor=='PORT_B'): self.steerMotor = Motor(self.nxt.brick, PORT_B)
             if(steeringMotor=='PORT_C'): self.steerMotor = Motor(self.nxt.brick, PORT_C)
             self.tacho = self.getUsefulTacho(self.steerMotor)
+            self.steeringRatio=steeringGearRatio # Global variable fro steering gear ratio
         
-        self.once=True        
+        self.once=True # start dead reckoning path record only once    
         
     def sendCommand(self, cmd):
         """     
@@ -122,43 +124,33 @@ class NXTLocomotionCommandHandler:
                 motor.idle()
             if(not self.differentialDrive): 
                 self.steerMotor.idle()
-                    
-        def convertToUseful(v, angle):  #currently unused
-            '''Takes turn angle and converts to degrees, globally assigns velocity, and gets angle between -180 and 180'''
-            self.angle = angle*180/pi
-            self.v = v
-            while(self.angle>180): self.angle-=360
-            while(self.angle<-180): self.angle+=360  
         
         def goToDegree(degree):
-            '''Takes a degree measurement (from the tachometer) and carefully aligns the steering motor to that degree'''
+            """
+            Takes a degree measurement (from the tachometer) and carefully aligns the steering motor to that degree
+            """
             curDegree = self.getUsefulTacho(self.steerMotor)            #currently angled at this degree
+            baseDegree=curDegree
             degreeRange = abs(curDegree-degree)                         #distance in degrees it has to run
             leftPower = -75.0                                           #full power for steering
             rightPower = 75.0
             powerRange=rightPower-MIN                                   #power range for steering, MIN is the minimum power for movement on steering
             while(curDegree>degree+RANGE or curDegree<degree-RANGE):    #checks to see if the current angle is close enough to the desired
-                #reset=True
                 while(curDegree>degree+RANGE):
                     if(abs(curDegree-degree)<30): leftPower=-MIN        #small angle change necessitates small power
                     elif(abs(curDegree-degree)>degreeRange): leftPower = -75    #large angle change necessitates max power
                     else: leftPower = -(((abs(curDegree-degree)/degreeRange)*powerRange)+MIN)   #As you get closer to the angle, decrease power to steering motor
-                    #if reset: print 'leftPower: ' + str(leftPower) + ' curDegree: ' + str(curDegree)
-                    #reset = False
                     self.steerMotor.run(leftPower)
                     lastDegree=curDegree
                     curDegree=self.getUsefulTacho(self.steerMotor)      #get new current degree
                     if(lastDegree==curDegree): break                    #implies the motor is stuck
                     if(self.v==0): break                                #check for pause...
                 self.steerMotor.idle()                                  #always idle motors before giving power incase opposite direction
-                curDegree=self.getUsefulTacho(self.steerMotor)          #recheck current degree
-                #reset = True
+                curDegree=self.getUsefulTacho(self.steerMotor)          #recheck current degre
                 while(curDegree<degree-RANGE):                          #Same as above
                     if(abs(curDegree-degree)<30): rightPower=MIN
                     elif(abs(curDegree-degree)>degreeRange): rightPower = 75
                     else: rightPower = (((abs(degree-curDegree)/degreeRange)*powerRange)+MIN)
-                    #if reset: print 'rightPower: ' + str(rightPower) + ' curDegree: ' + str(curDegree)
-                    #reset = False
                     self.steerMotor.run(rightPower)
                     lastDegree=curDegree
                     curDegree=self.getUsefulTacho(self.steerMotor)
@@ -168,12 +160,12 @@ class NXTLocomotionCommandHandler:
                 curDegree=self.getUsefulTacho(self.steerMotor)
                 if(self.v==0): break # check for pause...
             self.steerMotor.idle()
-            #print 'at degree: ' + str(self.getUsefulTacho(self.steerMotor))
+            self.pose.updateSteerAngle(curDegree,baseDegree)
     
         def difDrive():
-            '''
-            Methodology behind a differential drive.  It uses omega (angle) the turning velocity.
-            '''
+            """
+            Methodology behind a differential drive.  It uses facing direction and needed direction
+            """
             angle = self.angle*180/pi
             if angle > 0 or angle < 0:
                 print 'angle='+str(angle)+' w='+str(self.angle)
@@ -195,9 +187,9 @@ class NXTLocomotionCommandHandler:
                 go(leftPow)                         #straight
         
         def nonDifDrive():
-            '''
+            """
             Methodology behind a car type drive.  It checks current pose and uses given vx and vy to calculate whether it should be turning or not.
-            '''
+            """
             pose = self.pose.getPose() 
             angle = pose[2]*180/pi+90               #Facing Direction
             #Orient facing direction between -180 and 180
@@ -210,51 +202,49 @@ class NXTLocomotionCommandHandler:
             elif(phi+360-angle<angle-phi):          #quadrant 3 angle and quadrant 2 phi
                 #left
                 degree=-MAX_ANGLE
-                #print 'angle='+str(angle)+' phi='+str(phi)+' going to: '+str(degree)+' vx='+str(vx)+' vy='+str(vy)
                 goToDegree(degree)
             elif(angle+360-phi<phi-angle):          #quadrant 2 angle and quadrant 3 phi
                 #right
                 degree=MAX_ANGLE
-                #print 'angle='+str(angle)+' phi='+str(phi)+' going to: '+str(degree)+' vx='+str(vx)+' vy='+str(vy)
                 goToDegree(degree)
             elif(phi+RANGE<angle):                  #right turn to line up
                 #right
                 degree=MAX_ANGLE
-                #print 'angle='+str(angle)+' phi='+str(phi)+' going to: '+str(degree)+' vx='+str(vx)+' vy='+str(vy)
                 goToDegree(degree)
             elif(phi-RANGE>angle):                  #left turn to line up
                 #left
                 degree=-MAX_ANGLE
-                #print 'angle='+str(angle)+' phi='+str(phi)+' going to: '+str(degree)+' vx='+str(vx)+' vy='+str(vy)
                 goToDegree(degree)
             else:                                   #general straight direction
                 #straight
                 degree=self.tacho
-                #print 'angle='+str(angle)+' phi='+str(phi)+' going to: '+str(degree)+' vx='+str(vx)+' vy='+str(vy)
                 goToDegree(degree)
             if(self.v!=0):                          #run drive motors
                 go(leftPow*.65)
             
-        
-        #convertToUseful(cmd[0],cmd[1])
         pose = self.pose.getPose()                  #get pose from vicon
         vx=cmd[0]                                   #decompose velocity
         vy=cmd[1]
-        theta = pose[2]+(pi)                      #get facing angle (account for vicon axes)
+        if self.leftForward:
+            theta = pose[2]-(pi/2)  #get facing angle (account for vicon axes)
+        else:
+            theta = pose[2]+(pi/2) 
         self.v = cos(theta)*vx+sin(theta)*vy        #magnitude of v
         if self.once:
-            self.pose.setPose()
+            try:
+                self.pose.setPose()
+            except:
+                pass
             self.once=False
         if(self.differentialDrive):                 #handles differential drive
             theta=theta-pi                          #orient angle for reverse direction of travel
             #self.angle = (1/.6)*(-sin(theta)*vx + cos(theta)*vy)    # omega
-            self.angle = atan2(vy/.29,vx/.29) - theta
-            print 'Vx: '+str(vx/.29)+' Vy: '+str(vy/.29)+' theta: '+str(theta)
+            self.angle = atan2(vy,vx) - theta
+            print 'Vx: '+str(vx)+' Vy: '+str(vy)+' theta: '+str(theta)
             while self.angle>pi: self.angle-=2*pi
             while self.angle<-pi: self.angle+=2*pi
             difDrive()
         else:                                       #handles car type drive
-            #print 'gloabal center: ' + str(self.tacho)
             nonDifDrive()
             
     def getUsefulTacho(self, motor):

@@ -31,26 +31,26 @@ class NXTSensorHandler:
         
         touch = Touch(self.nxt.brick, eval(touchPort))
         if initial:
-            return False                                                #don't return true until actually checked sensor value
+            return False                #don't return true until actually checked sensor value
         else:
-            data = touch.get_sample()                                   #already in boolean format
-            if data: print 'Touch Sensor '+str(touchPort)+' pressed' #give some output about the sensor
+            data = touch.get_sample()   #already in boolean format
+            if data: print 'Touch Sensor '+str(touchPort)+' pressed' 
             return data
             
     def detectColor(self, colorPort='PORT_3', colorValue=3, operator='>', initial=False):
         """
-        Use the color sensor to see different colors (1-6) with 6 being dark and 1 being light
+        Use the color sensor to see different colors (1-6) with 6 being black and 1 being white
         
         colorPort (str): The port used for the color sensor (default='PORT_3')
-        colorValue (int): The desired value read by the color sensor [1-6, 6->dark] (default=3)
+        colorValue (int): The desired value read by the color sensor [1-6, 6->black] (default=3)
         operator (str): The operator to perform on the color value ['<','>','=','!='] (default='>')
         """
         
         color = Color20(self.nxt.brick, eval(colorPort))
         if initial:
-            return False                                                #don't return true until actually checked sensor value
+            return False                    #don't return true until actually checked sensor value
         else:
-            data = color.get_sample()                              #integer between 1 and 6
+            data = color.get_sample()                    #integer between 1 and 6
             output = operation(data,operator,colorValue) #use user input to determine 'true' value
             if output:
                 print 'ColorValue is '+operator+' '+str(colorValue)
@@ -67,9 +67,9 @@ class NXTSensorHandler:
         
         ultrasonic=Ultrasonic(self.nxt.brick, eval(ultrasonicPort))
         if initial:
-            return False                                                #don't return true until actually checked sensor value
+            return False                    #don't return true until actually checked sensor value
         else:
-            data = ultrasonic.get_sample()                         #integer between 0 and 255
+            data = ultrasonic.get_sample()  #integer between 0 and 255
             output = operation(data,operator,ultrasonicDistance)
             if output:
                 print 'Ultrasonic Distsance is '+operator+' '+str(ultrasonicDistance)
@@ -88,8 +88,8 @@ class NXTSensorHandler:
             return False
         else:
             motor = Motor(self.nxt.brick,eval(motorPort))
-            data = getUsefulTacho(motor)
-            output = operation(data,operator,degree)
+            data = getUsefulTacho(motor) #minus large number to positive large number
+            output = operation(data,operator,degree) #get bolean based on user input
             if output:
                 print 'Tachometer value is '+operator+' '+str(degree)
             return output

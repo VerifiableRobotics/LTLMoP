@@ -24,9 +24,9 @@ class NXTActuatorHandler:
     ### Available actuator functions: ###
     #####################################
     
-    def runMotorTime(self, actuatorVal, actuatorMotorPorts='PORT_A', actuatorForward=True, actionTime=1, actionPower=100, initial=False):
+    def runMotorTime(self, actuatorVal, actuatorMotorPorts='PORT_A', actuatorForward=True, actionTime=1.0, actionPower=100, initial=False):
         """
-        Runs a specified motor for power and time
+        Runs a specified motor for power [-128 to 127] and time in seconds
         
         actuatorMotorPorts (str): The motor ports that allow the robot to do an action (default='PORT_A')
         actuatorForward (bool): Whether positive power applies forward motion (default=True)
@@ -39,7 +39,6 @@ class NXTActuatorHandler:
             for port in ports:
                 self.action+=Motor(self.nxt.brick,eval(port)),
             if int(actuatorVal) == 1: #a correction so that it doesn't run on startup (thanks Cameron!)
-                self.pose.setPose()
                 if actuatorForward: #if the user wants one direction
                     print 'Running motor '+str(ports)+' for '+str(actionTime)+' seconds at '+str(actionPower)+' power'
                     for motor in self.action:
@@ -54,14 +53,13 @@ class NXTActuatorHandler:
                     sleep(actionTime)
                     for motor in self.action:
                         motor.idle()
-                self.pose.killPose()
     
     def runMotorDistance(self, actuatorVal, actuatorMotorPorts='PORT_B.PORT_C', distance=.1, power=100, initial=False):
         """
         Runs a motor for a specific distance of travel
         
         actuatorMotorPorts (str): The ports for the actuation motors (default='PORT_B.PORT_C')
-        distance (float): Distance the motor should run for (default=.3)
+        distance (float): Distance the motor should run for (default=.1)
         power (int): The power given to the motor (default=100)
         """
         if not initial:
@@ -72,21 +70,17 @@ class NXTActuatorHandler:
             neededDegree=distance/self.pose.wheelDiameter*180/pi/self.pose.gearRatio*2
             baseDegree=getUsefulTacho(self.motors[0])
             if int(actuatorVal)==1:
-                self.pose.setPose()
                 self.direction=self.pose.direction
                 if self.direction:
                     print 'Running motor '+str(ports)+' over '+str(distance)+' meters at '+str(power)+' power'
-                    #print 'Current Location:' +str(self.x-self.base[0]) +',' +str(self.y-self.base[1]) +',' +str(self.theta)
                     curDegree=getUsefulTacho(self.motors[0])
                     controlledRun(self,self.motors,power,curDegree,neededDegree)
                 else:
                     print 'Running motor '+str(ports)+' over '+str(distance)+' meters at '+str(power)+' power'
-                    #print 'Current Location:' +str(self.x-self.base[0]) +',' +str(self.y-self.base[1]) +','+str(self.theta)
                     curDegree=getUsefulTacho(self.motors[0])
                     controlledRun(self,self.motors,-power,curDegree,-neededDegree)
                 sleep(1)
                 curDegree=getUsefulTacho(self.motors[0])
-                self.pose.killPose()
                 
                     
     def runMotorAngle(self, actuatorVal, actuatorMotorPorts='PORT_A', actuatorForward=True, angle=30, motorGearTeeth=1, actuatorGearTeeth=1, power=70, initial=False):
@@ -119,12 +113,11 @@ class NXTActuatorHandler:
                 sleep(1)
                 curDegree=getUsefulTacho(self.angle[0])
                 self.pose.updateSteerAngle(curDegree, baseDegree)
-                self.pose.killPose()
                     
     def arcTurn(self, actuatorVal, actuatorMotorPorts='PORT_B.PORT_C', power=100, arcAngle=90, arcRadius=.5, initial=False):
         """
         For a differential drive robot, run the drive motors such that it creates an arc 
-        with radius arcRadius and through angle arcAngle
+        with radius arcRadius and through angle arcAngle.  VERY INNACURATE
         
         actuatorMotorPorts (str): The ports for the actuation motors (default='PORT_A.PORT_B')
         power (int): The desired power to apply to the faster motor (default=100)
@@ -143,8 +136,8 @@ class NXTActuatorHandler:
             curTravel = baseTravel
             degrees = (distance/self.pose.wheelDiameter*360/pi/self.pose.gearRatio)
             if int(actuatorVal)==1:
-                self.pose.setPose()
                 self.direction=self.pose.direction
+                print 'Arcing through '+str(arcAngle)+' at a radius of '+str(arcRadius)+'m'
                 if self.direction:
                     while curTravel<baseTravel+abs(degrees):
                         if arcAngle <0:
@@ -165,7 +158,6 @@ class NXTActuatorHandler:
                         curTravel = (getUsefulTacho(self.motors[0])+getUsefulTacho(self.motors[1]))/2
                 for motor in self.motors:
                     motor.idle() 
-                self.pose.killPose()
                 
     def turnOnMotor(self, actuatorVal, actuatorMotorPorts='PORT_A.PORT_B', power=100, initial=False):
         """
@@ -181,7 +173,6 @@ class NXTActuatorHandler:
             for port in ports:
                 self.on+=Motor(self.nxt.brick,eval(port)),
             if int(actuatorVal)==1:
-                self.pose.setPose()
                 self.direction=self.pose.direction
                 if self.direction:
                     print 'Turning '+str(ports)+' on with power '+str(power)
@@ -207,25 +198,35 @@ class NXTActuatorHandler:
             if int(actuatorVal)==1:
                 for motor in self.off:
                     motor.idle()
-                self.pose.killPose()
-    
-    def playTone(self, actuatorVal, frequency=350, duration=500, initial=False):
+                    
+    def playTones(self, actuatorVal, frequencies=350, durations=500, initial=False):
         """
         Plays a tone on the nxt with set frequency (Hz) and duration (ms)
         
-        frequency (int): A frequency that the nxt can play [0-20k Hz] (default=350)
-        duration (int): The time to play the frequency in ms (default=500)
+        frequencies (str): A set of frequencies that the nxt can play [0-20k Hz] (default='350.600')
+        durations (str): The time to play the frequency in ms (default='500.250')
         """
-        if not initial and int(actuatorVal) == 1: #no initialization or definitions 
-            if duration > 0 and frequency > 0:    #real values for freq and duration
-                print 'playing frequency: '+ str(frequency)
-                self.nxt.brick.play_tone(frequency, duration)
-            else:
-                if duration <= 0:
-                    print 'duration is not a reasonable number'
-                else:
-                    print 'frequency is not a reasonable number'
-                    
+        if not initial:
+            tones = ()
+            freqs = frequencies.split('.')
+            for freq in freqs:
+                tones+=eval(freq),
+            times = ()
+            durats = durations.split('.')
+            for durat in durats:
+                times+=eval(durat),
+            if int(actuatorVal) == 1:
+                for frequency, duration in zip(tones,times):
+                    if duration > 0 and frequency > 0:    #real values for freq and duration
+                        self.nxt.brick.play_tone(frequency, duration)
+                        print 'playing frequency: '+ str(frequency)
+                        sleep(float(duration/1000.)+.1)
+                    else:
+                        if duration <= 0:
+                            print 'duration is not a reasonable number'
+                        else:
+                            print 'frequency is not a reasonable number'
+                        
     def playSoundFile(self, actuatorVal, soundFile='none', initial=False): #I'm not sure if this works
         """
         Plays a sound file on the nxt once

@@ -14,7 +14,7 @@ InitHandler: # Robot default init handler with default argument values
 NXTInit(brick='NXT', brickMAC='00:16:53:14:1B:33')
 
 LocomotionCommandHandler: # Robot locomotion command actuator handler with default argument values
-NXTLocomotionCommand(leftDriveMotor='PORT_B',rightDriveMotor='PORT_C',steeringMotor='none',leftForward=True,rightForward=True)
+NXTLocomotionCommand(leftDriveMotor='PORT_B',rightDriveMotor='PORT_C',steeringMotor='none', steeringGearRatio=1.0,leftForward=True,rightForward=True)
 
 MotionControlHandler: # Robot default motion control handler with default argument values
 vectorController()
