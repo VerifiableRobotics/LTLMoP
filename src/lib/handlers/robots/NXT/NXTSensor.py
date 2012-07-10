@@ -8,6 +8,7 @@ NXTSensor.py - LEGO Mindstorms NXT Sensor Handler
 from nxt.sensor import Light, Sound, Touch, Ultrasonic, Color20
 from nxt.sensor import PORT_1, PORT_2, PORT_3, PORT_4
 from nxt.motor import Motor, PORT_A, PORT_B, PORT_C
+from math import pi
 
 class NXTSensorHandler:
     def __init__(self, proj, shared_data):
@@ -16,6 +17,7 @@ class NXTSensorHandler:
         """
         
         self.nxt = shared_data['NXT_INIT_HANDLER'] 
+        self.pose = proj.h_instance['pose']
         
             
     ###################################
@@ -92,6 +94,22 @@ class NXTSensorHandler:
             output = operation(data,operator,degree) #get bolean based on user input
             if output:
                 print 'Tachometer value is '+operator+' '+str(degree)
+            return output
+    
+    def facingDirection(self, angle=90, operator='>', initial=False):
+        """
+        Take the current theta from pose as sensor input.  Useful primarily for dead reckoning in single region operation.  
+        
+        angle (int): The angle for comparing the current theta pose to (default=90)
+        operator (str): How the angle is being compared to the pose value ['<','>','=','!='] (default='>')
+        """
+        if initial:
+            return False
+        else:
+            data = self.pose.getPose()[2]*180/pi
+            output = operation(data,operator,angle)
+            if output:
+                print 'Current facing angle is '+operator+' '+str(angle)
             return output
             
             

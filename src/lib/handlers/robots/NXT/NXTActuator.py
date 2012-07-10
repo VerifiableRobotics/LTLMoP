@@ -166,7 +166,7 @@ class NXTActuatorHandler:
         actuatorMotorPorts (str): The ports for the actuation motors (default='PORT_A.PORT_B')
         power (int): The power sent to the set of motors (default=100)
         """
-        if not inital:
+        if not initial:
             self.actuating=True
             self.on=()
             ports=actuatorMotorPorts.split('.')

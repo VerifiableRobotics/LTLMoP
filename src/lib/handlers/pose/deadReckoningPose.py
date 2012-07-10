@@ -71,7 +71,7 @@ class poseHandler:
         
         x=self.x
         y=self.y
-        o=orient(self.theta-pi/2) #fix irregular vicon pose
+        o=orient(self.theta+pi/2) #fix irregular vicon pose
 
         return array([x, y, o])
         
@@ -182,7 +182,7 @@ def updatePosDD(self,curLeft,baseLeft,curRight,baseRight,gearRatio,wheelDiameter
     """
     Update position for differential drive type robot using dead reckoning.
     """
-    slipConstant=2.5 # generall error summed up as slip
+    slipConstant=1.5 # generall error summed up as slip
     smallThetaConstant=15 # small numbers get rounded and this fixes that problem
     #curRight/curLeft are the current tachometer readings on the right/left motors in degrees
     #baseRight/baseLeft are the previous tachometer readings on the right/left motors in degrees

@@ -68,6 +68,7 @@ class NXTLocomotionCommandHandler:
                 self.right=Motor(self.nxt.brick, PORT_C)
         
         self.steerMotor=None
+        self.steeringRatio=1
         if(steeringMotor=='none'): 
             self.differentialDrive=True
         if(not self.differentialDrive):
@@ -167,12 +168,12 @@ class NXTLocomotionCommandHandler:
             Methodology behind a differential drive.  It uses facing direction and needed direction
             """
             angle = self.angle*180/pi
-            if angle > 0 or angle < 0:
-                print 'angle='+str(angle)+' w='+str(self.angle)
-            leftPow = -75                           #max powers
-            if self.leftForward: leftPow = 75
-            rightPow = -75
-            if self.rightForward: rightPow = 75
+           # if angle > 0 or angle < 0:
+                #print 'angle='+str(angle)+' w='+str(self.angle)
+            leftPow = -80                           #max powers
+            if self.leftForward: leftPow = 80
+            rightPow = -80
+            if self.rightForward: rightPow = 80
             if(self.v==0):
                 idle()                              #pause...
             elif angle>.5:                           #left turning arc
@@ -234,13 +235,13 @@ class NXTLocomotionCommandHandler:
             try:
                 self.pose.setPose()
             except:
+                print 'Not setting pose with dead reckoning'
                 pass
             self.once=False
         if(self.differentialDrive):                 #handles differential drive
-            theta=theta-pi                          #orient angle for reverse direction of travel
-            #self.angle = (1/.6)*(-sin(theta)*vx + cos(theta)*vy)    # omega
+            #theta=theta-pi                          #orient angle for reverse direction of travel
             self.angle = atan2(vy,vx) - theta
-            print 'Vx: '+str(vx)+' Vy: '+str(vy)+' theta: '+str(theta)
+            #print 'Vx: '+str(vx)+' Vy: '+str(vy)+' theta: '+str(theta)
             while self.angle>pi: self.angle-=2*pi
             while self.angle<-pi: self.angle+=2*pi
             difDrive()
