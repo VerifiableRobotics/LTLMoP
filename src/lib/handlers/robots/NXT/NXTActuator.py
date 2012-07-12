@@ -19,6 +19,9 @@ class NXTActuatorHandler:
         """
         self.nxt = shared_data['NXT_INIT_HANDLER']
         self.pose = proj.h_instance['pose'] # pose data is useful for dead reckoning
+        self.loco = proj.h_instance['locomotionCommand']
+        
+        self.actuatorMotorOn=False
         
     #####################################
     ### Available actuator functions: ###
@@ -173,7 +176,8 @@ class NXTActuatorHandler:
             for port in ports:
                 self.on+=Motor(self.nxt.brick,eval(port)),
             if int(actuatorVal)==1:
-                self.direction=self.pose.direction
+                self.direction=self.loco.leftForward
+                self.actuatorMotorOn=True
                 if self.direction:
                     print 'Turning '+str(ports)+' on with power '+str(power)
                     for motor in self.on:
@@ -193,6 +197,7 @@ class NXTActuatorHandler:
             self.actuating=True
             self.off=()
             ports = actuatorMotorPorts.split('.')
+            self.actuatorMotorOn=False
             for port in ports:
                 self.off+=Motor(self.nxt.brick,eval(port)),
             if int(actuatorVal)==1:
