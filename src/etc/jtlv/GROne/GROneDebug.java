@@ -145,7 +145,7 @@ public class GROneDebug {
 		  }
 		  
 		  if (explainEnv ==0 && !envUnreal.equals(Env.FALSE())) {		 
-			  	debugInfo += "Environment is unrealizable because the environment can force a safety violation."+ "\n"; //TRUE if unsat
+			  	debugInfo += "Environment is unrealizable because the system can force a safety violation."+ "\n"; //TRUE if unsat
 		  		explainEnv = 1;
 		  }
 		  
