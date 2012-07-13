@@ -563,7 +563,6 @@ public class GROneGame {
 
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
 		while (ini_iterator.hasNext()) {
-
             BDD this_ini = (BDD) ini_iterator.next();
 
             RawState test_st = new RawState(aut.size(), this_ini, 0);
@@ -589,7 +588,7 @@ public class GROneGame {
 
             // iterating over the stacks.
             while (!st_stack.isEmpty()) {
-                // making a new entry.
+    			// making a new entry.
                 BDD p_st = st_stack.pop();
                 int p_j = j_stack.pop().intValue();
 
@@ -636,10 +635,12 @@ public class GROneGame {
                 } else {
                 	all_succs = Env.TRUE();
                 }
-                if (all_succs.isZero()) {
+/*              if (all_succs.isZero()) {
 					//System.out.println("No successor was found"+p_st);
 					return true;
+					// This is just wrong, and was causing the empty automaton problem seen by Bingxin					
 				}
+*/
                 for (BDDIterator all_states = all_succs.iterator(env
                         .moduleUnprimeVars()); all_states.hasNext();) {
                     BDD sin = (BDD) all_states.next();
@@ -766,11 +767,12 @@ public class GROneGame {
 	                    new_state.add_succ(aut.elementAt(idx));
 	                    if (det) break; //if we only need one successor, stop here
                     }
-                    result = result & (candidate.equals(sys.trans().and(env.trans())));
-					
+                    //when detecting environment unsatisfiability, all system actions should be valid from primed_cur_succ
+                    //result = result & (candidate.equals(sys.trans().and(env.trans())));
+                    result = result & (candidate.equals(primed_cur_succ));
                 }
             }
-        }
+		}
 
         /* Remove stuttering */
         // TODO: Make this more efficient (and less ugly) if possible
@@ -809,6 +811,8 @@ public class GROneGame {
 
         /* Print output */
 
+		
+		
 		if (det) {
 			String res = "";
 		
@@ -1160,9 +1164,14 @@ public class GROneGame {
 
 				assert (!(input.isZero() && det)) : p_st+"No successor was found";
 				addState(new_state, input, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
+				
+				
+                //when detecting system unsatisfiability, all env actions in primed_cur_succ_all (which is actualy Env.TRUE() in the nondet case) should be valid
+				//result = result & (input.equals(p_st.and(env.trans())));
+				result = result & (input.equals(primed_cur_succ_all ));
 				//result is true if for every state, all environment actions take us into a lower iterate of Z
 				//this means the environment can do anything to prevent the system from achieving some goal.
-				result = result & (input.equals(p_st.and(env.trans())));				
+				
 			}
 		}
         
