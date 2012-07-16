@@ -162,7 +162,10 @@ class NXTLocomotionCommandHandler:
                 curDegree=self.getUsefulTacho(self.steerMotor)
                 if(self.v==0): break # check for pause...
             self.steerMotor.idle()
-            self.pose.updateSteerAngle(curDegree,baseDegree)
+            try:
+                self.pose.updateSteerAngle(curDegree,baseDegree)
+            except:
+                pass
     
         def difDrive():
             """
