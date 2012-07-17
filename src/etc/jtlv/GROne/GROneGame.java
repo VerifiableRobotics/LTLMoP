@@ -225,6 +225,15 @@ public class GROneGame {
 		BDD exy2 = (sys.trans().and(slowSame.and(exy3))).exist(sys_slow_prime);
 		return env.trans().imp((exy1.and(exy2)).exist(sys_fast_prime)).forAll(env_prime);
 	}*/
+	
+	public BDD controlStates(Module this1, Module responder, BDD to) {
+		BDDVarSet responder_prime = responder.modulePrimeVars();
+		BDDVarSet this_prime = this1.modulePrimeVars();
+		BDD exy = responder.trans().imp(Env.prime(to)).forAll(responder_prime);
+		return this1.trans().and(exy).exist(this_prime);
+	}
+
+
 
 	
 
@@ -940,6 +949,7 @@ public class GROneGame {
 	 *            
 	 */
 	public boolean calculate_counterstrategy(BDD ini, boolean enable_234, boolean det) {
+		
 		Stack<BDD> st_stack = new Stack<BDD>();
 		Stack<Integer> i_stack = new Stack<Integer>();
 		Stack<Integer> j_stack = new Stack<Integer>();	
@@ -953,8 +963,8 @@ public class GROneGame {
         while (ini_iterator.hasNext()) {       
 	        int a = 0;
 	        BDD this_ini = (BDD) ini_iterator.next();
-	       	            
-	        int idx = -1;
+
+			int idx = -1;
 	        st_stack.push(this_ini);
 	        i_stack.push(new Integer(0)); // TODO: is there a better default i?
 	        j_stack.push(new Integer(-1)); // TODO: is there a better default j?
@@ -1034,15 +1044,15 @@ public class GROneGame {
 				for (BDDIterator envIter = primed_cur_succ_all.iterator(env.modulePrimeVars()); envIter.hasNext();) {
 					oldInput = input;
 					BDD primed_cur_succ = ((BDD) envIter.next());
+		    	
 					
-									
 					
 					//\rho_1 transitions in K\"onighofer et al
 					if (p_az == 0) {
 					//special caze when we are in Z_0. Either we force a safety violation, or we go to the relevant y2_mem[a][j], 
 					//and continue to violate the system liveness j						
 						//FIRST, WE CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
-						input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
+						input = input.or(p_st.and(primed_cur_succ.and(controlStates(env,sys,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
 						//input = input.or(p_st.and((sys.yieldStates(env,Env.FALSE()))));//CONSIDERS ALL ENV. MOVES
 						
 //						//OTHERWISE (subsumed by \rho_4):
@@ -1058,13 +1068,15 @@ public class GROneGame {
 //								input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1]).and(sys.justiceAt(p_j).not())))))));		
 //							
 //						}
-						
+
 						
 					} else {	
 						
-						input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az-1])))) )));
+						input = input.or(p_st.and((primed_cur_succ.and((controlStates(env,sys,(z2_mem[p_az-1])))) )));
 						//System.out.println(p_st.and((primed_cur_succ.and((sys.yieldStates(env,sys.justiceAt(p_j).not().or(z2_mem[p_az-1])))))));	
+
 					}
+					
 					if (!input.equals(oldInput)) {	
 						//System.out.println("RHO 1");
 						//if (p_az!=0) {							
@@ -1096,8 +1108,8 @@ public class GROneGame {
 					//\rho_2 transitions		                
 					if (rank_j == -1) {
 						//same thing as above -- Z_0 is special
-						if (p_az == 0) input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,Env.FALSE())).not()));
-						else input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,z2_mem[p_az-1])).not()));
+						if (p_az == 0) input = input.or(p_st.and(primed_cur_succ.and(controlStates(env,sys,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((controlStates(env,sys,Env.FALSE())).not()));
+						else input = input.or(p_st.and(primed_cur_succ.and(controlStates(env,sys,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((controlStates(env,sys,z2_mem[p_az-1])).not()));
 						//if (p_az == 0) input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))));
 						//else input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))));
 						if (!input.equals(oldInput)) {
@@ -1111,11 +1123,11 @@ public class GROneGame {
 					//\rho_3 transitions						
 					if (rank_j != -1 && rank_i != -1 && !(p_st.and(env.justiceAt(rank_i))).isZero()) {
 						if (p_az == 0) 
-							input = input.or((p_st.and(env.justiceAt(rank_i)).and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az]))))))
-									.and((sys.yieldStates(env,(Env.FALSE()))).not())));		        				
+							input = input.or((p_st.and(env.justiceAt(rank_i)).and(primed_cur_succ.and(controlStates(env,sys,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az]))))))
+									.and((controlStates(env,sys,(Env.FALSE()))).not())));		        				
 						else 
-							input = input.or((p_st.and(env.justiceAt(rank_i)).and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))))
-									.and((sys.yieldStates(env,z2_mem[p_az-1])).not())));
+							input = input.or((p_st.and(env.justiceAt(rank_i)).and(primed_cur_succ.and((controlStates(env,sys,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))))
+									.and((controlStates(env,sys,z2_mem[p_az-1])).not())));
 					}
 					if (!input.equals(oldInput) && det) {	
 						//System.out.println("RHO 3");	
@@ -1128,24 +1140,24 @@ public class GROneGame {
 					if (rank_i != -1 && rank_j != -1) {
 						if (p_az == 0) {
 							if (p_c == 0) {
-								input = input.or(((p_st.and((primed_cur_succ.and((sys.yieldStates(env,sys.justiceAt(rank_j).not().and(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[rank_j][rank_i][p_az][p_c]))))))))
+								input = input.or(((p_st.and((primed_cur_succ.and((controlStates(env,sys,sys.justiceAt(p_j).not().and(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c]))))))))
 												//this next clause is probably superfluous because of \rho_1
-												.and((sys.yieldStates(env,Env.FALSE())).not())));
+												.and((controlStates(env,sys,Env.FALSE())).not())));
 													
 							} else {
-								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,sys.justiceAt(rank_j).not().and(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c-1])))))))
-												.and((sys.yieldStates(env,Env.FALSE())).not())));
+								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,sys.justiceAt(p_j).not().and(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
+												.and((controlStates(env,sys,Env.FALSE())).not())));
 							}
 						} else {
 							if (p_c == 0) {
-								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,sys.justiceAt(rank_j).not().and(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[rank_j][rank_i][p_az][p_c])))))))
-												.and((sys.yieldStates(env,z2_mem[p_az-1])).not())));
+								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,sys.justiceAt(p_j).not().and(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c])))))))
+												.and((controlStates(env,sys,z2_mem[p_az-1])).not())));
 								
 																				
 							
 							} else {
-								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,sys.justiceAt(rank_j).not().and(Env.unprime(primed_cur_succ).and(x2_mem[rank_j][rank_i][p_az][p_c-1])))))))
-												.and((sys.yieldStates(env,z2_mem[p_az-1])).not())));
+								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,sys.justiceAt(p_j).not().and(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
+												.and((controlStates(env,sys,z2_mem[p_az-1])).not())));
 													
 							}
 						}	
@@ -1153,7 +1165,7 @@ public class GROneGame {
 						if (!input.equals(oldInput)) {
 							//System.out.println("RHO 4");
 							new_i = rank_i;
-							new_j = rank_j;
+							new_j = p_j;
 							if (det) break;	
 						}
 					}
@@ -1161,7 +1173,6 @@ public class GROneGame {
 				}
 				
 									
-
 				assert (!(input.isZero() && det)) : p_st+"No successor was found";
 				addState(new_state, input, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
 				
@@ -1202,11 +1213,20 @@ public class GROneGame {
  	private void addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
     	   for (BDDIterator inputIter = input.iterator(env
                     .modulePrimeVars()); inputIter.hasNext();) {
-							
+						
     		   BDD inputOne = (BDD) inputIter.next();
+    		   while (det && inputOne.and(env.trans()).isZero() && inputIter.hasNext()) {
+    			   inputOne = (BDD) inputIter.next();
+    	   		}
+    		   if (inputOne.and(env.trans()).isZero()) {
+    			   break;
+    		   }
+    	
+    		   
     		    // computing the set of system possible successors.
-                Vector<BDD> sys_succs = new Vector<BDD>();               
+                Vector<BDD> sys_succs = new Vector<BDD>();      
                 BDD all_sys_succs = sys.succ(new_state.get_state().and(inputOne));
+
                 int idx = -1;
                
                 if (all_sys_succs.equals(Env.FALSE())) {
@@ -1218,6 +1238,7 @@ public class GROneGame {
                         idx = aut.indexOf(gsucc);
                     }
                     new_state.add_succ(aut.elementAt(idx));
+                    
                 	continue;                	
                 }               	
                 
@@ -1238,7 +1259,7 @@ public class GROneGame {
 					
 					//Make sure this is a safe successor state
 					if (!sys_succ.and(sys.trans()).isZero()) {
-						//System.out.println("Adding system successor = " + sys_succ);
+						//System.out.println("Adding system successor = " + sys_succ + " of " + new_state.get_state());
 					   
 						RawCState gsucc = new RawCState(aut.size(), sys_succ, new_j, new_i, inputOne);
 						idx = aut.indexOf(gsucc); // the equals doesn't consider
