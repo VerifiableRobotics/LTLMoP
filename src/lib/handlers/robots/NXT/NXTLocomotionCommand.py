@@ -171,6 +171,7 @@ class NXTLocomotionCommandHandler:
             """
             Methodology behind a differential drive.  It uses facing direction and needed direction
             """
+            stopped=False
             angle = self.angle*180/pi
            # if angle > 0 or angle < 0:
                 #print 'angle='+str(angle)+' w='+str(self.angle)
@@ -181,28 +182,32 @@ class NXTLocomotionCommandHandler:
             try:
                 if(self.v==0 and not self.actuator.actuatorMotorOn):
                     idle()                              #pause...
+                    stopped=True
             except:
-                pass
-            else:
                 if(self.v==0):
                     idle()
-                elif angle>.5:                           #left turning arc
-                    if(leftPow>0): arcPower=((leftPow-LOW)*(90-abs(angle))/90)+LOW # scaled power based on required omega
-                    else: arcPower=((leftPow+LOW)*(90-abs(angle))/90)-LOW
-                    left(leftPow,arcPower)
-                elif angle<-.5:                           #right tuning arc
-                    if(rightPow>0): arcPower=((rightPow-LOW)*(90-abs(angle))/90)+LOW
-                    else: arcPower=((rightPow+LOW)*(90-abs(angle))/90)-LOW
-                    right(rightPow,arcPower)                
-                else:
-                    go(leftPow)                         #straight
-            
+                    stopped=True
+            if stopped:
+                pass
+            elif angle>.5:                           #left turning arc
+                if(leftPow>0): arcPower=((leftPow-LOW)*(90-abs(angle))/90)+LOW # scaled power based on required omega
+                else: arcPower=((leftPow+LOW)*(90-abs(angle))/90)-LOW
+                left(leftPow,arcPower)
+            elif angle<-.5:                           #right tuning arc
+                if(rightPow>0): arcPower=((rightPow-LOW)*(90-abs(angle))/90)+LOW
+                else: arcPower=((rightPow+LOW)*(90-abs(angle))/90)-LOW
+                right(rightPow,arcPower)                
+            else:
+                go(leftPow)                         #straight
+            stopped=False
+        
         def nonDifDrive():
             """
             Methodology behind a car type drive.  It checks current pose and uses given vx and vy to calculate whether it should be turning or not.
             """
             pose = self.pose.getPose() 
             angle = pose[2]*180/pi+90               #Facing Direction
+            stopped=False
             #Orient facing direction between -180 and 180
             while(angle>180): angle-=360 
             while(angle<-180): angle+=360
@@ -210,34 +215,37 @@ class NXTLocomotionCommandHandler:
             try:
                 if(self.v==0 and not self.actuator.actuatorMotorOn):  #pause command sent
                     idle()
+                    stopped=True
             except:
-                pass
-            else:
                 if(self.v==0):
                     idle()
-                elif(phi+360-angle<angle-phi):          #quadrant 3 angle and quadrant 2 phi
-                    #left
-                    degree=-MAX_ANGLE
-                    goToDegree(degree)
-                elif(angle+360-phi<phi-angle):          #quadrant 2 angle and quadrant 3 phi
-                    #right
-                    degree=MAX_ANGLE
-                    goToDegree(degree)
-                elif(phi+RANGE<angle):                  #right turn to line up
-                    #right
-                    degree=MAX_ANGLE
-                    goToDegree(degree)
-                elif(phi-RANGE>angle):                  #left turn to line up
-                    #left
-                    degree=-MAX_ANGLE
-                    goToDegree(degree)
-                else:                                   #general straight direction
-                    #straight
-                    degree=self.tacho
-                    goToDegree(degree)
-                if(self.v!=0):                          #run drive motors
-                    go(leftPow*.65)
-            
+                    stopped=True
+            if stopped:
+                pass
+            elif(phi+360-angle<angle-phi):          #quadrant 3 angle and quadrant 2 phi
+                #left
+                degree=-MAX_ANGLE
+                goToDegree(degree)
+            elif(angle+360-phi<phi-angle):          #quadrant 2 angle and quadrant 3 phi
+                #right
+                degree=MAX_ANGLE
+                goToDegree(degree)
+            elif(phi+RANGE<angle):                  #right turn to line up
+                #right
+                degree=MAX_ANGLE
+                goToDegree(degree)
+            elif(phi-RANGE>angle):                  #left turn to line up
+                #left
+                degree=-MAX_ANGLE
+                goToDegree(degree)
+            else:                                   #general straight direction
+                #straight
+                degree=self.tacho
+                goToDegree(degree)
+            if(self.v!=0):                          #run drive motors
+                go(leftPow*.65)
+        
+        stopped=False
         pose = self.pose.getPose()                  #get pose from vicon
         vx=cmd[0]                                   #decompose velocity
         vy=cmd[1]
