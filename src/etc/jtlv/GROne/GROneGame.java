@@ -1140,23 +1140,23 @@ public class GROneGame {
 					if (rank_i != -1 && rank_j != -1) {
 						if (p_az == 0) {
 							if (p_c == 0) {
-								input = input.or(((p_st.and((primed_cur_succ.and((controlStates(env,sys,sys.justiceAt(p_j).not().and(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c]))))))))
+								input = input.or(((p_st.and((primed_cur_succ.and((controlStates(env,sys,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c]))))))))
 												//this next clause is probably superfluous because of \rho_1
 												.and((controlStates(env,sys,Env.FALSE())).not())));
 													
 							} else {
-								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,sys.justiceAt(p_j).not().and(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
+								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
 												.and((controlStates(env,sys,Env.FALSE())).not())));
 							}
 						} else {
 							if (p_c == 0) {
-								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,sys.justiceAt(p_j).not().and(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c])))))))
+								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c])))))))
 												.and((controlStates(env,sys,z2_mem[p_az-1])).not())));
 								
 																				
 							
 							} else {
-								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,sys.justiceAt(p_j).not().and(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
+								input = input.or(((p_st.and(primed_cur_succ.and((controlStates(env,sys,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
 												.and((controlStates(env,sys,z2_mem[p_az-1])).not())));
 													
 							}
@@ -1173,7 +1173,7 @@ public class GROneGame {
 				}
 				
 									
-				assert (!(input.isZero() && det)) : p_st+"No successor was found";
+				assert (!(input.isZero() && det)) : p_st + "No successor was found";
 				addState(new_state, input, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
 				
 				
@@ -1259,12 +1259,13 @@ public class GROneGame {
 					
 					//Make sure this is a safe successor state
 					if (!sys_succ.and(sys.trans()).isZero()) {
-						//System.out.println("Adding system successor = " + sys_succ + " of " + new_state.get_state());
-					   
+						
 						RawCState gsucc = new RawCState(aut.size(), sys_succ, new_j, new_i, inputOne);
 						idx = aut.indexOf(gsucc); // the equals doesn't consider
 												  // the id number.
 						if (idx == -1) {
+							//System.out.println("Adding system successor = " + sys_succ + " of " + new_state.get_state());
+							   
 							st_stack.push(sys_succ);
 							i_stack.push(new_i);
 							j_stack.push(new_j);
