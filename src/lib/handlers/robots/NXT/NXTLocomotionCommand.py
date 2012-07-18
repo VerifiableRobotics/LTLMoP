@@ -17,10 +17,10 @@ FORTH = 100
 BACK = -100
 
 RANGE = 5
-MIN = 60
+MIN = 65
 
 STRAIGHT_W=3
-MAX_ANGLE = 105
+MAX_ANGLE = 35
 
 LOW=0
 
@@ -224,19 +224,19 @@ class NXTLocomotionCommandHandler:
                 pass
             elif(phi+360-angle<angle-phi):          #quadrant 3 angle and quadrant 2 phi
                 #left
-                degree=-MAX_ANGLE
+                degree=-MAX_ANGLE*self.steeringRatio
                 goToDegree(degree)
             elif(angle+360-phi<phi-angle):          #quadrant 2 angle and quadrant 3 phi
                 #right
-                degree=MAX_ANGLE
+                degree=MAX_ANGLE*self.steeringRatio
                 goToDegree(degree)
             elif(phi+RANGE<angle):                  #right turn to line up
                 #right
-                degree=MAX_ANGLE
+                degree=MAX_ANGLE*self.steeringRatio
                 goToDegree(degree)
             elif(phi-RANGE>angle):                  #left turn to line up
                 #left
-                degree=-MAX_ANGLE
+                degree=-MAX_ANGLE*self.steeringRatio
                 goToDegree(degree)
             else:                                   #general straight direction
                 #straight
