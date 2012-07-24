@@ -4,6 +4,7 @@ import roslib; roslib.load_manifest('gazebo')
 import rospy, math
 from gazebo.srv import *
 from numpy import *
+from std_msgs.msg import String
 from tf.transformations import euler_from_quaternion
 
 
@@ -38,10 +39,11 @@ class poseHandler:
 		self.or_y = resp.pose.orientation.y
 		self.or_z = resp.pose.orientation.z
 		self.or_w = resp.pose.orientation.w
-		#  Use the tf module transforming quaternions to euler
-		angles = euler_from_quaternion([self.or_x, self.or_y, self.or_z, self.or_w])
-		self.theta = angles[2]	
-		self.last_pose = array([self.pos_x, self.pos_y, self.theta])
+		if not math.isnan(self.or_x) or not math.isnan(self.or_y) or not math.isnan(self.or_z) or not math.isnan(self.or_w):
+			#  Use the tf module transforming quaternions to euler
+			angles = euler_from_quaternion([self.or_x, self.or_y, self.or_z, self.or_w])
+			self.theta = angles[2]	
+			self.last_pose = array([self.pos_x, self.pos_y, self.theta])
 	return self.last_pose
 
 

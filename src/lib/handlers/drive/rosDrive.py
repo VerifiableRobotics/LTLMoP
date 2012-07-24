@@ -15,7 +15,7 @@ from geometry_msgs.msg import Twist
 class driveHandler:
     def __init__(self, proj, shared_data):
         try:
-            self.loco = proj.loco_handler
+            self.loco = proj.h_instance['locomotionCommand']
             self.coordmap = proj.coordmap_lab2map
         except NameError:
             print "(DRIVE) Locomotion Command Handler not found."

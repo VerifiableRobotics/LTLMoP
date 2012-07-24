@@ -23,7 +23,7 @@ class initHandler:
 
 	texture_dir =  '/opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials/textures'
 	ltlmop_path = proj.getFilenamePrefix()
-	regionsFile = ltlmop_path + "_decomposed.regions"
+	regionsFile = proj.rfiold.filename#ltlmop_path + ".regions"
 	svgFile = self.region2svg(regionsFile)
 	svg = rsvg.Handle(file=svgFile)
 	
@@ -60,7 +60,8 @@ class initHandler:
 	        if input == '': # EOF
 	                print "(INIT) WARNING:  Gazebo seems to have died!"
 	                break
-		if "spawning success True" in input:	
+		#if "spawning success True" in input:	
+		if ("Successfully spawned" or "successfully spawned") in input:
 	                time.sleep(1)
 	                break
   	
@@ -93,7 +94,7 @@ class initHandler:
     def getSharedData(self):
         # TODO: Return a dictionary of any objects that will need to be shared with
         # other handlers
-        return {}
+        return {'ROS_INIT_HANDLER': self}
 
     def region2svg(self, regionFile):
 	fout=re.sub(r"\.region$", ".svg", regionFile)
