@@ -23,7 +23,8 @@ class initHandler:
 
 	texture_dir =  '/opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials/textures'
 	ltlmop_path = proj.getFilenamePrefix()
-	regionsFile = proj.rfiold.filename#ltlmop_path + ".regions"
+	shutil.copy(proj.rfi.filename,ltlmop_path+"_copy.regions")
+	regionsFile = ltlmop_path+"_copy.regions"
 	svgFile = self.region2svg(regionsFile)
 	svg = rsvg.Handle(file=svgFile)
 	
@@ -61,14 +62,15 @@ class initHandler:
 	                print "(INIT) WARNING:  Gazebo seems to have died!"
 	                break
 		#if "spawning success True" in input:	
-		if ("Successfully spawned" or "successfully spawned") in input:
-	                time.sleep(1)
+		#if ("Successfully spawned" or "successfully spawned") in input:
+		if "Successfully spawned" in input:
+	                time.sleep(5)
 	                break
   	
 	if not calib :
 		# Start in the center of the defined initial region
 		#initial_region = proj.rfiold.regions[int(proj.exp_cfg_data['InitialRegion'][0])]
-		initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(init_region)]
+		initial_region = proj.rfiold.regions[proj.rfiold.indexOfRegionWithName(init_region)]
 		center = initial_region.getCenter()
 
 		# Load the map calibration data and the region file data to feed to the simulator

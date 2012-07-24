@@ -24,26 +24,34 @@ class poseHandler:
         
     def getPose(self,cached = False):
     	
-	if not cached or self.last_pose is None:
-		#  Ros service call to get model state
-		#  This returns a GetModelStateResponse, which contains data on pose and twist
-		rospy.wait_for_service('/gazebo/get_model_state')
-	    	try:
-			gms = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
-			resp = gms(self.model_name,self.relative_entity_name)
-	   	except rospy.ServiceException, e:
-	       		print "Service call failed: %s"%e
-		self.pos_x = resp.pose.position.x
-		self.pos_y = resp.pose.position.y
-		self.or_x = resp.pose.orientation.x
-		self.or_y = resp.pose.orientation.y
-		self.or_z = resp.pose.orientation.z
-		self.or_w = resp.pose.orientation.w
-		if not math.isnan(self.or_x) or not math.isnan(self.or_y) or not math.isnan(self.or_z) or not math.isnan(self.or_w):
-			#  Use the tf module transforming quaternions to euler
-			angles = euler_from_quaternion([self.or_x, self.or_y, self.or_z, self.or_w])
-			self.theta = angles[2]	
-			self.last_pose = array([self.pos_x, self.pos_y, self.theta])
+	if (not cached) or self.last_pose is None:
+	    #  Ros service call to get model state
+	    #  This returns a GetModelStateResponse, which contains data on pose and twist
+	    rospy.wait_for_service('/gazebo/get_model_state')
+	    try:
+	    	gms = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+		resp = gms(self.model_name,self.relative_entity_name)
+	    except rospy.ServiceException, e:
+	    	print "Service call failed: %s"%e
+	    self.pos_x = resp.pose.position.x
+	    self.pos_y = resp.pose.position.y
+	    self.or_x = resp.pose.orientation.x
+	    self.or_y = resp.pose.orientation.y
+	    self.or_z = resp.pose.orientation.z
+	    self.or_w = resp.pose.orientation.w
+	    #  Use the tf module transforming quaternions to euler
+	    try:
+	        angles = euler_from_quaternion(quat([self.or_x, self.or_y, self.or_z, self.or_w]))
+		f = open('angles.log')
+		f.write(angles,'\n')
+		f.close()
+	        self.theta = angles[2]	
+	        self.last_pose = array([self.pos_x, self.pos_y, self.theta])
+	    except:
+	        print 'Pose Broke'
+	if self.last_pose is None:
+	    self.last_pose=array([0,0,0])
+	print 'Pose: ',self.last_pose
 	return self.last_pose
 
 
