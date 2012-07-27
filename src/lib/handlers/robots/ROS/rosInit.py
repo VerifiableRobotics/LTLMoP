@@ -11,8 +11,11 @@ import re, Polygon, Polygon.IO
 import lib.regions as regions
 #import execute
 from numpy import *
-from gazebo.srv import *
+#from gazebo.srv import *
+from gazebo_msgs.srv import *
+from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Twist
 
 class initHandler:
 	def __init__(self, proj, init_region, calib=False):
@@ -75,24 +78,30 @@ class initHandler:
 			map2lab = list(coordmap_map2lab(array(center)))
 
 			print "Initial region name: ", initial_region.name, " I think I am here: ", map2lab, " and center is: ", center
-			#print proj.exp_cfg_data['Calibration'][0]
+			#print proj.exp_cfg_data['Calibration'][0]		
 
-			model_state = gazebo.msg.ModelState()
+			rospy.wait_for_service('/gazebo/get_model_state')
+			cms = ModelState()
+			try:
+				gms = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+				cms = gms('pr2','plane1_model')
+			except rospy.ServiceException, e:
+				print 'Service Call Failed: %s'%e
+
+			model_state = ModelState()
 			model_state.model_name = 'pr2'
+			model_state.pose = cms.pose
+			#Teleporting the robot is very dangerous!  The following works only if the 'contact_max_correction_vel' in the world file is set VERY low (~.1).
+			#For further safety, the robot is teleported to slightly above the plane of reference (z+=.2), so that it never 'intersects' with the floor.  This means it will look like it 'falls' into place.  
 			model_state.pose.position.x = map2lab[0]
 			model_state.pose.position.y = map2lab[1]		
+			model_state.pose.position.z +=.2
 
-			#rospy.wait_for_service('/gazebo/set_model_state')
+			rospy.wait_for_service('/gazebo/set_model_state')
 			try:
-				#sms = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
-				#print 'Model State: ' + str(model_state)
-				#sms(model_state)	
-				pose=Pose()
-				sms = rospy.Publisher('/base_controller/command', Pose) 
-				rospy.init_node('poseInit')
-				pose.position.x=map2lab[0]
-				pose.position.y=map2lab[1]
-				sms.publish(pose)
+				sms = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+				print 'Model State: ' + str(model_state)
+				sms(model_state)	
 			except rospy.ServiceException, e:
 				print "Service call failed: %s"%e
 

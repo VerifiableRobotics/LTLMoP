@@ -27,45 +27,28 @@ class driveHandler:
 		self.turning = False
 		# Feedback linearization code:
 		d = 0.3 # Distance from front axle to point we are abstracting to [m]
-		vx= 0.09*x
-		vy= 0.09*y
+		vx= x
+		vy= y
 		w = (1/d)*(-math.sin(theta)*vx + math.cos(theta)*vy)
 		v = math.cos(theta)*vx + math.sin(theta)*vy
-        
-		twist.linear.x = 0 
-		twist.linear.y = 0 
-		twist.linear.z = 0
-		twist.angular.x = 0
-		twist.angular.y = 0
-		twist.angular.z = 0
-		try:
-			if w!=0:	
-				if  (not self.turning and abs(w) > math.pi/w):
-					self.turning = True
-					#print "not turning"
-					if (self.turning):
-						twist.angular.z = cmp (v,0)
-						#twist.angular.z = -5 * cmp(v,0) 
-						#print "turning"  
-				else:
-					twist.linear.x = v 
-					twist.linear.y = w 
-			else:	
-				if not self.turning:
-					self.turning = True
-					#print "not turning"
-					if (self.turning):
-						twist.angular.z = cmp (v,0)
-						#twist.angular.z = -5 * cmp(v,0) 
-						#print "turning"  
-				else:
-					twist.linear.x = v 
-					twist.linear.y = w 
+
+		twist.linear.x=v
+		twist.angular.z=w
+		#the following is not my code and is bad, but is here for backup
+		'''try:
+			#if  (not self.turning and abs(w) > math.pi/w):
+			if  abs(w) > math.pi/w:
+				#self.turning = True
+				#print "not turning"
+				#if (self.turning):
+				twist.angular.z = -5 * cmp(v,0) 
+				#print "turning"  
+			else:
+				twist.linear.x = v 
+				twist.linear.y = w 
 		except: 
 			twist.linear.x = v
-			twist.linear.y = w
-
-		print 'Twist: ',twist
+			twist.linear.y = w'''
 		try:
 			self.loco.sendCommand(twist)
 		except:

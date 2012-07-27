@@ -51,7 +51,6 @@ class poseHandler:
 				self.last_pose = array([self.pos_x, self.pos_y, self.theta])
 			except Exception:
 				print 'Pose Broke', Exception
-		if self.last_pose is None:
-			self.last_pose=array([0,0,0])
-		print 'Pose: ',self.last_pose
+		#if self.last_pose is None:
+		#	self.last_pose=array([0,0,0])
 		return self.last_pose
