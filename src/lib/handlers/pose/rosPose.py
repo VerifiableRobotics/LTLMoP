@@ -28,6 +28,8 @@ class poseHandler:
 		self.or_z = 0
 		self.or_w = 0
 
+		self.shared_data=shared_data['ROS_INIT_HANDLER']
+
 	def getPose(self,cached = False):
 		if (not cached) or self.last_pose is None:
 			#Ros service call to get model state
@@ -48,9 +50,13 @@ class poseHandler:
 			try:
 				angles = euler_from_quaternion([self.or_x, self.or_y, self.or_z, self.or_w])
 				self.theta = angles[2]	
-				self.last_pose = array([self.pos_x, self.pos_y, self.theta])
+				shared=self.shared_data
+				self.last_pose = array([self.pos_x+shared.offset[0], self.pos_y+shared.offset[1], self.theta])
+				#self.theta-=self.theta
+				#while self.theta>pi: self.theta-=2*pi
+				#while self.theta<-pi:self.theta+=2*pi
+				#self.last_pose=array([real_pose[0]/shared.ratio+(shared.imgWidth/2),-real_pose[1]/shared.ratio+(shared.imgHeight/2),self.theta])
+				#print self.last_pose
 			except Exception:
 				print 'Pose Broke', Exception
-		#if self.last_pose is None:
-		#	self.last_pose=array([0,0,0])
 		return self.last_pose
