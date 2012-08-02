@@ -25,7 +25,7 @@ class poseHandler:
 		#GetModelState expects the arguments model_name and relative_entity_name
 		#In this case it is pr2 and world respectively but can be changed for different robots and environments	
 		self.model_name = modelName
-		self.relative_entity_name = 'world'
+		self.relative_entity_name = 'world' #implies the gazebo global coordinates
 		self.last_pose = None
 
 		self.shared_data=shared_data['ROS_INIT_HANDLER']
@@ -33,13 +33,15 @@ class poseHandler:
 	def getPose(self,cached = False):
 		if (not cached) or self.last_pose is None:
 			#Ros service call to get model state
-			#This returns a GetModelStateResponse, which contains data on pose and twist
+			#This returns a GetModelStateResponse, which contains data on pose
 			rospy.wait_for_service('/gazebo/get_model_state')
 			try:
 				gms = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
 				resp = gms(self.model_name,self.relative_entity_name)
+				#Cartesian Pose
 				self.pos_x = resp.pose.position.x
 				self.pos_y = resp.pose.position.y
+				#Quaternion Orientation
 				self.or_x = resp.pose.orientation.x
 				self.or_y = resp.pose.orientation.y
 				self.or_z = resp.pose.orientation.z
@@ -51,6 +53,8 @@ class poseHandler:
 				angles = euler_from_quaternion([self.or_x, self.or_y, self.or_z, self.or_w])
 				self.theta = angles[2]	
 				shared=self.shared_data
+				#The following accounts for the maps offset in gazebo for 
+				#initial region placement
 				self.last_pose = array([self.pos_x+shared.offset[0], self.pos_y+shared.offset[1], self.theta])
 			except Exception:
 				print 'Pose Broke', Exception

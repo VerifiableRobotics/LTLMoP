@@ -9,15 +9,15 @@ Control functions using ROS
 
 import time
 import threading
-#import roslib
-#roslib.load_manifest('rospy')
-#roslib.load_manifest('actionlib')
-#roslib.load_manifest('pr2_controllers_msgs')
+import roslib
+roslib.load_manifest('rospy')
+roslib.load_manifest('actionlib')
+roslib.load_manifest('pr2_controllers_msgs')
 
-#import rospy
-#import actionlib
-#from actionlib_msgs.msg import *
-#from pr2_controllers_msgs.msg import *
+import rospy
+import actionlib
+from actionlib_msgs.msg import *
+from pr2_controllers_msgs.msg import *
 
 class rosActuatorHandler:
 	def __init__(self, proj, shared_data):
@@ -26,21 +26,38 @@ class rosActuatorHandler:
 		"""
 		self.rosInitHandler = shared_data['ROS_INIT_HANDLER']
 
-		#rospy.init_node('actuationHandler')
-
 	#####################################
 	### Available actuator functions: ###
 	#####################################
 
 
-	def simpleAction(self, actuatorVal, service='r_gripper_controller/gripper_action', initial=False):
+	def simpleTopicAction(self, actuatorVal, topic='r_gripper_controller/command', messageType='Pr2GripperCommand', attr1Name='position', attr1Value='.2', attr2Name='max_effort', attr2Value='100', initial=False):
 		"""
-		Perform a service call to complete an action
+		Complete an action by publishing on a Topic	
 
-		service (str): The ROS service location (default='r_gripper_controller/gripper_action')
+		topic (str): The ROS topic with which to publish your action message (default='r_gripper_controller/command')
+		messageType (str): The type of message to send on the topic (default='Pr2GripperCommand')
+		attr1Name (str): The name of the 1st attribute of the message you want to set (default="position")
+		attr1Value (str): The value to assign to the 1st attribute (default='.2')
+		attr2Name (str): The name of the 2nd attribute of the message you want to set (default="max_effort")
+		attr2Value (str): The value to assign to the 2nd attribute (default="100")
 		"""
 		if initial:
-			pass
+			#Open a publisher on the given topic with the given message type
+			action=rospy.Publisher(topic,eval(messageType))
+			#Generally you should initiate a node for each publisher, but
+			#Locomotion has already done that, so there is now a global node
+			#for ltlmop handlers, which this will publish on (you cannot 
+			#create multiple nodes for a given process [ltlmop])
+
+			#create a blank message with the given type
+			message=eval(messageType+'()')
+			#Set the attributes of the message
+			if not attr1Name=='':
+				setattr(message, attr1Name, eval(attr1Value))
+			if not attr2Name=='':
+				setattr(message, attr2Name, eval(attr2Value))
 		else:
-			if actuatorVale==True:
-				pass
+			if int(actuatorVal)==1:
+				#publish the message
+				action.publish(message)

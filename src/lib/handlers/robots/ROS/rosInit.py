@@ -31,7 +31,8 @@ class initHandler:
 		package (str): The package where the robot is located (default="pr2_gazebo")
 		launchFile (str): The launch file name for the robot in the package (default="pr2.launch")
 		"""
-		
+
+		#The package and launch file for the robot that is being used		
 		self.package=package
 		self.launchFile=launchFile
 		#Map to real world scaling constant
@@ -39,7 +40,7 @@ class initHandler:
 
 		#The next few blocks creates a png copy of the regions to load into gazebo
 		#This block creates a copy and converts to svg
-		texture_dir =  '/opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials/textures'
+		texture_dir =  '/opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials/textures' #potentially dangerous as pathd in ROS change with updates
 		ltlmop_path = proj.getFilenamePrefix()
 		regionsFile = ltlmop_path+"_copy.regions"
 		shutil.copy(proj.rfi.filename,regionsFile)
@@ -59,22 +60,24 @@ class initHandler:
 		full_pic_path = texture_dir + "/" + proj.project_basename + "_simbg.png"
 		shutil.copyfile (full_pic_path, (texture_dir + "/" + 'ltlmop_map.png'))
 
-		# Change size of region map in gazebo:
-		# Potential problem when version changes >_<
-		path="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/worlds/ltlmop_map.world"
+		# Change size of region map in gazebo
+		# This is accomplished through edits of the world file before opening
+		path="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/worlds/ltlmop_map.world" # Potential problem when version changes >_<
 		searchExp='<box size='
-		T=array([[self.ratio*self.imgWidth,0],[0,self.ratio*self.imgHeight]])
-		resizeX=T[0][0]
-		resizeY=T[1][1]
+		T=[self.ratio*self.imgWidth,self.ratio*self.imgHeight]
+		resizeX=T[0]
+		resizeY=T[1]
 		replaceExp='            <box size="'+str(resizeX)+' '+str(resizeY)+' .1" />\n'
 		self.replaceAll(path,searchExp,replaceExp)
+		
 		#Change robot in gazebo:
+		#Accomplish through edits in the launch file
 		path="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/launch/ltlmop.launch"
 		searchExp='<include file='
-		replaceExp='    <include file="$(find '+self.package+')/'+self.launchFile+'" />\n'
+		replaceExp='    <include file="$(find '+self.package+')/launch/'+self.launchFile+'" />\n'
 		self.replaceAll(path,searchExp,replaceExp)
 
-		# Create a subprocess
+		# Create a subprocess for ROS
 		start = subprocess.Popen(['roslaunch', 'gazebo_worlds', 'ltlmop.launch'], stdout=subprocess.PIPE)
 		start_output = start.stdout
 		
@@ -86,6 +89,8 @@ class initHandler:
 				print "(INIT) WARNING:  Gazebo seems to have died!"
 				break
 			if "Successfully spawned" in input:
+			#Successfully spawend is output from the creation of the PR2
+			#It might get stuck waiting for another type of robot to spawn
 				time.sleep(5)
 				break
 
@@ -93,9 +98,9 @@ class initHandler:
 		# Move the region map so the robot is 'centered' 
 		if not calib :
 			# Start in the center of the defined initial region
-			try:
+			try: #Normal operation
 				initial_region = proj.rfiold.regions[proj.rfiold.indexOfRegionWithName(init_region)]
-			except:
+			except: #Calibration
 				initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(init_region)]
 			center = initial_region.getCenter()
 
@@ -140,7 +145,8 @@ class initHandler:
 	def region2svg(self, proj, regionFile):
 		"""
 		Converts region file to svg
-		This is from the deprecated regions file with slight changes
+		This is from the deprecated regions file with slight changes for 
+		proper calculation of the size of the regions map
 		"""
 		fout=re.sub(r"\.region$", ".svg", regionFile)
 		rfi = regions.RegionFileInterface()
@@ -148,16 +154,13 @@ class initHandler:
 
 		polyList = []
 		
-		width=0
-		height=0
-
 		for region in rfi.regions:
 			points = [(pt.x,-pt.y) for pt in region.getPoints()]
 			poly = Polygon.Polygon(points)
 			polyList.append(poly)
-		try:
+		try: #Normal Operation
 			boundary=proj.rfiold.regions[proj.rfiold.indexOfRegionWithName("boundary")]
-		except:
+		except: #Calibration
 			boundary=proj.rfi.regions[proj.rfi.indexOfRegionWithName("boundary")]
 		width=boundary.size.width
 		height=boundary.size.height
@@ -165,11 +168,13 @@ class initHandler:
 		#use boundary size for image size
 		Polygon.IO.writeSVG(fout, polyList, width=width,height=height)
 
-		return fout
+		return fout #return the file name
 
 	def replaceAll(self,file,searchExp,replaceExp):
 		"""
 		Relaces lines in a file given a search string and replacement string
+		You only need a portion of the line to match the searchExp and 
+		then it will replace the whole line with the replaceExp
 		"""
 		for line in fileinput.input(file, inplace=1):
 			if searchExp in line:
