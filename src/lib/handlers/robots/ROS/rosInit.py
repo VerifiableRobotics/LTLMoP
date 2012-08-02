@@ -21,15 +21,19 @@ from geometry_msgs.msg import Twist
 import fileinput
 
 class initHandler:
-	def __init__(self, proj, init_region, robotPixelWidth=200, robotPhysicalWidth=.5, calib=False):
+	def __init__(self, proj, init_region, robotPixelWidth=200, robotPhysicalWidth=.5,package="pr2_gazebo",launchFile="pr2.launch", calib=False):
 		"""
 		Initialization handler for ROS and gazebo
 
 		init_region (region): The initial region of the robot
 		robotPixelWidth (int): The width of the robot in pixels in ltlmop (default=200)
 		robotPhysicalWidth (float): The physical width of the robot in meters (default=.5)
+		package (str): The package where the robot is located (default="pr2_gazebo")
+		launchFile (str): The launch file name for the robot in the package (default="pr2.launch")
 		"""
 		
+		self.package=package
+		self.launchFile=launchFile
 		#Map to real world scaling constant
 		self.ratio=robotPhysicalWidth/robotPixelWidth
 
@@ -64,6 +68,11 @@ class initHandler:
 		resizeY=T[1][1]
 		replaceExp='            <box size="'+str(resizeX)+' '+str(resizeY)+' .1" />\n'
 		self.replaceAll(path,searchExp,replaceExp)
+		#Change robot in gazebo:
+		path="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/launch/ltlmop.launch"
+		searchExp='<include file='
+		replaceExp='    <include file="$(find '+self.package+')/'+self.launchFile+'" />\n'
+		self.replaceAll(path,searchExp,replaceExp)
 
 		# Create a subprocess
 		start = subprocess.Popen(['roslaunch', 'gazebo_worlds', 'ltlmop.launch'], stdout=subprocess.PIPE)
@@ -80,6 +89,7 @@ class initHandler:
 				time.sleep(5)
 				break
 
+
 		# Move the region map so the robot is 'centered' 
 		if not calib :
 			# Start in the center of the defined initial region
@@ -90,9 +100,8 @@ class initHandler:
 			center = initial_region.getCenter()
 
 			# Load the map calibration data and the region file data to feed to the simulator
-			#coordmap_map2lab,coordmap_lab2map = proj.getCoordMaps()
-			#map2lab = list(coordmap_map2lab(array(center)))
-			map2lab=(self.ratio*(center[0]-self.imgWidth/2),-self.ratio*(center[1]-self.imgHeight/2))
+			coordmap_map2lab,coordmap_lab2map = proj.getCoordMaps()
+			map2lab = list(coordmap_map2lab(array(center)))
 
 			print "Initial region name: ", initial_region.name, " I think I am here: ", map2lab, " and center is: ", center
 
@@ -115,16 +124,12 @@ class initHandler:
 			model_state.pose.position.y = -map2lab[1]
 			#Storage for pose correction		
 			self.offset=(map2lab[0],map2lab[1])
-			pr2_state=ModelState()
-			pr2_state.model_name='pr2'
-			pr2_state.pose.orientation.z=-pi/2
 
 			#send the pose to the map
 			rospy.wait_for_service('/gazebo/set_model_state')
 			try:
 				sms = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 				sms(model_state)	
-				#sms(pr2_state)
 			except rospy.ServiceException, e:
 				print "Service call failed: %s"%e
 

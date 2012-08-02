@@ -19,6 +19,7 @@ PATHSM='/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/'
 sudo cp ltlmop_map.world $PATHSM/worlds/ltlmop_map.world
 sudo chmod 777 $PATHSM/worlds/ltlmop_map.world
 sudo chmod 777 $PATHSM/worlds
+sudo chmod 777 $PATHSM/launch
 sudo cp ltlmop.launch $PATHSM/launch/ltlmop.launch
 sudo chmod 777 $PATHSM/launch/ltlmop.launch
 PATHLOC='/opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials/'

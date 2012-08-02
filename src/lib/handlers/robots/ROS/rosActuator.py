@@ -9,15 +9,15 @@ Control functions using ROS
 
 import time
 import threading
-import roslib
-roslib.load_manifest('rospy')
-roslib.load_manifest('actionlib')
-roslib.load_manifest('pr2_controllers_msgs')
+#import roslib
+#roslib.load_manifest('rospy')
+#roslib.load_manifest('actionlib')
+#roslib.load_manifest('pr2_controllers_msgs')
 
-import rospy
-import actionlib
-from actionlib_msgs.msg import *
-from pr2_controllers_msgs.msg import *
+#import rospy
+#import actionlib
+#from actionlib_msgs.msg import *
+#from pr2_controllers_msgs.msg import *
 
 class rosActuatorHandler:
 	def __init__(self, proj, shared_data):

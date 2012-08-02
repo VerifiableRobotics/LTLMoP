@@ -5,10 +5,10 @@ Type: # Robot type
 ROS
 
 InitHandler: # Robot default init handler with default argument values
-rosInit(calib=False)
+rosInit(robotPixelWidth=200, robotPhysicalWidth=.5, package="pr2_gazebo", launchFile="pr2.launch", calib=False)
 
 PoseHandler: # Robot default pose handler with default argument values
-viconPose(host='10.0.0.102',port=800,x_VICON_name="ros:ros <t-X>",y_VICON_name="ros:ros <t-Y>",theta_VICON_name="ros:ros <a-Z>")
+rosPose(modelName="pr2")
 
 SensorHandler: # Robot default sensors handler with default argument values
 rosSensor()
@@ -20,7 +20,7 @@ MotionControlHandler: # Robot default motion control handler with default argume
 heatController()
 
 DriveHandler: # Robot default drive handler with deafult argument values
-rosDrive()
+differentialDrive(d=.3)
 
 LocomotionCommandHandler: # Robot default locomotion command handler with default argument values
 rosLocomotionCommand()

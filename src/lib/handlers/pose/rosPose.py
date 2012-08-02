@@ -15,18 +15,18 @@ rosPose.py - ROS Interface Pose Handler
 """
 
 class poseHandler:
-	def __init__(self, proj, shared_data):
+	def __init__(self, proj, shared_data, modelName="pr2"):
+		"""
+		Pose Handler for ROS and gazebo.  
+
+		modelName (str): The model name of the robot in gazebo to get the pose information from (default="pr2")
+		"""
+
 		#GetModelState expects the arguments model_name and relative_entity_name
 		#In this case it is pr2 and world respectively but can be changed for different robots and environments	
-		self.model_name = 'pr2'
+		self.model_name = modelName
 		self.relative_entity_name = 'world'
 		self.last_pose = None
-		self.pos_x = 0
-		self.pos_y = 0
-		self.or_x = 0
-		self.or_y = 0
-		self.or_z = 0
-		self.or_w = 0
 
 		self.shared_data=shared_data['ROS_INIT_HANDLER']
 
@@ -52,11 +52,6 @@ class poseHandler:
 				self.theta = angles[2]	
 				shared=self.shared_data
 				self.last_pose = array([self.pos_x+shared.offset[0], self.pos_y+shared.offset[1], self.theta])
-				#self.theta-=self.theta
-				#while self.theta>pi: self.theta-=2*pi
-				#while self.theta<-pi:self.theta+=2*pi
-				#self.last_pose=array([real_pose[0]/shared.ratio+(shared.imgWidth/2),-real_pose[1]/shared.ratio+(shared.imgHeight/2),self.theta])
-				#print self.last_pose
 			except Exception:
 				print 'Pose Broke', Exception
 		return self.last_pose
