@@ -35,3 +35,8 @@ if ! grep -q ltlmop $PATHLOC/scripts/Gazebo.material
 fi
 sudo chmod 777 $PATHLOC/scripts/Gazebo.material
 ROS_WORKSPACE=/opt/ros/fuerte
+sudo apt-get install openjdk-7-jre
+sudo apt-get install opedjdk-7-jdk
+cd ../../../../etc/jtlv
+sh build.sh
+cd ../../lib/handlers/robots/ROS
