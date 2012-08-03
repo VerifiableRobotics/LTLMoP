@@ -34,6 +34,12 @@ class rosActuatorHandler:
 	#####################################
 
 
+	def actionTemplate(self, actuatorVal, initial=False):
+		"""
+		This is a template for future creation of actions 
+		"""
+		pass
+
 	def simpleTopicAction(self, actuatorVal, topic='r_gripper_controller/command', messageType='Pr2GripperCommand', attr1Name='position', attr1Value='.2', attr2Name='max_effort', attr2Value='100', attr3Name='', attr3Value='', initial=False):
 		"""
 		Complete an action by publishing on a Topic	
