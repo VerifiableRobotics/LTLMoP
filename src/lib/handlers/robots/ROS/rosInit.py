@@ -144,6 +144,9 @@ class initHandler:
 			except rospy.ServiceException, e:
 				print "Service call failed: %s"%e
 
+			#The following is a global node for LTLMoP
+			rospy.init_node('LTLMoPHandlers')	
+
 	def getSharedData(self):
 		# TODO: Return a dictionary of any objects that will need to be shared with other handlers
 		return {'ROS_INIT_HANDLER': self}
