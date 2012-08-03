@@ -17,7 +17,7 @@ class locomotionCommandHandler:
 			#open a publisher for the base controller of the robot
 			self.pub = rospy.Publisher('/base_controller/command', Twist)
 			#The following is the global node for ltlmop handlers
-			rospy.init_node('LTLMoPHandlers')
+			#rospy.init_node('LTLMoPHandlers')
 		except:
 			print 'Problem setting up Locomotion Command Node'
 
