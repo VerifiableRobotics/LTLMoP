@@ -29,7 +29,7 @@ class locomotionCommandHandler:
 		#Positive x is forward on robots in Gazebo
 		twist.linear.x=cmd[0]*4
 		#Angluar z is yaw or rotation in the xy plane
-		twist.angular.z=cmd[1]
+		twist.angular.z=cmd[1]*1.5
 		try:
 			#Publish the command to the robot
 			self.pub.publish(twist)

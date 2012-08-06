@@ -5,7 +5,7 @@ Type: # Robot type
 ROS
 
 InitHandler: # Robot default init handler with default argument values
-rosInit(robotPixelWidth=200, robotPhysicalWidth=.5, package="pr2_gazebo", launchFile="pr2.launch", calib=False)
+rosInit(robotPixelWidth=200, robotPhysicalWidth=.5, package="pr2_gazebo", launchFile="pr2.launch")
 
 PoseHandler: # Robot default pose handler with default argument values
 rosPose(modelName="pr2")
