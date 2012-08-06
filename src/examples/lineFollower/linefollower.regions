@@ -1,0 +1,43 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+
+Obstacles: # Names of regions to treat as obstacles
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "boundary", 
+        "color": [176, 0, 255], 
+        "holeList": [], 
+        "points": [[0, 0], [276, 0], [574, 0], [574, 299], [276, 299], [0, 299]], 
+        "position": [110, 75], 
+        "type": "poly", 
+        "size": [574, 299]
+    }, 
+    {
+        "name": "r2", 
+        "color": [255, 255, 0], 
+        "position": [386, 75], 
+        "type": "rect", 
+        "size": [298, 299]
+    }, 
+    {
+        "name": "r1", 
+        "color": [204, 50, 50], 
+        "position": [110, 75], 
+        "type": "rect", 
+        "size": [276, 299]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+boundary	r2	684	75	684	374	386	374	684	374	386	75	684	75
+boundary	r1	110	374	386	374	110	75	386	75	110	75	110	374
+r2	r1	386	75	386	374
+
