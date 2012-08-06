@@ -163,7 +163,7 @@ class rosActuatorHandler:
 				self.torsoAction.wait_for_server()
 				self.torsoAction.send_goal(self.torsoMessage)
 				self.torsoAction.wait_for_result()
-				if not torsoAction.get_state() == GoalStatus.SUCCEEDED:
+				if not self.torsoAction.get_state() == GoalStatus.SUCCEEDED:
 					print "Action failed"
 	
 	def movePr2Head(self, actuatorVal, target_frame_id='r_gripper_tool_frame', target_x=0.0, target_y=0.0, target_z=0.0, min_duration=1.0, initial=False):
