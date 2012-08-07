@@ -42,6 +42,10 @@ class initHandler:
 		self.launchFile=robotLaunchFile
 		#Map to real world scaling constant
 		self.ratio=robotPhysicalWidth/robotPixelWidth
+		
+		# Center the robot in the init region
+		if not init_region=="__origin__" :
+			self.centerTheRobot(proj, init_region)
 
 		if useRegionMap:
 			#This creates a png copy of the regions to load into gazebo
@@ -53,10 +57,6 @@ class initHandler:
 		else:
 			# Create a subprocess for ROS
 			self.rosSubProcess(proj,rospkg=worldPackage,launch=worldLaunchFile)
-		# Center the robot in the init region
-		if not init_region=="__origin__" :
-			print 'Moving the robot'
-			self.centerTheRobot(proj, init_region)
 
 		#The following is a global node for LTLMoP
 		rospy.init_node('LTLMoPHandlers')	
@@ -174,7 +174,11 @@ class initHandler:
 
 		print "Initial region name: ", initial_region.name, " I think I am here: ", map2lab, " and center is: ", center
 
-		#get the current pose
+		#set the ROBOT_INITIAL_POSE environment variable
+		os.environ['ROBOT_INITIAL_POSE']="-x "+str(map2lab[0])+" -y "+str(map2lab[1])
+		
+		#deprecated
+		'''#get the current pose
 		rospy.wait_for_service('/gazebo/get_model_state')
 		cms = ModelState()
 		try:
@@ -202,4 +206,4 @@ class initHandler:
 			sms = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 			sms(model_state)	
 		except rospy.ServiceException, e:
-			print "Service call failed: %s"%e
+			print "Service call failed: %s"%e'''

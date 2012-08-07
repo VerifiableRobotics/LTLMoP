@@ -8,17 +8,19 @@ Control functions using ROS
 """
 
 import time
-import threading, thread
+import threading, thread, subprocess
 import roslib
 roslib.load_manifest('rospy')
 roslib.load_manifest('actionlib')
 roslib.load_manifest('pr2_controllers_msgs')
+roslib.load_manifest('pr2_tuckarm')
 
 import rospy
 import actionlib
 from actionlib_msgs.msg import *
 from pr2_controllers_msgs.msg import *
 from trajectory_msgs.msg import *
+from pr2_tuck_arms_action import tuck_arms_main
 
 class rosActuatorHandler:
 	def __init__(self, proj, shared_data):
@@ -194,3 +196,18 @@ class rosActuatorHandler:
 				self.headAction.wait_for_result()
 				if not self.headAction.get_state() == GoalStatus.SUCCEEDED:
 					print "Action failed"
+
+	def pr2TuckArms(self, actuatorVal, tuck=True, initial=False):
+		"""
+		This is an example of calling existing scripts with ROS
+
+		tuck (bool): True applies a tucking of the arms, False untucks them (default=True)
+		"""
+		if initial:
+			pass
+		else:
+			if int(actuatorVal)==1:
+				if tuck:
+					subprocess.Popen(['rosrun', 'pr2_tuckarm', 'tuck_arms.py','-r','t','-l','t'],stdout=subprocess.PIPE)
+				else:
+					subprocess.Popen(['rosrun', 'pr2_tuckarm', 'tuck_arms.py','-r','u','-l','u'],stdout=subprocess.PIPE)

@@ -5,10 +5,12 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-foldArms, 1
+x, 1
+y, 1
+z, 1
 
 CompileOptions:
-convexify: False
+convexify: True
 fastslow: False
 
 CurrentConfigName:
@@ -17,28 +19,33 @@ Untitled configuration
 Customs: # List of custom propositions
 
 RegionFile: # Relative path of region description file
-willowExample.regions
+basicTesting.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-wait, 1
+a, 1
+b, 1
+c, 1
 
 
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-Office = p16
-lab2 = p15
-Lab1 = p17
-others = p1
+r1 = p3
+r2 = p2
+others = p4, p5, p6, p7, p8, p9
 
 Spec: # Specification in structured English
-robot starts in Office with false
-infinitely often not wait
+robot starts in r1 with false
+infinitely often not a and not b and not c
 
-visit lab2
-visit Office
+visit r2
+visit r1
 
-if you were in Office then do foldArms
+if you are sensing a then stay there
+if you are sensing b then stay there
+if you are sensing c then stay there
 
-if you are sensing wait then stay there
+do x if and only if a
+do y if and only if b
+do z if and only if c
 
