@@ -21,14 +21,12 @@ from geometry_msgs.msg import Twist
 import fileinput
 
 class initHandler:
-	def __init__(self, proj, init_region, useRegionMap=True, worldPackage='', worldLaunchFile='', robotPixelWidth=200, robotPhysicalWidth=.5, robotPackage="pr2_gazebo", robotLaunchFile="pr2.launch", calib=False):
+	def __init__(self, proj, init_region, worldFile='ltlmop_map.world', robotPixelWidth=200, robotPhysicalWidth=.5, robotPackage="pr2_gazebo", robotLaunchFile="pr2.launch", calib=False):
 		"""
 		Initialization handler for ROS and gazebo
 
 		init_region (region): The initial region of the robot
-		useRegionMap (bool): Whether the LTLMoP region map should be used as the world (default=True)
-		worldPackage (str): The alternate world package to be used (default="")
-		worldLaunchFile (str): The alternate world launch file to be used (default="")
+		worldFile (str): The alternate world launch file to be used (default="ltlmop_map.world")
 		robotPixelWidth (int): The width of the robot in pixels in ltlmop (default=200)
 		robotPhysicalWidth (float): The physical width of the robot in meters (default=.5)
 		robotPackage (str): The package where the robot is located (default="pr2_gazebo")
@@ -40,23 +38,21 @@ class initHandler:
 		#The package and launch file for the robot that is being used		
 		self.package=robotPackage
 		self.launchFile=robotLaunchFile
+		#The world file that is to be launched, see gazebo_worlds/worlds
+		self.worldFile=worldFile
 		#Map to real world scaling constant
 		self.ratio=robotPhysicalWidth/robotPixelWidth
 		
-		# Center the robot in the init region
-		if not init_region=="__origin__" :
-			self.centerTheRobot(proj, init_region)
-
-		if useRegionMap:
+		if self.worldFile=='ltlmop_map.world':
 			#This creates a png copy of the regions to load into gazebo
 			self.createRegionMap(proj)
-			#Change robot in gazebo:
-			self.changeRobot(proj)
-			# Create a subprocess for ROS
-			self.rosSubProcess(proj)
-		else:
-			# Create a subprocess for ROS
-			self.rosSubProcess(proj,rospkg=worldPackage,launch=worldLaunchFile)
+		#Change robot and world file in gazebo:
+		self.changeRobotAndWorld(proj)
+		# Center the robot in the init region (not on calibration)
+		if not init_region=="__origin__" :
+			self.centerTheRobot(proj, init_region)
+		# Create a subprocess for ROS
+		self.rosSubProcess(proj)
 
 		#The following is a global node for LTLMoP
 		rospy.init_node('LTLMoPHandlers')	
@@ -105,6 +101,10 @@ class initHandler:
 			sys.stdout.write(line)
 
 	def createRegionMap(self, proj):
+		"""
+		This function creates the ltlmop region map as a floor plan in the 
+		Gazebo Simulator.
+		"""
 		#This block creates a copy and converts to svg
 		texture_dir =  '/opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials/textures' #potentially dangerous as pathd in ROS change with updates
 		ltlmop_path = proj.getFilenamePrefix()
@@ -136,15 +136,26 @@ class initHandler:
 		replaceExp='            <box size="'+str(resizeX)+' '+str(resizeY)+' .1" />\n'
 		self.replaceAll(path,searchExp,replaceExp)
 
-	def changeRobot(self, proj):
+	def changeRobotAndWorld(self, proj):
+		"""
+		This changes the robot in the launch file
+		"""
 		#Accomplish through edits in the launch file
 		path="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/launch/ltlmop.launch"
 		searchExp='<include file='
 		replaceExp='    <include file="$(find '+self.package+')/launch/'+self.launchFile+'" />\n'
 		self.replaceAll(path,searchExp,replaceExp)
+		searchExp='<node name="gazebo" pkg="gazebo"'
+		replaceExp='    <node name="gazebo" pkg="gazebo" type="gazebo" args="-u $(find gazebo_worlds)/worlds/'+self.worldFile+'" respawn="false" output="screen"/>\n'
+		self.replaceAll(path,searchExp,replaceExp)
 
-	def rosSubProcess(self, proj, rospkg='gazebo_worlds', launch='ltlmop.launch'):
-		start = subprocess.Popen(['roslaunch', rospkg, launch], stdout=subprocess.PIPE)
+
+	def rosSubProcess(self, proj, worldFile='ltlmop_map.world'):
+		"""
+		This launches the world file with the robot in Gazebo and waits until
+		it is most of the way launched before it launches the ltlmop Simulator
+		"""
+		start = subprocess.Popen(['roslaunch', 'gazebo_worlds', 'ltlmop.launch'], stdout=subprocess.PIPE)
 		start_output = start.stdout
 
 		# Wait for it to fully start up
@@ -154,7 +165,7 @@ class initHandler:
 			if input == '': # EOF
 				print "(INIT) WARNING:  Gazebo seems to have died!"
 				break
-			if "Successfully spawned" or "successfully spawsned" in input:
+			if "Successfully spawned" or "successfully spawned" in input:
 				#Successfully spawend is output from the creation of the PR2
 				#It might get stuck waiting for another type of robot to spawn
 				time.sleep(5)
@@ -177,33 +188,3 @@ class initHandler:
 		#set the ROBOT_INITIAL_POSE environment variable
 		os.environ['ROBOT_INITIAL_POSE']="-x "+str(map2lab[0])+" -y "+str(map2lab[1])
 		
-		#deprecated
-		'''#get the current pose
-		rospy.wait_for_service('/gazebo/get_model_state')
-		cms = ModelState()
-		try:
-			gms = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
-			#cms = gms('plane1_model','world')
-			cms = gms('pr2','world')
-		except rospy.ServiceException, e:
-			print 'Service Call Failed: %s'%e
-
-		#create a new pose
-		model_state = ModelState()
-		#model_state.model_name = 'plane1_model'
-		model_state.model_name = 'pr2'
-		model_state.pose = cms.pose
-		#Teleporting the robot is very dangerous! So insted, we move
-		#the floor beneath the robot.    
-		model_state.pose.position.x = map2lab[0]
-		model_state.pose.position.y = map2lab[1]
-		#Storage for pose correction		
-		#self.offset=(map2lab[0],map2lab[1])
-	
-		#send the pose to the map
-		rospy.wait_for_service('/gazebo/set_model_state')
-		try:
-			sms = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
-			sms(model_state)	
-		except rospy.ServiceException, e:
-			print "Service call failed: %s"%e'''
