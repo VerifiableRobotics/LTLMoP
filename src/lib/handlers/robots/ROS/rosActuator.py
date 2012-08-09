@@ -60,7 +60,7 @@ class rosActuatorHandler:
 
 			# this creates a new message with the given type
 			# general form:
-			#self.templateMessage=eval(messageType+'()')
+			# self.templateMessage=eval(messageType+'()')
 			# nongeneral form:
 			self.templateMessage=Pr2GripperCommand()
 
