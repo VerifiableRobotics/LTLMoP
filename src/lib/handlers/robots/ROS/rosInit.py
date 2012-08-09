@@ -154,7 +154,7 @@ class initHandler:
 			if input == '': # EOF
 				print "(INIT) WARNING:  Gazebo seems to have died!"
 				break
-			if "Successfully spawned" in input:
+			if "Successfully spawned" or "successfully spawsned" in input:
 				#Successfully spawend is output from the creation of the PR2
 				#It might get stuck waiting for another type of robot to spawn
 				time.sleep(5)
