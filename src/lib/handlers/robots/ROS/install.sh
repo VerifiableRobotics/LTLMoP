@@ -30,13 +30,13 @@ sudo cp ltlmop.launch $PATHSM/launch/ltlmop.launch
 sudo chmod 777 $PATHSM/launch/ltlmop.launch
 PATHLOC='/opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials'
 sudo chmod 777 /opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials/textures
+sudo chmod 777 $PATHLOC/scripts/Gazebo.material
 if ! grep -q ltlmop $PATHLOC/scripts/Gazebo.material 
 	then sudo cat ltlmop.material >> $PATHLOC/scripts/Gazebo.material 
 fi
-sudo chmod 777 $PATHLOC/scripts/Gazebo.material
 ROS_WORKSPACE=/opt/ros/fuerte
 sudo apt-get install openjdk-7-jre
-sudo apt-get install opedjdk-7-jdk
+sudo apt-get install openjdk-7-jdk
 cd ../../../../etc/jtlv
 sh build.sh
 cd ../../lib/handlers/robots/ROS

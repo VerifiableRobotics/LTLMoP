@@ -709,8 +709,8 @@ Regions: # Stored as JSON string
         "holeList": [], 
         "points": [
             [
-                218, 
-                116
+                230, 
+                117
             ], 
             [
                 240, 
@@ -814,37 +814,37 @@ Regions: # Stored as JSON string
         "points": [
             [
                 2, 
-                193
+                191
             ], 
             [
                 0, 
-                209
+                207
             ], 
             [
                 67, 
-                208
+                206
             ], 
             [
                 62, 
-                2
-            ], 
-            [
-                45, 
                 0
             ], 
             [
                 53, 
-                193
+                0
+            ], 
+            [
+                53, 
+                191
             ]
         ], 
         "position": [
             229, 
-            179
+            181
         ], 
         "type": "poly", 
         "size": [
             67, 
-            209
+            207
         ]
     }, 
     {

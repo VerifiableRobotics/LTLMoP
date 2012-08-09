@@ -12,12 +12,17 @@ rosLocomotionCommand.py - ros Locomotion Command Handler
 """
 
 class locomotionCommandHandler:
-	def __init__(self, proj, shared_data):
+	def __init__(self, proj, shared_data, velocityTopic='/base_controller/command'):
+		"""
+		The ROS Locomotion Command Handler
+
+		velocityTopic (str): This is the topic which handles the movement commands (default='/base_controller/command')
+		"""
 		try:
 			#open a publisher for the base controller of the robot
-			self.pub = rospy.Publisher('/base_controller/command', Twist)
-			#The following is the global node for ltlmop handlers
-			#rospy.init_node('LTLMoPHandlers')
+			self.pub = rospy.Publisher(velocityTopic, Twist)
+			# for the pr2, use /base_controller/command
+			# the turtlebot takes /cmd_vel
 		except:
 			print 'Problem setting up Locomotion Command Node'
 
