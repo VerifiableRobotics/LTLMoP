@@ -40,3 +40,6 @@ sudo apt-get install openjdk-7-jdk
 cd ../../../../etc/jtlv
 sh build.sh
 cd ../../lib/handlers/robots/ROS
+echo "source /opt/ros/fuerte/setup.bash" >> ~/.bashrc
+. ~/.bashrc
+source /opt/ros/fuerte/setup.bash
