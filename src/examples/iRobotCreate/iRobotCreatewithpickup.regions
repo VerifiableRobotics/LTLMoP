@@ -1,0 +1,52 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+origin	4
+r4	2
+
+Obstacles: # Names of regions to treat as obstacles
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+r7	poly	345	115	151	139	0	0	255	0	0	151	0	151	139	57	122	55	122
+origin	poly	147	115	253	153	0	255	0	198	0	253	122	198	153	0	153	0	0
+r1	poly	147	268	198	98	204	50	50	198	0	169	98	0	98	0	0
+r3	poly	316	366	162	122	0	255	0	0	0	159	12	162	122	0	122
+r5	poly	496	254	187	88	255	255	0	0	0	187	0	187	88	26	88
+r4	poly	475	342	208	146	255	255	0	47	0	208	0	208	146	3	146	0	36
+r2	rect	147	366	169	122	255	255	0
+r6	rect	496	115	187	139	255	255	0
+center	poly	316	237	206	141	204	50	50	29	31	84	0	86	0	180	17	206	105	159	141	0	129
+boundary	poly	147	115	536	373	0	0	255	0	251	0	153	0	0	198	0	349	0	536	0	536	139	536	227	536	373	331	373	169	373	0	373
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+iRobotCreatewithpickup_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+r7	origin	345	115	400	237
+r7	r6	496	115	496	254
+r7	center	402	237	496	254	400	237	402	237
+r7	boundary	345	115	496	115
+origin	r1	147	268	345	268
+origin	center	345	268	400	237
+origin	boundary	147	115	345	115	147	115	147	268
+r1	r2	147	366	316	366
+r1	center	316	366	345	268
+r1	boundary	147	268	147	366
+r3	r4	475	378	478	488
+r3	r2	316	366	316	488
+r3	center	316	366	475	378
+r3	boundary	316	488	478	488
+r5	r4	522	342	683	342
+r5	r6	496	254	683	254
+r5	center	496	254	522	342
+r5	boundary	683	254	683	342
+r4	center	475	378	522	342
+r4	boundary	478	488	683	488	683	342	683	488
+r2	boundary	147	366	147	488	147	488	316	488
+r6	boundary	683	115	683	254	496	115	683	115
+

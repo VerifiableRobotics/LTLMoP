@@ -5,7 +5,11 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from numpy import *
-import math, time, copy, sys
+import math, time, copy, sys, os
+# needs to add the path of ltlmop_root to sys path
+sys.path.append('../../..')
+sys.path.append('.')
+import lib.regions
 
 info = """DiffDriveSim
 
@@ -47,13 +51,14 @@ class DiffDriveSim:
 
         # If regionfile=0, render the ground as default solid green terrain.
         # Otherwise, load the regions file specified and draw the region colors on the ground.
-        self.region_data = []
+        # Initialize the region file interface
+        self.rfi = lib.regions.RegionFileInterface()
 
         # Load a region file if it has been specified on instantiation.
         #regionfile = "examples/sandbox/sandbox.regions"
 ##        region_calib = [0.4,-0.4]
         if (regionfile!=None):
-            self.loadRegionData(regionfile)
+            self.rfi.readFile(regionfile)
             self.region_calib = region_calib
 
         # Simulation world parameters.
@@ -234,54 +239,6 @@ class DiffDriveSim:
 
                 # Append all these new pointers to the simulator class.
                 self._geoms.append(geom)
-        
-    def loadRegionData(self, regionfile):
-        """
-        Parses a LTLMoP-formatted ".regions" file and creates a data structure to render the region map in the simulator.
-        """
-
-        data = open(regionfile,"r")
-
-        reading_regions = 0
-        for line in data:
-
-            # Find when the Regions information is found in the text file (as per LTLMoP format)
-            if (line.split().count("Regions:")>0):
-                reading_regions = 1
-            # Once we have found where the region information begins, parse it in the form:
-            # [color info, vertex info] ==> [R, G, B, [x1, y1], [x2, y2], ...] 
-            elif (reading_regions == 1 ):
-                info = line.split()
-                if (len(info)==0):
-                    reading_regions = 0
-                # Do not plot the boundary region.
-                elif info[0].lower()!="boundary":
-                    # Polygon-type region -- extract color and all the vertices in the polygon.
-                    if info[1]=="poly":
-                        region_color = [float(info[6])/255, float(info[7])/255, float(info[8])/255]
-                        posx = int(info[2])
-                        posy = int(info[3])
-                        vertices = []
-                        for idx in range(9,len(info),2):
-                            vertices.append([posx + int(info[idx]), posy + int(info[idx+1])])
-                        temp_info = region_color
-                        temp_info.extend(vertices)
-                        self.region_data.append(temp_info)
-                    elif info[1]=="rect":
-                        region_color = [float(info[6])/255, float(info[7])/255, float(info[8])/255]
-                        posx = int(info[2])
-                        posy = int(info[3])
-                        width = int(info[4])
-                        height = int(info[5])
-                        vertices = []
-                        vertices.append([posx, posy])
-                        vertices.append([posx, posy + height])
-                        vertices.append([posx + width, posy + height])
-                        vertices.append([posx + width, posy])
-                        temp_info = region_color
-                        temp_info.extend(vertices)
-                        self.region_data.append(temp_info)
-
 
     def rotate(self,vec,rot):
         """
@@ -412,7 +369,7 @@ class DiffDriveSim:
 
         # Draw a quad at the position of the vehicle that extends to the
         # clipping planes.
-        if (self.region_data==[]):
+        if (self.rfi.regions==[]):
 
             glPushMatrix()
             glTranslate(x, 0.0, z)
@@ -434,16 +391,15 @@ class DiffDriveSim:
 
         # If we have region data, draw the individual regions and color them accordingly.
         else:
-            for row in self.region_data:
+            for region in self.rfi.regions:
                 glPushMatrix()
 
-                color = (row[0], row[1], row[2])
-                glMaterialfv(GL_FRONT, GL_SPECULAR, color)
+                glMaterialfv(GL_FRONT, GL_SPECULAR, [x for x in region.color])
 
                 glBegin(GL_POLYGON)
-                for idx in range(3,len(row)):
+                for pt in region.getPoints():
                     glNormal3f(*normal)
-                    glVertex3f(row[idx][0]*self.region_calib[0], d, -row[idx][1]*self.region_calib[1])
+                    glVertex3f(pt[0]*self.region_calib[0], d, -pt[1]*self.region_calib[1])
                 glEnd()
 
                 glPopMatrix()

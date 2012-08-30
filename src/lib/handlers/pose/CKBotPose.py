@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 =======================================
-CKBotPose.py - Nao Pose Handler
+CKBotPose.py - CKBot Pose Handler
 =======================================
 
 Get data from Vicon.
@@ -19,10 +19,13 @@ global listener
 
 class poseHandler:
     def __init__(self, proj, shared_data):
+        """
+        Pose Handler for CKBot robot
+        """
         try:
             # Get vicon connection settings from robot configuration file
             ViconPort = int(proj.robot_data['ViconPort'][0])    # Vicon listener port (number)
-	    self.shared_data = shared_data
+            self.shared_data = shared_data
             # Note that this number must be the same as is used when running ViconBroadcaster.exe
         except KeyError, ValueError:
             print "(POSE) ERROR: Cannot find Vicon connection setting ('ViconPort') in robot file."
@@ -65,13 +68,13 @@ class poseHandler:
         pos_x = totpose[0]/5
         pos_y = totpose[1]/5
         theta = totpose[2]/5
-	self.shared_data['Angle'] = theta
+        self.shared_data['Angle'] = theta
 
         return array([pos_x, pos_y, theta])
 
-class ListeningThread(Thread):
+class _ListeningThread(Thread):
     def __init__(self, port):
-        super(ListeningThread, self).__init__()
+        super(_ListeningThread, self).__init__()
         self.port = port
         self.poseStr = ""
         self.lock = Lock()
@@ -118,7 +121,7 @@ class ListeningThread(Thread):
 
 def startListening(port):
     global listener
-    listener = ListeningThread(port)
+    listener = _ListeningThread(port)
     listener.start()
 
 def stopListening():

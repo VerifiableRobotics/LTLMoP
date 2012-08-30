@@ -17,6 +17,9 @@ from numpy import *
 
 class poseHandler:
     def __init__(self, proj, shared_data):
+        """
+        Pose Handler for player robot in state
+        """
         try:
             self.c = shared_data['PlayerClient']
             self.p = shared_data['PlayerPos2D']

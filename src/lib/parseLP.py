@@ -2,9 +2,8 @@
 
 import math,re, os, random
 import Polygon, Polygon.IO, Polygon.Utils
-import wx
 import project
-import regions
+from regions import *
 import itertools
 import decomposition
 
@@ -28,6 +27,7 @@ class parseLP:
 
         # load data
         self.proj = project.Project()
+        self.proj.setSilent(True)
         self.proj.loadProject(spec_file)
         
         # Look for a defined boundary region, and set it aside if available
@@ -64,14 +64,15 @@ class parseLP:
                 self.regionBetween.append((m.group("rA"),m.group("rB")))
             
         # generate new regions
-        self.generateNewRegion()
+        #self.generateNewRegion()
         # break the overlapped regions into seperated parts
         self.checkOverLapping()
         # remove small regions
         self.removeSmallRegions()
         
         # decompose any regions with holes or are concave
-        self.decomp()
+        if self.proj.compile_options['convexify']:
+            self.decomp()
 
         # store the regionMapping data to project file
         self.proj.regionMapping = self.newPolysMap
@@ -104,7 +105,7 @@ class parseLP:
                 elif region.name == regionNameB:
                     regionB = region
                     
-            newRegion = regions.findRegionBetween(regionA,regionB,name='between$'+regionNameA+'$and$'+regionNameB+"$")
+            newRegion = findRegionBetween(regionA,regionB,name='between$'+regionNameA+'$and$'+regionNameB+"$")
             self.proj.rfi.regions.append(newRegion)            
             
     def checkOverLapping(self):
@@ -252,7 +253,7 @@ class parseLP:
                         
         for region in smallRegion:
             #print "remove"+region
-            del self.portionOfRegion[region]
+            del self.portionOfRegion[region]            
             
     def intAllPoints(self,poly):
         """
@@ -270,15 +271,19 @@ class parseLP:
         # the only different data is regions
         self.proj.rfi.regions = []
         for nameOfPortion,poly in self.portionOfRegion.iteritems():
-            newRegion                   = regions.Region()
+            newRegion                   = Region()
             newRegion.name              = nameOfPortion
-            newRegion.color             = wx.Colour()
+            newRegion.color             = Color()
             newRegion.color.SetFromName(random.choice(['RED','ORANGE','YELLOW','GREEN','BLUE','PURPLE']))
-            newRegion.pointArray        = [wx.Point(*x) for x in Polygon.Utils.pointList(poly)]
+            for i,ct in enumerate(poly):
+                if poly.isHole(i):
+                    newRegion.holeList.append([Point(*x) for x in Polygon.Utils.pointList(Polygon.Polygon(poly[i]))])
+                else:  
+                    newRegion.pointArray = [Point(*x) for x in Polygon.Utils.pointList(Polygon.Polygon(poly[i]))]
             newRegion.alignmentPoints   = [False] * len([x for x in newRegion.getPoints()])    
             newRegion.recalcBoundingBox()
             
-            if newRegion.getDirection() == regions.dir_CCW:
+            if newRegion.getDirection() == dir_CCW:
                 newRegion.pointArray.reverse()
                 
             self.proj.rfi.regions.append(newRegion)

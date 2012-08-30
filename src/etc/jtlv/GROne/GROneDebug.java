@@ -139,13 +139,13 @@ public class GROneDebug {
 				System.err.println("Error: " + e.getMessage());
 	  }  
 
-		  if (explainSys ==0 && !sysUnreal.equals(Env.FALSE())) {		 
+		  if (explainSys ==0 && !sysUnreal.equals(Env.FALSE())) {
 				 debugInfo += "System is unrealizable because the environment can force a safety violation."+ "\n"; //TRUE if unsat
 		  		 explainSys = 1;
 		  }
 		  
 		  if (explainEnv ==0 && !envUnreal.equals(Env.FALSE())) {		 
-			  	debugInfo += "Environment is unrealizable because the environment can force a safety violation."+ "\n"; //TRUE if unsat
+			  	debugInfo += "Environment is unrealizable because the system can force a safety violation."+ "\n"; //TRUE if unsat
 		  		explainEnv = 1;
 		  }
 		  
@@ -180,7 +180,7 @@ public class GROneDebug {
 			
 		counter_exmple = g.envWinningStates().and(all_init);		 
 		if (counter_exmple.isZero()) {	//no winning environment states		
-			debugInfo += "Specification is realizable.\n";
+			//debugInfo += "Specification is realizable assuming instantaneous actions.\n";
 		}	
 			
 		if (!(env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
@@ -248,7 +248,7 @@ public class GROneDebug {
 					 if (g.calculate_counterstrategy(counter_exmple, true, false)) {
 						 debugInfo += "System highlighted goal(s) inconsistent with transition relation " + (i-1) + "\n";
 						 explainSys = 1;
-					 } else if (i > 1) {
+					 } else  {
 					 //if we get here, the sys is unrealizable because of the current goal					 				
 						 debugInfo += "System highlighted goal(s) unrealizable " + (i-1) + "\n";
 						 explainSys = 1;		

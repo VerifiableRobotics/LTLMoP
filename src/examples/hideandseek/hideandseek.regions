@@ -9,6 +9,12 @@ CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, v
 Danger	0
 Parking	1
 
+Obstacles: # Names of regions to treat as obstacles
+Tree
+SchoolWall
+Danger
+Wall
+
 Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
 Tree	poly	873	190	113	35	0	128	0	0	0	113	0	65	35	24	35
 SchoolWall	poly	113	57	575	446	160	15	22	0	0	575	0	575	202	393	202	393	193	406	193	552	193	552	38	406	38	393	38	159	38	159	193	149	193	149	38	17	38	17	193	17	302	17	431	154	431	154	302	165	302	165	431	390	431	390	302	410	302	410	446	0	446
@@ -21,9 +27,6 @@ boundary	poly	113	57	941	446	160	32	240	0	0	575	0	719	0	941	0	941	31	941	269	941
 Danger	poly	700	301	96	133	255	0	0	0	133	53	0	96	91
 Wall	poly	832	57	222	31	0	0	255	0	0	222	0	222	31	0	31
 Parking	poly	919	326	135	177	255	165	0	0	177	9	0	135	0	135	177
-
-Thumbnail: # Relative path of image file that has region shapes overlayed on background image
-hideandseek_simbg.png
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
 SchoolWall	Closet	665	95	665	250	519	95	665	95	519	250	665	250

@@ -1,6 +1,7 @@
 import wx
 import sys, os
 from regions import *
+from itertools import chain
 
 #----------------------------------------------------------------------------
 
@@ -37,11 +38,11 @@ class DrawableRegion(Region):
         self._privateDraw(dc, self.position, selected, scale, showAlignmentPoints)
 
         if highlight:
-            pdc.SetPen(wx.Pen(wx.BLACK, 3, wx.SOLID))
+            dc.SetPen(wx.Pen(wx.BLACK, 3, wx.SOLID))
             #pdc.SetBrush(wx.Brush(wx.RED, wx.BDIAGONAL_HATCH))
-            pdc.SetBrush(wx.Brush(wx.BLACK, wx.CROSSDIAG_HATCH))
+            dc.SetBrush(wx.Brush(wx.BLACK, wx.CROSSDIAG_HATCH))
 
-            self._privateDraw(pdc, self.position, selected, scale, showAlignmentPoints)
+            self._privateDraw(dc, self.position, selected, scale, showAlignmentPoints)
 
 
     # =====================
@@ -61,7 +62,31 @@ class DrawableRegion(Region):
 
         if self.type == reg_POLY:
             scaledPointArray = map(lambda pt: wx.Point(scale*pt.x, scale*pt.y), self.pointArray)
-            dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]], scale*position.x, scale*position.y)
+            if self.holeList == []:
+                dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]], scale*position.x, scale*position.y)
+            else:
+                # To draw with holes, need to draw to a bitmap in memory and then blit, since wxpython doesn't support DrawPolyPolygon...
+                b = wx.EmptyBitmap(scale*self.size.width, scale*self.size.height)
+                b_dc = wx.MemoryDC()
+                b_dc.SelectObject(b)
+                b_dc.BeginDrawing()
+                b_dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
+                b_dc.DrawRectangle(0,0,scale*self.size.width, scale*self.size.height)
+
+                b_dc.SetPen(dc.GetPen())
+                b_dc.SetBrush(dc.GetBrush())
+                b_dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]])
+                for holePts in self.holeList:
+                    b_dc.SetPen(wx.Pen(wx.WHITE, 1, wx.SOLID))
+                    b_dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
+                    scaledPointArray = map(lambda pt: wx.Point(scale*pt.x, scale*pt.y), holePts) 
+                    b_dc.DrawPolygon(scaledPointArray + [scaledPointArray[0]])
+
+                b_dc.EndDrawing()
+                b_dc.SelectObject(wx.NullBitmap)
+                b.SetMaskColour(wx.WHITE)
+                dc.DrawBitmap(b, scale*self.position.x, scale*self.position.y, useMask=True)
+                
         elif self.type == reg_RECT:
             dc.DrawRectangle(scale*position.x, scale*position.y,
                              scale*self.size.width, scale*self.size.height)
@@ -103,24 +128,24 @@ class DrawableRegion(Region):
 
 #----------------------------------------------------------------------------
 
-def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], deemphasizeList=[], memory=False):
-    """ Draw the map contained in the given project onto the target canvas.
+def drawMap(target, rfi, scaleToFit=True, drawLabels=True, highlightList=[], deemphasizeList=[], memory=False):
+    """ Draw the map contained in the given RegionFileInterface onto the target canvas.
     """
 
     # Nothing to draw if there are no regions loaded yet
-    if proj.rfi is None:
+    if rfi is None:
         print "ERROR: Can't draw a map without loading some regions first"
         return
 
     # Upgrade from Regions to DrawableRegions, if necessary
     # TODO: Should really only be necessary once
-    for i, region in enumerate(proj.rfi.regions):
+    for i, region in enumerate(rfi.regions):
         if isinstance(region, DrawableRegion):
             continue
 
         obj = DrawableRegion(region.type)
         obj.setData(region.getData())
-        proj.rfi.regions[i] = obj
+        rfi.regions[i] = obj
         del region
 
     if memory:
@@ -133,10 +158,9 @@ def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], de
             dc = wx.GCDC(pdc)
         except:
             dc = pdc
-        else:
-            target.PrepareDC(pdc)
 
-        target.PrepareDC(dc)
+        if isinstance(target, wx.ScrolledWindow):
+            target.PrepareDC(dc)
 
     dc.BeginDrawing()
 
@@ -151,7 +175,7 @@ def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], de
         windowAspect = 1.0*maximumHeight/maximumWidth
 
         # TODO: Assuming the regions don't change, we only really need to calculate this once
-        (leftMargin, topMargin, rightExtent, downExtent) = proj.rfi.getBoundingBox()
+        (leftMargin, topMargin, rightExtent, downExtent) = rfi.getBoundingBox()
 
         W = rightExtent + 2*leftMargin
         H = downExtent + 2*topMargin
@@ -169,8 +193,8 @@ def drawMap(target, proj, scaleToFit=True, drawLabels=True, highlightList=[], de
         mapScale = 1
 
     # Draw the regions!
-    for i in range(len(proj.rfi.regions)-1, -1, -1):
-        obj = proj.rfi.regions[i]
+    for i in range(len(rfi.regions)-1, -1, -1):
+        obj = rfi.regions[i]
         doHighlight = (obj.name in highlightList)
         doDeemphasize = (obj.name in deemphasizeList)
 

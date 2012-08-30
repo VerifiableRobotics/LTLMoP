@@ -1,0 +1,31 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+deck	4
+dining	2
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+porch	poly	58	80	241	503	255	255	0	0	0	241	0	241	240	241	495	240	498	0	503
+deck	poly	299	569	799	163	0	255	1	572	0	799	5	657	163	111	163	0	6	219	0
+bedroom	poly	871	80	228	494	139	76	132	0	240	0	0	228	0	227	494	0	489
+dining	poly	518	320	347	249	255	247	0	1	241	1	11	1	0	346	0	347	242	0	249
+living	poly	299	80	572	240	233	123	19	0	0	572	0	572	240	565	240	220	240	0	240
+kitchen	poly	299	320	220	255	255	0	0	0	0	220	11	220	241	219	249	0	255
+boundary	poly	13	10	1183	729	0	0	255	35	576	0	14	131	17	211	20	420	0	1106	34	1183	616	954	729	402	729
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+unsynth_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+porch	living	299	80	299	320
+porch	kitchen	299	320	299	575
+deck	bedroom	871	569	1098	574
+deck	kitchen	299	575	518	569
+bedroom	living	871	80	871	320
+dining	living	519	320	864	320
+dining	kitchen	519	331	519	561	518	569	519	561
