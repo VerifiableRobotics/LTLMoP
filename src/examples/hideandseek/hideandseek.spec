@@ -1,58 +1,20 @@
 # This is a specification definition file for the LTLMoP toolkit.
 # Format details are described at the beginning of each section below.
-# Note that all values are separated by *tabs*.
-
-
-======== EXPERIMENT CONFIG 0 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.015105263183,-7.91368414226,-0.0243703678802,6.15273987364
-
-InitialRegion: # Initial region number
-10
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-playerstage.lab
-
-Name: # Name of the experiment
-Default
-
-RobotFile: # Relative path of robot description file
-HnS_stage.robot
-
-
-======== EXPERIMENT CONFIG 1 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0100832261975,-3.10740369646,-0.0090486321417,2.46124893359
-
-InitialRegion: # Initial region number
-10
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-naoReal.lab
-
-Name: # Name of the experiment
-ASL
-
-RobotFile: # Relative path of robot description file
-nao_hns.robot
 
 
 ======== SETTINGS ========
 
-Actions: # List of actions and their state (enabled = 1, disabled = 0)
-count,1
-whistle,1
-hide,1
-say_foundyou,1
-say_imfound,1
-say_hider,1
-say_seeker,1
+Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+count, 1
+whistle, 1
+hide, 1
+say_foundyou, 1
+say_imfound, 1
+say_hider, 1
+say_seeker, 1
+
+CurrentConfigName:
+Basic simulation
 
 Customs: # List of custom propositions
 seeker
@@ -61,33 +23,25 @@ playing
 RegionFile: # Relative path of region description file
 hideandseek.regions
 
-Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-see_player,1
-hear_whistle,1
-hear_counting,1
-
-currentExperimentName:
-Default
+Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
+see_player, 1
+hear_whistle, 1
+hear_counting, 1
 
 
 ======== SPECIFICATION ========
 
-RegionMapping:
+RegionMapping: # Mapping between region names and their decomposed counterparts
+Classroom1 = p12
+Classroom2 = p11
+Office = p7
+Closet = p10
+Gym = p8
+others = p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26
+Parking = p6
+between$Tree$and$Wall$ = p2
 
-Classroom1=p12
-Classroom2=p11
-Office=p7
-Closet=p10
-Danger=p9
-Wall=p3
-Gym=p8
-others=p13,p14,p15,p16,p17,p18,p19,p20,p21,p22,p23,p24,p25,p26
-Tree=p4
-SchoolWall=p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p37
-Parking=p6
-between$Tree$and$Wall$=p2
-
-Spec: # Specification in simple English
+Spec: # Specification in structured English
 ### Overview ###
 # Start in the parking lot.  If you are a seeker, stay there and count until you hear a ready whistle.
 # Then search all the hiding spots until you find someone.  Once you've found someone, you are now a hider.
@@ -100,10 +54,6 @@ Environment starts with not hear_whistle and not hear_counting
 Robot starts in Parking
 # Robot can start as either seeker or hider
 Robot starts with not count and not whistle and not hide and not playing
-
-### Restrictions ###
-group Obstacles is Wall, SchoolWall, Tree, Danger
-Always not all Obstacles
 
 ### Game start and end conditions ###
 playing is set on ((seeker and Parking and hear_whistle) or (not seeker and Parking and hear_counting)) and reset on (see_player)
@@ -138,5 +88,4 @@ Do say_seeker if and only if you are activating seeker and you are not activatin
 
 # don't talk while walking
 If you were activating say_imfound or say_foundyou or say_hider or say_seeker then stay there
-
 

@@ -48,7 +48,11 @@ def readFromFile(fileName):
     """
 
     # FIXME: This file reading function is very fragile; we should catch exceptions
-    f = open(fileName, "r")
+    try:
+        f = open(fileName, "r")
+    except IOError:
+        print "ERROR: Cannot open file %s" % fileName
+        return None
 
     # A regex to search for sections
     p_sec = re.compile(r"^=+\s*(?P<title>[^=]+)=+")

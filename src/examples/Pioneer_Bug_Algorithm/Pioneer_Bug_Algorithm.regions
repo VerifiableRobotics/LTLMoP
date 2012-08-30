@@ -1,0 +1,94 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+boundary	5	
+boundary	7
+boundary	10
+
+Obstacles: # Names of regions to treat as obstacles
+pond
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "forest_1", 
+        "color": [0, 128, 128], 
+        "position": [45, 692], 
+        "type": "rect", 
+        "size": [164, 175]
+    }, 
+    {
+        "name": "garage", 
+        "color": [176, 0, 255], 
+        "holeList": [], 
+        "points": [[0, 0], [223, 0], [332, 0], [332, 260], [0, 260]], 
+        "position": [1191, 607], 
+        "type": "poly", 
+        "size": [332, 260]
+    }, 
+    {
+        "name": "pond", 
+        "color": [0, 128, 255], 
+        "holeList": [], 
+        "points": [[0, 0], [175, 53], [202, 219], [172, 356], [0, 415], [0, 187]], 
+        "position": [209, 277], 
+        "type": "poly", 
+        "size": [202, 415]
+    }, 
+    {
+        "name": "station", 
+        "color": [255, 128, 128], 
+        "position": [1191, 408], 
+        "type": "rect", 
+        "size": [223, 199]
+    }, 
+    {
+        "name": "forest_2", 
+        "color": [64, 128, 128], 
+        "position": [45, 464], 
+        "type": "rect", 
+        "size": [164, 228]
+    }, 
+    {
+        "name": "forest_3", 
+        "color": [0, 128, 64], 
+        "position": [45, 277], 
+        "type": "rect", 
+        "size": [164, 187]
+    }, 
+    {
+        "name": "forest_4", 
+        "color": [0, 128, 0], 
+        "position": [45, 35], 
+        "type": "rect", 
+        "size": [164, 242]
+    }, 
+    {
+        "name": "boundary", 
+        "color": [204, 50, 50], 
+        "holeList": [], 
+        "points": [[0, 657], [0, 429], [0, 242], [0, 0], [164, 0], [1478, 0], [1478, 572], [1478, 832], [1146, 832], [164, 832], [0, 832]], 
+        "position": [45, 35], 
+        "type": "poly", 
+        "size": [1478, 832]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+forest_1	forest_2	45	692	209	692
+forest_1	boundary	45	692	45	867	45	867	209	867
+garage	station	1191	607	1414	607
+garage	boundary	1191	867	1523	867	1523	607	1523	867
+pond	forest_2	209	464	209	692
+pond	forest_3	209	277	209	464
+forest_2	forest_3	45	464	209	464
+forest_2	boundary	45	464	45	692
+forest_3	forest_4	45	277	209	277
+forest_3	boundary	45	277	45	464
+forest_4	boundary	45	35	209	35	45	35	45	277
+

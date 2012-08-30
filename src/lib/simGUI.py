@@ -58,7 +58,7 @@ class SimGUI_Frame(wx.Frame):
         self.window_1_pane_1.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.mapBitmap = None
 
-        self.Bind(wx.EVT_PAINT, self.onPaint)
+        self.window_1_pane_1.Bind(wx.EVT_PAINT, self.onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBG)
 
         # Make status bar at bottom.
@@ -93,6 +93,8 @@ class SimGUI_Frame(wx.Frame):
     
         self.robotPos = None
         self.robotVel = (0,0)
+
+        self.markerPos = None
 
         # Let everyone know we're ready
         self.UDPSockTo.sendto("Hello!",self.addrTo)
@@ -132,6 +134,10 @@ class SimGUI_Frame(wx.Frame):
             elif input.startswith("POSE:"):
                 [x,y] = map(float, input.split(":")[1].split(","))
                 self.robotPos = (x, y)
+                wx.CallAfter(self.onPaint)
+            elif input.startswith("marker:"):
+                [x,y] = map(float, input.split(":")[1].split(","))
+                self.markerPos = (x, y)
                 wx.CallAfter(self.onPaint)
             elif input.startswith("VEL:"):
                 [x,y] = map(float, input.split(":")[1].split(","))
@@ -224,7 +230,7 @@ class SimGUI_Frame(wx.Frame):
     def onResize(self, event=None): # wxGlade: SimGUI_Frame.<event_handler>
         size = self.window_1_pane_1.GetSize()
         self.mapBitmap = wx.EmptyBitmap(size.x, size.y)
-        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj, scaleToFit=True, drawLabels=False, memory=True)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=False, memory=True)
 
         self.Refresh()
         self.Update()
@@ -248,10 +254,7 @@ class SimGUI_Frame(wx.Frame):
                 dc = wx.GCDC(pdc)
             except:
                 dc = pdc
-            else:
-                self.window_1_pane_1.PrepareDC(pdc)
 
-        self.window_1_pane_1.PrepareDC(dc)
         dc.BeginDrawing()
 
         # Draw background
@@ -261,6 +264,10 @@ class SimGUI_Frame(wx.Frame):
         if self.robotPos is not None:
             [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
             dc.DrawCircle(x, y, 5)
+        if self.markerPos is not None:
+            [m,n] = map(lambda m: int(self.mapScale*m), self.markerPos) 
+            dc.SetBrush(wx.Brush(wx.RED))
+            dc.DrawCircle(m, n, 5)
 
         # Draw velocity vector of robot (for debugging)
         #dc.DrawLine(self.robotPos[0], self.robotPos[1], 

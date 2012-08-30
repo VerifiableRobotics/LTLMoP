@@ -29,14 +29,32 @@ class SysDummySensorHandler:
     def __init__(self, parent):
         self.parent = parent
 
-    def getSensorValue(self,name):
+    def __getitem__(self, name):
+        if name == "initializing_handler":
+            return {}
+        else:
+            return compile("self.sensor_handler.getSensorValue('%s')" % name, "<string>", "eval")
+
+    def __contains__(self, name):
+        return True
+
+    def getSensorValue(self, name):
         return self.parent.sensorStates[name]
 
 class EnvDummySensorHandler:
     def __init__(self, parent):
         self.parent = parent
 
-    def getSensorValue(self,name):
+    def __getitem__(self, name):
+        if name == "initializing_handler":
+            return {}
+        else:
+            return compile("self.sensor_handler.getSensorValue('%s')" % name, "<string>", "eval")
+
+    def __contains__(self, name):
+        return True
+
+    def getSensorValue(self, name):
         m = re.match('^bit(\d+)$', name)
         if m is not None:
             # Handle region encodings specially
@@ -51,12 +69,31 @@ class EnvDummySensorHandler:
 class SysDummyActuatorHandler:
     def __init__(self):
         pass
-    def setActuator(self,name,val):
+
+    def __getitem__(self, name):
+        if name == "initializing_handler":
+            return {}
+        else:
+            return compile("self.actuator_handler.setActuator('%s', new_val)" % name, "<string>", "eval")
+
+    def __contains__(self, name):
+        return True
+
+    def setActuator(self, name, val):
         pass
 
 class EnvDummyActuatorHandler:
     def __init__(self, parent):
         self.parent = parent
+
+    def __getitem__(self, name):
+        if name == "initializing_handler":
+            return {}
+        else:
+            return compile("self.actuator_handler.setActuator('%s', new_val)" % name, "<string>", "eval")
+
+    def __contains__(self, name):
+        return True
 
     def setActuator(self,name,val):
         self.parent.sensorStates[name] = val
@@ -64,10 +101,10 @@ class EnvDummyActuatorHandler:
             for btn in self.parent.env_buttons:
                 if btn.GetLabelText() == name:
                     if int(val) == 1:
-                        btn.SetBackgroundColour(wx.Colour(0, 255, 0)) 
+                        btn.SetBackgroundColour(wx.Colour(0, 255, 0))
                         btn.SetValue(True)
                     else:
-                        btn.SetBackgroundColour(wx.Colour(255, 0, 0)) 
+                        btn.SetBackgroundColour(wx.Colour(255, 0, 0))
                         btn.SetValue(False)
                     break
         except AttributeError:
@@ -103,7 +140,7 @@ class MopsyFrame(wx.Frame):
 
         self.Bind(wx.EVT_BUTTON, self.onButtonNext, self.button_next)
         # end wxGlade
-        
+
         self.dest_region = None
         self.current_region = None
         self.regionsToHide = []
@@ -131,18 +168,29 @@ class MopsyFrame(wx.Frame):
         self.sysDummyActuatorHandler = SysDummyActuatorHandler()
         self.envDummyActuatorHandler = EnvDummyActuatorHandler(self)
         self.dummyMotionHandler = DummyMotionHandler()
+        self.proj.sensor_handler, self.proj.actuator_handler, self.proj.h_instance = [None]*3
 
         print "Loading safety constraints..."
-        self.safety_aut = fsa.Automaton(self.proj.rfi.regions, self.proj.regionMapping, self.sysDummySensorHandler, self.sysDummyActuatorHandler, self.dummyMotionHandler) 
-        self.safety_aut.loadFile(self.proj.getFilenamePrefix() + "_safety.aut", self.proj.all_sensors, self.proj.all_actuators, self.proj.all_customs)
+        self.safety_aut = fsa.Automaton(self.proj)
+        self.safety_aut.sensor_handler = self.sysDummySensorHandler
+        self.safety_aut.actuator_handler = self.sysDummyActuatorHandler
+        self.safety_aut.motion_handler = self.dummyMotionHandler
+
+        self.safety_aut.loadFile(self.proj.getFilenamePrefix() + "_safety.aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
+
         print "Loading environment counter-strategy..."
         self.num_bits = int(numpy.ceil(numpy.log2(len(self.proj.rfi.regions))))  # Number of bits necessary to encode all regions
         region_props = ["bit" + str(n) for n in xrange(self.num_bits)]
-        self.env_aut = fsa.Automaton(self.proj.rfi.regions, self.proj.regionMapping, self.envDummySensorHandler, self.envDummyActuatorHandler, self.dummyMotionHandler)
+
+
+        self.env_aut = fsa.Automaton(self.proj)
+        self.env_aut.sensor_handler = self.envDummySensorHandler
+        self.env_aut.actuator_handler = self.envDummyActuatorHandler
+        self.env_aut.motion_handler = self.dummyMotionHandler
         # We are being a little tricky here by just reversing the sensor and actuator propositions
         # to create a sort of dual of the usual automaton
-        self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.all_actuators + self.proj.all_customs + region_props, self.proj.all_sensors, [])
-        
+        self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.enabled_actuators + self.proj.all_customs + region_props, self.proj.enabled_sensors, [])
+
         # Force initial state to state #0 in counter-strategy
         self.env_aut.current_region = None
         self.env_aut.current_state = self.env_aut.states[0]
@@ -150,7 +198,7 @@ class MopsyFrame(wx.Frame):
         self.env_aut.last_next_states = []
         self.env_aut.next_state = None
         self.env_aut.next_region = None
-        
+
         #self.env_aut.dumpStates([self.env_aut.current_state])
 
         # Set initial sensor values
@@ -159,16 +207,16 @@ class MopsyFrame(wx.Frame):
         # Figure out what actuator/custom-prop settings the system should start with
         for k,v in self.env_aut.current_state.inputs.iteritems():
             # Skip any "bitX" region encodings
-            if re.match('^bit\d+$', k): continue 
+            if re.match('^bit\d+$', k): continue
             self.actuatorStates[k] = int(v)
-        
+
         # Figure out what region the system should start from (ripped from regionFromState)
         self.current_region = 0
         for bit in range(self.num_bits):
             if (int(self.env_aut.current_state.inputs["bit" + str(bit)]) == 1):
                 # bit0 is MSB
                 self.current_region += int(2**(self.num_bits-bit-1))
-        
+
         self.dest_region = self.current_region
 
         # Create all the sensor/actuator buttons
@@ -180,7 +228,7 @@ class MopsyFrame(wx.Frame):
         for s in self.proj.all_customs:
             del(actprops[s])
         custprops = copy.deepcopy(self.actuatorStates)
-        for s in self.proj.all_actuators:
+        for s in self.proj.enabled_actuators:
             del(custprops[s])
 
         self.populateToggleButtons(self.sizer_env, self.env_buttons, self.sensorStates)
@@ -192,7 +240,7 @@ class MopsyFrame(wx.Frame):
             b.Enable(False)
 
         # Set up the logging grid
-        colheaders = self.proj.all_sensors + ["Region"] + self.proj.all_actuators + self.proj.all_customs
+        colheaders = self.proj.enabled_sensors + ["Region"] + self.proj.enabled_actuators + self.proj.all_customs
         self.history_grid.CreateGrid(0,len(colheaders))
         for i,n in enumerate(colheaders):
             self.history_grid.SetColLabelValue(i," " + n + " ")
@@ -211,7 +259,7 @@ class MopsyFrame(wx.Frame):
 
         # Start initial environment move
         # All transitionable states have the same env move, so just use the first
-        if (len(self.env_aut.current_state.transitions) >=1 ): 
+        if (len(self.env_aut.current_state.transitions) >=1 ):
             self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
 
         self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
@@ -227,9 +275,9 @@ class MopsyFrame(wx.Frame):
         # Look for any transition states that agree with our current outputs (ignoring dest_region)
         for s in trans:
             okay = True
-            for k,v in s.outputs.iteritems():   
+            for k,v in s.outputs.iteritems():
                 # Skip any "bitX" region encodings
-                if re.match('^bit\d+$', k): continue 
+                if re.match('^bit\d+$', k): continue
                 if int(v) != int(self.actuatorStates[k]):
                     okay = False
                     break
@@ -258,10 +306,10 @@ class MopsyFrame(wx.Frame):
 
     def appendToHistory(self):
         self.history_grid.AppendRows(1)
-        newvals = [self.sensorStates[s] for s in self.proj.all_sensors] + \
+        newvals = [self.sensorStates[s] for s in self.proj.enabled_sensors] + \
                   [self.safety_aut.getAnnotatedRegionName(self.current_region)] + \
-                  [self.actuatorStates[s] for s in self.proj.all_actuators] + \
-                  [self.actuatorStates[s] for s in self.proj.all_customs] 
+                  [self.actuatorStates[s] for s in self.proj.enabled_actuators] + \
+                  [self.actuatorStates[s] for s in self.proj.all_customs]
         lastrow = self.history_grid.GetNumberRows()-1
 
         for i,v in enumerate(newvals):
@@ -277,7 +325,7 @@ class MopsyFrame(wx.Frame):
         self.history_grid.MakeCellVisible(lastrow,0)
         self.history_grid.ForceRefresh()
         self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+2), 0)
-           
+
 
     def onMapClick(self, event):
         x = event.GetX()/self.mapScale
@@ -291,7 +339,7 @@ class MopsyFrame(wx.Frame):
                     self.label_movingto.SetLabel("Move to region " + self.safety_aut.getAnnotatedRegionName(self.proj.rfi.regions.index(region)))
 
                 self.applySafetyConstraints()
-                break 
+                break
 
         self.onResize() # Force map redraw
         event.Skip()
@@ -305,10 +353,10 @@ class MopsyFrame(wx.Frame):
             # Set the initial value as appropriate
             if int(item_val) == 1:
                 button_container[-1].SetValue(True)
-                button_container[-1].SetBackgroundColour(wx.Colour(0, 255, 0)) 
+                button_container[-1].SetBackgroundColour(wx.Colour(0, 255, 0))
             else:
                 button_container[-1].SetValue(False)
-                button_container[-1].SetBackgroundColour(wx.Colour(255, 0, 0)) 
+                button_container[-1].SetBackgroundColour(wx.Colour(255, 0, 0))
 
             self.window_1_pane_2.Layout() # Update the frame
             self.Refresh()
@@ -326,9 +374,9 @@ class MopsyFrame(wx.Frame):
 
         # TODO: Button background colour doesn't show up very well
         if btn.GetValue():
-            btn.SetBackgroundColour(wx.Colour(0, 255, 0)) 
+            btn.SetBackgroundColour(wx.Colour(0, 255, 0))
         else:
-            btn.SetBackgroundColour(wx.Colour(255, 0, 0)) 
+            btn.SetBackgroundColour(wx.Colour(255, 0, 0))
 
         self.Refresh()
         self.applySafetyConstraints()
@@ -343,7 +391,7 @@ class MopsyFrame(wx.Frame):
         else:
             hl = []
 
-        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj, scaleToFit=True, drawLabels=True, memory=True, highlightList=hl, deemphasizeList=self.regionsToHide)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=True, memory=True, highlightList=hl, deemphasizeList=self.regionsToHide)
 
         self.Refresh()
         self.Update()
@@ -374,11 +422,11 @@ class MopsyFrame(wx.Frame):
 
         # Draw robot
         if self.current_region is not None:
-            [x,y] = map(lambda x: int(self.mapScale*x), self.proj.rfi.regions[self.current_region].getCenter()) 
+            [x,y] = map(lambda x: int(self.mapScale*x), self.proj.rfi.regions[self.current_region].getCenter())
             dc.DrawCircle(x, y, 5)
 
         dc.EndDrawing()
-        
+
         if event is not None:
             event.Skip()
 

@@ -7,17 +7,30 @@ viconPose.py - Pose Handler for Vicon System
 
 import sys, time
 from numpy import *
-import pyvicon
+import _pyvicon
 
 class poseHandler:
-    def __init__(self, proj, shared_data):
-        host = proj.lab_data['ViconHost'][0]    
-        port = int(proj.lab_data['ViconPort'][0])
+    def __init__(self, proj, shared_data,host,port,x_VICON_name,y_VICON_name,theta_VICON_name):
+        """
+        Posw handler for VICON system
 
-        self.s = pyvicon.ViconStreamer()
-        self.s.connect(host,port)
+        host (string): The ip address of VICON system (default="10.0.0.102")
+        port (int): The port of VICON system (default=800)
+        x_VICON_name (string): The name of the stream for x pose of the robot in VICON system (default="SubjectName:SegmentName <t-X>")
+        y_VICON_name (string): The name of the stream for y pose of the robot in VICON system (default="SubjectName:SegmentName <t-Y>")
+        theta_VICON_name (string): The name of the stream for orintation of the robot in VICON system (default="SubjectName:SegmentName <a-Z>")
+        """
+        
+        self.host = host    
+        self.port = port
+        self.x = x_VICON_name
+        self.y = y_VICON_name
+        self.theta = theta_VICON_name
 
-        self.s.selectStreams(["Time", proj.robot_data['ViconName_X'][0], proj.robot_data['ViconName_Y'][0], proj.robot_data['ViconName_Theta'][0]])
+        self.s = _pyvicon.ViconStreamer()
+        self.s.connect(self.host,self.port)
+
+        self.s.selectStreams(["Time", self.x, self.y, self.theta])
 
         self.s.startStreams()
 

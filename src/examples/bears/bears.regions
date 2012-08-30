@@ -1,0 +1,32 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+cabin	3
+pear_tree	3
+apple_tree	0
+
+Obstacles: # Names of regions to treat as obstacles
+lower_river
+upper_river
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+lower_river	poly	311	367	187	241	0	40	255	94	0	162	125	187	241	79	239	55	120	14	82	0	0
+upper_river	poly	144	27	262	274	3	0	255	0	0	159	210	166	274	262	274	255	202	80	3
+boundary	poly	13	10	1106	631	0	0	255	4	593	0	14	131	17	211	20	420	0	1106	34	979	631	485	598	377	596
+cabin	rect	56	356	108	195	255	0	105
+lemon_tree	poly	780	480	130	86	255	255	0	3	86	0	0	130	28
+pear_tree	poly	867	140	159	124	0	255	0	159	38	60	124	0	94	41	0
+apple_tree	poly	427	68	220	119	22	127	12	62	0	220	24	209	105	74	119	8	79	0	22
+bear_colony	poly	634	273	165	152	255	0	2	94	0	165	114	80	152	0	107	3	24
+bridge	poly	252	301	235	66	143	34	15	0	0	59	0	155	0	235	0	235	66	153	66	59	66	0	66
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+lower_river	boundary	390	606	498	608
+lower_river	bridge	311	367	405	367
+upper_river	boundary	144	27	224	30
+
