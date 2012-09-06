@@ -4,7 +4,7 @@
 RRTController.py - Rapidly-Exploring Random Trees Motion Controller
 ===================================================================
 
-Uses the vector field algorithm developed by Stephen R. Lindemann to calculate a global velocity vector to take the robot from the current region to the next region, through a specified exit face.
+Uses Rapidly-exploring Random Tree Algorithm to generate paths given the starting position and the goal point.
 """
 
 import _RRTControllerHelper
@@ -34,11 +34,13 @@ class motionControlHandler:
         """
         Rapidly-Exploring Random Trees alogorithm motion planning controller
 
-        robot_type (int): Which robot is used for execution. Nao is 1, STAGE is 2, ODE is 3, Pioneer is 4(default=3)
+        robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
         max_angle (float): The biggest difference in angle between two nodes. The value should be within 0 to 6.28 = 2*pi. Default set to 1.047 = pi/3 (default=1.047)
         plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
         """
 
+        self.system_print = False
+        
         # Get references to handlers we'll need to communicate with
         self.drive_handler = proj.h_instance['drive']
         self.pose_handler = proj.h_instance['pose']
@@ -65,9 +67,9 @@ class motionControlHandler:
         self.map               = {}
         self.all               = Polygon.Polygon()
 
-        # Information about the robot
-        if robot_type not in [1,2,3]:
-            robot_type = 1
+        # Information about the robot (default set to ODE)
+        if robot_type not in [1,2,3,4]:
+            robot_type = 3
         self.system = robot_type
 
         # Information about maximum turning angle allowed
@@ -83,8 +85,8 @@ class motionControlHandler:
         else:
             self.plotting          = False
 
-        print "plotting is " + str(self.plotting)
-        ## 1: Nao ; 2: STAGE; 3: 0DE; 4: Pioneer
+        # Specify the size of the robot 
+        # 1: Nao ; 2: ROS; 3: 0DE; 4: Pioneer
         if  self.system == 1:
             self.radius = 0.15*1.2
         elif self.system == 2:
@@ -92,30 +94,31 @@ class motionControlHandler:
         elif self.system == 3:
             self.radius = 5
         elif self.system == 4:
-            self.radius = 10
+            self.radius = 0.15
             self.system = 1
 
-        #operate_system (int): Which operating system is used for execution.
-        #Ubuntu and Mac is 1, Windows is 2
+        # Operate_system (int): Which operating system is used for execution.
+        # Ubuntu and Mac is 1, Windows is 2
         if sys.platform in ['win32', 'cygwin']:
             self.operate_system = 2
         else:
-            self.operate_system = 1
-
-
-
-        print "operate_system is "+ str(self.operate_system)
-
+            self.operate_system = 1            
+        if self.system_print == True:
+            print "operate_system is "+ str(self.operate_system)
+        
+        # Generate polygon for regions in the map
         for region in self.proj.rfi.regions:
             self.map[region.name] = self.createRegionPolygon(region)
             for n in range(len(region.holeList)): # no of holes
                 self.map[region.name] -= self.createRegionPolygon(region,n)
 
+        # Generate the boundary polygon 
         for regionName,regionPoly in self.map.iteritems():
             self.all += regionPoly
 
+        # Start plotting if operating in Windows 
         if self.operate_system == 2 and self.plotting ==True:
-            # start using anmination to plot Pioneer
+            # start using anmination to plot the robot 
             self.fig = plt.figure()
             self.ax = self.fig.add_subplot(111)
             self.scope = _Scope(self.ax,self)
@@ -124,7 +127,6 @@ class motionControlHandler:
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
         If ``last`` is True, we will move to the center of the destination region.
-
         Returns ``True`` if we've reached the destination region.
         """
 
@@ -144,13 +146,15 @@ class motionControlHandler:
             time.sleep(1)
             return False
 
-        ###This part is run when the robot goes to a new region, otherwise, the original tree will be used.
+        ###This part will be run when the robot goes to a new region, otherwise, the original tree will be used.
         if not self.previous_next_reg == next_reg:
+            # Entered a new region. New tree should be formed.
             self.nextRegionPoly    = self.map[self.proj.rfi.regions[next_reg].name]
             self.currentRegionPoly = self.map[self.proj.rfi.regions[current_reg].name]
-
-            #print "next Region is "+str(self.proj.rfi.regions[next_reg].name)
-            #print "Current Region is "+str(self.proj.rfi.regions[current_reg].name)
+            
+            if self.system_print == True:
+                print "next Region is " + str(self.proj.rfi.regions[next_reg].name)
+                print "Current Region is " + str(self.proj.rfi.regions[current_reg].name)
 
             pointArray = [x for x in self.proj.rfi.regions[current_reg].getPoints()]
             pointArray = map(self.coordmap_map2lab, pointArray)
@@ -161,13 +165,9 @@ class motionControlHandler:
             if last:
                 transFace = None
             else:
-                # Find a face to go through
-                # TODO: Account for non-determinacy?
-
+                # Determine the mid points on the faces connecting to the next region (one goal point will be picked among all the mid points)
                 transFace = None
-                # Find the index of this face
                 q_gBundle = [[],[]]
-
                 for i in range(len(self.proj.rfi.transitions[current_reg][next_reg])):
                     pointArray_transface = [x for x in self.proj.rfi.transitions[current_reg][next_reg][i]]
                     transFace = asarray(map(self.coordmap_map2lab,pointArray_transface))
@@ -181,29 +181,28 @@ class motionControlHandler:
             # Run algorithm to build the Rapid-Exploring Random Trees
             self.RRT_V = None
             self.RRT_E = None
+            
+            # For plotting
             if self.operate_system == 2:
                 if self.plotting == True:
                     self.ax.cla()
                 else:
                     self.ax = None
-
             else:
                 self.ax = None
 
             self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = self.buildTree(\
-            [pose[0], pose[1]],pose[2], vertices,self.radius,self.system,self.currentRegionPoly, self.nextRegionPoly,q_gBundle,\
+            [pose[0], pose[1]],pose[2], self.radius,self.system,self.currentRegionPoly, self.nextRegionPoly,q_gBundle,\
             self.map,self.all,self.max_angle_allowed, self.plotting,self.operate_system)
-            #self.buildTree(\
-            #[pose[0], pose[1]],pose[2], vertices,self.radius,self.system,self.currentRegionPoly, self.nextRegionPoly,q_gBundle,\
-            #self.map,self.all,self.max_angle_allowed, self.plotting,self.operate_system,self.ax)
 
+            """
             # map the lab coordinates back to pixels
             V_tosend = array(mat(self.RRT_V[1:,:])).T
             V_tosend = map(self.coordmap_lab2map, V_tosend)
             V_tosend = mat(V_tosend).T
             s = 'RRT:E'+"["+str(list(self.RRT_E[0]))+","+str(list(self.RRT_E[1]))+"]"+':V'+"["+str(list(self.RRT_V[0]))+","+str(list(V_tosend[0]))+","+str(list(V_tosend[1]))+"]"+':T'+"["+str(list(q_gBundle[0]))+","+str(list(q_gBundle[1]))+"]"
-
             #print s
+            """
 
         # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
         V = self.setVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.radius)
@@ -215,14 +214,12 @@ class motionControlHandler:
         # Pass this desired velocity on to the drive handler
         self.drive_handler.setVelocity(V[0,0], V[1,0], pose[2])
         RobotPoly = Polygon.Shapes.Circle(self.radius,(pose[0],pose[1]))
-        #step 4: check whether robot is inside the boundary
-
+        
+        # check if robot is inside the current region
         departed = not self.currentRegionPoly.covers(RobotPoly)
         arrived  = self.nextRegionPoly.covers(RobotPoly)
 
-
         if departed and (not arrived) and (time.time()-self.last_warning) > 0.5:
-            #print "WARNING: Left current region but not in expected destination region"
             # Figure out what region we think we stumbled into
             for r in self.proj.rfi.regions:
                 pointArray = [self.coordmap_map2lab(x) for x in r.getPoints()]
@@ -234,6 +231,7 @@ class motionControlHandler:
                     break
             self.last_warning = time.time()
 
+        #print "arrived:"+str(arrived)
         return arrived
 
     def createRegionPolygon(self,region,hole = None):
@@ -256,7 +254,7 @@ class motionControlHandler:
             p        = the current x-y position of the robot
             E        = edges of the tree  (2 x No. of nodes on the tree)
             V        = points of the tree (2 x No. of vertices)
-            heading     = index of the previous heading point on the tree
+            heading  = index of the previous heading point on the tree
             E_prev   = current index of E
             last = True, if the current region is the last region
                  = False, if the current region is NOT the last region
@@ -281,62 +279,58 @@ class motionControlHandler:
 
         return Vel
 
-    def buildTree(self,p,theta,vert, R, system, regionPoly,nextRegionPoly,q_gBundle,\
+    def buildTree(self,p,theta, R, system, regionPoly,nextRegionPoly,q_gBundle,\
     mappedRegions,allRegions,max_angle_allowed, plotting, operate_system, last=False):
 
         """
-        This function builds the RRT tree
-        pose: x,y position of the robot
-        theta: current orientation of the robot
-        R: radius of the robot
-        system: determine step_size and radius for the example
-        regionPoly: current region polygon
-        nextRegionPoly: next region polygon
-        q_gBundle: coordinates of q_goals that the robot can reach
-        mappedRegions: region polygons
-        allRegions: polygon that includes all the region
+        This function builds the RRT tree.
+        
+        p                : x,y position of the robot
+        theta            : current orientation of the robot
+        R                : radius of the robot
+        system           : determine step_size and radius for the example
+        regionPoly       : current region polygon
+        nextRegionPoly   : next region polygon
+        q_gBundle        : coordinates of q_goals that the robot can reach
+        mappedRegions    : region polygons
+        allRegions       : polygon that includes all the region
         max_angle_allowed: the difference in angle between the two nodes allowed (between 0 to 2*pi)
-        plotting: True if plotting is enabled, False- disabled
-        operate_system: Which operating system is used for execution. Ubuntu and Mac is 1, Windows is 2
+        plotting         : True if plotting is enabled, False- disabled
+        operate_system   : Which operating system is used for execution. Ubuntu and Mac is 1, Windows is 2
         """
         finish_print       = 0       #set to 1 to print finish E and V before trimming
-
         max_angle = max_angle_allowed
 
 
-        ## 1: Nao ; 2: STAGE ;  3: ODE
+        ## 1: Nao and Pioneer; 2: ROS ; 3: ODE
+        #  Time step: for calculation of x, y position
+        #  Step_size: the length of each step in control space
+        #  Velocity : Velocity of the robot in m/s in control space
         if system == 1:    ## Nao
-            step_size  = 0.2          	#set the step_size for points be 1/5 of the norm from   ORIGINAL = 0.4
+            step_size  = 0.2      #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
+            timeStep = 5
+            velocity  = 0.05 
         elif system == 2:
             step_size  = 0.5
-        elif system == 3:
-            step_size  = 15
-
-        if system == 1:    ## Nao
-            timeStep = 5   #time step for calculation of x, y position
-        elif system == 2:
-            timeStep = 4   #time step for calculation of x, y position
-        elif system == 3:
-            timeStep = 10  #time step for calculation of x, y position    #10
-        #############tune velocity OMEGA, TIME STEP
-
-        #fix velocity
-        ## 1: Nao ; 2: STAGE ;  3: ODE
-        if system == 1:    ## Nao
-            velocity  = 0.05          	#set the step_size for points be 1/5 of the norm from
-        elif system == 2:
+            timeStep = 4
             velocity  = 0.06
         elif system == 3:
-            velocity = 2    # what is used in RRTControllerHelper.setVelocity    #1.5
+            step_size  = 15
+            timeStep = 10
+            velocity = 2    # 1.5
         #############tune velocity OMEGA, TIME STEP
 
-        BoundPoly  = regionPoly       # Boundary polygon = current region polygon
-        radius     = R
-        q_init     = mat(p).T
-        V          = vstack((0,q_init))
-        V_theta    = array([theta])
-        original_figure = 1
-
+        BoundPoly       = regionPoly       # Boundary polygon = current region polygon
+        radius          = R
+        q_init          = mat(p).T
+        V               = vstack((0,q_init))
+        V_theta         = array([theta])
+        
+        if operate_system == 1 and plotting == True:
+            plt.cla()
+            self.plotMap(mappedRegions) 
+            plt.plot(p[0],p[1],'ko')           
+            
         #!!! CONTROL SPACE: generate a list of omega for random sampling
         omegaLowerBound = -math.pi/20      # upper bound for the value of omega
         omegaUpperBound = math.pi/20       # lower bound for the value of omega
@@ -347,14 +341,14 @@ class motionControlHandler:
         edgeY    = []
 
         # check faces of the current region for goal points
-
         E = [[],[]]
         Other = [[],[]]
         path     = 0          # if path formed then = 1
         stuck    = 0          # count for changing the range of sampling omega
-        stuck_thres = 300     # threshold for changing the range of sampling omega
+        stuck_thres = 20     # threshold for changing the range of sampling omega
 
-        print "plotting is " + str(plotting)
+        if self.system_print == True:
+            print "plotting in buildTree is " + str(plotting)
         if plotting == True:
             if not plt.isinteractive():
                 plt.ion()
@@ -362,41 +356,38 @@ class motionControlHandler:
 
         while path == 0:
             #step -1: try connection to q_goal (generate path to goal)
-            goalCheck = 0;
             i = 0
-
+            if self.system_print == True:
+                print "step -1 "
+            
             # pushing possible q_goals into the current region (ensure path is covered by the current region polygon)
             q_pass = [[],[],[]]
             q_pass_dist = []
-            #print "q_gBundle is  " + str(q_gBundle)
             q_gBundle = mat(q_gBundle)
-            while i < q_gBundle.shape[1]:   ###not sure about shape
-                q_g = q_gBundle[:,i]+(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*radius    ##original 2*radius
+            while i < q_gBundle.shape[1]: 
+                q_g = q_gBundle[:,i]+(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*1.5*radius    ##original 2*radius
                 trial = 1
                 if not BoundPoly.isInside(q_g[0],q_g[1]):
                     trial = 2
-                    q_g = q_gBundle[:,i]-(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*radius    ##original 2*radius
+                    q_g = q_gBundle[:,i]-(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*1.5*radius    ##original 2*radius
 
                 #forming polygon for path checking
+                """
                 cross_goal     = cross(vstack((q_g-vstack((V[1,shape(V)[1]-1],V[2,shape(V)[1]-1])),0)).T,hstack((0,0,1)))
                 cross_goal       = cross_goal.T
                 move_vector_goal = radius*cross_goal[0:2]/sqrt((cross_goal[0,0]**2 + cross_goal[1,0]**2))
                 upperEdgeG   = hstack((vstack((V[1,shape(V)[1]-1],V[2,shape(V)[1]-1])),q_g)) + hstack((move_vector_goal,move_vector_goal))
                 lowerEdgeG   = hstack((vstack((V[1,shape(V)[1]-1],V[2,shape(V)[1]-1])),q_g)) - hstack((move_vector_goal,move_vector_goal))
                 EdgePolyGoal    = Polygon.Polygon((tuple(array(lowerEdgeG[:,0].T)[0]),tuple(array(upperEdgeG[:,0].T)[0]),tuple(array(upperEdgeG[:,1].T)[0]),tuple(array(lowerEdgeG[:,1].T)[0])))
-
+                """
+                
+                EdgePolyGoal = PolyShapes.Circle(radius,(q_g[0,0],q_g[1,0])) + PolyShapes.Circle(radius,(V[1,shape(V)[1]-1],V[2:,shape(V)[1]-1]))
+                EdgePolyGoal = PolyUtils.convexHull(EdgePolyGoal)
                 dist = norm(q_g - V[1:,shape(V)[1]-1])
-                connect_goal = BoundPoly.covers(EdgePolyGoal)   #check coverage of path from new point to goal
+                
                 #check connection to goal
-
-                """
-                if connect_goal:
-                    print "connection is true"
-                    path = 1
-                    q_pass = hstack((q_pass,vstack((i,q_g))))
-                    q_pass_dist = hstack((q_pass_dist,dist))
-                """
-
+                connect_goal = BoundPoly.covers(EdgePolyGoal)   #check coverage of path from new point to goal
+                
                 # compare orientation difference
                 thetaPrev = V_theta[shape(V)[1]-1]
                 theta_orientation = abs(arctan((q_g[1,0]- V[2,shape(V)[1]-1])/(q_g[0,0]- V[1,shape(V)[1]-1])))
@@ -424,20 +415,17 @@ class motionControlHandler:
                             theta_orientation =  2*pi - theta_orientation
 
                 ################################## PRINT PLT #################
-
                 if connect_goal :
                     if plotting == True:
                         if operate_system == 1:
-                            plt.subtitle('Randomly-exploring rapid tree', fontsize=12)
-                            BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
-                            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+                            plt.suptitle('Rapidly-exploring Random Tree', fontsize=12)
                             plt.xlabel('x')
                             plt.ylabel('y')
                             if shape(V)[1] <= 2:
                                 plt.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
                             else:
                                 plt.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                            plt.figure(original_figure).canvas.draw()
+                            plt.figure(1).canvas.draw()
                         else:
                             BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
                             self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
@@ -446,20 +434,20 @@ class motionControlHandler:
                             else:
                                 self.ax.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
 
-
+                # if connection to goal can be established and the max change in orientation of the robot is smaller than max_angle, tree is said to be completed.
                 if connect_goal and abs(theta_orientation - thetaPrev) < max_angle:
-                    #if connect_goal and abs(theta_orientation - thetaPrev) < pi/3:
-                    #print "connection is true.Path = 1"
                     path = 1
                     q_pass = hstack((q_pass,vstack((i,q_g))))
                     q_pass_dist = hstack((q_pass_dist,dist))
 
-
                 i = i + 1
 
+            if self.system_print == True:
+                print "checked goal points"
             self.E = E
             self.V = V
             # connection to goal has established
+            # Obtain the closest goal point that path can be formed.
             if path == 1:
                 if shape(q_pass_dist)[0] == 1:
                     cols = 0
@@ -474,11 +462,11 @@ class motionControlHandler:
                 if plotting == True :
                     if operate_system == 1:
                         plt.plot(q_g[0,0],q_g[1,0],'ko')
-                        plt.figure(original_figure).canvas.draw()
+                        plt.figure(1).canvas.draw()
                     else:
                         self.ax.plot(q_g[0,0],q_g[1,0],'ko')
 
-
+                # trim the path connecting current node to goal point into pieces if the path is too long now
                 numOfPoint = floor(norm(V[1:,shape(V)[1]-1]- q_g)/step_size)
                 if numOfPoint < 3:
                     numOfPoint = 3
@@ -495,8 +483,11 @@ class motionControlHandler:
                 hit_count   = 0           # count for regenerating new edge with the same q_rand
                 Icurrent    = []          # to keep track of the index of the closest point to q_n
 
-                while success == 0 and hit_count <= 2:
+                while success == 0 and hit_count <= 2: 
+                    if self.system_print == True:
+                        print "In control space generating path,stuck = " + str(stuck)                   
                     if stuck > stuck_thres:
+                        # increase the range of omega since path cannot ge generated
                         omega = random.choice(omega_range_abso)
                     else:
                         #!!!! CONTROL SPACE STEP 1 - generate random omega
@@ -527,13 +518,13 @@ class motionControlHandler:
 
                     # plotting
                     if plotting == True:
-                        self.plotPoly(path_all,'r',1)
-                        if operate_system == 1:
-                            self.plotMap(original_figure,BoundPoly,allRegions)
+                        self.plotPoly(path_all,'r',1)                      
 
                     stuck = stuck + 1
                     if in_bound:
-                        stuck = stuck -5
+                        if self.system_print == True:
+                            print "node connected"  
+                        stuck = stuck -1
                         x = []
                         y = []
                         for k in  PolyUtils.pointList(path_all):
@@ -574,13 +565,11 @@ class motionControlHandler:
         ####print with matlib
         if plotting ==True :
             if operate_system == 1:
-                BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
-                plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
                 plt.plot(V[1,:],V[2,:],'b')
                 for i in range(shape(E)[1]-1):
                     plt.text(V[1,E[0,i]],V[2,E[0,i]], V[0,E[0,i]], fontsize=12)
                     plt.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
-                plt.figure(original_figure).canvas.draw()
+                plt.figure(1).canvas.draw()
             else:
                 BoundPolyPoints = asarray(PolyUtils.pointList(BoundPoly))
                 self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
@@ -596,21 +585,21 @@ class motionControlHandler:
         E_toPass = array(E_toPass)
         return V, E, heading,0,V_toPass,E_toPass
 
-    def plotMap(self,number,currentRegion,allRegions):
+    def plotMap(self,mappedRegions):
         """
         Plotting regions and obstacles with matplotlib.pyplot
 
         number: figure number (see on top)
         """
 
-        if not plt.isinteractive():
-            plt.ion()
-        plt.hold(True)
-
-        self.plotPoly(currentRegion,'k')
+        #if not plt.isinteractive():
+        #    plt.ion()
+        #plt.hold(True)
 
         if self.operate_system == 1:
-            plt.figure(number).canvas.draw()
+            for regionName,regionPoly in mappedRegions.iteritems():
+                self.plotPoly(regionPoly,'k')
+            plt.figure(1).canvas.draw()
 
     def plotPoly(self,c,string,w = 1):
         """
@@ -629,10 +618,11 @@ class motionControlHandler:
                         BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(toPlot.contour(j))))
                         if self.operate_system == 2:
                             self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
-                            self.ax.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+                            self.ax.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)                            
                         else:
                             plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
                             plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+                            plt.figure(1).canvas.draw()
 
     def data_gen(self):
         #self.ax.cla()

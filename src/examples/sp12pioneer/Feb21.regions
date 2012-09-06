@@ -15,6 +15,107 @@ Obstacles: # Names of regions to treat as obstacles
 Regions: # Stored as JSON string
 [
     {
+        "name": "r5", 
+        "color": [
+            0, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                0
+            ], 
+            [
+                159, 
+                0
+            ], 
+            [
+                159, 
+                184
+            ], 
+            [
+                159, 
+                386
+            ], 
+            [
+                159, 
+                387
+            ], 
+            [
+                0, 
+                387
+            ]
+        ], 
+        "position": [
+            505, 
+            196
+        ], 
+        "type": "poly", 
+        "size": [
+            159, 
+            387
+        ]
+    }, 
+    {
+        "name": "r4", 
+        "color": [
+            255, 
+            165, 
+            0
+        ], 
+        "position": [
+            664, 
+            380
+        ], 
+        "type": "rect", 
+        "size": [
+            308, 
+            202
+        ]
+    }, 
+    {
+        "name": "r3", 
+        "color": [
+            255, 
+            165, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                0
+            ], 
+            [
+                510, 
+                0
+            ], 
+            [
+                510, 
+                184
+            ], 
+            [
+                308, 
+                184
+            ], 
+            [
+                0, 
+                184
+            ]
+        ], 
+        "position": [
+            664, 
+            196
+        ], 
+        "type": "poly", 
+        "size": [
+            510, 
+            184
+        ]
+    }, 
+    {
         "name": "r2", 
         "color": [
             255, 
@@ -68,4 +169,9 @@ Regions: # Stored as JSON string
 ]
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+r5	r4	664	380	664	582
+r5	r3	664	196	664	380
+r4	r3	664	380	972	380
+r4	r2	972	380	972	582
+r3	r2	972	380	1174	380
 
