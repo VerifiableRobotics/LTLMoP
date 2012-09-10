@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" width="694" height="511">
+<path style="fill:red;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 0, 0 L 694, 0 L 694, 511 L 0, 511 z "/>
+<path style="fill:green;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 199, 210 L 213, 293 L 153, 341 L 77, 311 L 82, 208 z "/>
+<path style="fill:blue;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 229, 67 L 282, 137 L 275, 266 L 213, 293 L 199, 210 L 156, 139 z "/>
+<path style="fill:yellow;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 75, 67 L 229, 67 L 156, 139 L 199, 210 L 82, 208 L 75, 70 z "/>
+<path style="fill:red;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 426, 82 L 375, 82 L 378, 390 L 39, 391 L 41, 442 L 421, 436 z "/>
+<path style="fill:green;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 505, 324 L 606, 324 L 606, 420 L 505, 420 z "/>
+</svg>
