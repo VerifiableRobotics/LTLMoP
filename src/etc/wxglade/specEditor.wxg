@@ -595,4 +595,75 @@
             </object>
         </object>
     </object>
+    <object class="AnalysisResultsDialog" name="analysisResultsDialog" base="EditDialog">
+        <style>wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxTHICK_FRAME</style>
+        <title>Analysis Results</title>
+        <size>562, 403</size>
+        <object class="wxBoxSizer" name="sizer_11" base="EditBoxSizer">
+            <orient>wxVERTICAL</orient>
+            <object class="sizeritem">
+                <flag>wxALL</flag>
+                <border>5</border>
+                <option>0</option>
+                <object class="wxStaticText" name="label_3" base="EditStaticText">
+                    <attribute>1</attribute>
+                    <label>Analysis Output:</label>
+                </object>
+            </object>
+            <object class="sizeritem">
+                <flag>wxALL|wxEXPAND</flag>
+                <border>5</border>
+                <option>1</option>
+                <object class="wxTextCtrl" name="text_ctrl_summary" base="EditTextCtrl">
+                    <style>wxTE_MULTILINE|wxTE_READONLY</style>
+                </object>
+            </object>
+            <object class="sizeritem">
+                <flag>wxALL</flag>
+                <border>5</border>
+                <option>0</option>
+                <object class="wxStaticText" name="label_10" base="EditStaticText">
+                    <attribute>1</attribute>
+                    <label>SLURP Traceback:</label>
+                </object>
+            </object>
+            <object class="sizeritem">
+                <flag>wxALL|wxEXPAND</flag>
+                <border>5</border>
+                <option>4</option>
+                <object class="wxTreeCtrl" name="tree_ctrl_traceback" base="EditTreeCtrl">
+                    <style>wxTR_HAS_BUTTONS|wxTR_NO_LINES|wxTR_HIDE_ROOT|wxTR_DEFAULT_STYLE|wxSUNKEN_BORDER</style>
+                </object>
+            </object>
+            <object class="sizeritem">
+                <flag>wxEXPAND</flag>
+                <border>0</border>
+                <option>0</option>
+                <object class="wxBoxSizer" name="sizer_16" base="EditBoxSizer">
+                    <orient>wxHORIZONTAL</orient>
+                    <object class="sizeritem">
+                        <flag>wxEXPAND</flag>
+                        <border>0</border>
+                        <option>1</option>
+                        <object class="spacer" name="spacer" base="EditSpacer">
+                            <height>20</height>
+                            <width>20</width>
+                        </object>
+                    </object>
+                    <object class="sizeritem">
+                        <flag>wxALL|wxEXPAND</flag>
+                        <border>5</border>
+                        <option>0</option>
+                        <object class="wxButton" name="button_1" base="EditButton">
+                            <stockitem>CLOSE</stockitem>
+                            <label>&amp;Close</label>
+                            <events>
+                                <handler event="EVT_BUTTON">onButtonClose</handler>
+                            </events>
+                        </object>
+                    </object>
+                </object>
+            </object>
+        </object>
+    </object>
 </application>
