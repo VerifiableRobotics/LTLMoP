@@ -154,6 +154,23 @@ class Automaton:
 
         return region
 
+    def envRegionFromState(self, state):
+        """
+        Given a state object, look at its 'sbitX' outputs to determine the region encoded,
+        and return the NUMBER of this region.
+        """
+        try:
+            region = 0
+            for bit in range(self.num_bits):
+                if (int(state.inputs["sbit" + str(bit)]) == 1):
+                    # bit0 is MSB
+                    region += int(2**(self.num_bits-bit-1))
+        except KeyError:
+            print "FATAL: Missing expected proposition 'sbit%d' in automaton!" % bit
+            region = None
+
+        return region
+
     def loadFile(self, filename, sensors, actuators, custom_props):
         """
         Create an automaton by reading in a file produced by TLV.
@@ -209,7 +226,7 @@ class Automaton:
 
                 # And then put it in the right place!
 
-                if var not in sensors:
+                if var not in sensors and not re.match('^sbit\d+$',var):
                     # If it's not a sensor proposition, then it's an output proposition
                     outputs[var]=val
                 else:
@@ -314,7 +331,10 @@ class Automaton:
             for nextState in state.transitions:
                 FILE.write('\ts'+ state.name +' -> s'+ nextState.name +'[style=\"bold\", arrowsize = 1.5, fontsize = 20, label=\"')
                 # Check the next state to figure out which inputs have to be on
+                envRegion = self.envRegionFromState(nextState)
+                FILE.write( self.getAnnotatedRegionName(envRegion) + '\\n')
                 for key in nextState.inputs.keys():
+                    if re.match('^sbit\d+$',key): continue
                     if nextState.inputs[key] == '1':
                         FILE.write( key + '\\n')
                     else:

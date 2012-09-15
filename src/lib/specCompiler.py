@@ -174,6 +174,57 @@ class SpecCompiler(object):
 
         adjData = self.parser.proj.rfi.transitions
 
+        ##############################################################################
+        ######### BEGIN HACK: generate env topology info for follow scenario #########
+        ##############################################################################
+
+        # taken from createJTLVInput
+
+        env_topology = []
+        # The topological relation (adjacency)
+        for Origin in range(len(adjData)):
+            # from region i we can stay in region i
+            env_topology.append('\t\t\t []( (')
+            env_topology.append(currBitEnc[Origin])
+            env_topology.append(') -> ( (')
+            env_topology.append(nextBitEnc[Origin])
+            env_topology.append(')')
+            
+            for dest in range(len(adjData)):
+                if adjData[Origin][dest]:
+                    # not empty, hence there is a transition
+                    env_topology.append('\n\t\t\t\t\t\t\t\t\t| (')
+                    env_topology.append(nextBitEnc[dest])
+                    env_topology.append(') ')
+
+            # closing this region
+            env_topology.append(' ) ) & \n ')
+
+        env_topology = ''.join(env_topology).replace("s.bit", "e.sbit")
+        
+        # Setting the system initial formula to allow only valid
+        #  region encoding. This may be redundent if an initial region is
+        #  specified, but it is here to ensure the system cannot start from
+        #  an invalid encoding
+        initreg_formula = '\t\t\t( ' + currBitEnc[0] + ' \n'
+        for regionInd in range(1,len(currBitEnc)):
+            initreg_formula = initreg_formula + '\t\t\t\t | ' + currBitEnc[regionInd] + '\n'
+        initreg_formula = initreg_formula + '\t\t\t) \n'
+        initreg_formula = initreg_formula.replace("s.bit", "e.sbit")
+
+        if "ENVIRONMENT TOPOLOGY" in LTLspec_env:
+            sensorBits = ["sbit{0}".format(n) for n in range(0,numBits)]
+            for p in sensorBits:
+                if p not in sensorList:
+                    self.proj.enabled_sensors.append(p)
+                    sensorList.append(p)
+
+        LTLspec_env = LTLspec_env.replace("ENVIRONMENT TOPOLOGY", env_topology + initreg_formula)
+
+        ##############################################################################
+        #################################### END HACK ################################
+        ##############################################################################
+
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
 
         return traceback
