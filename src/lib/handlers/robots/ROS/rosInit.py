@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 """
 =================================================
@@ -42,6 +43,7 @@ class initHandler:
 		self.worldFile=worldFile
 		#Map to real world scaling constant
 		self.ratio=robotPhysicalWidth/robotPixelWidth
+		self.robotPhysicalWidth = robotPhysicalWidth
 		
 		if self.worldFile=='ltlmop_map.world':
 			#This creates a png copy of the regions to load into gazebo

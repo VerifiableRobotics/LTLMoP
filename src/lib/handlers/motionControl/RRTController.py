@@ -39,7 +39,7 @@ class motionControlHandler:
         plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
         """
 
-        self.system_print = False
+        self.system_print = True
         
         # Get references to handlers we'll need to communicate with
         self.drive_handler = proj.h_instance['drive']
@@ -90,7 +90,10 @@ class motionControlHandler:
         if  self.system == 1:
             self.radius = 0.15*1.2
         elif self.system == 2:
-            self.radius = 0.1
+            self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
+            print "self.ROSInitHandler.robotPhysicalWidth"+ str(self.ROSInitHandler.robotPhysicalWidth)
+            self.radius = self.ROSInitHandler.robotPhysicalWidth/2
+            self.system = 1
         elif self.system == 3:
             self.radius = 5
         elif self.system == 4:

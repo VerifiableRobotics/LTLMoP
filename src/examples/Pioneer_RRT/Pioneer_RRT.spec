@@ -11,7 +11,7 @@ convexify: False
 fastslow: False
 
 CurrentConfigName:
-RRT with Pioneer
+RRT with ROS
 
 Customs: # List of custom propositions
 
