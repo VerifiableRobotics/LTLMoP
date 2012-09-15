@@ -42,7 +42,8 @@ class Project:
 
         # Compilation options (with defaults)
         self.compile_options = {"convexify": True,  # Decompose workspace into convex regions
-                                "fastslow": False}  # Enable "fast-slow" synthesis algorithm
+                                "fastslow": False,  # Enable "fast-slow" synthesis algorithm
+                                "parser": "slurp"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
 
         # Climb the tree to find out where we are
         p = os.path.abspath(sys.argv[0])
@@ -165,7 +166,11 @@ class Project:
                     continue
 
                 k,v = l.split(":", 1)
-                self.compile_options[k.strip().lower()] = (v.strip().lower() in ['true', 't', '1'])
+                if k.strip().lower() == "parser":
+                    self.compile_options[k.strip().lower()] = v.strip().lower()
+                else:
+                    # convert to boolean if not a parser type
+                    self.compile_options[k.strip().lower()] = (v.strip().lower() in ['true', 't', '1'])
 
         return spec_data
 

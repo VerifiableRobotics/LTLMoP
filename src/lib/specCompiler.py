@@ -4,14 +4,6 @@ import time, copy
 import math
 import subprocess
 
-# Add SLURP to path for import
-# Climb the tree to find out where we are
-
-p = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
-
-from ltlbroom.specgeneration import SpecGenerator
-
 sys.path.append("lib")
 
 import project
@@ -84,33 +76,78 @@ class SpecCompiler(object):
         else:
             text = self.proj.specText
 
-        # Make a new specgenerator and have it process the text
-        specGen = SpecGenerator()
-        LTLspec_env, LTLspec_sys, self.proj.internal_props, responses, traceback = \
-            specGen.generate(text, sensorList, regionList, robotPropList)
+        # Create LTL using selected parser
+        # TODO: rename decomposition object to something other than 'parser'
+        if self.proj.compile_options["parser"] == "slurp":
+            # Add SLURP to path for import
+            p = os.path.dirname(os.path.abspath(__file__))
+            sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
 
-        for ln, response in enumerate(responses):
-            if not response:
-                print "WARNING: Could not parse the sentence in line {0}".format(ln)
+            from ltlbroom.specgeneration import SpecGenerator
 
-        # Abort compilation if there were any errors
-        if not all(responses):
+            # Make a new specgenerator and have it process the text
+            specGen = SpecGenerator()
+            LTLspec_env, LTLspec_sys, self.proj.internal_props, responses, traceback = \
+                specGen.generate(text, sensorList, regionList, robotPropList)
+
+            for ln, response in enumerate(responses):
+                if not response:
+                    print "WARNING: Could not parse the sentence in line {0}".format(ln)
+
+            # Abort compilation if there were any errors
+            if not all(responses):
+                return None
+        
+            # Add in the internal memory propositions, so they go into the SMV and spec files
+            for p in self.proj.internal_props:
+                if p not in robotPropList:
+                    robotPropList.append(p)
+
+            # Conjoin all the spec chunks
+            LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
+            LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
+
+            # substitute decomposed region names
+            for r in self.proj.rfi.regions:
+                if not (r.isObstacle or r.name.lower() == "boundary"):
+                    LTLspec_env = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
+                    LTLspec_sys = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
+
+        elif self.proj.compile_options["parser"] == "ltl":
+            # delete comments
+            text = re.sub(r"#.*$", "", text, flags=re.MULTILINE)
+
+            # split into env and sys parts (by looking for a line of just dashes in between)
+            LTLspec_env, LTLspec_sys = re.split(r"^\s*-+\s*$", text, maxsplit=1, flags=re.MULTILINE)
+
+            # split into subformulas
+            LTLspec_env = re.split(r"(?:[ \t]*[\n\r][ \t]*)+", LTLspec_env)
+            LTLspec_sys = re.split(r"(?:[ \t]*[\n\r][ \t]*)+", LTLspec_sys)
+
+            # remove any empty initial entries (HACK?)
+            while '' in LTLspec_env:
+                LTLspec_env.remove('')
+            while '' in LTLspec_sys:
+                LTLspec_sys.remove('')
+
+            print LTLspec_env
+            print LTLspec_sys
+
+            # automatically conjoin all the subformulas
+            LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
+            LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
+
+            # substitute decomposed region names
+            for r in self.proj.rfi.regions:
+                if not (r.isObstacle or r.name.lower() == "boundary"):
+                    LTLspec_env = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
+                    LTLspec_sys = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
+
+            traceback = [] # HACK: needs to be something other than None
+        else:
+            print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
             return None
-    
-        # Add in the internal memory propositions, so they go into the SMV and spec files
-        for p in self.proj.internal_props:
-            if p not in robotPropList:
-                robotPropList.append(p)
 
-        # Conjoin all the spec chunks
-        LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
-        LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
-
-        # substitute decomposed region names
-        for r in self.proj.rfi.regions:
-            if not (r.isObstacle or r.name.lower() == "boundary"):
-                LTLspec_env = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
-                LTLspec_sys = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
 
         # Prepend "e." or "s." to propositions for JTLV
         for i, sensor in enumerate(sensorList):

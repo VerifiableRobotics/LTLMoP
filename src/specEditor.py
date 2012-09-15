@@ -265,6 +265,10 @@ class SpecEditorFrame(wx.Frame):
         global MENU_COMPILECONFIG; MENU_COMPILECONFIG = wx.NewId()
         global MENU_CONVEXIFY; MENU_CONVEXIFY = wx.NewId()
         global MENU_FASTSLOW; MENU_FASTSLOW = wx.NewId()
+        global MENU_PARSERMODE; MENU_PARSERMODE = wx.NewId()
+        global MENU_PARSERMODE_SLURP; MENU_PARSERMODE_SLURP = wx.NewId()
+        global MENU_PARSERMODE_STRUCTURED; MENU_PARSERMODE_STRUCTURED = wx.NewId()
+        global MENU_PARSERMODE_LTL; MENU_PARSERMODE_LTL = wx.NewId()
         global MENU_SIMULATE; MENU_SIMULATE = wx.NewId()
         global MENU_SIMCONFIG; MENU_SIMCONFIG = wx.NewId()
         global MENU_ANALYZE; MENU_ANALYZE = wx.NewId()
@@ -292,6 +296,11 @@ class SpecEditorFrame(wx.Frame):
         wxglade_tmp_menu_sub = wx.Menu()
         wxglade_tmp_menu_sub.Append(MENU_CONVEXIFY, "Decompose workspace into convex regions", "", wx.ITEM_CHECK)
         wxglade_tmp_menu_sub.Append(MENU_FASTSLOW, "Enable \"fast-slow\" synthesis", "", wx.ITEM_CHECK)
+        wxglade_tmp_menu_sub_sub = wx.Menu()
+        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_SLURP, "SLURP (NL)", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_STRUCTURED, "Structured English", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_LTL, "LTL", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub.AppendMenu(MENU_PARSERMODE, "Parser mode", wxglade_tmp_menu_sub_sub, "")
         wxglade_tmp_menu.AppendMenu(MENU_COMPILECONFIG, "Compilation options", wxglade_tmp_menu_sub, "")
         wxglade_tmp_menu.AppendSeparator()
         wxglade_tmp_menu.Append(MENU_SIMULATE, "&Simulate\tF6", "", wx.ITEM_NORMAL)
@@ -356,6 +365,9 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuCompile, id=MENU_COMPILE)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_CONVEXIFY)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_FASTSLOW)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_SLURP)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_STRUCTURED)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_LTL)
         self.Bind(wx.EVT_MENU, self.onMenuSimulate, id=MENU_SIMULATE)
         self.Bind(wx.EVT_MENU, self.onMenuConfigSim, id=MENU_SIMCONFIG)
         self.Bind(wx.EVT_MENU, self.onMenuAnalyze, id=MENU_ANALYZE)
@@ -458,6 +470,12 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_log.Clear()
         self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
         self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
+        if self.proj.compile_options["parser"] == "slurp":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
+        elif self.proj.compile_options["parser"] == "structured":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_STRUCTURED, True)
+        elif self.proj.compile_options["parser"] == "ltl":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_LTL, True)
 
         self.SetTitle("Specification Editor - Untitled")
 
@@ -836,6 +854,13 @@ class SpecEditorFrame(wx.Frame):
         # Set compilation option checkboxes
         self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
         self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
+
+        if self.proj.compile_options["parser"] == "slurp":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
+        elif self.proj.compile_options["parser"] == "structured":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_STRUCTURED, True)
+        elif self.proj.compile_options["parser"] == "ltl":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_LTL, True)
     
         self.dirty = False
 
@@ -1383,6 +1408,12 @@ class SpecEditorFrame(wx.Frame):
     def onMenuSetCompileOptions(self, event):  # wxGlade: SpecEditorFrame.<event_handler>
         self.proj.compile_options["convexify"] = self.frame_1_menubar.IsChecked(MENU_CONVEXIFY)
         self.proj.compile_options["fastslow"] = self.frame_1_menubar.IsChecked(MENU_FASTSLOW)
+        if self.frame_1_menubar.IsChecked(MENU_PARSERMODE_SLURP):
+            self.proj.compile_options["parser"] = "slurp"
+        elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_STRUCTURED):
+            self.proj.compile_options["parser"] = "structured"
+        elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_LTL):
+            self.proj.compile_options["parser"] = "ltl"
         self.dirty = True
 
 # end of class SpecEditorFrame
