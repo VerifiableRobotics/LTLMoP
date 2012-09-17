@@ -8,6 +8,7 @@ sys.path.append("lib")
 
 import project
 import parseLP
+import fsa
 from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import bitEncoding, replaceRegionName
 
@@ -347,8 +348,7 @@ class SpecCompiler(object):
 
         # check for trivial initial-state automaton with no transitions
         if realizable:
-            proj_copy = deepcopy(self.proj)
-            proj_copy.rfi = self.proj.parser.rfi
+            proj_copy = copy.deepcopy(self.proj)
             proj_copy.sensor_handler = None
             proj_copy.actuator_handler = None
             proj_copy.h_instance = None
