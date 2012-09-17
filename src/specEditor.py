@@ -35,7 +35,7 @@ class AnalysisResultsDialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.THICK_FRAME
         wx.Dialog.__init__(self, *args, **kwds)
         self.label_3 = wx.StaticText(self, wx.ID_ANY, "Analysis Output:")
-        self.text_ctrl_summary = wx.TextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.text_ctrl_summary = wx.richtext.RichTextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
         self.label_10 = wx.StaticText(self, wx.ID_ANY, "SLURP Traceback:")
         self.tree_ctrl_traceback = wx.TreeCtrl(self, wx.ID_ANY, style=wx.TR_HAS_BUTTONS | wx.TR_NO_LINES | wx.TR_FULL_ROW_HIGHLIGHT | wx.TR_HIDE_ROOT | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
         self.button_1 = wx.Button(self, wx.ID_CLOSE, "")
@@ -110,6 +110,12 @@ class AnalysisResultsDialog(wx.Dialog):
                 elif section != "goals":
                     self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"ORANGE")
                 
+    def appendLog(self, text, color="BLACK"):
+        self.text_ctrl_summary.BeginTextColour(color)
+        self.text_ctrl_summary.WriteText(text)
+        self.text_ctrl_summary.EndTextColour()
+        self.text_ctrl_summary.ShowPosition(self.text_ctrl_summary.GetLastPosition())
+        wx.Yield() # Ensure update
                 
     def onButtonClose(self, event): # wxGlade: AnalysisResultsDialog.<event_handler>
         self.Hide()
@@ -1276,13 +1282,13 @@ class SpecEditorFrame(wx.Frame):
 
         (realizable, nonTrivial, to_highlight, output) = compiler._analyze()
 
-        self.appendLog(output, "BLACK")
+        self.analysisDialog.appendLog(output, "BLACK")
 
         if realizable:
             if nonTrivial:
-                self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")
+                self.analysisDialog.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")
             else:
-                self.appendLog("Synthesized automaton is trivial.\n", "RED")
+                self.analysisDialog.appendLog("Synthesized automaton is trivial.\n", "RED")
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1291,6 +1297,8 @@ class SpecEditorFrame(wx.Frame):
             self.analysisDialog.markFragments(*frag)
 
         self.analysisDialog.Show()
+
+        self.appendLog("Analysis complete.\n", "BLUE")
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Opens the counterstrategy visualization interfacs ("Mopsy")
