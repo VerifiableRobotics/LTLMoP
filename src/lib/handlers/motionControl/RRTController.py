@@ -357,7 +357,6 @@ class motionControlHandler:
         path     = 0          # if path formed then = 1
         stuck    = 0          # count for changing the range of sampling omega
         stuck_thres = 20     # threshold for changing the range of sampling omega
-        node_thres  = 250    # threshold for the number of nodes before the entire tree starts from the beginning
 
         if self.system_print == True:
             print "plotting in buildTree is " + str(plotting)
@@ -367,15 +366,6 @@ class motionControlHandler:
             plt.hold(True)
 
         while path == 0:
-            if shape(V)[1]-1 > node_thres:
-                V  = vstack((0,q_init))
-                E = [[],[]]
-                V_theta   = array([theta])
-                Other = [[],[]]
-                if self.system_print == True:
-                    print "THE ENTIRE TREE WILL BE REGENERATED."
-                if plotting == True:
-                    plt.cla()
             #step -1: try connection to q_goal (generate path to goal)
             i = 0
             """
@@ -573,8 +563,7 @@ class motionControlHandler:
                                 second_success_check = 0
                                 second_success_check_count += 1
                         
-                        """
-                        
+                        """                        
                         x = []
                         y = []
                         for k in  PolyUtils.pointList(path_all):
