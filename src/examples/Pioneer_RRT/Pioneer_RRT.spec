@@ -35,5 +35,4 @@ Spec: # Specification in structured English
 visit r1
 visit r3
 visit r4
-visit r2
 

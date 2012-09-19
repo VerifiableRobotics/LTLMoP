@@ -11,7 +11,7 @@ convexify: False
 fastslow: False
 
 CurrentConfigName:
-RRT with ROS
+RRT with ODE
 
 Customs: # List of custom propositions
 

@@ -56,8 +56,8 @@ class motionControlHandler:
         # Store the Rapidly-Exploring Random Tress Built
         self.RRT_V = None               # array containing all the points on the RRT Tree
         self.RRT_E = None               # array specifying the connection of points on the Tree
-        self.RRT_V_toPass = None
-        self.RRT_E_toPass = None
+        #self.RRT_V_toPass = None
+        #self.RRT_E_toPass = None
         self.point_to_go = None
         self.heading     = None
         self.E_prev      = None
@@ -93,7 +93,7 @@ class motionControlHandler:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
             print "self.ROSInitHandler.robotPhysicalWidth"+ str(self.ROSInitHandler.robotPhysicalWidth)
             self.radius = self.ROSInitHandler.robotPhysicalWidth/2
-            self.system = 1
+            #self.system = 1
         elif self.system == 3:
             self.radius = 5
         elif self.system == 4:
@@ -159,9 +159,11 @@ class motionControlHandler:
                 print "next Region is " + str(self.proj.rfi.regions[next_reg].name)
                 print "Current Region is " + str(self.proj.rfi.regions[current_reg].name)
 
+            """
             pointArray = [x for x in self.proj.rfi.regions[current_reg].getPoints()]
             pointArray = map(self.coordmap_map2lab, pointArray)
             vertices = mat(pointArray).T
+            """
 
             #set to zero velocity before tree is generated
             self.drive_handler.setVelocity(0, 0)
@@ -194,10 +196,13 @@ class motionControlHandler:
             else:
                 self.ax = None
 
-            self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = self.buildTree(\
+            self.RRT_V,self.RRT_E,self.heading,self.E_prev = self.buildTree(\
             [pose[0], pose[1]],pose[2], self.radius,self.system,self.currentRegionPoly, self.nextRegionPoly,q_gBundle,\
             self.map,self.all,self.max_angle_allowed, self.plotting,self.operate_system)
 
+            #self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.RRT_V_toPass,self.RRT_E_toPass = self.buildTree(\
+            #[pose[0], pose[1]],pose[2], self.radius,self.system,self.currentRegionPoly, self.nextRegionPoly,q_gBundle,\
+            #self.map,self.all,self.max_angle_allowed, self.plotting,self.operate_system)
             """
             # map the lab coordinates back to pixels
             V_tosend = array(mat(self.RRT_V[1:,:])).T
@@ -309,19 +314,22 @@ class motionControlHandler:
         #  Time step: for calculation of x, y position
         #  Step_size: the length of each step in control space
         #  Velocity : Velocity of the robot in m/s in control space
+        
+        
         if system == 1:    ## Nao
             step_size  = 0.2      #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
             timeStep = 5
             velocity  = 0.05 
         elif system == 2:
-            step_size  = 0.5
-            timeStep = 4
-            velocity  = 0.06
+            step_size  = 0.2
+            timeStep = 8
+            velocity  = 0.08
         elif system == 3:
             step_size  = 15
             timeStep = 10
             velocity = 2    # 1.5
         #############tune velocity OMEGA, TIME STEP
+    
 
         BoundPoly       = regionPoly       # Boundary polygon = current region polygon
         radius          = R
@@ -349,6 +357,7 @@ class motionControlHandler:
         path     = 0          # if path formed then = 1
         stuck    = 0          # count for changing the range of sampling omega
         stuck_thres = 20     # threshold for changing the range of sampling omega
+        node_thres  = 250    # threshold for the number of nodes before the entire tree starts from the beginning
 
         if self.system_print == True:
             print "plotting in buildTree is " + str(plotting)
@@ -358,10 +367,21 @@ class motionControlHandler:
             plt.hold(True)
 
         while path == 0:
+            if shape(V)[1]-1 > node_thres:
+                V  = vstack((0,q_init))
+                E = [[],[]]
+                V_theta   = array([theta])
+                Other = [[],[]]
+                if self.system_print == True:
+                    print "THE ENTIRE TREE WILL BE REGENERATED."
+                if plotting == True:
+                    plt.cla()
             #step -1: try connection to q_goal (generate path to goal)
             i = 0
+            """
             if self.system_print == True:
                 print "step -1 "
+            """
             
             # pushing possible q_goals into the current region (ensure path is covered by the current region polygon)
             q_pass = [[],[],[]]
@@ -438,15 +458,20 @@ class motionControlHandler:
                                 self.ax.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
 
                 # if connection to goal can be established and the max change in orientation of the robot is smaller than max_angle, tree is said to be completed.
+
                 if connect_goal and abs(theta_orientation - thetaPrev) < max_angle:
                     path = 1
                     q_pass = hstack((q_pass,vstack((i,q_g))))
                     q_pass_dist = hstack((q_pass_dist,dist))
 
                 i = i + 1
-
+            
+            
             if self.system_print == True:
                 print "checked goal points"
+                if shape(V)[1]-1 > node_thres-10: 
+                    print "may erase the current tree and generate a new one. count:" + str(shape(V)[1]-1 - node_thres)
+            
             self.E = E
             self.V = V
             # connection to goal has established
@@ -483,12 +508,15 @@ class motionControlHandler:
             # path is not formed, try to append points onto the tree
             if path == 0:
                 success     = 0           # whether adding a new point is successful
-                hit_count   = 0           # count for regenerating new edge with the same q_rand
+                hit         = 0           # whether adding more new points are successful 1 = not successful should quit
                 Icurrent    = []          # to keep track of the index of the closest point to q_n
 
-                while success == 0 and hit_count <= 2: 
+                while success == 0 and hit == 0:
+                    #and hit_count <= 2: 
+                    """
                     if self.system_print == True:
-                        print "In control space generating path,stuck = " + str(stuck)                   
+                        print "In control space generating path,stuck = " + str(stuck)
+                    """                  
                     if stuck > stuck_thres:
                         # increase the range of omega since path cannot ge generated
                         omega = random.choice(omega_range_abso)
@@ -498,7 +526,15 @@ class motionControlHandler:
 
 
                     #!!!! CONTROL SPACE STEP 2 - pick a random point on the tree
-                    tree_index = random.choice(array(V[0])[0])
+                    if success == 1:
+                        tree_index = shape(V)[1]-1                        
+                    else:                        
+                        if random.choice([1,2]) == 1:
+                            tree_index = random.choice(array(V[0])[0])
+                        else:
+                            tree_index = shape(V)[1]-1        
+                        
+                        
                     xPrev     = V[1,tree_index]
                     yPrev     = V[2,tree_index]
                     thetaPrev = V_theta[tree_index]
@@ -518,28 +554,63 @@ class motionControlHandler:
 
                     path_all = PolyUtils.convexHull(path_robot)
                     in_bound = BoundPoly.covers(path_all)
-
+                    """
                     # plotting
                     if plotting == True:
-                        self.plotPoly(path_all,'r',1)                      
+                        self.plotPoly(path_all,'r',1) 
+                    """                     
 
                     stuck = stuck + 1
-                    if in_bound:
-                        if self.system_print == True:
-                            print "node connected"  
-                        stuck = stuck -1
+                    
+                    if in_bound: 
+                        #print V
+                        robot_new_node = PolyShapes.Circle(radius,(xPrev,yPrev))
+                        second_success_check = 1 
+                        second_success_check_count = 0
+                        for k in range(shape(V)[1]-1):
+                            robot_old_node = PolyShapes.Circle(radius,(V[1,k],V[2,k])) 
+                            if robot_new_node.overlaps(robot_old_node):
+                                second_success_check = 0
+                                second_success_check_count += 1
+                        
+                        """
+                        
                         x = []
                         y = []
                         for k in  PolyUtils.pointList(path_all):
                             x = hstack((x,k[0]))
                             y = hstack((y,k[1]))
-
-                        V = hstack((V,vstack((shape(V)[1],xPrev,yPrev))))
-                        V_theta = hstack((V_theta,thetaPrev))
-                        E = hstack((E,vstack((tree_index ,shape(V)[1]-1))))
-                        Other = hstack((Other,vstack((velocity,omega))))
-                        ##################### E should add omega and velocity
-                        success = 1
+                        """
+                        
+                        if second_success_check == 1 or (stuck > stuck_thres+1 and second_success_check_count < 2) or success == 1 or (stuck > stuck_thres+100):  
+                            if  stuck > stuck_thres+1:
+                                hit  = 1  
+                            stuck = stuck - 20              
+                            # plotting
+                            if plotting == True:
+                                self.plotPoly(path_all,'b',1) 
+                            """    
+                            if self.system_print == True:
+                                print "node connected" 
+                            """      
+                            V = hstack((V,vstack((shape(V)[1],xPrev,yPrev))))
+                            V_theta = hstack((V_theta,thetaPrev))
+                            E = hstack((E,vstack((tree_index ,shape(V)[1]-1))))
+                            Other = hstack((Other,vstack((velocity,omega))))
+                            ##################### E should add omega and velocity
+                            success = 1
+                        else:
+                            if success == 1:
+                                hit = 1
+                            """
+                            if self.system_print == True:
+                                print "node not connected. check goal point"
+                            """ 
+                    else:
+                        if success == 1:
+                            hit = 1
+                    
+                    
 
         if finish_print == 1:
             print 'Here is the V matrix:', V, 'Here is the E matrix:',E
@@ -557,13 +628,14 @@ class motionControlHandler:
 
             if trim == 0:
                 single = 1;
-
+        """
         # generate V to be sent to SimGUI to plot
         V_toPass = V[0:,0]
         E_toPass = [[],[]]
         for i in range(shape(E)[1]):
             V_toPass = hstack((V_toPass,vstack((i,V[1,E[1,i-1]],V[2,E[1,i-1]]))))
             E_toPass = hstack((E_toPass,vstack((i-1,i))))
+        """
 
         ####print with matlib
         if plotting ==True :
@@ -584,9 +656,10 @@ class motionControlHandler:
         heading  = E[0,0]
         # parse string for RRT printing in GUI (in format: RRT:E[[1,2,3]]:V[[1,2,3]])
         V = array(V)
-        V_toPass = array(V_toPass)
-        E_toPass = array(E_toPass)
-        return V, E, heading,0,V_toPass,E_toPass
+        #V_toPass = array(V_toPass)
+        #E_toPass = array(E_toPass)
+        #return V, E, heading,0,V_toPass,E_toPass
+        return V, E, heading,0
 
     def plotMap(self,mappedRegions):
         """
