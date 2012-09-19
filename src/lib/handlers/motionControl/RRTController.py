@@ -91,7 +91,6 @@ class motionControlHandler:
             self.radius = 0.15*1.2
         elif self.system == 2:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
-            print "self.ROSInitHandler.robotPhysicalWidth"+ str(self.ROSInitHandler.robotPhysicalWidth)
             self.radius = self.ROSInitHandler.robotPhysicalWidth/2
             #self.system = 1
         elif self.system == 3:
@@ -459,8 +458,6 @@ class motionControlHandler:
             
             if self.system_print == True:
                 print "checked goal points"
-                if shape(V)[1]-1 > node_thres-10: 
-                    print "may erase the current tree and generate a new one. count:" + str(shape(V)[1]-1 - node_thres)
             
             self.E = E
             self.V = V
@@ -571,7 +568,8 @@ class motionControlHandler:
                             y = hstack((y,k[1]))
                         """
                         
-                        if second_success_check == 1 or (stuck > stuck_thres+1 and second_success_check_count < 2) or success == 1 or (stuck > stuck_thres+100):  
+                        if second_success_check == 1 or (stuck > stuck_thres+1 and second_success_check_count < 2) or success == 1 :
+                            #or (stuck > stuck_thres+100):  
                             if  stuck > stuck_thres+1:
                                 hit  = 1  
                             stuck = stuck - 20              
