@@ -35,10 +35,10 @@ class motionControlHandler:
         Rapidly-Exploring Random Trees alogorithm motion planning controller
 
         robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
-        max_angle (float): The biggest difference in angle between two nodes. The value should be within 0 to 6.28 = 2*pi. Default set to 1.047 = pi/3 (default=1.047)
+        max_angle (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 1.047 = pi/3 (default=1.047)
         plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
         """
-
+        # for debugging. print on GUI.
         self.system_print = True
         
         # Get references to handlers we'll need to communicate with
@@ -212,14 +212,14 @@ class motionControlHandler:
             """
 
         # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
-        V = self.setVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.radius)
-        self.Velocity = V[0:2,0]
-        self.heading = V[2,0]
-        self.E_prev = V[3,0]
+        move = self.getVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E,self.heading,self.E_prev,self.radius)
+        self.Velocity = move[0:2,0]
+        self.heading= move[2,0]
+        self.E_prev = move[3,0]
         self.previous_next_reg = next_reg
 
         # Pass this desired velocity on to the drive handler
-        self.drive_handler.setVelocity(V[0,0], V[1,0], pose[2])
+        self.drive_handler.setVelocity(move[0,0], move[1,0], pose[2])
         RobotPoly = Polygon.Shapes.Circle(self.radius,(pose[0],pose[1]))
         
         # check if robot is inside the current region
@@ -254,7 +254,7 @@ class motionControlHandler:
         formedPolygon= Polygon.Polygon(regionPoints)
         return formedPolygon
 
-    def setVelocity(self,p, V, E, heading,E_prev,radius, last=False):
+    def getVelocity(self,p, V, E, heading,E_prev,radius, last=False):
         """
         This function calculates the velocity for the robot with RRT.
         The inputs are (given in order):
@@ -568,10 +568,12 @@ class motionControlHandler:
                             y = hstack((y,k[1]))
                         """
                         
-                        if second_success_check == 1 or (stuck > stuck_thres+1 and second_success_check_count < 2) or success == 1 :
-                            #or (stuck > stuck_thres+100):  
+                        if second_success_check == 1 or (stuck > stuck_thres+1 and second_success_check_count < 2) or success == 1 or (stuck > stuck_thres+500):  
                             if  stuck > stuck_thres+1:
                                 hit  = 1  
+                                
+                            if (stuck > stuck_thres+500):
+                                stuck = 0
                             stuck = stuck - 20              
                             # plotting
                             if plotting == True:
