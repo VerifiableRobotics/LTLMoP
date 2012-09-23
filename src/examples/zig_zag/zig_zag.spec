@@ -25,9 +25,9 @@ Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
 r6 = p1
+r3 = p4
 r1 = p6
 r2 = p5
-r3 = p4
 others = 
 
 Spec: # Specification in structured English
