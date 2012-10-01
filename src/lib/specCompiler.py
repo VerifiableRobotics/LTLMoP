@@ -7,14 +7,23 @@ import subprocess
 sys.path.append("lib")
 
 import project
+import regions
 import parseLP
 import fsa
 from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import bitEncoding, replaceRegionName
 
 class SpecCompiler(object):
-    def __init__(self, spec_filename):
+    def __init__(self, spec_filename=None):
         self.proj = project.Project()
+
+        if spec_filename is not None:
+            self.loadSpec(spec_filename)
+
+    def loadSpec(self,spec_filename):
+        """
+        Load the project object
+        """
         self.proj.loadProject(spec_filename)
 
         # Check to make sure this project is complete
@@ -26,7 +35,39 @@ class SpecCompiler(object):
             print "ERROR: Please write a specification before compiling."
             return
 
-        self.decomposedSpecText = None
+    def loadSimpleSpec(self,text="", regionList=[], sensors=[], actuators=[], customs=[], adj=[], outputfile=""):
+        """
+        Load a simple spec given by the arguments without reading from a spec file
+        
+        For Slurp
+
+        region, sensors, actuators, customs are lists of strings representing props
+        adj is a list of tuples [(region1,region2),...]
+        """
+
+        if outputfile is "":
+            print "need to specify output filename"
+            return
+
+        self.proj.project_root = os.path.abspath(os.path.dirname(os.path.expanduser(outputfile)))
+        self.proj.project_basename, ext = os.path.splitext(os.path.basename(outputfile))
+        self.proj.specText=text
+        # construct a list of region objects with given names
+        self.proj.rfi = regions.RegionFileInterface()
+        for rname in regionList:
+            self.proj.rfi.regions.append(regions.Region(name=rname))
+
+        self.proj.enabled_sensors = sensors
+        self.proj.enabled_actuators = actuators
+        self.proj.all_customs = customs
+
+        # construct adjacency matrix
+        self.proj.rfi.transitions= [[[] for j in range(len(self.proj.rfi.regions))] for i in range(len(self.proj.rfi.regions))]
+        for tran in adj:
+            idx0 = self.proj.rfi.indexOfRegionWithName(tran[0])
+            idx1 = self.proj.rfi.indexOfRegionWithName(tran[1])
+            self.proj.rfi.transitions[idx0][idx1] = [(0,0)] # fake trans face
+            self.proj.rfi.transitions[idx1][idx0] = [(0,0)]
 
     def _decompose(self):
         self.parser = parseLP.parseLP()
@@ -55,11 +96,15 @@ class SpecCompiler(object):
         self.parser.proj.rfi.recalcAdjacency()
         self.parser.proj.rfi.writeFile(filename)
 
+
         self.proj.regionMapping = self.parser.proj.regionMapping
         self.proj.writeSpecFile()
         
     def _writeSMVFile(self):
-        numRegions = len(self.parser.proj.rfi.regions)
+        if self.proj.compile_options["parser"] != "slurp":
+            numRegions = len(self.parser.proj.rfi.regions)
+        else:
+            numRegions = len(self.proj.rfi.regions)
         sensorList = self.proj.enabled_sensors
         robotPropList = self.proj.enabled_actuators + self.proj.all_customs + self.proj.internal_props
 
@@ -71,11 +116,7 @@ class SpecCompiler(object):
         sensorList = copy.deepcopy(self.proj.enabled_sensors)
         robotPropList = self.proj.enabled_actuators + self.proj.all_customs
         
-        # Allow the option of not running decomposition
-        if self.decomposedSpecText is not None:
-            text = self.decomposedSpecText
-        else:
-            text = self.proj.specText
+        text = self.proj.specText
 
         # Create LTL using selected parser
         # TODO: rename decomposition object to something other than 'parser'
@@ -107,12 +148,13 @@ class SpecCompiler(object):
             # Conjoin all the spec chunks
             LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
             LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
-
-            # substitute decomposed region names
-            for r in self.proj.rfi.regions:
-                if not (r.isObstacle or r.name.lower() == "boundary"):
-                    LTLspec_env = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
-                    LTLspec_sys = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
+            
+            if self.proj.compile_options["parser"] != "slurp":
+                # substitute decomposed region names
+                for r in self.proj.rfi.regions:
+                    if not (r.isObstacle or r.name.lower() == "boundary"):
+                        LTLspec_env = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
+                        LTLspec_sys = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
 
         elif self.proj.compile_options["parser"] == "ltl":
             # delete comments
@@ -159,7 +201,8 @@ class SpecCompiler(object):
             text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
             robotPropList[i] = "s." + robotPropList[i]
 
-        regionList = [x.name for x in self.parser.proj.rfi.regions]
+        if self.proj.compile_options["parser"] != "slurp":
+            regionList = [x.name for x in self.parser.proj.rfi.regions]
 
         # Define the number of bits needed to encode the regions
         numBits = int(math.ceil(math.log(len(regionList),2)))
@@ -173,8 +216,10 @@ class SpecCompiler(object):
         LTLspec_env = replaceRegionName(LTLspec_env, bitEncode, regionList)
         LTLspec_sys = replaceRegionName(LTLspec_sys, bitEncode, regionList)
 
-        adjData = self.parser.proj.rfi.transitions
-
+        if self.proj.compile_options["parser"] != "slurp":
+            adjData = self.parser.proj.rfi.transitions
+        else:
+            adjData = self.proj.rfi.transitions
         ##############################################################################
         ######### BEGIN HACK: generate env topology info for follow scenario #########
         ##############################################################################
@@ -396,7 +441,8 @@ class SpecCompiler(object):
         return (realizable, realizableFS, output)
 
     def compile(self, with_safety_aut=False):
-        self._decompose()
+        if self.proj.compile_options["parser"] != "slurp":
+            self._decompose()
         tb = self._writeLTLFile()
         self._writeSMVFile()
 
@@ -405,5 +451,5 @@ class SpecCompiler(object):
             return 
 
         #self._checkForEmptyGaits()
-        self._synthesize(with_safety_aut)
+        return self._synthesize(with_safety_aut)
 
