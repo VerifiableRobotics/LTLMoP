@@ -7,7 +7,7 @@ RRTController.py - Rapidly-Exploring Random Trees Motion Controller
 Uses Rapidly-exploring Random Tree Algorithm to generate paths given the starting position and the goal point.
 """
 
-import _RRTControllerHelper
+#import _RRTControllerHelper
 from numpy import *
 from __is_inside import *
 import math
@@ -39,7 +39,6 @@ class motionControlHandler:
         max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
         plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
         """
-        
         
         self.system_print       = False       # for debugging. print on GUI ( a bunch of stuffs)
         self.finish_print       = False       # set to 1 to print the original finished E and V before trimming the tree 
@@ -300,8 +299,8 @@ class motionControlHandler:
             if not heading == shape(V)[1]-1:
                 self.E_current_column = self.E_current_column + 1
                 dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- pose
-            else:
-                dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- vstack((V[1,E[0,self.E_current_column]],V[2,E[0,self.E_current_column]]))
+            #else:
+            #    dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- vstack((V[1,E[0,self.E_current_column]],V[2,E[0,self.E_current_column]]))
         
         Vel = zeros([2,1])
         Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
@@ -359,11 +358,12 @@ class motionControlHandler:
             face_normal = mat(face_normal)
             
             while i < q_gBundle.shape[1]: 
-                #q_g = q_gBundle[:,i]+face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
-                q_g = q_gBundle[:,i]+(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*1.5*self.radius    ##original 2*self.radius
+                q_g_original = q_gBundle[:,i]
+                q_g = q_gBundle[:,i]+face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
+                #q_g = q_gBundle[:,i]+(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*1.5*self.radius    ##original 2*self.radius
                 if not regionPoly.isInside(q_g[0],q_g[1]):
-                    q_g = q_gBundle[:,i]-(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*1.5*self.radius    ##original 2*self.radius
-                    #q_g = q_gBundle[:,i]-face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
+                    #q_g = q_gBundle[:,i]-(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*1.5*self.radius    ##original 2*self.radius
+                    q_g = q_gBundle[:,i]-face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
 
                 #forming polygon for path checking                
                 EdgePolyGoal = PolyShapes.Circle(self.radius,(q_g[0,0],q_g[1,0])) + PolyShapes.Circle(self.radius,(V[1,shape(V)[1]-1],V[2:,shape(V)[1]-1]))
@@ -388,36 +388,23 @@ class motionControlHandler:
                     elif q_g[0,0] > V[1,shape(V)[1]-1]: # foruth quadrant
                         theta_orientation =  2*pi - theta_orientation
 
-                ################################## PRINT PLT #################
-                if connect_goal :
-                    if self.plotting == True:
-                        if self.operate_system == 1:
-                            plt.suptitle('Rapidly-exploring Random Tree', fontsize=12)
-                            plt.xlabel('x')
-                            plt.ylabel('y')
-                            if shape(V)[1] <= 2:
-                                plt.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                            else:
-                                plt.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                            plt.figure(1).canvas.draw()
-                        else:
-                            BoundPolyPoints = asarray(PolyUtils.pointList(regionPoly))
-                            self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
-                            if shape(V)[1] <= 2:
-                                self.ax.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                            else:
-                                self.ax.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
+                # check the angle between vector(new goal to goal_original ) and vector( latest node to new goal)
+                Goal_to_GoalOriginal = q_g_original - q_g
+                LatestNode_to_Goal   = q_g - V[1:,shape(V)[1]-1]
+                Angle_Goal_LatestNode= arccos(vdot(array(Goal_to_GoalOriginal), array(LatestNode_to_Goal))/norm(Goal_to_GoalOriginal)/norm(LatestNode_to_Goal))
 
-                # if connection to goal can be established and the max change in orientation of the robot is smaller than max_angle, tree is said to be completed.
-                
+                # if connection to goal can be established and the max change in orientation of the robot is smaller than max_angle, tree is said to be completed.            
                 if self.orientation_print == True:
                     print "theta_orientation is " + str(theta_orientation)
                     print "thetaPrev is " + str(thetaPrev)                    
                     print "(theta_orientation - thetaPrev) is " + str(abs(theta_orientation - thetaPrev))
                     print "self.max_angle_allowed is " + str(self.max_angle_allowed)
                     print "abs(theta_orientation - thetaPrev) < self.max_angle_allowed" + str(abs(theta_orientation - thetaPrev) < self.max_angle_allowed)
+                    print"Goal_to_GoalOriginal: " + str( array(Goal_to_GoalOriginal)) + "; LatestNode_to_Goal: " + str( array(LatestNode_to_Goal))
+                    print vdot(array(Goal_to_GoalOriginal), array(LatestNode_to_Goal))
+                    print "Angle_Goal_LatestNode" + str(Angle_Goal_LatestNode)
                     
-                if connect_goal and abs(theta_orientation - thetaPrev) < self.max_angle_allowed:
+                if connect_goal and (abs(theta_orientation - thetaPrev) < self.max_angle_allowed) and (Angle_Goal_LatestNode < self.max_angle_allowed):
                     
                     path = True
                     q_pass = hstack((q_pass,vstack((i,q_g))))
@@ -438,16 +425,30 @@ class motionControlHandler:
                 else:
                     (cols,) = nonzero(q_pass_dist == min(q_pass_dist))
                     cols = asarray(cols)[0]
-                q_g = q_pass[1:,cols]   ###Catherine
+                q_g = q_pass[1:,cols]   
+                """
                 q_g = q_g-(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*3*self.radius   #org 3
                 if not nextRegionPoly.isInside(q_g[0],q_g[1]):
                     q_g = q_g+(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,q_pass[0,cols]]-V[1:,(shape(V)[1]-1)])*6*self.radius   #org 3
-
+                """
                 if self.plotting == True :
                     if self.operate_system == 1:
+                        plt.suptitle('Rapidly-exploring Random Tree', fontsize=12)
+                        plt.xlabel('x')
+                        plt.ylabel('y')
+                        if shape(V)[1] <= 2:
+                            plt.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
+                        else:
+                            plt.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
                         plt.plot(q_g[0,0],q_g[1,0],'ko')
                         plt.figure(1).canvas.draw()
                     else:
+                        BoundPolyPoints = asarray(PolyUtils.pointList(regionPoly))
+                        self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
+                        if shape(V)[1] <= 2:
+                            self.ax.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
+                        else:
+                            self.ax.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
                         self.ax.plot(q_g[0,0],q_g[1,0],'ko')
 
                 # trim the path connecting current node to goal point into pieces if the path is too long now
@@ -460,6 +461,22 @@ class motionControlHandler:
                     if i != 0:
                         V = hstack((V,vstack((shape(V)[1],x[i],y[i]))))
                         E = hstack((E,vstack((shape(V)[1]-2,shape(V)[1]-1))))
+                
+                #push the goal point to the next region
+                q_g = q_g+face_normal[:,q_pass[0,cols]]*3*self.radius    ##original 2*self.radius
+                if not nextRegionPoly.isInside(q_g[0],q_g[1]):
+                    q_g = q_g-face_normal[:,q_pass[0,cols]]*6*self.radius    ##original 2*self.radius
+                V = hstack((V,vstack((shape(V)[1],q_g[0,0],q_g[1,0]))))
+                E = hstack((E,vstack((shape(V)[1]-2 ,shape(V)[1]-1))))
+                
+                if self.plotting == True :
+                    if self.operate_system == 1:
+                        plt.plot(q_g[0,0],q_g[1,0],'ko')
+                        plt.plot(( V[1,shape(V)[1]-1],V[1,shape(V)[1]-2]),( V[2,shape(V)[1]-1],V[2,shape(V)[1]-2]),'b')
+                        plt.figure(1).canvas.draw()                       
+                    else:
+                        self.ax.plot(q_g[0,0],q_g[1,0],'ko')
+                        self.ax.plot(( V[1,shape(V)[1]-1],V[1,shape(V)[1]-2]),( V[2,shape(V)[1]-1],V[2,shape(V)[1]-2]),'b')
 
             # path is not formed, try to append points onto the tree
             if not path:
@@ -494,7 +511,7 @@ class motionControlHandler:
         if self.plotting ==True :
             if self.operate_system == 1:
                 plt.plot(V[1,:],V[2,:],'b')
-                for i in range(shape(E)[1]-1):
+                for i in range(shape(E)[1]):
                     plt.text(V[1,E[0,i]],V[2,E[0,i]], V[0,E[0,i]], fontsize=12)
                     plt.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
                 plt.figure(1).canvas.draw()
@@ -502,7 +519,7 @@ class motionControlHandler:
                 BoundPolyPoints = asarray(PolyUtils.pointList(regionPolyf))
                 self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
                 self.ax.plot(V[1,:],V[2,:],'b')
-                for i in range(shape(E)[1]-1):
+                for i in range(shape(E)[1]):
                     self.ax.text(V[1,E[0,i]],V[2,E[0,i]], V[0,E[0,i]], fontsize=12)
                     self.ax.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
 
