@@ -84,6 +84,9 @@ def guiListen():
         elif input == "PAUSE":
             runFSA = False
             print "PAUSED."
+        elif input == "QUIT":
+            print "Quitting."
+            sys.exit(0)
         else:
             print "WARNING: Unknown command received from GUI: " + input
 
@@ -168,6 +171,7 @@ def main(argv):
 
         # Create new thread to communicate with subwindow
         guiListenThread = threading.Thread(target = guiListen)
+        guiListenThread.daemon = True
         guiListenThread.start()
 
         # Set up socket for communication to simGUI

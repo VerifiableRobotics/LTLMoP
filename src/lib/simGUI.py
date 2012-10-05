@@ -89,6 +89,7 @@ class SimGUI_Frame(wx.Frame):
         # Create new thread to communicate with subwindow
         print >>sys.__stdout__, "(GUI) Starting controller listen thread..."
         self.controllerListenThread = threading.Thread(target = self.controllerListen)
+        self.controllerListenThread.daemon = True
         self.controllerListenThread.start()
     
         self.robotPos = None
@@ -98,6 +99,8 @@ class SimGUI_Frame(wx.Frame):
 
         # Let everyone know we're ready
         self.UDPSockTo.sendto("Hello!",self.addrTo)
+
+        self.Bind(wx.EVT_CLOSE, self.onQuit)
 
     def setMapImage(self, filename):
         # Load and display the map
@@ -356,6 +359,11 @@ class SimGUI_Frame(wx.Frame):
         self.text_ctrl_sim_log.Clear()
         event.Skip()
 
+    def onQuit(self, event):
+        print "Telling execute.py to quit..."
+        self.UDPSockTo.sendto("QUIT",self.addrTo) # This goes to the controller
+        self.UDPSockTo.sendto("\n",self.addrTo) # This goes to the controller
+        event.Skip()
 
     def onSLURPSubmit(self, event): # wxGlade: SimGUI_Frame.<event_handler>
         if self.text_ctrl_slurpin.GetValue() == "":

@@ -29,6 +29,7 @@ class sensorHandler:
 
             # Create new thread to communicate with subwindow
             sensorListenThread = threading.Thread(target = self._sensorListen)
+            sensorListenThread.daemon = True
             sensorListenThread.start()
 
             # Block until the sensor listener gets the go-ahead from the subwindow
