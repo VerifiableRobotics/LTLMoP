@@ -43,6 +43,7 @@ class Project:
         # Compilation options (with defaults)
         self.compile_options = {"convexify": True,  # Decompose workspace into convex regions
                                 "fastslow": False,  # Enable "fast-slow" synthesis algorithm
+                                "decompose": True,  # Create regions for free space and region overlaps (required for Locative Preposition support)
                                 "parser": "slurp"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
 
         # Climb the tree to find out where we are

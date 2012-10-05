@@ -49,6 +49,7 @@ class SpecCompiler(object):
             print "need to specify output filename"
             return
 
+        self.proj.compile_options['decompose'] = False
         self.proj.project_root = os.path.abspath(os.path.dirname(os.path.expanduser(outputfile)))
         self.proj.project_basename, ext = os.path.splitext(os.path.basename(outputfile))
         self.proj.specText=text
@@ -101,7 +102,7 @@ class SpecCompiler(object):
         self.proj.writeSpecFile()
         
     def _writeSMVFile(self):
-        if self.proj.compile_options["parser"] != "slurp":
+        if self.proj.compile_options["decompose"]:
             numRegions = len(self.parser.proj.rfi.regions)
         else:
             numRegions = len(self.proj.rfi.regions)
@@ -149,7 +150,7 @@ class SpecCompiler(object):
             LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
             LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
             
-            if self.proj.compile_options["parser"] != "slurp":
+            if self.proj.compile_options["decompose"]:
                 # substitute decomposed region names
                 for r in self.proj.rfi.regions:
                     if not (r.isObstacle or r.name.lower() == "boundary"):
@@ -201,7 +202,7 @@ class SpecCompiler(object):
             text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
             robotPropList[i] = "s." + robotPropList[i]
 
-        if self.proj.compile_options["parser"] != "slurp":
+        if self.proj.compile_options["decompose"]:
             regionList = [x.name for x in self.parser.proj.rfi.regions]
 
         # Define the number of bits needed to encode the regions
@@ -216,7 +217,7 @@ class SpecCompiler(object):
         LTLspec_env = replaceRegionName(LTLspec_env, bitEncode, regionList)
         LTLspec_sys = replaceRegionName(LTLspec_sys, bitEncode, regionList)
 
-        if self.proj.compile_options["parser"] != "slurp":
+        if self.proj.compile_options["decompose"]:
             adjData = self.parser.proj.rfi.transitions
         else:
             adjData = self.proj.rfi.transitions
@@ -441,7 +442,7 @@ class SpecCompiler(object):
         return (realizable, realizableFS, output)
 
     def compile(self, with_safety_aut=False):
-        if self.proj.compile_options["parser"] != "slurp":
+        if self.proj.compile_options["decompose"]:
             self._decompose()
         tb = self._writeLTLFile()
         self._writeSMVFile()
