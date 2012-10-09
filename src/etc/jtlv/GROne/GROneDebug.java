@@ -180,7 +180,7 @@ public class GROneDebug {
 			
 		counter_exmple = g.envWinningStates().and(all_init);		 
 		if (counter_exmple.isZero()) {	//no winning environment states		
-			//debugInfo += "Specification is realizable assuming instantaneous actions.\n";
+			debugInfo += "Specification is realizable.\n";
 		}	
 			
 		if (!(env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
@@ -189,11 +189,11 @@ public class GROneDebug {
 			for (int i = env.justiceNum(); i >=1; i--){		
 				//checking for unrealizable environment justice 				
 				if (env.justiceAt(i-1).isZero()) {
-					debugInfo += "Environment highlighted goal(s) unsatisfiable " + (i-1) + "\n";
+					debugInfo += "Environment highlighted goal(s) unsatisfiable: " + (i-1) + "\n";
 					explainEnv = 1;
 				}
 				else if ((env.trans().and(Env.prime(env.justiceAt(i-1))).isZero()) | (env.trans().and(env.justiceAt(i-1))).isZero()) { 
-					debugInfo += "Environment highlighted goal(s) inconsistent with transition relation " + (i-1) + "\n";
+					debugInfo += "Environment highlighted goal(s) inconsistent with transition relation: " + (i-1) + "\n";
 					 explainEnv = 1;
 				}
 				 prev = counter_exmple;
@@ -204,13 +204,13 @@ public class GROneDebug {
 						 //checking for multi-step unsatisfiability between env transitions and goals
 						 //since the first argument is 3, we allow all three kinds of system transitions
 						 //so we are looking for livelock 	
-						 debugInfo += "Environment highlighted goal(s) inconsistent with transition relation " + (i-1) + "\n";
+						 debugInfo += "Environment highlighted goal(s) inconsistent with transition relation: " + (i-1) + "\n";
 						 explainEnv = 1;
 						 i = 0;
 					 //} else if (counter_exmple.isZero() && !env.justiceAt(i-1).equals(Env.TRUE())) {// && (!prev.isZero())) {
 					 } else if (i < env.justiceNum()) {
 						 //if we get here, the env is unrealizable because of the current goal
-						 debugInfo += "Environment highlighted goal(s) unrealizable " + (i-1) + "\n";	
+						 debugInfo += "Environment highlighted goal(s) unrealizable: " + (i-1) + "\n";	
 						 explainEnv = 1;
 						 i = 0;
 					 }
@@ -232,11 +232,11 @@ public class GROneDebug {
 		if (!(sys.justiceNum()==1 && sys.justiceAt(0).equals(Env.TRUE()))) {
 			for (int i = 1; i <= sys.justiceNum(); i++){
 				 if (sys.justiceAt(i-1).isZero()) {
-					 debugInfo += "System highlighted goal(s) unsatisfiable " + (i-1) + "\n";
+					 debugInfo += "System highlighted goal(s) unsatisfiable: " + (i-1) + "\n";
 					 explainSys = 1;
 				 }
 				 else if ((sys.trans().and(Env.prime(sys.justiceAt(i-1))).isZero()) | sys.trans().and(sys.justiceAt(i-1)).isZero()) {
-					 debugInfo += "System highlighted goal(s) inconsistent with transition relation " + (i-1) + "\n";	
+					 debugInfo += "System highlighted goal(s) inconsistent with transition relation: " + (i-1) + "\n";	
 				 	 explainSys = 1;
 				 }
 			 
@@ -246,11 +246,11 @@ public class GROneDebug {
 					//checking for multi-step unsatisfiability between sys transitions and goals
 					//since the second argument is true, we are looking for livelock 
 					 if (g.calculate_counterstrategy(counter_exmple, true, false)) {
-						 debugInfo += "System highlighted goal(s) inconsistent with transition relation " + (i-1) + "\n";
+						 debugInfo += "System highlighted goal(s) inconsistent with transition relation: " + (i-1) + "\n";
 						 explainSys = 1;
 					 } else  {
 					 //if we get here, the sys is unrealizable because of the current goal					 				
-						 debugInfo += "System highlighted goal(s) unrealizable " + (i-1) + "\n";
+						 debugInfo += "System highlighted goal(s) unrealizable: " + (i-1) + "\n";
 						 explainSys = 1;		
 					 }
 					 i = sys.justiceNum() + 1;
