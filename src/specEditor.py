@@ -685,7 +685,7 @@ class SpecEditorFrame(wx.Frame):
 
         # Try loading the file
         if not rfi.readFile(filename):
-            wx.MessageBox("Cannot open region file %s" % (fileName), "Error",
+            wx.MessageBox("Cannot open region file %s" % (filename), "Error",
                         style = wx.OK | wx.ICON_ERROR)
             self.rfi = None
             return
