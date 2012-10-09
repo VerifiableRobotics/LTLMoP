@@ -240,7 +240,7 @@ public class GROneDebug {
 				 	 explainSys = 1;
 				 }
 			 
-				 g = new GROneGame(env,sys, i, 1);
+				 g = new GROneGame(env,sys, i, env.justiceNum());
 				 counter_exmple = g.envWinningStates().and(all_init);
 				 if (explainSys ==0 && !counter_exmple.isZero()) {
 					//checking for multi-step unsatisfiability between sys transitions and goals
