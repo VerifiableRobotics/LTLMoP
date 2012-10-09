@@ -106,9 +106,9 @@ class AnalysisResultsDialog(wx.Dialog):
 
             if ftype == section:
                 if section == "goals" and jx_this == jx:
-                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FF1493") # deep pink
+                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FA58D0") # pale pink
                 elif section != "goals":
-                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"ORANGE")
+                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FE9A2E") # pale orange
                 
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_summary.BeginTextColour(color)
@@ -1285,13 +1285,15 @@ class SpecEditorFrame(wx.Frame):
 
         (realizable, nonTrivial, to_highlight, output) = compiler._analyze()
 
-        self.analysisDialog.appendLog(output, "BLACK")
-
         if realizable:
+            # Strip trailing \n from output so it doesn't scroll past it
+            self.analysisDialog.appendLog(output.rstrip(), "BLACK")
             if nonTrivial:
-                self.analysisDialog.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")
+                self.analysisDialog.appendLog("\nSynthesized automaton is non-trivial.", "BLACK")
             else:
-                self.analysisDialog.appendLog("Synthesized automaton is trivial.\n", "RED")
+                self.analysisDialog.appendLog("\nSynthesized automaton is trivial.", "RED")
+        else:
+            self.analysisDialog.appendLog(output.rstrip(), "RED")
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
