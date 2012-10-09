@@ -144,10 +144,7 @@ class SpecCompiler(object):
             if not all(responses):
                 return None
         
-            # Add in the internal memory propositions and sensors so they go into the SMV and spec files
-            for p in self.proj.internal_props:
-                if p not in robotPropList:
-                    robotPropList.append(p)
+            # Add in the sensors so they go into the SMV and spec files
             for s in internal_sensors:
                 if s not in sensorList:
                     sensorList.append(s)
