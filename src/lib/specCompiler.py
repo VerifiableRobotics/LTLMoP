@@ -130,8 +130,11 @@ class SpecCompiler(object):
 
             # Make a new specgenerator and have it process the text
             specGen = SpecGenerator()
-            LTLspec_env, LTLspec_sys, self.proj.internal_props, responses, traceback = \
-                specGen.generate(text, sensorList, regionList, robotPropList)
+            # Filter out regions it shouldn't know about
+            filtered_regions = [region.name for region in self.proj.rfi.regions 
+                                if not (region.isObstacle or region.name.lower() == "boundary")]
+            LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
+                specGen.generate(text, sensorList, filtered_regions, robotPropList)
 
             for ln, response in enumerate(responses):
                 if not response:
@@ -141,10 +144,15 @@ class SpecCompiler(object):
             if not all(responses):
                 return None
         
-            # Add in the internal memory propositions, so they go into the SMV and spec files
+            # Add in the internal memory propositions and sensors so they go into the SMV and spec files
             for p in self.proj.internal_props:
                 if p not in robotPropList:
                     robotPropList.append(p)
+            for s in internal_sensors:
+                if s not in sensorList:
+                    sensorList.append(s)
+                    self.proj.all_sensors.append(s)
+                    self.proj.enabled_sensors.append(s)                    
 
             # Conjoin all the spec chunks
             LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
@@ -155,7 +163,9 @@ class SpecCompiler(object):
                 for r in self.proj.rfi.regions:
                     if not (r.isObstacle or r.name.lower() == "boundary"):
                         LTLspec_env = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
+                        LTLspec_env = re.sub('\\be\.' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
                         LTLspec_sys = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
+                        LTLspec_sys = re.sub('\\be\.' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
 
         elif self.proj.compile_options["parser"] == "ltl":
             # delete comments
@@ -262,9 +272,10 @@ class SpecCompiler(object):
         if "ENVIRONMENT TOPOLOGY" in LTLspec_env:
             sensorBits = ["sbit{0}".format(n) for n in range(0,numBits)]
             for p in sensorBits:
-                if p not in sensorList:
+                if p not in self.proj.enabled_sensors:
                     self.proj.enabled_sensors.append(p)
-                    sensorList.append(p)
+                if p not in self.proj.all_sensors:   
+                    self.proj.all_sensors.append(p)
 
         LTLspec_env = LTLspec_env.replace("ENVIRONMENT TOPOLOGY", env_topology + initreg_formula)
 

@@ -1150,6 +1150,14 @@ def replaceRegionName(formula,bitEncode,regionList):
 
             #tempFormula = tempFormula.replace(prop, bitEncode['current'][ind])
     
+    # Handle region sensor names
+    for prop in re.findall('e\.(\w+)',tempFormula):
+        if prop in regionList:
+            ind = regionList.index(prop)
+            # replace every occurrence of the proposition with the bit encoding
+            # it is written this way to prevent partial word replacements (as with the .replace method)
+            tempFormula = re.sub('\\be\.'+prop+'\\b', bitEncode['env'][ind],tempFormula)
+    
     LTLsubformula = tempFormula 
 
     return LTLsubformula
@@ -1178,35 +1186,42 @@ def bitEncoding(numRegions,numBits):
     # initializing the dictionary
     bitEncode = {}
 
-    # create an encoding of the regions, both current and next
+    # create an encoding of the regions, current and next for sys and current for env
     currBitEnc = []
     nextBitEnc = []
+    envBitEnc = []
     for num in range(numRegions):
         binary = numpy.binary_repr(num) # regions encoding start with 0
         # Adding zeros
         bitString = '0'*(numBits-len(binary)) + binary
 
         # Encoding the string
+        envTempString = '('
         currTempString = '('
         nextTempString = '('
         for bitNum in range(numBits):
             if bitNum>0:
+                envTempString = envTempString + ' & '
                 currTempString = currTempString + ' & '
                 nextTempString = nextTempString + ' & '
             if bitString[bitNum]=='1':
+                envTempString = envTempString + 'e.sbit' + str(bitNum)
                 currTempString = currTempString + 's.bit' + str(bitNum)
                 nextTempString = nextTempString + 'next(s.bit' + str(bitNum) + ')'
             if bitString[bitNum]=='0':
+                envTempString = envTempString + '!e.sbit' + str(bitNum)
                 currTempString = currTempString + '!s.bit' + str(bitNum)
                 nextTempString = nextTempString + '!next(s.bit' + str(bitNum) + ')'
 
+        envTempString = envTempString + ')'
         currTempString = currTempString + ')'
         nextTempString = nextTempString + ')'
-       
+        
+        envBitEnc.append(envTempString)
         currBitEnc.append(currTempString)
         nextBitEnc.append(nextTempString)
 
-
+    bitEncode['env'] = envBitEnc
     bitEncode['current'] = currBitEnc
     bitEncode['next'] = nextBitEnc
 
