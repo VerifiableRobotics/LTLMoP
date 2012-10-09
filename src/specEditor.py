@@ -1005,6 +1005,9 @@ class SpecEditorFrame(wx.Frame):
             if p not in self.list_box_customs.GetItems():
                 self.list_box_customs.AppendAndEnsureVisible(p)
 
+        # TODO: It would be useful to auto add sensors created by compilation here so
+        # they can be seen without restarting the GUI.
+
         if self.tracebackTree is None:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
