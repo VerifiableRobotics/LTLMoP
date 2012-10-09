@@ -90,6 +90,7 @@ public class GROneDebug {
 			 cox = cox.or((env.yieldStates(sys, cox.not())).not());			 
 		 }		 
 		 sysUnreal = cox.id().and(all_init);
+		 BDD unrealCause = (env.yieldStates(sys, Env.TRUE()).not()).exist(sys.modulePrimeVars());	
 		 
 		 //Some simple satisfiability tests
 		 if (sys.initial().isZero()) {
@@ -140,7 +141,7 @@ public class GROneDebug {
 	  }  
 
 		  if (explainSys ==0 && !sysUnreal.equals(Env.FALSE())) {
-				 debugInfo += "System is unrealizable because the environment can force a safety violation."+ "\n"; //TRUE if unsat
+				 debugInfo += "System is unrealizable because the environment can force a safety violation."+unrealCause+ "\n"; //TRUE if unsat
 		  		 explainSys = 1;
 		  }
 		  
@@ -180,7 +181,7 @@ public class GROneDebug {
 			
 		counter_exmple = g.envWinningStates().and(all_init);		 
 		if (counter_exmple.isZero()) {	//no winning environment states		
-			//debugInfo += "Specification is realizable assuming instantaneous actions.\n";
+			debugInfo += "Specification is realizable assuming instantaneous actions.\n";
 		}	
 			
 		if (!(env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
@@ -240,7 +241,7 @@ public class GROneDebug {
 				 	 explainSys = 1;
 				 }
 			 
-				 g = new GROneGame(env,sys, i, 1);
+				 g = new GROneGame(env,sys, i, env.justiceNum());
 				 counter_exmple = g.envWinningStates().and(all_init);
 				 if (explainSys ==0 && !counter_exmple.isZero()) {
 					//checking for multi-step unsatisfiability between sys transitions and goals
