@@ -1005,8 +1005,12 @@ class SpecEditorFrame(wx.Frame):
             if p not in self.list_box_customs.GetItems():
                 self.list_box_customs.AppendAndEnsureVisible(p)
 
-        # TODO: It would be useful to auto add sensors created by compilation here so
-        # they can be seen without restarting the GUI.
+        # Add any auto-generated sensor propositions to the list
+        for s in compiler.proj.enabled_sensors:
+            if s not in self.list_box_sensors.GetItems():
+                self.list_box_sensors.Insert(s,0)
+                self.list_box_sensors.Check(0)
+
 
         if self.tracebackTree is None:
             sys.stdout = sys.__stdout__
