@@ -3,17 +3,18 @@
 """ ================================================
     project.py - Abstraction layer for project files
     ================================================
-    
+
     This module exposes an object that allows for simplified loading of the
     various files included in a single project.
 """
 
 # TODO: Document better
-# TODO: Add in output (write-to-file) functions?
 
 import os, sys
 import fileMethods, regions
 from numpy import *
+import handlerSubsystem
+import inspect
 
 class Project:
     """
@@ -22,109 +23,68 @@ class Project:
 
     def __init__(self):
         self.project_basename = None
+        self.project_root = None
+        self.spec_data = None
         self.silent = False
-        pass
+        self.regionMapping = None
+        self.rfi = None
+        self.specText = ""
+        self.all_sensors = []
+        self.enabled_sensors = []
+        self.all_actuators = []
+        self.enabled_actuators = []
+        self.all_customs = []
+        self.internal_props = []
+        self.currentConfig = None
+        self.shared_data = {}  # This is for storing things like server connection objects, etc.
+
+        self.h_instance = {'init':{},'pose':None,'locomotionCommand':None,'motionControl':None,'drive':None,'sensor':{},'actuator':{}}
+
+        # Compilation options (with defaults)
+        self.compile_options = {"convexify": True,  # Decompose workspace into convex regions
+                                "fastslow": False,  # Enable "fast-slow" synthesis algorithm
+                                "decompose": True,  # Create regions for free space and region overlaps (required for Locative Preposition support)
+                                "parser": "slurp"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
+
+        # Climb the tree to find out where we are
+        p = os.path.abspath(sys.argv[0])
+        t = ""
+        while t != "src":
+            (p, t) = os.path.split(p)
+            if p == "":
+                print "I have no idea where I am; this is ridiculous"
+                return None
+
+        self.ltlmop_root = os.path.join(p, "src")
 
     def setSilent(self, silent):
         self.silent = silent
 
-    def getExperimentConfig(self, exp_cfg_name):
-        """
-        Returns a dictionary corresponding to the specified experiment config
-        """
-
-        # Find the section that corresponds to this configuration
-        for key, val in self.spec_data.iteritems():
-            if key.startswith("EXPERIMENT CONFIG") and val['Name'][0] == exp_cfg_name :
-                if not self.silent: print "  -> Using experiment configuration \"%s\"" % exp_cfg_name
-                return val
-
-
-        if not self.silent: print "ERROR: Could not find experiment config with name \"%s\" in spec file!" % exp_cfg_name
-        return
-
-    def loadLabData(self, exp_cfg_data):
-        """
-        Takes an experiment config dictionary and returns a lab config dictionary.
-        """
-
-        #### Load in the lab setup file
-        
-        try:
-            lab_name = exp_cfg_data['Lab'][0]
-        except IndexError, KeyError:
-            if not self.silent: print "WARNING: Lab configuration file undefined"        
-            return
-
-        # Add extension to the name if there isn't one. 
-        if not lab_name.endswith('.lab'):
-            lab_name = lab_name+'.lab'     
-        if not self.silent: print "Loading lab setup file %s..." % lab_name
-        try:
-            # First try path relative to project path
-            lab_data = fileMethods.readFromFile(os.path.join(self.project_root, lab_name))   
-        except IOError: 
-            try:
-                # If that doesn't work, try looking in $self.ltlmop_root/labs/ directory
-                lab_data = fileMethods.readFromFile(os.path.join(self.ltlmop_root, "labs", lab_name))   
-            except IOError:
-                if not self.silent: print "ERROR: Couldn't find lab setup file in project directory or labs folder."
-                return
-        if not self.silent: print "  -> Looks like you want to run your experiment with %s. Good choice." % lab_data["Name"][0]
-        
-        return lab_data
-        
-    def loadRegionMapping(self, spec_data):
+    def loadRegionMapping(self):
         """
         Takes the region mapping data and returns region mapping dictionary.
         """
+
+        if self.spec_data is None:
+            if not self.silent: print "ERROR: Cannot load region mapping data before loading a spec file"
+            return None
+
         try:
-            mapping_data = spec_data['SPECIFICATION']['RegionMapping']
-        except IndexError, KeyError:
-            if not self.silent: print "WARNING: Region mapping data undefined"        
-            return {'Null':['Null']}
+            mapping_data = self.spec_data['SPECIFICATION']['RegionMapping']
+        except KeyError:
+            if not self.silent: print "WARNING: Region mapping data undefined"
+            return None
+
         if len(mapping_data) == 0:
-            if not self.silent: print "WARNING: Region mapping data is empty"        
-            return {'Null':['Null']}
-        
+            if not self.silent: print "WARNING: Region mapping data is empty"
+            return None
+
         regionMapping = {}
         for line in mapping_data:
-            oldRegionName,newRegionList = line.split('=')
-            regionMapping[oldRegionName] = newRegionList.split(',')
+            oldRegionName, newRegionList = line.split('=')
+            regionMapping[oldRegionName.strip()] = [n.strip() for n in newRegionList.split(',')]
+
         return regionMapping
-        
-        
-    def loadRobotFile(self, exp_cfg_data):
-        """
-        Takes an experiment config dictionary and returns a robot description dictionary.
-        """
-
-        #### Load in the robot file
-        
-        try:
-            rdf_name = exp_cfg_data['RobotFile'][0]
-        except IndexError, KeyError:
-            if not self.silent: print "WARNING: Robot description file undefined"        
-            return
-
-        # Add extension to the name if there isn't one. 
-        if not rdf_name.endswith('.robot'):
-            rdf_name = rdf_name+'.robot'  
-     
-        if not self.silent: print "Loading robot description file %s..." % rdf_name
-        try:
-            # First try path relative to project path
-            rdf_data = fileMethods.readFromFile(os.path.join(self.project_root, rdf_name))   
-        except IOError: 
-            try:
-                # If that doesn't work, try looking in $self.ltlmop_root/robots/ directory
-                rdf_data = fileMethods.readFromFile(os.path.join(self.ltlmop_root, "robots", rdf_name))   
-            except IOError:
-                if not self.silent: print "ERROR: Couldn't find robot description file in project directory or robots folder."
-                return
-        if not self.silent: print "  -> %s looks excited for this run." % rdf_data["Name"][0]
-        
-        return rdf_data
 
     def loadRegionFile(self, decomposed=False):
         """
@@ -133,83 +93,155 @@ class Project:
 
         #### Load in the region file
 
-        try:
-            regf_name = self.spec_data['SETTINGS']['RegionFile'][0]
-            if decomposed:
-                #regf_name = regf_name.split(".")[0] + "_decomposed.regions"
-                regf_name = self.getFilenamePrefix() + "_decomposed.regions"
-        except IndexError, KeyError:
-            if not self.silent: print "WARNING: Region file undefined"        
-            return
+        if decomposed:
+            regf_name = self.getFilenamePrefix() + "_decomposed.regions"
+        else:
+            try:
+                regf_name = os.path.join(self.project_root, self.spec_data['SETTINGS']['RegionFile'][0])
+            except (IndexError, KeyError):
+                if not self.silent: print "WARNING: Region file undefined"
+                return None
 
         if not self.silent: print "Loading region file %s..." % regf_name
-        rfi = regions.RegionFileInterface() 
+        rfi = regions.RegionFileInterface()
 
-        if rfi.readFile(os.path.join(self.project_root, regf_name)) == False:
+        if not rfi.readFile(regf_name):
             if not self.silent:
                 print "ERROR: Could not load region file %s!"  % regf_name
                 if decomposed:
                     print "Are you sure you compiled your specification?"
-            return
-     
+            return None
+
         if not self.silent: print "  -> Found definitions for %d regions." % len(rfi.regions)
 
         return rfi
 
-    def getCoordMaps(self, exp_cfg_data):
+    def getCoordMaps(self):
         """
         Returns forward (map->lab) and reverse (lab->map) coordinate mapping functions, in that order
-
-        We are currently assuming the transformation is only linear, not affine (TODO).
         """
 
+        if self.currentConfig is None:
+            return (None, None)
+
+        r = self.currentConfig.getRobotByName(self.currentConfig.main_robot)
+        if r.calibrationMatrix is None:
+            if not self.silent: print "WARNING: Main robot has no calibration data.  Using identity matrix."
+            T = eye(3)
+        else:
+            T = r.calibrationMatrix
+
+        # Check for singular matrix
+        if abs(linalg.det(T)) < finfo(float).eps:
+            if not self.silent: print "WARNING: Singular calibration matrix.  Ignoring, and using identity matrix."
+            T = eye(3)
+
         #### Create the coordmap functions
-
-        # Look for transformation values in spec file
-        try:
-            transformValues = exp_cfg_data['Calibration'][0].split(",")
-            [xscale, xoffset, yscale, yoffset] = map(float, transformValues)
-        except KeyError, ValueError:
-            if not self.silent: print "ERROR: Please calibrate and update values before running simulation."
-            return
-
-        # Create functions for coordinate transformation
-        # (numpy may seem like overkill for this, but we already have it as a dependency anyways...)
-        scale = diag([xscale, yscale])
-        inv_scale = linalg.inv(scale)
-        offset = array([xoffset, yoffset])
-
-        #coordmap_map2lab = lambda pt: (array((a*vstack([mat(pt).T,1]))[0:2]).flatten()) 
-        #coordmap_lab2map = lambda pt: (array((linalg.inv(a)*vstack([mat(pt).T,1]))[0:2]).flatten()) 
-
-        coordmap_map2lab = lambda pt: (dot(scale, array([pt[0], pt[1]])) + offset)
-        coordmap_lab2map = lambda pt: (dot(inv_scale, array([pt[0], pt[1]]) - offset))
+        coordmap_map2lab = lambda pt: (linalg.inv(T) * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
+        coordmap_lab2map = lambda pt: (T * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
 
         return coordmap_map2lab, coordmap_lab2map
 
     def loadSpecFile(self, spec_file):
         # Figure out where we should be looking for files, based on the spec file name & location
         self.project_root = os.path.abspath(os.path.dirname(spec_file))
-        self.project_basename, ext = os.path.splitext(os.path.basename(spec_file)) 
-        
-        # Climb the tree to find out where we are
-        p = os.path.abspath(sys.argv[0])
-        t = ""
-        while t != "src":
-            (p, t) = os.path.split(p)
-            if p == "":
-                print "I have no idea where I am; this is ridiculous"
-                sys.exit(1)
+        self.project_basename, ext = os.path.splitext(os.path.basename(spec_file))
 
-        self.ltlmop_root = os.path.join(p,"src")
 
         ### Load in the specification file
         if not self.silent: print "Loading specification file %s..." % spec_file
-        spec_data = fileMethods.readFromFile(spec_file)   
-        
+        spec_data = fileMethods.readFromFile(spec_file)
+
+        if spec_data is None:
+            if not self.silent: print "WARNING: Failed to load specification file"
+            return None
+
+        try:
+            self.specText = '\n'.join(spec_data['SPECIFICATION']['Spec'])
+        except KeyError:
+            if not self.silent: print "WARNING: Specification text undefined"
+
+        if 'CompileOptions' in spec_data['SETTINGS']:
+            for l in spec_data['SETTINGS']['CompileOptions']:
+                if ":" not in l:
+                    continue
+
+                k,v = l.split(":", 1)
+                if k.strip().lower() == "parser":
+                    self.compile_options[k.strip().lower()] = v.strip().lower()
+                else:
+                    # convert to boolean if not a parser type
+                    self.compile_options[k.strip().lower()] = (v.strip().lower() in ['true', 't', '1'])
+
         return spec_data
+
+    def writeSpecFile(self, filename=None):
+        if filename is None:
+            # Default to same filename as we loaded from
+            filename = os.path.join(self.project_root, self.project_basename + ".spec")
+        else:
+            # Update our project paths based on the new filename
+            self.project_root = os.path.dirname(os.path.abspath(filename))
+            self.project_basename, ext = os.path.splitext(os.path.basename(filename))
+
+        data = {}
+
+        data['SPECIFICATION'] = {"Spec": self.specText}
+
+        if self.regionMapping is not None:
+            data['SPECIFICATION']['RegionMapping'] = [rname + " = " + ', '.join(rlist) for
+                                                      rname, rlist in self.regionMapping.iteritems()]
+
+        data['SETTINGS'] = {"Sensors": [p + ", " + str(int(p in self.enabled_sensors)) for p in self.all_sensors],
+                            "Actions": [p + ", " + str(int(p in self.enabled_actuators)) for p in self.all_actuators],
+                            "Customs": self.all_customs}
+
+        if self.currentConfig is not None:
+            data['SETTINGS']['CurrentConfigName'] = self.currentConfig.name
+
+        data['SETTINGS']['CompileOptions'] = "\n".join(["%s: %s" % (k, str(v)) for k,v in self.compile_options.iteritems()])
     
-    def loadProject(self, spec_file, exp_cfg_name=None):
+        if self.rfi is not None:
+            # Save the path to the region file as relative to the spec file
+            # FIXME: relpath has case sensitivity problems on OS X
+            data['SETTINGS']['RegionFile'] = os.path.normpath(os.path.relpath(self.rfi.filename, self.project_root))
+
+        comments = {"FILE_HEADER": "This is a specification definition file for the LTLMoP toolkit.\n" +
+                                   "Format details are described at the beginning of each section below.",
+                    "RegionFile": "Relative path of region description file",
+                    "Sensors": "List of sensor propositions and their state (enabled = 1, disabled = 0)",
+                    "Actions": "List of action propositions and their state (enabled = 1, disabled = 0)",
+                    "Customs": "List of custom propositions",
+                    "Spec": "Specification in structured English",
+                    "RegionMapping": "Mapping between region names and their decomposed counterparts"}
+
+        fileMethods.writeToFile(filename, data, comments)
+
+    def loadConfig(self, name=None):
+        """
+        Load the config object with name ``name`` (case-insensitive).  If no name is specified, load the one defined as currently selected.
+        """
+
+        self.hsub = handlerSubsystem.HandlerSubsystem(self)
+        self.hsub.setSilent(self.silent)
+        self.hsub.loadAllConfigFiles()
+
+        if name is None:
+            try:
+                name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
+            except (KeyError, IndexError):
+                if not self.silent: print "WARNING: No experiment configuration defined"
+                return None
+
+        for c in self.hsub.configs:
+            if c.name.lower() == name.lower():
+                return c
+
+        if not self.silent: print "WARNING: Default experiment configuration of name '%s' could not be found in configs/ directory." % name
+
+        return None
+
+    def loadProject(self, spec_file):
         """
         Because the spec_file contains references to all other project files, this is all we
         need to know in order to load everything in.
@@ -217,44 +249,43 @@ class Project:
 
         self.spec_data = self.loadSpecFile(spec_file)
 
-        # Figure out the name of the current experiment config if not specified
-        if exp_cfg_name is None:
-            exp_cfg_name = self.spec_data['SETTINGS']['currentExperimentName'][0]
+        if self.spec_data is None:
+            return False
 
-        self.regionMapping = self.loadRegionMapping(self.spec_data)
-        self.exp_cfg_data = self.getExperimentConfig(exp_cfg_name)
-        self.lab_data = self.loadLabData(self.exp_cfg_data)
-        self.robot_data = self.loadRobotFile(self.exp_cfg_data)
+        self.currentConfig = self.loadConfig()
+        self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
-        self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps(self.exp_cfg_data)
+        self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps()
         self.determineEnabledPropositions()
+
+        return True
 
     def determineEnabledPropositions(self):
         """
-        Populate ``all_sensors``, ``initial_sensors``, and ``all_actuators`` lists based on
-        configuration information.
+        Populate lists ``all_sensors``, ``enabled_sensors``, etc.
         """
-    
-        # Figure out what sensors are enabled, and which are initially true
+
+        # Figure out what sensors are enabled
         self.all_sensors = []
-        self.initial_sensors = []
+        self.enabled_sensors = []
         for line in self.spec_data['SETTINGS']['Sensors']:
             sensor, val = line.split(',')
-            if int(val) == 1: 
-                self.all_sensors.append(sensor)
-                if sensor in self.exp_cfg_data['InitialTruths']:
-                    self.initial_sensors.append(sensor)
+            self.all_sensors.append(sensor.strip())
+            if int(val) == 1:
+                self.enabled_sensors.append(sensor.strip())
 
         # Figure out what actuators are enabled
         self.all_actuators = []
+        self.enabled_actuators = []
         for line in self.spec_data['SETTINGS']['Actions']:
             act, val = line.split(',')
-            if int(val) == 1: 
-                self.all_actuators.append(act)
+            self.all_actuators.append(act.strip())
+            if int(val) == 1:
+                self.enabled_actuators.append(act.strip())
 
         # Figure out what the custom propositions are
         self.all_customs = self.spec_data['SETTINGS']['Customs']
-    
+
     def getFilenamePrefix(self):
         """ Returns the full path of most project files, minus the extension.
 
@@ -263,73 +294,17 @@ class Project:
         """
         return os.path.join(self.project_root, self.project_basename)
 
-    def getBackgroundImagePath(self):
-        """ Returns the path of the background image with regions drawn on top, created by RegionEditor """
-        return self.rfi.thumb
-        #return self.getFilenamePrefix() + "_simbg.png"
-    
-    def lookupHandlers(self):
+    def importHandlers(self, all_handler_types=None):
         """
         Figure out which handlers we are going to use, based on the different configurations file settings
-        """
-
-        # TODO: Complain nicely instead of just dying when this breaks?
-        self.h_name = {}
-        self.h_name['init'] = self.lab_data["InitializationHandler"]
-        self.h_name['pose'] = self.lab_data["PoseHandler"][0]
-        self.h_name['sensor'] = self.lab_data["SensorHandler"][0]
-        self.h_name['actuator'] = self.lab_data["ActuatorHandler"][0]
-        self.h_name['locomotionCommand'] = self.lab_data["LocomotionCommandHandler"][0]
-        self.h_name['motionControl'] = self.robot_data["MotionControlHandler"][0]
-        self.h_name['drive'] = self.robot_data["DriveHandler"][0]
-    
-    def runInitialization(self, calib=False):
-        """
-        Run the necessary initialization handlers.
-
-        We treat initialization handlers separately, because there may be more than one.
-        NOTE: These will be loaded in the same order as they are listed in the lab config file.
-        """
-
-        self.shared_data = {}  # This is for storing things like server connection objects, etc.
-        init_num = 1
-        self.init_handlers = []
-        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
-        for handler in self.h_name['init']:
-            if not self.silent: print "  -> %s" % handler
-            # TODO: Is there a more elegant way to do this? This is pretty ugly...
-            exec("from %s import initHandler as initHandler%d" % (handler, init_num)) in locals() # WARNING: This assumes our input data is not malicious...
-            exec("self.init_handlers.append(initHandler%d(self, calib=calib))" % (init_num)) in locals()
-            self.shared_data.update(self.init_handlers[-1].getSharedData())
-            init_num += 1  # So they don't clobber each other
-
-        return self.shared_data
-
-    def importHandlers(self, list=None):
-        """
+        Only one motion/pose/drive/locomotion handler per experiment
+        Multiple init/sensor/actuator handlers per experiment, one for each robot (if any)
         Load in specified handlers.  If no list is given, *all* handlers will be loaded.
-
         Note that the order of loading is important, due to inter-handler dependencies.
         """
 
-        if list is None:
-            list = ['pose','sensor','actuator','locomotionCommand','drive','motionControl']
+        if all_handler_types is None:
+            all_handler_types = ['init','pose','locomotionCommand','drive','motionControl','sensor','actuator']
 
-        sys.path.append(self.ltlmop_root)  # Temporary fix until paths get straightened out
-        # Now do the rest of them
-        for handler in list:
-            if not self.silent: print "  -> %s" % self.h_name[handler]
-            exec("from %s import %sHandler" % (self.h_name[handler], handler)) in locals() # WARNING: This assumes our input data is not malicious...
-            if handler == 'pose':
-                self.pose_handler = poseHandler(self, self.shared_data)
-                if not self.silent: print "(POSE) Initial pose: " + str(self.pose_handler.getPose())
-            elif handler == 'sensor':
-                self.sensor_handler = sensorHandler(self, self.shared_data)
-            elif handler == 'actuator':
-                self.actuator_handler = actuatorHandler(self, self.shared_data)
-            elif handler == 'locomotionCommand':
-                self.loco_handler = locomotionCommandHandler(self, self.shared_data)
-            elif handler == 'drive':
-                self.drive_handler = driveHandler(self, self.shared_data)
-            elif handler == 'motionControl':
-                self.motion_handler = motionControlHandler(self, self.shared_data)
+        self.hsub.importHandlers(self.currentConfig,all_handler_types)
+        if not self.silent: print "(POSE) Initial pose: " + str(self.h_instance['pose'].getPose())

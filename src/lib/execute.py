@@ -3,7 +3,7 @@
 """ =================================================
     execute.py - Top-level hybrid controller executor
     =================================================
-    
+
     This module executes a hybrid controller for a robot in a simulated or real environment.
 
     :Usage: ``execute.py [-hn] [-a automaton_file] [-s spec_file]``
@@ -20,6 +20,8 @@
 import sys, os, getopt, textwrap
 import threading, subprocess, time
 import fileMethods, regions, fsa, project
+from numpy import *
+from handlers.motionControl.__is_inside import is_inside
 from socket import *
 
 ####################
@@ -58,10 +60,10 @@ def guiListen():
     buf = 1024
     addrFrom = (host,portFrom)
     UDPSockFrom = socket(AF_INET,SOCK_DGRAM)
-    UDPSockFrom.setsockopt(SOL_SOCKET,SO_REUSEADDR,1) 
+    UDPSockFrom.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
     UDPSockFrom.bind(addrFrom)
 
-    while 1: 
+    while 1:
         # Wait for and receive a message from the subwindow
         input,addrFrom = UDPSockFrom.recvfrom(buf)
 
@@ -82,6 +84,9 @@ def guiListen():
         elif input == "PAUSE":
             runFSA = False
             print "PAUSED."
+        elif input == "QUIT":
+            print "Quitting."
+            sys.exit(0)
         else:
             print "WARNING: Unknown command received from GUI: " + input
 
@@ -117,7 +122,7 @@ def main(argv):
             aut_file = arg
         elif opt in ("-s", "--spec-file"):
             spec_file = arg
-    
+
     if aut_file is None:
         print "ERROR: Automaton file needs to be specified."
         usage(argv[0])
@@ -144,23 +149,10 @@ def main(argv):
     # Initialize each module #
     ##########################
 
-    proj.lookupHandlers()
-
     # Import the relevant handlers
     print "Importing handler functions..."
-    
-    proj.runInitialization()
+
     proj.importHandlers()
-
-    #######################
-    # Load automaton file #
-    #######################
-    
-    print "Loading automaton..."
-
-    FSA = fsa.Automaton(proj.rfi.regions, proj.regionMapping, proj.sensor_handler, proj.actuator_handler, proj.motion_handler)
-
-    FSA.loadFile(aut_file, proj.all_sensors, proj.all_actuators, proj.spec_data['SETTINGS']['Customs'])
 
     ############################
     # Start status/control GUI #
@@ -174,11 +166,12 @@ def main(argv):
 
         # Create a subprocess
         print "Starting GUI window and listen thread..."
-        p_gui = subprocess.Popen(["python",os.path.join(proj.ltlmop_root, "lib", "simGUI.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        p_gui = subprocess.Popen(["python","-u",os.path.join(proj.ltlmop_root, "lib", "simGUI.py")])
 
 
         # Create new thread to communicate with subwindow
         guiListenThread = threading.Thread(target = guiListen)
+        guiListenThread.daemon = True
         guiListenThread.start()
 
         # Set up socket for communication to simGUI
@@ -201,10 +194,22 @@ def main(argv):
         sys.stdout = redir
         sys.stderr = redir
 
+    #######################
+    # Load automaton file #
+    #######################
+
+    print "Loading automaton..."
+
+    FSA = fsa.Automaton(proj)
+
+    success = FSA.loadFile(aut_file, proj.enabled_sensors, proj.enabled_actuators, proj.all_customs)
+    if not success: return
+
     #############################
     # Begin automaton execution #
     #############################
-    
+
+
     last_gui_update_time = 0
 
     ### Wait for the initial start command
@@ -218,21 +223,31 @@ def main(argv):
 
     ### Figure out where we should start from
 
-    if 'InitialRegion' in proj.exp_cfg_data: 
-        init_region = int(proj.exp_cfg_data['InitialRegion'][0])
-        init_region = proj.rfi.indexOfRegionWithName(proj.regionMapping[proj.rfiold.regions[init_region].name][0])
-    else:
-        print "WARNING: Initial region auto-detection not yet implemented" # TODO: determine initial region
-        init_region = 0
+    pose = proj.h_instance['pose'].getPose()
+
+    init_region = None
+
+    for i, r in enumerate(proj.rfi.regions):
+        #pointArray = [proj.coordmap_map2lab(x) for x in r.getPoints()]
+        #vertices = mat(pointArray).T
+
+        #if is_inside([pose[0], pose[1]], vertices):
+        if r.objectContainsPoint(*proj.coordmap_lab2map(pose)):
+            init_region = i
+            break
+
+    if init_region is None:
+        print "Initial pose of ", pose, "not inside any region!"
+        sys.exit(1)
 
     print "Starting from initial region: " + proj.rfi.regions[init_region].name
-    
+
     ### Have the FSA find a valid initial state
 
     # Figure out our initially true outputs
     init_outputs = []
-    for prop in proj.exp_cfg_data['InitialTruths']:
-        if prop not in proj.all_sensors:
+    for prop in proj.currentConfig.initial_truths:
+        if prop not in proj.enabled_sensors:
             init_outputs.append(prop)
 
     init_state = FSA.chooseInitialState(init_region, init_outputs)
@@ -244,34 +259,39 @@ def main(argv):
         print "Starting from state %s." % init_state.name
 
     ### Get everything moving
+    # Rate limiting is approximately 20Hz
+    avg_freq = 20
 
-    avg_freq = 0
+    # Choose a timer func with maximum accuracy for given platform
+    if sys.platform in ['win32', 'cygwin']:
+        timer_func = time.clock
+    else:
+        timer_func = time.time
 
     while True:
         # Idle if we're not running
         while not runFSA:
-            proj.drive_handler.setVelocity(0,0) 
+            proj.h_instance['drive'].setVelocity(0,0)
             time.sleep(0.05) # We need to sleep to give up the CPU
 
-        tic = time.time() 
-
+        tic = timer_func()
         FSA.runIteration()
+        toc = timer_func()
         
-        toc = time.time()
+        # Rate limiting of execution and GUI update
+        while (toc - tic) < 0.05:
+            time.sleep(0.005)
+            toc = timer_func()
 
-        # TODO: Possibly implement max rate-limiting?
-        #while (toc - tic) < 0.05:
-        #   time.sleep(0.01)
-        #   toc = time.time()
-
-        # Update GUI, no faster than 20Hz
-        if show_gui and (time.time() - last_gui_update_time > 0.05):
-            avg_freq = 0.9*avg_freq + 0.1*1/(toc-tic) # IIR filter
+        # Update GUI
+        # If rate limiting is disabled in the future add in rate limiting here for the GUI:
+        # if show_gui and (timer_func() - last_gui_update_time > 0.05)
+        if show_gui:
+            avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic) # IIR filter
             UDPSockTo.sendto("Running at approximately %dHz..." % int(avg_freq),addrTo)
-            pose = proj.pose_handler.getPose(cached=True)[0:2]
+            pose = proj.h_instance['pose'].getPose(cached=True)[0:2]
             UDPSockTo.sendto("POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose))),addrTo)
 
-            last_gui_update_time = time.time()
 
 class RedirectText:
     """

@@ -1,0 +1,168 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+r2	5
+
+Obstacles: # Names of regions to treat as obstacles
+blocked
+edgeAndWall
+edge
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "r5", 
+        "color": [255, 0, 0], 
+        "holeList": [], 
+        "points": [[8, 12], [77, 0], [77, 31], [77, 169], [0, 183]], 
+        "position": [52, 27], 
+        "type": "poly", 
+        "size": [77, 183]
+    }, 
+    {
+        "name": "boundary", 
+        "color": [204, 50, 50], 
+        "holeList": [], 
+        "points": [[13, 33], [82, 21], [84, 21], [533, 5], [535, 5], [676, 0], [676, 168], [676, 358], [677, 402], [678, 546], [414, 553], [412, 553], [179, 560], [177, 560], [0, 569], [1, 446], [5, 204]], 
+        "position": [47, 6], 
+        "type": "poly", 
+        "size": [678, 569]
+    }, 
+    {
+        "name": "r4", 
+        "color": [0, 0, 255], 
+        "holeList": [], 
+        "points": [[4, 14], [81, 0], [80, 22], [80, 237], [0, 256]], 
+        "position": [48, 196], 
+        "type": "poly", 
+        "size": [81, 256]
+    }, 
+    {
+        "name": "r3", 
+        "color": [0, 0, 255], 
+        "holeList": [], 
+        "points": [[177, 135], [0, 144], [1, 21], [81, 2], [176, 0]], 
+        "position": [47, 431], 
+        "type": "poly", 
+        "size": [177, 144]
+    }, 
+    {
+        "name": "r1", 
+        "color": [0, 128, 255], 
+        "holeList": [], 
+        "points": [[1, 0], [403, 4], [405, 194], [310, 202], [308, 189], [0, 190]], 
+        "position": [147, 218], 
+        "type": "poly", 
+        "size": [405, 202]
+    }, 
+    {
+        "name": "blocked", 
+        "color": [192, 192, 192], 
+        "holeList": [], 
+        "points": [[0, 0], [0, 215], [95, 213], [329, 202], [327, 189], [19, 190], [20, 0]], 
+        "position": [128, 218], 
+        "type": "poly", 
+        "size": [329, 215]
+    }, 
+    {
+        "name": "edgeAndWall", 
+        "color": [176, 176, 176], 
+        "holeList": [], 
+        "points": [[0, 34], [20, 34], [422, 38], [424, 228], [596, 224], [595, 180], [467, 181], [464, 0], [1, 12]], 
+        "position": [128, 184], 
+        "type": "poly", 
+        "size": [596, 228]
+    }, 
+    {
+        "name": "incline", 
+        "color": [255, 0, 0], 
+        "holeList": [], 
+        "points": [[453, 0], [463, 137], [0, 149], [0, 11]], 
+        "position": [129, 47], 
+        "type": "poly", 
+        "size": [463, 149]
+    }, 
+    {
+        "name": "edge", 
+        "color": [192, 192, 192], 
+        "holeList": [], 
+        "points": [[2, 16], [451, 0], [453, 36], [0, 47], [0, 16]], 
+        "position": [129, 11], 
+        "type": "poly", 
+        "size": [453, 47]
+    }, 
+    {
+        "name": "r2", 
+        "color": [0, 255, 0], 
+        "holeList": [], 
+        "points": [[4, 151], [2, 151], [0, 12], [95, 4], [267, 0], [268, 144]], 
+        "position": [457, 408], 
+        "type": "poly", 
+        "size": [268, 151]
+    }, 
+    {
+        "name": "mesh", 
+        "color": [255, 0, 0], 
+        "holeList": [], 
+        "points": [[0, 11], [234, 0], [236, 139], [3, 146], [1, 146]], 
+        "position": [223, 420], 
+        "type": "poly", 
+        "size": [236, 146]
+    }, 
+    {
+        "name": "naoArea", 
+        "color": [0, 0, 255], 
+        "holeList": [], 
+        "points": [[131, 0], [131, 190], [3, 191], [0, 10]], 
+        "position": [592, 174], 
+        "type": "poly", 
+        "size": [131, 191]
+    }, 
+    {
+        "name": "r6", 
+        "color": [0, 255, 0], 
+        "holeList": [], 
+        "points": [[2, 5], [143, 0], [143, 168], [12, 178], [2, 41], [0, 5]], 
+        "position": [580, 6], 
+        "type": "poly", 
+        "size": [143, 178]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+r5	boundary	52	210	60	39	60	39	129	27
+r5	r4	52	210	129	196
+r5	incline	129	58	129	196
+r5	edge	129	27	129	58
+boundary	r4	48	452	52	210
+boundary	r3	47	575	48	452	47	575	224	566
+boundary	edgeAndWall	723	364	724	408
+boundary	edge	129	27	131	27	131	27	580	11
+boundary	r2	461	559	725	552	724	408	725	552	459	559	461	559
+boundary	mesh	224	566	226	566	226	566	459	559
+boundary	naoArea	723	174	723	364
+boundary	r6	580	11	582	11	723	6	723	174	582	11	723	6
+r4	r3	48	452	128	433
+r4	blocked	128	218	128	433
+r4	edgeAndWall	128	218	129	196
+r3	blocked	128	433	223	431
+r3	mesh	223	431	224	566
+r1	blocked	147	408	455	407	147	408	148	218	455	407	457	420
+r1	edgeAndWall	148	218	550	222	550	222	552	412
+r1	r2	457	420	552	412
+blocked	edgeAndWall	128	218	148	218
+blocked	mesh	223	431	457	420
+edgeAndWall	incline	129	196	592	184
+edgeAndWall	r2	552	412	724	408
+edgeAndWall	naoArea	595	365	723	364	592	184	595	365
+incline	edge	129	58	582	47
+incline	r6	582	47	592	184
+edge	r6	580	11	582	47
+r2	mesh	457	420	459	559
+naoArea	r6	592	184	723	174
+

@@ -1,0 +1,41 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+r4	0
+r2	0
+
+Obstacles: # Names of regions to treat as obstacles
+shelf1
+shelf2
+shelf3
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+office	poly	149	387	102	54	255	255	0	0	0	102	0	101	49	1	54
+r4	poly	148	305	103	82	255	128	0	103	82	1	82	0	6	102	0
+r3	poly	502	300	105	86	0	255	0	0	0	104	0	105	85	0	86
+r2	poly	502	173	104	84	0	0	255	0	0	102	8	104	80	1	84
+r1	poly	146	165	106	97	176	0	255	106	97	1	91	0	0	103	0
+boundary	poly	145	127	463	314	192	192	192	4	260	3	184	2	129	1	38	0	0	104	0	356	4	459	9	459	54	461	126	461	173	462	258	463	304	354	305	105	309	5	314
+shelf1	poly	249	127	253	46	255	0	0	0	0	252	4	253	46	0	38
+shelf2	poly	250	257	253	48	255	0	0	2	5	253	0	252	43	0	48
+shelf3	poly	250	386	252	50	255	0	0	1	1	252	0	249	46	0	50
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+grocery_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+office	r4	149	387	251	387
+office	boundary	149	387	150	441	150	441	250	436
+office	shelf3	250	436	251	387
+r4	boundary	148	311	149	387
+r3	boundary	606	300	607	385
+r2	boundary	604	181	606	253
+r1	boundary	146	165	147	256
+boundary	shelf1	249	127	501	131
+boundary	shelf3	250	436	499	432
+
