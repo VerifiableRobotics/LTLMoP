@@ -214,6 +214,7 @@ public class GROneDebug {
 						 explainEnv = 1;
 						 i = 0;
 					 }
+					 explainEnv = 1;
 				 } 
 			}
 		}
