@@ -13,6 +13,9 @@ import fsa
 from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import bitEncoding, replaceRegionName
 
+# Hack needed to ensure there's only one
+_SLURP_SPEC_GENERATOR = None
+
 class SpecCompiler(object):
     def __init__(self, spec_filename=None):
         self.proj = project.Project()
@@ -122,19 +125,22 @@ class SpecCompiler(object):
         # Create LTL using selected parser
         # TODO: rename decomposition object to something other than 'parser'
         if self.proj.compile_options["parser"] == "slurp":
-            # Add SLURP to path for import
-            p = os.path.dirname(os.path.abspath(__file__))
-            sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
-
-            from ltlbroom.specgeneration import SpecGenerator
-
+            # Hack: We need to make sure there's only one of these
+            global _SLURP_SPEC_GENERATOR
+            
             # Make a new specgenerator and have it process the text
-            specGen = SpecGenerator()
+            if not _SLURP_SPEC_GENERATOR:
+                # Add SLURP to path for import
+                p = os.path.dirname(os.path.abspath(__file__))
+                sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
+                from ltlbroom.specgeneration import SpecGenerator
+                _SLURP_SPEC_GENERATOR = SpecGenerator()
+            
             # Filter out regions it shouldn't know about
             filtered_regions = [region.name for region in self.proj.rfi.regions 
                                 if not (region.isObstacle or region.name.lower() == "boundary")]
             LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
-                specGen.generate(text, sensorList, filtered_regions, robotPropList)
+                _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList)
 
             for ln, response in enumerate(responses):
                 if not response:
