@@ -995,7 +995,7 @@ class SpecEditorFrame(wx.Frame):
         self.list_box_locphrases.Set(self.proj.regionMapping.keys())
         self.list_box_locphrases.Select(0)
 
-        self.appendLog("Parsing NL to LTL...\n", "BLUE")
+        self.appendLog("Creating LTL...\n", "BLUE")
 
         self.tracebackTree = compiler._writeLTLFile()
         
