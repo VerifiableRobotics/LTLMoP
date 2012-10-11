@@ -185,6 +185,8 @@ public class GROneDebug {
 		}	
 			
 		if (!(env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
+			
+			boolean flagRealPrev = false;
 		
 			
 			for (int i = env.justiceNum(); i >=1; i--){		
@@ -209,13 +211,20 @@ public class GROneDebug {
 						 explainEnv = 1;
 						 i = 0;
 					 //} else if (counter_exmple.isZero() && !env.justiceAt(i-1).equals(Env.TRUE())) {// && (!prev.isZero())) {
-					 } else if (i < env.justiceNum()) {
+					 } else if (i < env.justiceNum() & !flagRealPrev) {
 						 //if we get here, the env is unrealizable because of the current goal
 						 debugInfo += "Environment highlighted goal(s) unrealizable " + (i-1) + "\n";	
 						 explainEnv = 1;
 						 i = 0;
 					 }
-				 } 
+					 else flagRealPrev = true;	//flags that the previous set of livenesses was also realizable				 
+				 } else if (explainEnv ==0 && !counter_exmple.isZero() & flagRealPrev) {
+					 //if we get here, the env is unrealizable because of the previous goal (this is important mainly for the case where the last goal is unrealiable)
+					 debugInfo += "Environment highlighted goal(s) unrealizable: " + (i) + "\n";	
+					 explainEnv = 1;
+					 i = 0;
+				 }
+						 
 			}
 		}
 		
