@@ -18,26 +18,30 @@ basicsim
 Customs: # List of custom propositions
 
 RegionFile: # Relative path of region description file
-../firefighting/floorplan.regions
+slurp_hospital.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-sbit0, 1
-sbit1, 1
-sbit2, 1
+bomb, 1
 
 
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-living = p4
-deck = p7
-porch = p3
-dining = p6
-bedroom = p8
+r4 = p3
+r5 = p2
+r6 = p1
+r1 = p6
+closet = p12
+r3 = p4
+hall_W = p9
+lounge = p7
+r2 = p5
+hall_N = p10
 others = 
-kitchen = p5
+hall_C = p11
+kitchen = p8
 
 Spec: # Specification in structured English
-Follow me.
-Avoid the porch.
+Go to r3.
+If you see a bomb, go to the lounge.
 

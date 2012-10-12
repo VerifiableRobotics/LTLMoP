@@ -5,9 +5,6 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-sweep, 1
-defuse, 1
-call, 1
 
 CompileOptions:
 convexify: False
@@ -24,9 +21,7 @@ RegionFile: # Relative path of region description file
 slurp_hospital.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-bomb, 1
 hostage, 1
-sweep_done, 1
 
 
 ======== SPECIFICATION ========
@@ -47,6 +42,6 @@ hall_C = p11
 kitchen = p8
 
 Spec: # Specification in structured English
-Patrol r6 and r3.
-Go to the kitchen.
+Patrol r1, r2, r3, r4, r5, and r6.
+If you see a hostage, stay there.
 

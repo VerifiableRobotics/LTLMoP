@@ -5,9 +5,7 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-sweep, 1
 defuse, 1
-call, 1
 
 CompileOptions:
 convexify: True
@@ -24,25 +22,29 @@ RegionFile: # Relative path of region description file
 slurp_hospital.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-bomb, 1
 hostage, 1
-sweep_done, 1
+bomb, 1
 
 
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-r4 = p4
-r5 = p3
-r6 = p2
-r1 = p7
-closet = p10
-r3 = p5
-lounge = p8
-r2 = p6
-others = p11, p12, p13, p14, p15, p16, p17, p18, p19
-kitchen = p9
+r4 = p3
+r5 = p2
+r6 = p1
+r1 = p6
+closet = p12
+r3 = p4
+hall_W = p13, p14
+lounge = p7
+r2 = p5
+hall_N = p15, p16
+others = 
+hall_C = p11
+kitchen = p8
 
 Spec: # Specification in structured English
+Patrol r1, r2, r3, r4, r5, and r6.
+If you see a hostage, stay there.
 If you see a bomb, go to the lounge.
 
