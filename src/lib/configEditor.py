@@ -106,7 +106,7 @@ def drawParamConfigPane(target, method, proj):
             return
 
         if this_param.type.lower() == "region":
-            this_param.setValue(param_controls[this_param].GetStringSelection())
+            this_param.setValue(param_controls[this_param].GetValue())
         elif this_param.type.lower().startswith("bool"):
             this_param.setValue(str(param_controls[this_param].GetValue()))
         elif this_param.type.lower().startswith("int"):
