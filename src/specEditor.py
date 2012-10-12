@@ -1288,10 +1288,15 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Running analysis...\n", "BLUE")
 
         (realizable, nonTrivial, to_highlight, output) = compiler._analyze()
+        
+        # Remove lines about garbage collection from the output and remove extraenous lines
+        output_lines = [line for line in output.split('\n') if line.strip() and
+                        "Garbage collection" not in line and 
+                        "Resizing node table" not in line]
 
         if realizable:
             # Strip trailing \n from output so it doesn't scroll past it
-            self.analysisDialog.appendLog(output.rstrip(), "BLACK")
+            self.analysisDialog.appendLog('\n'.join(output_lines), "BLACK")
             if nonTrivial:
                 self.analysisDialog.appendLog("\nSynthesized automaton is non-trivial.", "BLACK")
             else:
