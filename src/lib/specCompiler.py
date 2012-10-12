@@ -272,7 +272,7 @@ class SpecCompiler(object):
         initreg_formula = initreg_formula + '\t\t\t) \n'
         initreg_formula = initreg_formula.replace("s.bit", "e.sbit")
 
-        if "ENVIRONMENT TOPOLOGY" in LTLspec_env:
+        if "FOLLOW_SENSOR_CONSTRAINTS" in LTLspec_env:
             sensorBits = ["sbit{0}".format(n) for n in range(0,numBits)]
             for p in sensorBits:
                 if p not in self.proj.enabled_sensors:
@@ -280,7 +280,7 @@ class SpecCompiler(object):
                 if p not in self.proj.all_sensors:   
                     self.proj.all_sensors.append(p)
 
-        LTLspec_env = LTLspec_env.replace("ENVIRONMENT TOPOLOGY", env_topology + initreg_formula)
+        LTLspec_env = LTLspec_env.replace("FOLLOW_SENSOR_CONSTRAINTS", env_topology + initreg_formula)
 
         ##############################################################################
         #################################### END HACK ################################
