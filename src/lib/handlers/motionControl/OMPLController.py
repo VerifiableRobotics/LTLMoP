@@ -17,6 +17,7 @@ Uses Open Motion Planning Library developed by Rice University to generate paths
 try:
     from ompl import util as ou
     from ompl import base as ob
+    from ompl import control as oc
     from ompl import geometric as og
 except:
     # if the ompl module is not in the PYTHONPATH assume it is installed in a
@@ -26,6 +27,7 @@ except:
     sys.path.insert(0, join(dirname(dirname(abspath(__file__))),'py-bindings'))
     from ompl import util as ou
     from ompl import base as ob
+    from ompl import control as oc
     from ompl import geometric as og
 from time import sleep
 from math import fabs
@@ -43,12 +45,15 @@ import Polygon.Utils as PolyUtils
 import Polygon.Shapes as PolyShapes
 import matplotlib.pyplot as plt
 from math import sqrt, fabs , pi
+import random
 
 class motionControlHandler:
-    def __init__(self, proj, shared_data,Space_Dimension,robot_type,max_angle_goal,max_angle_overlap,plotting):
+    def __init__(self, proj, shared_data,Space_Dimension,planner,robot_type,Geometric_Control,max_angle_goal,max_angle_overlap,plotting):
         """
-        Space_Dimension(string): dimension of the space operating in. Enter 2 for 2D and 3 for 3D (default=2)
+        Space_Dimension(int): dimension of the space operating in. Enter 2 for 2D and 3 for 3D (default=2)
+        planner(string): Planner to be used. Enter RRT,KPIECE1 or PRM. (default='PRM')
         robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
+        Geometric_Control(string): Specify if you want to planner to sample in geometric or control space. G for geometric and C for control. (default='G')
         max_angle_goal (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 6.28 = 2*pi (default=6.28)
         max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
         plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
@@ -60,7 +65,8 @@ class motionControlHandler:
         self.nextRegionPoly     = None                  # polygon of the next region
         self.map                = {}                    # dictionary of polygons of different regions
         self.all                = Polygon.Polygon()     # polygon of the boundary
-        self.OMPLpath = None
+        self.OMPLpath           = None
+        self.trans_matrix       = mat([[0,1],[-1,0]])   # transformation matrix for find the normal to the vector 
         
         # Get references to handlers we'll need to communicate with
         self.drive_handler = proj.h_instance['drive']
@@ -75,7 +81,18 @@ class motionControlHandler:
         
         # Information about the spoce dimension
         if Space_Dimension not in [2,3]:
-            self.Space_Dimension = 2
+            Space_Dimension = 2
+        self.Space_Dimension = Space_Dimension
+        
+        # Information about the planner
+        if planner not in ['RRT','KPIECE1','PRM']:
+            planner = 'PRM'
+        self.planner = planner
+        
+        # Information about the geometric or control space
+        if Geometric_Control not in ['G','D']:
+            Geometric_Control = 'G'
+        self.Geometric_Control = Geometric_Control
         
         # Information about the robot (default set to ODE)
         if robot_type not in [1,2,3,4]:
@@ -96,7 +113,10 @@ class motionControlHandler:
             self.operate_system = 1   
                      
         if self.system_print == True:
-            print "The operate_system is "+ str(self.operate_system)
+            print "Operate_system: "+ str(self.operate_system)
+            print "Planner: " + str(self.planner)
+            print "Geometric/Control space: " + str(self.Geometric_Control)
+            print "Space Dimension: " + str(self.Space_Dimension)
         
         # Generate polygon for regions in the map
         for region in self.proj.rfi.regions:
@@ -176,6 +196,7 @@ class motionControlHandler:
                 # Determine the mid points on the faces connecting to the next region (one goal point will be picked among all the mid points later in buildTree)
                 transFace   = None
                 q_gBundle   = [[],[]] # list of goal points (midpoints of transition faces)
+                face_normal = [[],[]] # normal of the trnasition faces
                 for i in range(len(self.proj.rfi.transitions[current_reg][next_reg])):
                     pointArray_transface = [x for x in self.proj.rfi.transitions[current_reg][next_reg][i]]
                     transFace = asarray(map(self.coordmap_map2lab,pointArray_transface))
@@ -183,6 +204,22 @@ class motionControlHandler:
                     coord_y = (transFace[0,1] +transFace[1,1])/2    #mid-point coordinate y
                     goalPoints = hstack((q_gBundle,vstack((coord_x,coord_y))))
                 
+                #find the normal vector to the face
+                face          = transFace[0,:] - transFace[1,:]
+                distance_face = norm(face)
+                normal        = face/distance_face * self.trans_matrix
+                face_normal   = hstack((face_normal,vstack((normal[0,0],normal[0,1]))))
+                
+                # move the goal points to the next region
+                q_gBundle = mat(goalPoints)
+                face_normal = mat(face_normal)    
+                for i in range(q_gBundle.shape[1]):           
+                    q_g = q_gBundle[:,i]+face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
+                    if not self.nextRegionPoly.isInside(q_g[0],q_g[1]):
+                        q_g = q_gBundle[:,i]-face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
+                    goalPoints[0,i] = q_g[0,i]
+                    goalPoints[1,i] = q_g[1,i]
+                        
                 if transFace is None:
                     print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
                     
@@ -230,15 +267,10 @@ class motionControlHandler:
         """
 
         pose     = mat(p).T
-        
-        #print(ss.getSolutionPath().getStates())
-        #print(ss.getSolutionPath().getState(0))[0]
-        #print(ss.getSolutionPath().getState(0))[1]
-        #print(ss.getSolutionPath().getStateCount())
         """
         if self.system_print == True:
-            print (OMPLpath.getSolutionPath().getState(self.currentState))[0]   # x-coordinate of the current state
-        """
+            print (OMPLpath.getSolutionPath().getState(self.currentState))[0]   # x-coordinate of the current state  
+        """     
         
         #dis_cur = distance between current position and the next point
         dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
@@ -322,12 +354,10 @@ class motionControlHandler:
         # expensive to emphasize the benefit of explicitly generating valid
         # samples
         sleep(.001)
-        print "Running isStateValid"
         # Valid states satisfy the following constraints:
-        # inside the current region and the next region
+        # inside the current region and the next region       
         if self.Space_Dimension == 2:
             return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,state))
-            #return not (fabs(state[0]<.8) and fabs(state[1]<.8) and state[2]>.25 and state[2]<.5)
         else: 
             a = 1   # just making a case for 3D
 
@@ -335,7 +365,6 @@ class motionControlHandler:
         """
         goal points: array that contains the coordinates of all the possible goal states
         """
-        
         # construct the state space we are planning in
         space = ob.RealVectorStateSpace(self.Space_Dimension)
 
@@ -349,8 +378,18 @@ class motionControlHandler:
         space.setBounds(bounds)
         if self.system_print == True:
             print "The bounding box of the boundary is: " + str(self.all.boundingBox() )
-            print "The volumd of the bounding box is: " + str(bounds.getVolume())
-            
+            print "The volume of the bounding box is: " + str(bounds.getVolume())
+        
+        if self.Geometric_Control == 'C':
+            # create a control space
+            cspace = oc.RealVectorControlSpace(space, self.Space_Dimension)
+
+            # set the bounds for the control space
+            cbounds = ob.RealVectorBounds(self.Space_Dimension)
+            cbounds.setLow(-.3)
+            cbounds.setHigh(.3)
+            cspace.setBounds(cbounds) 
+           
         # define a simple setup class
         ss = og.SimpleSetup(space)
 
@@ -364,15 +403,16 @@ class motionControlHandler:
         start[1] = pose[1]
 
         # create goal states
-        """
+        
         print goalPoints
         goalStates = ob.GoalStates(ss.getSpaceInformation())
         for i in range(shape(goalPoints)[1]):
             goal = ob.State(space)
-            goal[0] = goalPoints[0,i-1]
-            goal[1] = goalPoints[1,i-1]
+            goal[0] = goalPoints[0,i]
+            goal[1] = goalPoints[1,i]
             goalStates.addState(goal)
         print goalStates
+        
         """
         goalStates = ob.GoalStates(ss.getSpaceInformation())
         NextRegionCenter = self.nextRegionPoly.center()
@@ -384,7 +424,7 @@ class motionControlHandler:
         else:   # find a random point in the region that the robot can be covered by when it stands there
             goalPointInsideNextRegion = False
             while not goalPointInsideNextRegion:
-                sample = self.nextRegionPoly.sample(random.random())
+                sample = self.nextRegionPoly.sample(random.random)
                 if self.nextRegionPoly.covers(PolyShapes.Circle(self.radius,sample)):
                     setAsGoal = sample
                     goalPointInsideNextRegion = True
@@ -394,7 +434,7 @@ class motionControlHandler:
         goal[0] = setAsGoal[0]
         goal[1] = setAsGoal[1]
         goalStates.addState(goal)   
-
+        """
 
 
         # set the start and goal states;
@@ -412,8 +452,18 @@ class motionControlHandler:
             si.setValidStateSamplerAllocator(ob.ValidStateSamplerAllocator(self.alloc_MyValidStateSampler))
 
         # create a planner for the defined space
-        planner = og.PRM(si)
+        if self.planner == 'PRM':
+            planner = og.PRM(si)
+        elif self.planner == 'RRT':
+            planner = og.RRT(si)
+        elif self.planner == 'KPIECE1':
+            planner = og.KPIECE1(si)
+        else:   
+            planner = og.PRM(si)
         ss.setPlanner(planner)
+        planner.setRange(self.radius*2)
+        print "planner.getRange():" + str(planner.getRange())
+        ss.setup()
         
 
         # attempt to solve the problem within ten seconds of planning time
@@ -495,10 +545,6 @@ class _MyValidStateSampler(ob.ValidStateSampler):
             state[1] = self.rng_.uniformReal(-1,1)
         state[2] = z
         return True
-
-
-
-
 
 if __name__ == '__main__':
     print("Using default uniform sampler:")
