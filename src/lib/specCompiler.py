@@ -267,14 +267,18 @@ class SpecCompiler(object):
         return (realizable, realizableFS, output)
 
     def compile(self, with_safety_aut=False):
+        print "--> Decomposing..."
         self._decompose()
-        self._writeSMVFile()
+        print "--> Writing LTL file..."
         tb = self._writeLTLFile()
+        print "--> Writing SMV file..."
+        self._writeSMVFile()
 
         if tb is None:
             print "ERROR: Compilation aborted"
             return 
 
         #self._checkForEmptyGaits()
-        self._synthesize(with_safety_aut)
+        print "--> Synthesizing..."
+        return self._synthesize(with_safety_aut)
 
