@@ -29,6 +29,7 @@ except:
     from ompl import base as ob
     from ompl import control as oc
     from ompl import geometric as og
+from functools import partial
 from time import sleep
 from math import fabs
 from numpy import *
@@ -90,7 +91,7 @@ class motionControlHandler:
         self.planner = planner
         
         # Information about the geometric or control space
-        if Geometric_Control not in ['G','D']:
+        if Geometric_Control not in ['G','C']:
             Geometric_Control = 'G'
         self.Geometric_Control = Geometric_Control
         
@@ -124,6 +125,16 @@ class motionControlHandler:
             for n in range(len(region.holeList)): # no of holes
                 self.map[region.name] -= self.createRegionPolygon(region,n)
 
+        
+        # building the planner dictionary
+        self.planner_dictionary = {'G':{},'C':{}}
+        self.planner_dictionary['G']['PRM'] = og.PRM
+        self.planner_dictionary['G']['RRT'] = og.RRT
+        self.planner_dictionary['G']['KPIECE1'] = og.KPIECE1
+        #self.planner_dictionary['C']['PRM'] = oc.PRM
+        self.planner_dictionary['C']['RRT'] = oc.RRT
+        self.planner_dictionary['C']['KPIECE1'] = oc.KPIECE1
+        
         # Generate the boundary polygon 
         for regionName,regionPoly in self.map.iteritems():
             self.all += regionPoly
@@ -195,20 +206,20 @@ class motionControlHandler:
             else:
                 # Determine the mid points on the faces connecting to the next region (one goal point will be picked among all the mid points later in buildTree)
                 transFace   = None
-                q_gBundle   = [[],[]] # list of goal points (midpoints of transition faces)
+                goalPoints   = [[],[]] # list of goal points (midpoints of transition faces)
                 face_normal = [[],[]] # normal of the trnasition faces
                 for i in range(len(self.proj.rfi.transitions[current_reg][next_reg])):
                     pointArray_transface = [x for x in self.proj.rfi.transitions[current_reg][next_reg][i]]
                     transFace = asarray(map(self.coordmap_map2lab,pointArray_transface))
                     coord_x = (transFace[0,0] +transFace[1,0])/2    #mid-point coordinate x
                     coord_y = (transFace[0,1] +transFace[1,1])/2    #mid-point coordinate y
-                    goalPoints = hstack((q_gBundle,vstack((coord_x,coord_y))))
+                    goalPoints = hstack((goalPoints,vstack((coord_x,coord_y))))
                 
-                #find the normal vector to the face
-                face          = transFace[0,:] - transFace[1,:]
-                distance_face = norm(face)
-                normal        = face/distance_face * self.trans_matrix
-                face_normal   = hstack((face_normal,vstack((normal[0,0],normal[0,1]))))
+                    #find the normal vector to the face
+                    face          = transFace[0,:] - transFace[1,:]
+                    distance_face = norm(face)
+                    normal        = face/distance_face * self.trans_matrix
+                    face_normal   = hstack((face_normal,vstack((normal[0,0],normal[0,1]))))
                 
                 # move the goal points to the next region
                 q_gBundle = mat(goalPoints)
@@ -217,9 +228,13 @@ class motionControlHandler:
                     q_g = q_gBundle[:,i]+face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
                     if not self.nextRegionPoly.isInside(q_g[0],q_g[1]):
                         q_g = q_gBundle[:,i]-face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
-                    goalPoints[0,i] = q_g[0,i]
-                    goalPoints[1,i] = q_g[1,i]
-                        
+                    goalPoints[0,i] = q_g[0,0]
+                    goalPoints[1,i] = q_g[1,0]
+                    if self.plotting == True:
+                        if self.operate_system == 1:
+                            plt.plot(q_g[0,0],q_g[1,0],'ro')
+                            plt.figure(1).canvas.draw()  
+                
                 if transFace is None:
                     print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
                     
@@ -271,14 +286,22 @@ class motionControlHandler:
         if self.system_print == True:
             print (OMPLpath.getSolutionPath().getState(self.currentState))[0]   # x-coordinate of the current state  
         """     
+        #print (OMPLpath.getSolutionPath().getState(self.currentState))[0]
         
         #dis_cur = distance between current position and the next point
-        dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
+        #dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
+        dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose
 
         if norm(dis_cur) < 1.5*self.radius:         # go to next point
-            if not self.currentState == OMPLpath.getSolutionPath().getStateCount():
+            #print self.currentState == OMPLpath.getSolutionPath().getStateCount()
+            #print "self.currentState: " + str(self.currentState)
+            #print "OMPLpath.getSolutionPath().getStateCount(): " + str(OMPLpath.getSolutionPath().getStateCount())
+            if not (self.currentState+1) == OMPLpath.getSolutionPath().getStateCount():
+                #print "adding current state number"
                 self.currentState = self.currentState + 1
-                dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
+                #dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
+                dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose
+                #print "get new distance"
         
         Vel = zeros([2,1])
         Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
@@ -355,18 +378,33 @@ class motionControlHandler:
         # samples
         sleep(.001)
         # Valid states satisfy the following constraints:
-        # inside the current region and the next region       
+        # inside the current region and the next region   
+        #print "state: " + str(state)
+        #print "state.getX(): " + str(state.getX())
         if self.Space_Dimension == 2:
-            return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,state))
+            return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY())))
         else: 
             a = 1   # just making a case for 3D
+    
+    # This function generates control space needed information
+    def propagate(self, start, control, duration, state):
+        #print "control[0]: " + str(control[0])
+        #print "control[1]: " + str(control[1])
+        #print "duration: " + str(duration)
+        state.setX( start.getX() + control[0] * duration * cos(start.getYaw()) )
+        state.setY( start.getY() + control[0] * duration * sin(start.getYaw()) )
+        state.setYaw(start.getYaw() + control[1] * duration)
 
     def plan(self,goalPoints,samplerIndex):
         """
         goal points: array that contains the coordinates of all the possible goal states
         """
         # construct the state space we are planning in
-        space = ob.RealVectorStateSpace(self.Space_Dimension)
+        #space = ob.RealVectorStateSpace(self.Space_Dimension)
+        if self.Space_Dimension == 2:
+            space = ob.SE2StateSpace()
+        else:
+            space = ob.SE3StateSpace()
 
         # set the bounds
         bounds = ob.RealVectorBounds(self.Space_Dimension)    
@@ -385,22 +423,43 @@ class motionControlHandler:
             cspace = oc.RealVectorControlSpace(space, self.Space_Dimension)
 
             # set the bounds for the control space
-            cbounds = ob.RealVectorBounds(self.Space_Dimension)
-            cbounds.setLow(-.3)
-            cbounds.setHigh(.3)
+            cbounds = ob.RealVectorBounds(self.Space_Dimension)            
+            cbounds.setLow(0,-max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/25)
+            cbounds.setHigh(0,max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/25)
+            cbounds.setLow(1,-pi/5)
+            cbounds.setHigh(1,pi/5)
             cspace.setBounds(cbounds) 
+            
+            if self.system_print == True:
+                print cspace.settings()
+            
            
-        # define a simple setup class
-        ss = og.SimpleSetup(space)
-
-        # set state validity checking for this space
+        if self.Geometric_Control == 'G':
+            # define a simple setup class
+            ss = og.SimpleSetup(space)
+            # set state validity checking for this space
+        else:
+            # define a simple setup class
+            ss = oc.SimpleSetup(cspace)
+            ss.setStatePropagator(oc.StatePropagatorFn(self.propagate))
         ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.isStateValid))
+        
+        
         
         # create a start state
         start = ob.State(space)
         pose = self.pose_handler.getPose()
+        if not self.currentRegionPoly.covers(PolyShapes.Circle(self.radius,(pose[0],pose[1]))):
+            print "going to use last goal state as the start state."
+            pose[0] = (self.OMPLpath.getSolutionPath().getState(self.OMPLpath.getSolutionPath().getStateCount()-1)).getX()
+            pose[1] = (self.OMPLpath.getSolutionPath().getState(self.OMPLpath.getSolutionPath().getStateCount()-1)).getY()
+        start().setX(pose[0]) 
+        start().setY(pose[1])
+        start().setYaw(0) #pose[2]
+        """
         start[0] = pose[0]
         start[1] = pose[1]
+        """
 
         # create goal states
         
@@ -408,8 +467,13 @@ class motionControlHandler:
         goalStates = ob.GoalStates(ss.getSpaceInformation())
         for i in range(shape(goalPoints)[1]):
             goal = ob.State(space)
+            goal().setX(goalPoints[0,i])
+            goal().setY(goalPoints[1,i])
+            #goal().setYaw(0.0)
+            """
             goal[0] = goalPoints[0,i]
             goal[1] = goalPoints[1,i]
+            """
             goalStates.addState(goal)
         print goalStates
         
@@ -444,13 +508,19 @@ class motionControlHandler:
 
         # set sampler (optional; the default is uniform sampling)
         si = ss.getSpaceInformation()
+        """
         if samplerIndex==1:
             # use obstacle-based sampling
             si.setValidStateSamplerAllocator(ob.ValidStateSamplerAllocator(self.allocOBValidStateSampler))
         elif samplerIndex==2:
             # use my sampler
             si.setValidStateSamplerAllocator(ob.ValidStateSamplerAllocator(self.alloc_MyValidStateSampler))
-
+        """
+        
+        planner_prep = self.planner_dictionary[self.Geometric_Control][self.planner]
+        planner = planner_prep(si)
+        
+        """
         # create a planner for the defined space
         if self.planner == 'PRM':
             planner = og.PRM(si)
@@ -460,38 +530,57 @@ class motionControlHandler:
             planner = og.KPIECE1(si)
         else:   
             planner = og.PRM(si)
+        """
         ss.setPlanner(planner)
-        planner.setRange(self.radius*2)
-        print "planner.getRange():" + str(planner.getRange())
+        
+        if self.Geometric_Control == 'G':            
+            if not self.planner == 'PRM':
+                planner.setRange(self.radius*2)
+                print "planner.getRange():" + str(planner.getRange())
+                planner.setGoalBias(0.5)
+            
+        else:
+            # (optionally) set propagation step size
+            si.setPropagationStepSize(self.radius/5)
+            print "radius: " +str(self.radius)
+            print "si.getPropagationStepSize():" + str(si.getPropagationStepSize())         
+            planner.setGoalBias(0.5)
         ss.setup()
         
 
         # attempt to solve the problem within ten seconds of planning time
-        solved = ss.solve(10.0)
+        solved = ss.solve(1000.0) #10
+        
         if (solved):
             print("Found solution:")
             # print the path to screen
-            print(ss.getSolutionPath())
-            print(ss.getSolutionPath().getStates())
-            print(ss.getSolutionPath().getState(0))
-            print(ss.getSolutionPath().getState(0))[0]
-            print(ss.getSolutionPath().getState(0))[1]
-            print(ss.getSolutionPath().getStateCount())
-            PlannerData = ob.PlannerData(si)
-            print "get planner data: " + str(ss.getPlannerData(PlannerData))
+            print >>sys.__stdout__,(ss.getSolutionPath())
+            #print(ss.getSolutionPath().getStates())
+            #print(ss.getSolutionPath().getState(0)).getX()
+            #print(ss.getSolutionPath().getState(0))[0]
+            #print(ss.getSolutionPath().getState(0))[1]
+            #print(ss.getSolutionPath().getStateCount())
+            #PlannerData = ob.PlannerData(si)
+            #print "get planner data: " + str(ss.getPlannerData(PlannerData))
         else:
             print("No solution found")
         
+        
         if self.plotting == True :
             if self.operate_system == 1:
-                plt.suptitle('Map', fontsize=12)
+                plt.suptitle('Map with Geo/Control: '+str(self.Geometric_Control) + ",Planner:" +str(self.planner), fontsize=12)
                 plt.xlabel('x')
                 plt.ylabel('y')
                 for i in range(ss.getSolutionPath().getStateCount()-1):
-                    #print i
-                    #print ((ss.getSolutionPath().getStates())[i][0],(ss.getSolutionPath().getStates())[i+1][0])
+                    print i
+                    """
                     plt.plot(((ss.getSolutionPath().getStates())[i][0],(ss.getSolutionPath().getStates())[i+1][0]),((ss.getSolutionPath().getStates())[i][1],(ss.getSolutionPath().getStates())[i+1][1]),'b')
                     plt.figure(1).canvas.draw()
+                    """
+                    plt.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),'b')
+                    plt.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(), i, fontsize=12)
+                plt.text((ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getY(), ss.getSolutionPath().getStateCount()-1, fontsize=12)
+                plt.figure(1).canvas.draw()
             else:
                 BoundPolyPoints = asarray(PolyUtils.pointList(regionPoly))
                 self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')

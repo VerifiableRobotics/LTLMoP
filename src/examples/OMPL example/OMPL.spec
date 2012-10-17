@@ -11,7 +11,7 @@ convexify: False
 fastslow: False
 
 CurrentConfigName:
-Untitled configuration
+CKPIECE1
 
 Customs: # List of custom propositions
 
@@ -32,8 +32,9 @@ r3 = p3
 others = 
 
 Spec: # Specification in structured English
-visit r3
+visit r1
 visit r2
+visit r3
 visit r4
 visit r5
 visit r1
