@@ -11,7 +11,7 @@ convexify: False
 fastslow: False
 
 CurrentConfigName:
-CKPIECE1
+CRRT
 
 Customs: # List of custom propositions
 
