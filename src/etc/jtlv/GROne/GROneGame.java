@@ -700,12 +700,6 @@ public class GROneGame {
                                     //System.out.println("1");
                                     jcand = next_p_j;
                                 }
-
-                                // If possible, trim down the candidates to prioritize movement-less transitions
-                                BDD current_region = p_st.exist(env.moduleUnprimeVars()).exist(nonRegionProps);
-                                if (!candidate.and(current_region).isZero()) {
-                                    candidate = candidate.and(current_region); 
-                                }
                             }
                         }                       
                         // b - second successor option in the strategy.
@@ -759,6 +753,12 @@ public class GROneGame {
                         local_kind--;
                     }
 
+
+                    // If possible, trim down the candidates to prioritize movement-less transitions
+                    BDD current_region = p_st.exist(env.moduleUnprimeVars()).exist(nonRegionProps);
+                    if (!candidate.and(current_region).isZero()) {
+                        candidate = candidate.and(current_region); 
+                    }
                       	
                     for (BDDIterator candIter = candidate.iterator(env.moduleUnprimeVars().union(
                             sys.moduleUnprimeVars())); candIter.hasNext();) {
