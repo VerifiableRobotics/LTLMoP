@@ -178,28 +178,44 @@ class HandlerSubsystem:
         # Get a copy of the current project
         self.proj = proj
         
+
         # Set up loggers for printing error messages
-        if sys.platform in ['win32', 'cygwin']:
-            # Message with color is not yet supported in Windows
-            log_format =" --> [%(levelname)s] (%(pathname)s, line %(lineno)s): %(message)s"
-        else:
-            log_format = "\033[91m --> [%(levelname)s] (%(pathname)s, line %(lineno)s): %(message)s \033[0m"
+
+        class ColorLogFormatter(logging.Formatter):
+            def __init__(self, *args, **kwds):
+                super(ColorLogFormatter, self).__init__(*args, **kwds)
+                self.formatter = logging.Formatter(" --> [%(levelname)s] (%(pathname)s, line %(lineno)s): %(message)s")
+
+            def colorize(self, level, string):
+                if sys.platform in ['win32', 'cygwin']:
+                    # Message with color is not yet supported in Windows
+                    return string
+                else:
+                    colors = {'ERROR': 91, 'WARNING': 93, 'INFO': 94, 'DEBUG': 97}
+                    return "\033[{0}m{1}\033[0m".format(colors[level], string)
+
+            def format(self, record):
+                precolor = self.formatter.format(record)
+                return self.colorize(record.levelname, precolor)
+                
+        logger = logging.getLogger()
+        h = logging.StreamHandler()
+        f = ColorLogFormatter()
+        h.setFormatter(f)
+        logger.addHandler(h)
+
         if loggerLevel == 'error':
-            logging.basicConfig(format=log_format,level=logging.ERROR)
+            logger.setLevel(logging.ERROR)
         elif loggerLevel == 'warning':
-            logging.basicConfig(format=log_format,level=logging.WARNING)
+            logger.setLevel(logging.WARNING)
         elif loggerLevel == 'info':
-            logging.basicConfig(format=log_format,level=logging.INFO)
+            logger.setLevel(logging.INFO)
         elif loggerLevel == 'debug':
-            logging.basicConfig(format=log_format,level=logging.DEBUG)
+            logger.setLevel(logging.DEBUG)
 
         self.handler_dic = None
         self.robots = None
         self.configs = None
-
-
-
-
 
 
         self.handler_path = os.path.join(self.proj.ltlmop_root,'lib','handlers')
@@ -1100,8 +1116,8 @@ class ConfigFileParser:
 
 if __name__ == '__main__':
     proj = project.Project()
-    proj.ltlmop_root = '/home/jim/Desktop/ltlmop_git/src'
-    proj.project_root = '/home/jim/Desktop/ltlmop_git/src/examples/hideandseek'
+    proj.ltlmop_root = '/home/jim/LTLMoP/src'
+    proj.project_root = '/home/jim/LTLMoP/src/examples/hideandseek'
     h = HandlerSubsystem(proj,loggerLevel='debug')
     h.loadAllHandlers()
     h.loadAllRobots()
