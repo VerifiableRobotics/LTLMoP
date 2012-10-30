@@ -17,6 +17,7 @@ from copy import deepcopy
 import project
 import logging
 import ast
+import json
 
 
 
@@ -58,12 +59,7 @@ class ParameterObject:
             except ValueError:
                 logging.error("Invalid int value: {0}".format(value))
         elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
-            if value.lower() in ['1','true','t']:
-                self.value = True
-            elif value.lower() in ['0','false','f']:
-                self.value = False
-            else:
-                logging.error("Invalid boolean value: {0}".format(value))
+            self.value = value
         elif self.type.lower() == 'region':
             try:
                 self.value = ast.literal_eval(value)
@@ -532,6 +528,7 @@ class HandlerParser:
         self.handler_path = path    # handler folder path
         self.handler_dic = {}       # dictionary for all handler information {type of handler:list of handlers of that type}
                                     # for sensor,actuator,init and locomotion handler the value is a dictionary {name of the robot: handler object}
+        self.handler_all = {}       # dic of handler objects parsed from handler files. {handlerType.handlerFileName:handler object}
         self.handler_types = ['pose','drive','motionControl','share']       # list of types of handlers, must match with the folder name in lib/handler folder
         self.handler_robotSpecific_type = ['init','locomotionCommand','sensor','actuator']   # list of types of robot specific handlers in each robot folder
         self.ignore_parameter = ['self','initial','proj','shared_data','actuatorVal']     # list of name of parameter that should be ignored where parse the handler methods
@@ -573,6 +570,9 @@ class HandlerParser:
             for robotFolder in robotFolderList:
                 # ignore item that is not a folder
                 if '.' not in robotFolder:
+                
+                    folderName = '.'.join(['robots',robotFolder])
+
                     fileList = os.listdir(os.path.join(self.handler_path,'robots',robotFolder))
                     for fileName in fileList:
                         for handler_type in self.handler_robotSpecific_type:
@@ -593,6 +593,7 @@ class HandlerParser:
         """
         Load all handler files within the given folder
         If onlyLoadInit is True, only the info of __init__ method will be loaded
+        If over_write_h_type is given, then over write the handler type with it
 
         return a list of handler objects
         """
@@ -606,17 +607,31 @@ class HandlerParser:
             # ignore the file starts with underscore or not a .py file
             if h_file.endswith('.py') and not h_file.startswith('_'):
                 fileName = '.'.join(['handlers',folder,h_file.split('.')[0]])
-                h_obj = self.parseHandlers(fileName,folder,onlyLoadInit)
+                # change the type of handlers if it is robot dependent 
+                over_write_h_type=None
+                for handler_type in self.handler_robotSpecific_type:
+                    if handler_type.lower() in h_file.lower():
+                        # this is a robot dependent handler or a handler in the share folder
+                        over_write_h_type = handler_type.lower()
+
+                h_obj = self.parseHandlers(fileName,folder,onlyLoadInit,over_write_h_type)
+                # update the dictionary with all handler objects
+                if over_write_h_type:
+                    handler_dic_key = '.'.join([folder,over_write_h_type,h_file.split('.')[0]])
+                else:
+                    handler_dic_key = '.'.join([folder,h_file.split('.')[0]])
+                self.handler_all[handler_dic_key] = h_obj
                 if h_obj is not None:
                     # only append the handler in the list if it is correctly imported
                     handlerList.append(h_obj)
 
         return handlerList
 
-    def parseHandlers(self,handlerFile,h_type,onlyLoadInit=False):
+    def parseHandlers(self,handlerFile,h_type,onlyLoadInit=False,over_write_h_type=None):
         """
         Load method info (name,arg...) in the given handler file
         If onlyLoadInit is True, only the info of __init__ method will be loaded
+        If over_write_h_type is given, then over write the handler type with it
 
         returns a handler object or None if fail to load the given handler file
         """
@@ -626,32 +641,45 @@ class HandlerParser:
 
         # Regular expressions to help us out
         argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
-        numRE = re.compile('(?P<key>[^=]+)=(?P<val>[^,]+),?',re.IGNORECASE)
-
+        settingRE = re.compile(r"""(?x)
+                                   (?P<key>\w+)
+                                   \s*=\s*
+                                   (?P<val>
+                                       "[^"]*" | # double-quoted string
+                                       \[[^\]]*\] | # array
+                                       [^,\s]*    # other
+                                    )""")
+ 
         # Try to load the handler file
         logging.debug(" -> Loading handler:\t%s" % handlerFile.split('.')[-1])
         try:
             __import__(handlerFile)
         except ImportError as import_error:
             logging.error(" -> Failed to import handler %s : %s" % (handlerFile.split('.')[-1],import_error))
-            return None
+            return handlerObj
 
         # Find the class object specifies the handler
         handlerModule = sys.modules[handlerFile]
         allClass = inspect.getmembers(handlerModule,inspect.isclass)
         for classObj in allClass:
             # ignore all class objects that are imported or with name starts with underscore
+            # if there are multiple classes without underscore, then prefer the one ends with "handler"
             # each handler file should only have one main class not starts with underscore
             # the underscore classes are those used by the main class by not concerned by the user
-            if classObj[1].__module__ == handlerFile and not classObj[0].startswith('_'):
+            if classObj[1].__module__ == handlerFile and (not classObj[0].startswith('_') or \
+                re.match('\w+handler', classObj[0])):
                 handlerClass = classObj[1]
                 break
 
         # update the handler name and type info
         # handler name is the name of the file
-        # handler type is the name of the folder where the file is located
+        # handler type is the name of the folder where the file is located for robot independent handlers
+        # handler type is robotType.sensor/actuator/init/loco for robot dependent handlers
         handlerObj.name = handlerFile.split('.')[-1]
-        handlerObj.type = h_type
+        if over_write_h_type: 
+            handlerObj.type = over_write_h_type
+        else:
+            handlerObj.type = h_type
 
         # get all methods in this handler
         handlerMethod = inspect.getmembers(handlerClass,inspect.ismethod)
@@ -695,17 +723,19 @@ class HandlerParser:
                                     # update the parameter object
                                     paraObj.type = m.group('type')
                                     paraObj.des = m.group('description')
-                                    if m.group('range') is not None and numRE.search(m.group('range')):
-                                        for pair in numRE.findall(m.group('range')):
-                                            if pair[0].lower() == 'default':
-                                                paraObj.default = pair[1]
-                                                paraObj.resetValue()
-                                            elif pair[0].lower() == 'min':
-                                                paraObj.min = pair[1]
-                                            elif pair[0].lower() == 'max':
-                                                paraObj.max = pair[1]
-                                            else:
-                                                logging.warning(" -> Unrecognized argument comments \"%s\" for argument \"%s\" of method \"%s\"" %(pair[0],m.group('argName'),methodName))
+                                    if m.group('range') is not None:
+                                        try:
+                                            for k, v in settingRE.findall(m.group('range')):
+                                                if k.lower() not in ['default', 'min', 'max', 'options']:
+                                                    logging.warning(' -> Unrecognized setting name "{}" for parameter "{}" of method "{}"'.format(k.lower(), m.group('argName'), methodName))
+                                                    continue
+
+                                                setattr(paraObj, k.lower(), json.loads(v))
+                                        except ValueError:
+                                            # LOG AN ERROR HERE
+                                            logging.error(' -> Could not parse settings for parameter "{}" of method "{}"'.format(m.group('argName'), methodName))
+
+                                        paraObj.resetValue()
 
                         # If the line comments the function
                         else:
