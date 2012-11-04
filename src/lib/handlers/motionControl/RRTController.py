@@ -37,7 +37,7 @@ class motionControlHandler:
         robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
         max_angle_goal (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 6.28 = 2*pi (default=6.28)
         max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
-        plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
+        plotting (bool): Check the box to enable plotting. Uncheck to disable plotting (default=True)
         """
         
         self.system_print       = False       # for debugging. print on GUI ( a bunch of stuffs)
@@ -88,7 +88,7 @@ class motionControlHandler:
         
 
         # Information about whether plotting is enabled.
-        if plotting >= 1:
+        if plotting is True:
             self.plotting          = True
         else:
             self.plotting          = False
@@ -107,9 +107,9 @@ class motionControlHandler:
         elif self.system == 2:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
             self.radius = self.ROSInitHandler.robotPhysicalWidth/2
-            self.step_size  = 0.2
+            self.step_size  = self.radius*3 #0.2
             self.timeStep = 8
-            self.velocity  = 0.08
+            self.velocity  = self.radius/2  #0.08
         elif self.system == 3:
             self.radius = 5
             self.step_size  = 15

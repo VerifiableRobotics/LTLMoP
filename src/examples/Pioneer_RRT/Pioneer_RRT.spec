@@ -11,7 +11,7 @@ convexify: False
 fastslow: False
 
 CurrentConfigName:
-RRT with ODE
+RRT with quadrotor
 
 Customs: # List of custom propositions
 
