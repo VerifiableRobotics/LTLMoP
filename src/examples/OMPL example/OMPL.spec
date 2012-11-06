@@ -11,7 +11,7 @@ convexify: False
 fastslow: False
 
 CurrentConfigName:
-CRRT
+OMPL with quadrotor
 
 Customs: # List of custom propositions
 

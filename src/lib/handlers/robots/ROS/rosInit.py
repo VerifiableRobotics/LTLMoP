@@ -53,6 +53,10 @@ class initHandler:
 		# Center the robot in the init region (not on calibration)
 		if not init_region=="__origin__" :
 			self.centerTheRobot(proj, init_region)
+			
+		# set up a publisher to publish pose
+		self.pub = rospy.Publisher('/gazebo/set_model_state', ModelState)
+		
 		# Create a subprocess for ROS
 		self.rosSubProcess(proj)
 
@@ -148,7 +152,7 @@ class initHandler:
 		replaceExp='    <include file="$(find '+self.package+')/launch/'+self.launchFile+'" />\n'
 		self.replaceAll(path,searchExp,replaceExp)
 		searchExp='<node name="gazebo" pkg="gazebo"'
-		replaceExp='    <node name="gazebo" pkg="gazebo" type="gazebo" args="-u $(find gazebo_worlds)/worlds/'+self.worldFile+'" respawn="false" output="screen"/>\n'
+		replaceExp='    <node name="gazebo" pkg="gazebo" type="gazebo" args=" $(find gazebo_worlds)/worlds/'+self.worldFile+'" respawn="false" output="screen"/>\n'
 		self.replaceAll(path,searchExp,replaceExp)
 
 
@@ -189,4 +193,14 @@ class initHandler:
 
 		#set the ROBOT_INITIAL_POSE environment variable
 		os.environ['ROBOT_INITIAL_POSE']="-x "+str(map2lab[0])+" -y "+str(map2lab[1])
+		
+		# publish pose information
+		model = ModelState()
+		model.pose.position.x = map2lab[0]
+		model.pose.position.y = map2lab[1]
+		try:
+			#Publish the command to the robot
+			self.pub.publish(model)
+		except:
+			print 'Error publishing Twist Command'
 		

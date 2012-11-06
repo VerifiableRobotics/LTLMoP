@@ -45,6 +45,7 @@ import Polygon, Polygon.IO
 import Polygon.Utils as PolyUtils
 import Polygon.Shapes as PolyShapes
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from math import sqrt, fabs , pi
 import random
 
@@ -57,7 +58,7 @@ class motionControlHandler:
         Geometric_Control(string): Specify if you want to planner to sample in geometric or control space. G for geometric and C for control. (default='G')
         max_angle_goal (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 6.28 = 2*pi (default=6.28)
         max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
-        plotting (int): Enable plotting is 1 and disable plotting is 0 (default=1)
+        plotting (bool): Check the box to enable plotting (default=True)
         """
         
         #Parameters
@@ -101,7 +102,7 @@ class motionControlHandler:
         self.system = robot_type
         
         # Information about whether plotting is enabled.
-        if plotting >= 1:
+        if plotting is True:
             self.plotting          = True
         else:
             self.plotting          = False            
@@ -124,8 +125,7 @@ class motionControlHandler:
             self.map[region.name] = self.createRegionPolygon(region)
             for n in range(len(region.holeList)): # no of holes
                 self.map[region.name] -= self.createRegionPolygon(region,n)
-
-        
+     
         # building the planner dictionary
         self.planner_dictionary = {'G':{},'C':{}}
         self.planner_dictionary['G']['PRM'] = og.PRM
@@ -151,6 +151,18 @@ class motionControlHandler:
             self.radius = 5
         elif self.system == 4:
             self.radius = 0.15
+        
+        if self.plotting == True:  
+            if not plt.isinteractive():
+                plt.ion()
+            plt.hold(True)
+            self.fig = plt.figure(1)
+            self.ax = self.fig.gca(projection='3d')
+            self.ax.legend()  
+            self.BoundaryMaxMin = self.all.boundingBox()  #0-3:xmin, xmax, ymin and ymax        
+            self.plotMap()     
+            self.setPlotLimitXYZ()
+            plt.figure(1).canvas.draw()
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
@@ -161,11 +173,9 @@ class motionControlHandler:
         pose = self.pose_handler.getPose()
         
         if self.plotting == True:
-            if not plt.isinteractive():
-                plt.ion()
-            plt.hold(True)
             if self.operate_system == 1:
-                plt.plot(pose[0],pose[1],'ko') 
+                self.ax.plot([pose[0]],[pose[1]],'ko') 
+                self.setPlotLimitXYZ() 
                 plt.figure(1).canvas.draw()
                     
         if current_reg == next_reg and not last:
@@ -187,8 +197,10 @@ class motionControlHandler:
             # plotting current pose and the map
             if self.operate_system == 1 and self.plotting == True:
                 plt.cla()
-                self.plotMap(self.map) 
-                plt.plot(pose[0],pose[1],'ko') 
+                self.plotMap()
+                plt.plot([pose[0]],[pose[1]],'ko')             
+                self.setPlotLimitXYZ()
+                plt.figure(1).canvas.draw() 
 
             # Entered a new region. New tree should be formed.
             self.nextRegionPoly    = self.map[self.proj.rfi.regions[next_reg].name]
@@ -232,8 +244,9 @@ class motionControlHandler:
                     goalPoints[1,i] = q_g[1,0]
                     if self.plotting == True:
                         if self.operate_system == 1:
-                            plt.plot(q_g[0,0],q_g[1,0],'ro')
-                            plt.figure(1).canvas.draw()  
+                            plt.plot([q_g[0,0]],[q_g[1,0]],'ro')
+                            self.setPlotLimitXYZ()
+                            plt.figure(1).canvas.draw() 
                 
                 if transFace is None:
                     print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
@@ -321,21 +334,24 @@ class motionControlHandler:
         formedPolygon= Polygon.Polygon(regionPoints)
         return formedPolygon
                 
-    def plotMap(self,mappedRegions):
+    def plotMap(self):
         """
         Plotting regions and obstacles with matplotlib.pyplot
 
         number: figure number (see on top)
         """
 
-        #if not plt.isinteractive():
-        #    plt.ion()
-        #plt.hold(True)
-
         if self.operate_system == 1:
-            for regionName,regionPoly in mappedRegions.iteritems():
+            for regionName,regionPoly in self.map.iteritems():
                 self.plotPoly(regionPoly,'k')
-            plt.figure(1).canvas.draw()
+    
+    def setPlotLimitXYZ(self):
+        """
+        Set the limits for the plot on x, y and z axis
+        """
+        self.ax.set_xlim3d(self.BoundaryMaxMin[0], self.BoundaryMaxMin[1])
+        self.ax.set_ylim3d(self.BoundaryMaxMin[2], self.BoundaryMaxMin[3])
+        self.ax.set_zlim3d(-0.05,1)
 
     def plotPoly(self,c,string,w = 1):
         """
@@ -358,6 +374,7 @@ class motionControlHandler:
                         else:
                             plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
                             plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+                            self.setPlotLimitXYZ()
                             plt.figure(1).canvas.draw()
                             
     # return an obstacle-based sampler
@@ -572,14 +589,16 @@ class motionControlHandler:
                 plt.xlabel('x')
                 plt.ylabel('y')
                 for i in range(ss.getSolutionPath().getStateCount()-1):
-                    print i
+                    #print i
                     """
                     plt.plot(((ss.getSolutionPath().getStates())[i][0],(ss.getSolutionPath().getStates())[i+1][0]),((ss.getSolutionPath().getStates())[i][1],(ss.getSolutionPath().getStates())[i+1][1]),'b')
                     plt.figure(1).canvas.draw()
                     """
                     plt.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),'b')
-                    plt.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(), i, fontsize=12)
-                plt.text((ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getY(), ss.getSolutionPath().getStateCount()-1, fontsize=12)
+                    self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),0, i,fontsize=12)
+                #print [(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX()]
+                self.ax.text((ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getY(),0, ss.getSolutionPath().getStateCount()-1, fontsize=12)
+                self.setPlotLimitXYZ()
                 plt.figure(1).canvas.draw()
             else:
                 BoundPolyPoints = asarray(PolyUtils.pointList(regionPoly))
@@ -588,7 +607,7 @@ class motionControlHandler:
                     self.ax.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
                 else:
                     self.ax.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                self.ax.plot(q_g[0,0],q_g[1,0],'ko')
+                self.ax.plot([q_g[0,0]],[q_g[1,0]],'ko')
         #print ss
         return ss
                     
