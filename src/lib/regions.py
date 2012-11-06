@@ -327,6 +327,19 @@ class RegionFileInterface:
 
         return (leftMargin, topMargin, rightExtent, downExtent)
 
+    def getExternalFaces(self):
+        """
+        Returns a list of faces that are not connected to any
+        other region on the map.
+
+        Generally, this only makes sense for maps that have already
+        been decomposed.
+        """
+
+        allFaces = [face for obj in self.regions for face in obj.getFaces(includeHole=True)]
+        internalFaces = self.recalcAdjacency()
+        return list(set(allFaces) - set(internalFaces))
+
     def writeFile(self, filename):
         """
         File format is described inside the comments variable. 
