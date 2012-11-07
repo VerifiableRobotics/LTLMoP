@@ -15,7 +15,7 @@
 
 # TODO: store regions with absolute coordinates, not x/y-pos + relative!!
 
-import os, sys
+import os, sys, copy
 import fileMethods
 import re, random, math
 import Polygon, Polygon.Utils, os
@@ -707,7 +707,7 @@ class Region:
         lastPt = None
         for pt in self.getPoints():
 
-            thisPt = (pt.x, pt.y)
+            thisPt = copy.deepcopy(pt)
 
             if lastPt != None:
                 yield tuple(sorted((lastPt, thisPt)))
@@ -722,7 +722,7 @@ class Region:
             for i,hole in enumerate(self.holeList):
                 lastPt = None
                 for pt in self.getPoints(hole_id=i):
-                    thisPt = (pt.x, pt.y)
+                    thisPt = copy.deepcopy(pt)
 
                     if lastPt != None:
                         yield tuple(sorted((lastPt, thisPt)))
