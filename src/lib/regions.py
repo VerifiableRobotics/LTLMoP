@@ -81,6 +81,9 @@ else:
             else:
                 raise TypeError("Points can only be subtracted from other points")
 
+        def __hash__(self):
+            return hash((self.x, self.y))
+
     class Size(Point):
         def __init__(self, w, h):
             super(Size, self).__init__(w, h)
