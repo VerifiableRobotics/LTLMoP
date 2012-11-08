@@ -186,8 +186,11 @@ class motionControlHandler:
         if self.plotting == True:
             
             if self.operate_system == 1:
-                self.ax.plot([pose[0]],[pose[1]],'ko') 
-                self.setPlotLimitXYZ()  
+                if self.Space_Dimension == 3:
+                    self.ax.plot([pose[0]],[pose[1]],[pose[3]],'ko')    
+                else:
+                    self.ax.plot([pose[0]],[pose[1]],'ko') 
+                self.setPlotLimitXYZ()
                 self.ax.get_figure().canvas.draw()           
                     
         if current_reg == next_reg and not last:
@@ -256,13 +259,6 @@ class motionControlHandler:
                     goalPoints[0,i] = q_g[0,0]
                     goalPoints[1,i] = q_g[1,0]
                     
-                    if self.plotting == True:
-                        if self.operate_system == 1:
-                            if self.Space_Dimension == 3:
-                                self.ax.plot([q_g[0,0]],[q_g[1,0]],[self.maxHeight/2],'ro')
-                            else:
-                                self.ax.plot([q_g[0,0]],[q_g[1,0]],'ro')
-                            self.setPlotLimitXYZ()
                 
                 if transFace is None:
                     print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
@@ -274,11 +270,17 @@ class motionControlHandler:
                 
             
         # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
-        self.Velocity = self.getVelocity([pose[0], pose[1]], self.OMPLpath)
+        if self.Space_Dimension == 3:
+            self.Velocity = self.getVelocity([pose[0],pose[1],pose[3]], self.OMPLpath)
+        else:
+            self.Velocity = self.getVelocity([pose[0], pose[1]], self.OMPLpath)
         self.previous_next_reg = next_reg
 
         # Pass this desired velocity on to the drive handler
-        self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0], pose[2])
+        if self.Space_Dimension == 3:
+            self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0],pose[2],self.Velocity[2,0])
+        else:
+            self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0],pose[2])
         RobotPoly = Polygon.Shapes.Circle(self.radius,(pose[0],pose[1]))
         
         # check if robot is inside the current region
@@ -314,26 +316,38 @@ class motionControlHandler:
         """
         if self.system_print == True:
             print (OMPLpath.getSolutionPath().getState(self.currentState))[0]   # x-coordinate of the current state  
-        """     
-        #print (OMPLpath.getSolutionPath().getState(self.currentState))[0]
-        
-        #dis_cur = distance between current position and the next point
-        #dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
-        dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose
+        """ 
+        if self.Space_Dimension == 3:    
+            #print (OMPLpath.getSolutionPath().getState(self.currentState))[0]
+            
+            #dis_cur = distance between current position and the next point
+            #dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
+            dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY(),(OMPLpath.getSolutionPath().getState(self.currentState)).getZ()))- pose
 
-        if norm(dis_cur) < 1.5*self.radius:         # go to next point
-            #print self.currentState == OMPLpath.getSolutionPath().getStateCount()
-            #print "self.currentState: " + str(self.currentState)
-            #print "OMPLpath.getSolutionPath().getStateCount(): " + str(OMPLpath.getSolutionPath().getStateCount())
-            if not (self.currentState+1) == OMPLpath.getSolutionPath().getStateCount():
-                #print "adding current state number"
-                self.currentState = self.currentState + 1
-                #dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
-                dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose
-                #print "get new distance"
-        
-        Vel = zeros([2,1])
-        Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
+            if norm(dis_cur) < 1.5*self.radius:         # go to next point
+                #print self.currentState == OMPLpath.getSolutionPath().getStateCount()
+                #print "self.currentState: " + str(self.currentState)
+                #print "OMPLpath.getSolutionPath().getStateCount(): " + str(OMPLpath.getSolutionPath().getStateCount())
+                if not (self.currentState+1) == OMPLpath.getSolutionPath().getStateCount():
+                    #print "adding current state number"
+                    self.currentState = self.currentState + 1
+                    #dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
+                    dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY(),(OMPLpath.getSolutionPath().getState(self.currentState)).getZ()))- pose
+                    #print "get new distance"
+            
+            Vel = zeros([3,1])
+            Vel[0:3,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
+            
+        else:
+            dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose[0:2]
+
+            if norm(dis_cur) < 1.5*self.radius:         # go to next point
+                if not (self.currentState+1) == OMPLpath.getSolutionPath().getStateCount():
+                    # head to the next node
+                    self.currentState = self.currentState + 1
+                    dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose[0:2]
+            Vel = zeros([2,1])
+            Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
         return Vel
                        
     
@@ -520,7 +534,8 @@ class motionControlHandler:
             goal().setY(goalPoints[1,i])
             if self.Space_Dimension == 3:
                 # pick a random height
-                goal().setZ(random.uniform(0+self.height, self.maxHeight-self.height))           
+                z_goalPoint = random.uniform(0+self.height, self.maxHeight-self.height)
+                goal().setZ(z_goalPoint)           
                 #goal().setZ(self.maxHeight/2)
                 goal().rotation().setIdentity()
             #goal().setYaw(0.0)
@@ -528,6 +543,13 @@ class motionControlHandler:
             goal[0] = goalPoints[0,i]
             goal[1] = goalPoints[1,i]
             """
+            if self.plotting == True:
+                if self.Space_Dimension == 3:
+                    self.ax.plot([goalPoints[0,i]],[goalPoints[1,i]],[z_goalPoint],'ro')
+                else:
+                    self.ax.plot([goalPoints[0,i]],[goalPoints[1,i]],'ro')
+                self.setPlotLimitXYZ()
+                
             goalStates.addState(goal)
         print goalStates
         
@@ -632,7 +654,6 @@ class motionControlHandler:
                 plt.plot(((ss.getSolutionPath().getStates())[i][0],(ss.getSolutionPath().getStates())[i+1][0]),((ss.getSolutionPath().getStates())[i][1],(ss.getSolutionPath().getStates())[i+1][1]),'b')
                 plt.figure(1).canvas.draw()
                 """
-                print "self.Space_Dimension" + str(self.Space_Dimension)
                 if self.Space_Dimension == 3:
                     self.ax.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),((ss.getSolutionPath().getState(i)).getZ(),(ss.getSolutionPath().getState(i+1)).getZ()),'b')
                     self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i)).getZ(), i,fontsize=12)
