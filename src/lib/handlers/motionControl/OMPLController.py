@@ -35,27 +35,33 @@ from math import fabs
 from numpy import *
 from __is_inside import *
 import math
-import sys,os
+import sys,os, time
 from scipy.linalg import norm
 from numpy.matlib import zeros
-import time, sys,os
 import scipy as Sci
 import scipy.linalg
 import Polygon, Polygon.IO
 import Polygon.Utils as PolyUtils
 import Polygon.Shapes as PolyShapes
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+import Tkinter as Tk
 from mpl_toolkits.mplot3d import Axes3D
 from math import sqrt, fabs , pi
 import random
+import thread
+import threading
+
 
 class motionControlHandler:
-    def __init__(self, proj, shared_data,Space_Dimension,planner,robot_type,Geometric_Control,max_angle_goal,max_angle_overlap,plotting):
+    def __init__(self, proj, shared_data,Space_Dimension,planner,robot_type,Geometric_Control,maxHeight,max_angle_goal,max_angle_overlap,plotting):
         """
-        Space_Dimension(int): dimension of the space operating in. Enter 2 for 2D and 3 for 3D (default=2)
+        Space_Dimension(int): dimension of the space operating in. Enter 2 for 2D and 3 for 3D. Only quadrotor in ROS is supported for 3D now.(default=2)
         planner(string): Planner to be used. Enter RRT,KPIECE1 or PRM. (default='PRM')
         robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
         Geometric_Control(string): Specify if you want to planner to sample in geometric or control space. G for geometric and C for control. (default='G')
+        maxHeight(float): maximum height for the 3D space. Units:m(default=1)
         max_angle_goal (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 6.28 = 2*pi (default=6.28)
         max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
         plotting (bool): Check the box to enable plotting (default=True)
@@ -105,7 +111,10 @@ class motionControlHandler:
         if plotting is True:
             self.plotting          = True
         else:
-            self.plotting          = False            
+            self.plotting          = False  
+            
+        # Information about the maximum height in z direction
+        self.maxHeight = maxHeight          
             
         # Operate_system (int): Which operating system is used for execution.
         # Ubuntu and Mac is 1, Windows is 2
@@ -147,22 +156,24 @@ class motionControlHandler:
         elif self.system == 2:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
             self.radius = self.ROSInitHandler.robotPhysicalWidth/2
+            if self.ROSInitHandler.modelName == 'quadrotor':
+                self.height = 0.15 #(m)
         elif self.system == 3:
             self.radius = 5
         elif self.system == 4:
             self.radius = 0.15
         
-        if self.plotting == True:  
-            if not plt.isinteractive():
-                plt.ion()
-            plt.hold(True)
-            self.fig = plt.figure(1)
-            self.ax = self.fig.gca(projection='3d')
-            self.ax.legend()  
-            self.BoundaryMaxMin = self.all.boundingBox()  #0-3:xmin, xmax, ymin and ymax        
+
+        if self.plotting == True: 
+            app = _MyTkApp()
+            app.start()            
+            self.TkApp = app.getSharedData()
+            self.fig = self.TkApp.fig
+            self.ax  = self.TkApp.ax
+            self.ax.legend()            
+            self.BoundaryMaxMin = self.all.boundingBox()  #0-3:xmin, xmax, ymin and ymax          
             self.plotMap()     
             self.setPlotLimitXYZ()
-            plt.figure(1).canvas.draw()
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
@@ -173,10 +184,11 @@ class motionControlHandler:
         pose = self.pose_handler.getPose()
         
         if self.plotting == True:
+            
             if self.operate_system == 1:
                 self.ax.plot([pose[0]],[pose[1]],'ko') 
-                self.setPlotLimitXYZ() 
-                plt.figure(1).canvas.draw()
+                self.setPlotLimitXYZ()  
+                self.ax.get_figure().canvas.draw()           
                     
         if current_reg == next_reg and not last:
             # No need to move!
@@ -193,14 +205,15 @@ class motionControlHandler:
 
         ###This part will be run when the robot goes to a new region, otherwise, the original tree will be used.
         if not self.previous_next_reg == next_reg:
-        
+            
             # plotting current pose and the map
             if self.operate_system == 1 and self.plotting == True:
-                plt.cla()
+                self.ax.cla()
                 self.plotMap()
-                plt.plot([pose[0]],[pose[1]],'ko')             
-                self.setPlotLimitXYZ()
-                plt.figure(1).canvas.draw() 
+                if self.Space_Dimension == 3:
+                    self.ax.plot([pose[0]],[pose[1]],[pose[3]],'ko')   
+                else:
+                    self.ax.plot([pose[0]],[pose[1]],'ko')             
 
             # Entered a new region. New tree should be formed.
             self.nextRegionPoly    = self.map[self.proj.rfi.regions[next_reg].name]
@@ -242,11 +255,14 @@ class motionControlHandler:
                         q_g = q_gBundle[:,i]-face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
                     goalPoints[0,i] = q_g[0,0]
                     goalPoints[1,i] = q_g[1,0]
+                    
                     if self.plotting == True:
                         if self.operate_system == 1:
-                            plt.plot([q_g[0,0]],[q_g[1,0]],'ro')
+                            if self.Space_Dimension == 3:
+                                self.ax.plot([q_g[0,0]],[q_g[1,0]],[self.maxHeight/2],'ro')
+                            else:
+                                self.ax.plot([q_g[0,0]],[q_g[1,0]],'ro')
                             self.setPlotLimitXYZ()
-                            plt.figure(1).canvas.draw() 
                 
                 if transFace is None:
                     print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
@@ -351,7 +367,7 @@ class motionControlHandler:
         """
         self.ax.set_xlim3d(self.BoundaryMaxMin[0], self.BoundaryMaxMin[1])
         self.ax.set_ylim3d(self.BoundaryMaxMin[2], self.BoundaryMaxMin[3])
-        self.ax.set_zlim3d(-0.05,1)
+        self.ax.set_zlim3d(-0.05,self.maxHeight)
 
     def plotPoly(self,c,string,w = 1):
         """
@@ -372,10 +388,10 @@ class motionControlHandler:
                             self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
                             self.ax.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)                            
                         else:
-                            plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
-                            plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
+                            self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
+                            self.ax.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
                             self.setPlotLimitXYZ()
-                            plt.figure(1).canvas.draw()
+                            #self.ax.get_figure().canvas.draw()
                             
     # return an obstacle-based sampler
     def allocOBValidStateSampler(self,si):
@@ -398,10 +414,17 @@ class motionControlHandler:
         # inside the current region and the next region   
         #print "state: " + str(state)
         #print "state.getX(): " + str(state.getX())
-        if self.Space_Dimension == 2:
-            return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY())))
+        if self.Space_Dimension == 3:
+            # check if the robot is in the region, below the maxHeight and above 0
+            #print "xy:"+ str(self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY())))) + " top:" + str((state.getZ()+self.height) < self.maxHeight) + " bottom: " + str((state.getZ()-self.height) > 0 )
+            #self.ax.plot([state.getX()],[state.getY()],[state.getZ()],'ro')
+            #self.setPlotLimitXYZ()
+            #self.ax.get_figure().canvas.draw()
+            return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY()))) and (state.getZ()+self.height) < self.maxHeight and (state.getZ()-self.height) > 0
+            
         else: 
-            a = 1   # just making a case for 3D
+            return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY())))
+             
     
     # This function generates control space needed information
     def propagate(self, start, control, duration, state):
@@ -426,10 +449,15 @@ class motionControlHandler:
         # set the bounds
         bounds = ob.RealVectorBounds(self.Space_Dimension)    
         BoundaryMaxMin = self.all.boundingBox()  #0-3:xmin, xmax, ymin and ymax
-        bounds.setLow(0,BoundaryMaxMin[0])
+        bounds.setLow(0,BoundaryMaxMin[0])    # 0 stands for x axis
         bounds.setHigh(0,BoundaryMaxMin[1])
-        bounds.setLow(1,BoundaryMaxMin[2])
+        bounds.setLow(1,BoundaryMaxMin[2])    # 1 stands for y axis
         bounds.setHigh(1,BoundaryMaxMin[3])
+        
+        if self.Space_Dimension == 3:
+            bounds.setLow(2,BoundaryMaxMin[2])  # 2 stands for z axis
+            bounds.setHigh(2,BoundaryMaxMin[3])
+        
         space.setBounds(bounds)
         if self.system_print == True:
             print "The bounding box of the boundary is: " + str(self.all.boundingBox() )
@@ -459,25 +487,29 @@ class motionControlHandler:
             # define a simple setup class
             ss = oc.SimpleSetup(cspace)
             ss.setStatePropagator(oc.StatePropagatorFn(self.propagate))
-        ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.isStateValid))
-        
+        ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.isStateValid)) 
         
         
         # create a start state
         start = ob.State(space)
-        pose = self.pose_handler.getPose()
+        pose = self.pose_handler.getPose()  #x,y,w,(z if using ROS quadrotor)
         if not self.currentRegionPoly.covers(PolyShapes.Circle(self.radius,(pose[0],pose[1]))):
             print "going to use last goal state as the start state."
             pose[0] = (self.OMPLpath.getSolutionPath().getState(self.OMPLpath.getSolutionPath().getStateCount()-1)).getX()
             pose[1] = (self.OMPLpath.getSolutionPath().getState(self.OMPLpath.getSolutionPath().getStateCount()-1)).getY()
         start().setX(pose[0]) 
         start().setY(pose[1])
-        start().setYaw(0) #pose[2]
+        if self.Space_Dimension == 2:
+            start().setYaw(0) #pose[2]
+        else:
+            start().setZ(pose[3])
+            start().rotation().setIdentity()
         """
         start[0] = pose[0]
         start[1] = pose[1]
         """
-
+        print start()
+        
         # create goal states
         
         print goalPoints
@@ -486,6 +518,11 @@ class motionControlHandler:
             goal = ob.State(space)
             goal().setX(goalPoints[0,i])
             goal().setY(goalPoints[1,i])
+            if self.Space_Dimension == 3:
+                # pick a random height
+                goal().setZ(random.uniform(0+self.height, self.maxHeight-self.height))           
+                #goal().setZ(self.maxHeight/2)
+                goal().rotation().setIdentity()
             #goal().setYaw(0.0)
             """
             goal[0] = goalPoints[0,i]
@@ -552,9 +589,10 @@ class motionControlHandler:
         
         if self.Geometric_Control == 'G':            
             if not self.planner == 'PRM':
-                planner.setRange(self.radius*2)
-                print "planner.getRange():" + str(planner.getRange())
-                planner.setGoalBias(0.5)
+                pass
+                #planner.setRange(self.radius*2)
+                #print "planner.getRange():" + str(planner.getRange())
+                #planner.setGoalBias(0.5)
             
         else:
             # (optionally) set propagation step size
@@ -584,32 +622,77 @@ class motionControlHandler:
         
         
         if self.plotting == True :
-            if self.operate_system == 1:
-                plt.suptitle('Map with Geo/Control: '+str(self.Geometric_Control) + ",Planner:" +str(self.planner), fontsize=12)
-                plt.xlabel('x')
-                plt.ylabel('y')
-                for i in range(ss.getSolutionPath().getStateCount()-1):
-                    #print i
-                    """
-                    plt.plot(((ss.getSolutionPath().getStates())[i][0],(ss.getSolutionPath().getStates())[i+1][0]),((ss.getSolutionPath().getStates())[i][1],(ss.getSolutionPath().getStates())[i+1][1]),'b')
-                    plt.figure(1).canvas.draw()
-                    """
-                    plt.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),'b')
-                    self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),0, i,fontsize=12)
-                #print [(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX()]
-                self.ax.text((ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getY(),0, ss.getSolutionPath().getStateCount()-1, fontsize=12)
-                self.setPlotLimitXYZ()
+            self.ax.set_title('Map with Geo/Control: '+str(self.Geometric_Control) + ",Planner:" +str(self.planner), fontsize=12)
+            self.ax.set_xlabel('x')
+            self.ax.set_ylabel('y')
+            for i in range(ss.getSolutionPath().getStateCount()-1):
+                #print i
+    
+                """            
+                plt.plot(((ss.getSolutionPath().getStates())[i][0],(ss.getSolutionPath().getStates())[i+1][0]),((ss.getSolutionPath().getStates())[i][1],(ss.getSolutionPath().getStates())[i+1][1]),'b')
                 plt.figure(1).canvas.draw()
-            else:
-                BoundPolyPoints = asarray(PolyUtils.pointList(regionPoly))
-                self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
-                if shape(V)[1] <= 2:
-                    self.ax.plot(( V[1,shape(V)[1]-1],q_g[0,0]),( V[2,shape(V)[1]-1],q_g[1,0]),'b')
+                """
+                print "self.Space_Dimension" + str(self.Space_Dimension)
+                if self.Space_Dimension == 3:
+                    self.ax.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),((ss.getSolutionPath().getState(i)).getZ(),(ss.getSolutionPath().getState(i+1)).getZ()),'b')
+                    self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i)).getZ(), i,fontsize=12)
+                    
                 else:
-                    self.ax.plot(( V[1,E[0,shape(E)[1]-1]], V[1,shape(V)[1]-1],q_g[0,0]),( V[2,E[0,shape(E)[1]-1]], V[2,shape(V)[1]-1],q_g[1,0]),'b')
-                self.ax.plot([q_g[0,0]],[q_g[1,0]],'ko')
+                    self.ax.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),0,'b')
+                    self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),0, i,fontsize=12)
+                
+            #print [(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX()]
+            if self.Space_Dimension == 3:
+                self.ax.text((ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getY(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getZ(), ss.getSolutionPath().getStateCount()-1, fontsize=12)
+            else:
+                self.ax.text((ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getY(),0, ss.getSolutionPath().getStateCount()-1, fontsize=12)
+            self.setPlotLimitXYZ()
+            #self.ax.get_figure().canvas.draw()
+        
         #print ss
         return ss
+
+class _MyTkApp(threading.Thread):
+    def __init__(self):
+        self.fig = Figure(figsize=(5,4), dpi=100)
+        self.ax = Axes3D(self.fig)
+        threading.Thread.__init__(self)
+        
+    def getSharedData(self):
+		# A dictionary of any objects that will need to be shared with other handlers
+		return self    
+		
+    def _quit(self):
+        self.root.quit()     # stops mainloop
+        self.root.destroy()  # this is necessary on Windows to prevent
+        
+    def run(self):
+        self.root=Tk.Tk() #root
+        self.root.wm_title("Embedding in TK")
+     
+        #self.ax = self.fig.gca(projection='3d')
+        #t = arange(0.0,3.0,0.01)
+        #s = sin(2*pi*t)
+        #self.ax.plot(t,s,1)
+        
+        # a tk.DrawingArea
+        canvas = FigureCanvasTkAgg(self.fig, master=self.root)
+        self.ax.mouse_init()
+        canvas.show()
+        canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
+
+        toolbar = NavigationToolbar2TkAgg( canvas, self.root )
+        toolbar.update()
+        canvas._tkcanvas.pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
+        
+        button = Tk.Button(master=self.root, text='Quit', command=self._quit)
+        button.pack(side=Tk.BOTTOM)
+        #self.s = Tkinter.StringVar()
+        #self.s.set('Foo')
+        #l = Tkinter.Label(self.root,textvariable=self.s)
+        #l.pack()
+        self.root.mainloop()
+
                     
 ## @cond IGNORE
 

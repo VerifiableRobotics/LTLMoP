@@ -41,6 +41,7 @@ class poseHandler:
 				#Cartesian Pose
 				self.pos_x = resp.pose.position.x
 				self.pos_y = resp.pose.position.y
+				self.pos_z = resp.pose.position.z
 				#Quaternion Orientation
 				self.or_x = resp.pose.orientation.x
 				self.or_y = resp.pose.orientation.y
@@ -55,7 +56,7 @@ class poseHandler:
 				shared=self.shared_data
 				#The following accounts for the maps offset in gazebo for 
 				#initial region placement
-				self.last_pose = array([self.pos_x+shared.offset[0], self.pos_y+shared.offset[1], self.theta])
+				self.last_pose = array([self.pos_x+shared.offset[0], self.pos_y+shared.offset[1], self.theta, self.pos_z])
 			except Exception:
 				print 'Pose Broke', Exception
 		return self.last_pose

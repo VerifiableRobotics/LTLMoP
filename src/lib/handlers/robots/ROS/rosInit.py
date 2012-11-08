@@ -22,7 +22,7 @@ from geometry_msgs.msg import Twist
 import fileinput
 
 class initHandler:
-	def __init__(self, proj, init_region, worldFile='ltlmop_map.world', robotPixelWidth=200, robotPhysicalWidth=.5, robotPackage="pr2_gazebo", robotLaunchFile="pr2.launch", calib=False):
+	def __init__(self, proj, init_region, worldFile='ltlmop_map.world', robotPixelWidth=200, robotPhysicalWidth=.5, robotPackage="pr2_gazebo", robotLaunchFile="pr2.launch", modelName = "pr2", calib=False):
 		"""
 		Initialization handler for ROS and gazebo
 
@@ -32,6 +32,7 @@ class initHandler:
 		robotPhysicalWidth (float): The physical width of the robot in meters (default=.5)
 		robotPackage (str): The package where the robot is located (default="pr2_gazebo")
 		robotLaunchFile (str): The launch file name for the robot in the package (default="pr2.launch")
+		modelName(str): Name of the robot. Choices: pr2 and quadrotor for now(default="pr2")
 		"""
 
 		#Set a blank offset for moving the map
@@ -44,6 +45,7 @@ class initHandler:
 		#Map to real world scaling constant
 		self.ratio=robotPhysicalWidth/robotPixelWidth
 		self.robotPhysicalWidth = robotPhysicalWidth
+		self.modelName = modelName
 		
 		if self.worldFile=='ltlmop_map.world':
 			#This creates a png copy of the regions to load into gazebo
@@ -151,18 +153,17 @@ class initHandler:
 		searchExp='<include file='
 		replaceExp='    <include file="$(find '+self.package+')/launch/'+self.launchFile+'" />\n'
 		self.replaceAll(path,searchExp,replaceExp)
+		
+		
 		searchExp='<node name="gazebo" pkg="gazebo"'
 		replaceExp='    <node name="gazebo" pkg="gazebo" type="gazebo" args=" $(find gazebo_worlds)/worlds/'+self.worldFile+'" respawn="false" output="screen"/>\n'
 		self.replaceAll(path,searchExp,replaceExp)
 
 
-	def rosSubProcess(self, proj, worldFile='ltlmop_map.world'):
-		"""
-		This launches the world file with the robot in Gazebo and waits until
-		it is most of the way launched before it launches the ltlmop Simulator
-		"""
-		start = subprocess.Popen(['roslaunch', 'gazebo_worlds', 'ltlmop.launch'], stdout=subprocess.PIPE)
+	def rosSubProcess(self, proj, worldFile='ltlmop_map.world'):  
+		start = subprocess.Popen(['roslaunch gazebo_worlds ltlmop.launch'], shell = True, stdout=subprocess.PIPE)
 		start_output = start.stdout
+		
 
 		# Wait for it to fully start up
 		while 1:
@@ -179,6 +180,7 @@ class initHandler:
 
 	def centerTheRobot(self, proj, init_region):
 		# Start in the center of the defined initial region
+		
 		try: #Normal operation
 			initial_region = proj.rfiold.regions[proj.rfiold.indexOfRegionWithName(init_region)]
 		except: #Calibration
@@ -191,16 +193,4 @@ class initHandler:
 
 		print "Initial region name: ", initial_region.name, " I think I am here: ", map2lab, " and center is: ", center
 
-		#set the ROBOT_INITIAL_POSE environment variable
 		os.environ['ROBOT_INITIAL_POSE']="-x "+str(map2lab[0])+" -y "+str(map2lab[1])
-		
-		# publish pose information
-		model = ModelState()
-		model.pose.position.x = map2lab[0]
-		model.pose.position.y = map2lab[1]
-		try:
-			#Publish the command to the robot
-			self.pub.publish(model)
-		except:
-			print 'Error publishing Twist Command'
-		
