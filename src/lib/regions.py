@@ -20,111 +20,102 @@ import fileMethods
 import re, random, math
 import Polygon, Polygon.Utils, os
 import json
+from numbers import Number
 
 Polygon.setTolerance(0.01)
 
-if 'wx' in sys.modules:
-    print "wx is loaded, using wx objects for regions"
+class Point(object):
+    def __init__(self, x, y):
+        self.x = float(x)
+        self.y = float(y)
 
-    import wx
+    def __repr__(self):
+        return "Point(%f, %f)" % (self.x, self.y)
 
-    Point = wx.Point
-    Size = wx.Size
-    Color = wx.Colour
-else:
-    print "wx is NOT loaded, using ltlmop objects for regions"
-    from numbers import Number
+    def __add__(self, other):
+        if (isinstance(other, Point) or
+           (hasattr(other, "x") and hasattr(other, "y"))):
+            return Point(self.x+other.x, self.y+other.y)
+        else:
+            raise TypeError("Points can only be added to other points")
 
-    class Point(object):
-        def __init__(self, x, y):
-            self.x = float(x)
-            self.y = float(y)
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            return Point(self.x*other, self.y*other)
+        else:
+            raise TypeError("Points can only multiplied by numbers")
 
-        def __str__(self):
-            return "(%f, %f)" % (self.x, self.y)
+    def __rmul__(self, *args, **kwds):
+        return self.__mul__(*args, **kwds)
 
-        def __add__(self, other):
-            if isinstance(other, Point):
-                return Point(self.x+other.x, self.y+other.y)
-            else:
-                raise TypeError("Points can only be added to other points")
+    def __eq__(self, other):
+        EPS = 1e-6
 
-        def __mul__(self, other):
-            if isinstance(other, Number):
-                return Point(self.x*other, self.y*other)
-            else:
-                raise TypeError("Points can only multiplied by numbers")
+        return abs(self.x - other[0]) < EPS \
+           and abs(self.y - other[1]) < EPS
 
-        def __rmul__(self, *args, **kwds):
-            return self.__mul__(*args, **kwds)
+    def __ne__(self, other):
+        return not (self == other)
 
-        def __eq__(self, other):
-            EPS = 1e-6
+    def __len__(self):
+        return 2
 
-            return abs(self.x - other[0]) < EPS \
-               and abs(self.y - other[1]) < EPS
+    def __getitem__(self, idx):
+        if idx == 0:
+            return self.x
+        elif idx == 1:
+            return self.y
+        else:
+            raise IndexError()
 
-        def __len__(self):
-            return 2
+    def __sub__(self, other):
+        if isinstance(other, Point):
+            return Point(self.x-other.x, self.y-other.y)
+        else:
+            raise TypeError("Points can only be subtracted from other points")
+
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+class Size(Point):
+    def __init__(self, w, h):
+        super(Size, self).__init__(w, h)
     
-        def __getitem__(self, idx):
-            if idx == 0:
-                return self.x
-            elif idx == 1:
-                return self.y
-            else:
-                raise IndexError()
+    def GetWidth(self):  return self.x
+    def GetHeight(self): return self.y
 
-        def __sub__(self, other):
-            if isinstance(other, Point):
-                return Point(self.x-other.x, self.y-other.y)
-            else:
-                raise TypeError("Points can only be subtracted from other points")
+    def __getattr__(self, name):
+        if name == "width": return self.x
+        elif name == "height": return self.y
+        else:
+            raise AttributeError()
 
-        def __hash__(self):
-            return hash((self.x, self.y))
+class Color():
+    def __init__(self, red=0, green=0, blue=0):
+        self.color = (red, green, blue)
 
-    class Size(Point):
-        def __init__(self, w, h):
-            super(Size, self).__init__(w, h)
-        
-        def GetWidth(self):  return self.x
-        def GetHeight(self): return self.y
+    def __getitem__(self, idx):
+        return self.color[idx]
+    
+    def Red(self):   return self.color[0]
+    def Green(self): return self.color[1]
+    def Blue(self):  return self.color[2]
 
-        def __getattr__(self, name):
-            if name == "width": return self.x
-            elif name == "height": return self.y
-            else:
-                raise AttributeError()
+    def SetFromName(self, name):
+        colorMapping = {'RED': (255,0,0),
+                        'ORANGE': (255,128,0),
+                        'YELLOW': (255,255,0),
+                        'GREEN': (0,255,0),
+                        'BLUE': (0,0,255),
+                        'PURPLE': (255,0,255),
+                        'WHITE': (255,255,255),
+                        'BLACK': (0,0,0)}
 
-    class Color():
-        def __init__(self, red=0, green=0, blue=0):
-            self.color = (red, green, blue)
-
-        def __getitem__(self, idx):
-            return self.color[idx]
-        
-        def Red(self):   return self.color[0]
-        def Green(self): return self.color[1]
-        def Blue(self):  return self.color[2]
-
-        def SetFromName(self, name):
-            colorMapping = {'RED': (255,0,0),
-                            'ORANGE': (255,128,0),
-                            'YELLOW': (255,255,0),
-                            'GREEN': (0,255,0),
-                            'BLUE': (0,0,255),
-                            'PURPLE': (255,0,255),
-                            'WHITE': (255,255,255),
-                            'BLACK': (0,0,0)}
-
-            if name.upper() in colorMapping:
-                self.color = colorMapping[name.upper()]
-            else:
-                raise NotImplementedError("Color '%s' not recognized" % name)
+        if name.upper() in colorMapping:
+            self.color = colorMapping[name.upper()]
+        else:
+            raise NotImplementedError("Color '%s' not recognized" % name)
             
-                
-
 ############################################################
 
 # Direction IDs (for defining convexity):
@@ -152,7 +143,7 @@ class prettierJSONEncoder(json.JSONEncoder):
             return super(prettierJSONEncoder, self)._newline_indent()
 
 
-class RegionFileInterface:
+class RegionFileInterface(object):
     """
     A wrapper class for handling collections of regions and associated metadata.
 
@@ -237,19 +228,13 @@ class RegionFileInterface:
         COLLINEAR_TOLERANCE = 1  # pixel
 
         # Iterate over faces in obj1
-        for face in obj1.getFaces():
-            pta = Point(*face[0])
-            ptb = Point(*face[1])
-
+        for pta, ptb in obj1.getFaces():
             # Since we are modifying obj2, it's easier to re-run the loop than keep track of indices
             # in the case that we are adding two points.  Lazy, yes, but effective for now.
             clean = False
             while not clean:
                 clean = True
-                for other_face in obj2.getFaces():
-                    other_pta = Point(*other_face[0])
-                    other_ptb = Point(*other_face[1])
-
+                for other_pta, other_ptb in obj2.getFaces():
                     [on_segment_a, d_a, pint_a] = pointLineIntersection(other_pta, other_ptb, pta)
                     [on_segment_b, d_b, pint_b] = pointLineIntersection(other_pta, other_ptb, ptb)
                     if d_a < COLLINEAR_TOLERANCE and d_b < COLLINEAR_TOLERANCE: # Check for collinearity
@@ -280,7 +265,7 @@ class RegionFileInterface:
         Returns a list of shared faces
         """
 
-        # Calculate adjoining faces:
+        # Create empty adjacency matrix
         self.transitions = [[[] for j in range(len(self.regions))] for i in range(len(self.regions))]
 
         transitionFaces = {} # This is just a list of faces to draw dotted lines on
@@ -374,9 +359,7 @@ class RegionFileInterface:
             for region2, faces in enumerate(destinations[region1+1:]):
                 if faces == []: continue    # No transition between these regions, so skip
 
-                faceData = []
-                for face in faces:
-                    faceData.extend([face[0][0], face[0][1], face[1][0], face[1][1]])
+                faceData = [coord for face in faces for pt in face for coord in pt]
 
                 transitionData.append("\t".join([self.regions[region1].name,
                                                  self.regions[region1 + 1 + region2].name] +
@@ -450,7 +433,7 @@ class RegionFileInterface:
             for i in range(2, len(transData), 4):
                 p1 = Point(float(transData[i]), float(transData[i+1]))
                 p2 = Point(float(transData[i+2]), float(transData[i+3]))
-                faces.append(tuple(sorted((p1, p2))))
+                faces.append(frozenset((p1, p2)))
                 
             # During adjacency matrix reconstruction, we'll mirror over the diagonal
             self.transitions[region1][region2] = faces
@@ -471,7 +454,7 @@ class RegionFileInterface:
    
 ############################################################
  
-class Region:
+class Region(object):
     """ A rectangular or polygonal region, defined by the following properties:
 
             - 'name'          Region name
@@ -505,6 +488,7 @@ class Region:
         self.alignmentPoints   = [False] * len([x for x in self.getPoints()])
         self.isObstacle = False
         self.holeList = []
+
     # =================================
     # == Region Manipulation Methods ==
     # =================================
@@ -700,43 +684,40 @@ class Region:
     def getFaces(self,includeHole=False):
         """
         Wrapper function to allow for iteration over faces of regions.
-        A face is a tuple of the two points (in absolute coordinates) that make up the face,
-        sorted so that a given face is defined uniquely.
-
-        FIXME: Make sure we take advantage of this uniqueness elsewhere; I think we check
-        too many conditions sometimes
+        A face is a frozenset of the two points (in absolute coordinates) that make up the face.
         """
 
         lastPt = None
         for pt in self.getPoints():
 
-            thisPt = copy.deepcopy(pt)
+            thisPt = pt
 
-            if lastPt != None:
-                yield tuple(sorted((lastPt, thisPt)))
+            if lastPt is not None:
+                yield frozenset((lastPt, thisPt))
             else:
                 firstPt = thisPt
 
             lastPt = thisPt
 
-        yield tuple(sorted((lastPt, firstPt))) # Closing face
+        yield frozenset((lastPt, firstPt)) # Closing face
+
         # also include edges of holes in the get faces for checking adjancency
         if includeHole:
-            for i,hole in enumerate(self.holeList):
+            for i, hole in enumerate(self.holeList):
+
                 lastPt = None
                 for pt in self.getPoints(hole_id=i):
-                    thisPt = copy.deepcopy(pt)
 
-                    if lastPt != None:
-                        yield tuple(sorted((lastPt, thisPt)))
+                    thisPt = pt
+
+                    if lastPt is not None:
+                        yield frozenset((lastPt, thisPt))
                     else:
                         firstPt = thisPt
 
                     lastPt = thisPt
 
-                yield tuple(sorted((lastPt, firstPt))) # Closing face
-                
-
+                yield frozenset((lastPt, firstPt)) # Closing face
 
     def getPoints(self, relative=False, hole_id=None):
         """
