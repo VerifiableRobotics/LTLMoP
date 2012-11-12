@@ -998,8 +998,16 @@ class ConfigFileParser:
         return configObj
 
     def saveAllConfigFiles(self):
+        # save all config objects
+        savedFileName = []
         for configObj in self.configs:
             self.saveConfigFile(configObj)
+            savedFileName.append(configObj.name.replace(' ','_'))
+        # remove delected files
+        for configFile in os.listdir(self.config_path):
+            if configFile.split('.')[0] not in savedFileName:
+                os.remove(os.path.join(self.config_path,configFile))
+
 
     def saveConfigFile(self,configObj,fileName=''):
         """
