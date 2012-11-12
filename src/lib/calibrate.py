@@ -58,7 +58,7 @@ class CalibrateFrame(wx.Frame):
         self.proj.loadProject(sys.argv[1])
 
         if self.proj.currentConfig.name != "calibrate":
-            print "(ERROR) Calibration can only be run on a specfication file with a calibration configuration.\nPlease use ConfigEditor to calibrate a configuration."
+            print "(ERROR) Calibration can only be run on a specification file with a calibration configuration.\nPlease use ConfigEditor to calibrate a configuration."
             sys.exit(3)
 
         # Initialize the init and pose handlers
@@ -105,10 +105,7 @@ class CalibrateFrame(wx.Frame):
                 dc = wx.GCDC(pdc)
             except:
                 dc = pdc
-            else:
-                self.panel_map.PrepareDC(pdc)
 
-        self.panel_map.PrepareDC(dc)
         dc.BeginDrawing()
 
         # Draw background
@@ -145,7 +142,7 @@ class CalibrateFrame(wx.Frame):
 
         if file_pts is None or file_pts.shape[1] < 3:
             wx.MessageBox("Please choose at least three points in Region Editor for calibration.  Quitting.", "Error", wx.OK)
-            sys.exit(0)
+            self.Close()
 
         # Get real coordinates for calibration points
         real_pts = None
@@ -182,6 +179,8 @@ class CalibrateFrame(wx.Frame):
         else:
             UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
             UDPSock.sendto(output, self.configEditorPort)
+            UDPSock.close()
+
         yield
 
     def moveRobot(self, event, state=[False]):
@@ -222,8 +221,7 @@ class CalibrateFrame(wx.Frame):
         try:
             self.calibrationWizard.next()
         except StopIteration:
-            sys.exit(0)
-        event.Skip()
+            wx.CallAfter(self.Close)
 
 # end of class CalibrateFrame
 

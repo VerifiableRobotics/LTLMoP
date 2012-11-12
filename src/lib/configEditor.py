@@ -242,7 +242,7 @@ class handlerConfigDialog(wx.Dialog):
                     print "ERROR: Received invalid data from calibration tool."
                 else:
                     # Update the display
-                    self._handler2dialog(self.handler)
+                    wx.CallAfter(self._handler2dialog, self.handler)
 
                 break
 
