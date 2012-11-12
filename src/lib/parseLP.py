@@ -44,7 +44,7 @@ class parseLP:
             return
 
         # turn list of string into one string
-        spec = "\n".join(self.proj.spec_data['SPECIFICATION']['Spec'])
+        spec = "\n".join([line for line in self.proj.spec_data['SPECIFICATION']['Spec'] if not line.startswith("#")])
         
         # get all regions that need to find "region near"
         # the items in the list are tuple with region name and distance from the region boundary, default value is 50
