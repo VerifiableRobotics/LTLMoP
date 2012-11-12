@@ -89,6 +89,7 @@ class ViconStreamer:
         self._verbose = verbose
         self._streaming = True
         self.listenThread = threading.Thread(target = self._processStream)
+        self.listenThread.daemon = True
         self.listenThread.start()
 
     def stopStreams(self):

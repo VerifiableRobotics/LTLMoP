@@ -47,6 +47,7 @@ class AsynchronousProcessThread(threading.Thread):
         self.startComplete = threading.Event()
 
         # Auto-start
+        self.daemon = True
         self.start()
 
     def kill(self):

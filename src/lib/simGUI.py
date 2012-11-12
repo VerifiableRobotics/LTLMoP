@@ -82,12 +82,15 @@ class SimGUI_Frame(wx.Frame):
         # Create new thread to communicate with subwindow
         print >>sys.__stdout__, "(GUI) Starting controller listen thread..."
         self.controllerListenThread = threading.Thread(target = self.controllerListen)
+        self.controllerListenThread.daemon = True
         self.controllerListenThread.start()
     
         self.robotPos = None
         self.robotVel = (0,0)
 
         self.markerPos = None
+
+        self.Bind( wx.EVT_CLOSE, self.onClose)
 
         # Let everyone know we're ready
         self.UDPSockTo.sendto("Hello!",self.addrTo)
@@ -337,6 +340,12 @@ class SimGUI_Frame(wx.Frame):
         print >>f, str(self.text_ctrl_sim_log.GetValue())
 
         f.close()
+
+    def onClose(self, event):
+        print >>sys.__stderr__, "Telling execute.py to quit!"
+        self.UDPSockTo.sendto("QUIT",self.addrTo) # This goes to the controller
+        time.sleep(2)
+        event.Skip()
 
     def onSimClear(self, event): # wxGlade: SimGUI_Frame.<event_handler>
         self.text_ctrl_sim_log.Clear()
