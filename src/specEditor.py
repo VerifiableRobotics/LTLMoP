@@ -1216,6 +1216,11 @@ class SpecEditorFrame(wx.Frame):
         name = wx.GetTextFromUser("Name:", "New %s Proposition" % prop_prefix.title(), default_name)
 
         if name != "":
+            if name[0].isdigit():
+                wx.MessageBox("Propositions must begin with a letter.", "Invalid proposition name",
+                            style = wx.OK | wx.ICON_ERROR)
+                return
+
             # If it's valid, add it, select it and enable it
             lb.Insert(name, lb.GetCount())
             lb.Select(lb.GetCount()-1)
