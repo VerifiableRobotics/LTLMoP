@@ -20,6 +20,9 @@ class SpecCompiler(object):
             print "ERROR: Please define regions before compiling."
             return
     
+        # Remove comments
+        self.proj.specText = re.sub(r"#.*$", "", self.proj.specText, flags=re.MULTILINE)
+
         if self.proj.specText.strip() == "":
             print "ERROR: Please write a specification before compiling."
             return
