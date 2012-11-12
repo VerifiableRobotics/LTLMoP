@@ -693,13 +693,19 @@ class Region(object):
             thisPt = pt
 
             if lastPt is not None:
-                yield frozenset((lastPt, thisPt))
+                if lastPt != thisPt:
+                    yield frozenset((lastPt, thisPt))
+                else:
+                    print "WARNING: region {} has side of length 0".format(self.name)
             else:
                 firstPt = thisPt
 
             lastPt = thisPt
 
-        yield frozenset((lastPt, firstPt)) # Closing face
+        if lastPt != firstPt:
+            yield frozenset((lastPt, firstPt)) # Closing face
+        else:
+            print "WARNING: region {} has side of length 0".format(self.name)
 
         # also include edges of holes in the get faces for checking adjancency
         if includeHole:
@@ -711,13 +717,19 @@ class Region(object):
                     thisPt = pt
 
                     if lastPt is not None:
-                        yield frozenset((lastPt, thisPt))
+                        if lastPt != thisPt:
+                            yield frozenset((lastPt, thisPt))
+                        else:
+                            print "WARNING: region {} has hole side of length 0".format(self.name)
                     else:
                         firstPt = thisPt
 
                     lastPt = thisPt
 
-                yield frozenset((lastPt, firstPt)) # Closing face
+                if lastPt != firstPt:
+                    yield frozenset((lastPt, firstPt)) # Closing face
+                else:
+                    print "WARNING: region {} has hole side of length 0".format(self.name)
 
     def getPoints(self, relative=False, hole_id=None):
         """
