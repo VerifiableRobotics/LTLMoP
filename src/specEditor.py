@@ -663,8 +663,9 @@ class SpecEditorFrame(wx.Frame):
             default = self.proj.getFilenamePrefix() + ".spec"
 
         # Get a filename
-        filename = wx.FileSelector("Save File As", "examples",
-                                  default_filename=default,
+        filename = wx.FileSelector("Save File As", 
+                                  default_path=os.path.dirname(default),
+                                  default_filename=os.path.basename(default),
                                   default_extension="spec",
                                   wildcard="Specification files (*.spec)|*.spec",
                                   flags = wx.SAVE | wx.OVERWRITE_PROMPT)
