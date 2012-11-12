@@ -31,6 +31,6 @@ class driveHandler:
         x = min(x*self.mul,self.max)
         y = min(y*self.mul,self.max)
         
-        print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
+        #print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
         self.loco.sendCommand([x,y])
 
