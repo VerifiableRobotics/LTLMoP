@@ -51,10 +51,6 @@ SNAP_RADIUS = 10
  menu_POLY,         menu_ADD_PT,        menu_DEL_PT,
  menu_CALIB_PT,     menu_ABOUT] = [wx.NewId() for i in range(14)]
 
-# Timer IDs:
-
-id_SNAP_TIMER = wx.NewId()
-
 # Tool IDs:
 
 [id_SELECT,     id_RECT,    id_POLY,
@@ -105,7 +101,7 @@ class DrawingFrame(wx.Frame):
 
         # Setup our snapping support.
 
-        self.snapTimer = wx.Timer(self, id_SNAP_TIMER)
+        self.snapTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.onTimerEvent)
         self.lastCursor = None
         self.snapCoords = None
@@ -178,7 +174,6 @@ class DrawingFrame(wx.Frame):
         self.toolbar.AddSimpleTool(menu_UNDO,
                                    wx.ArtProvider.GetBitmap(wx.ART_UNDO, wx.ART_TOOLBAR, tsize),
                                    "Undo")
-        self.toolbar.AddSeparator()
         self.toolbar.AddSimpleTool(menu_DUPLICATE,
                                    wx.Bitmap("images/duplicate.bmp",
                                             wx.BITMAP_TYPE_BMP),
@@ -790,7 +785,9 @@ class DrawingFrame(wx.Frame):
     def onTimerEvent(self, event):
         timerID = event.GetEventObject().GetId()
 
-        if timerID == id_SNAP_TIMER:
+        # temporary workaround for what appears to be a bug on OS X with wxversion=2.9.3.1 osx-cocoa (classic)
+        #if timerID == self.snapTimer.GetId():
+        if True:
             if self.curTool == self.selectIcon and self.mouseMode != mouse_RESIZE: return
 
             # Allow snapping to first point of polygon in creation
@@ -1774,7 +1771,10 @@ class DrawingFrame(wx.Frame):
         dc.BeginDrawing()
         dc.SetPen(wx.BLACK_DASHED_PEN)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        dc.SetLogicalFunction(wx.INVERT)
+        
+        # workaround; INVERT seems not to work on OS X
+        if sys.platform != 'darwin':
+            dc.SetLogicalFunction(wx.INVERT)
 
         for i in xrange(len(self.selection)):
             position = self.selection[i].position
@@ -1816,7 +1816,10 @@ class DrawingFrame(wx.Frame):
         else:
             dc.SetPen(wx.BLACK_PEN)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        dc.SetLogicalFunction(wx.INVERT)
+
+        # workaround; INVERT seems not to work on OS X
+        if sys.platform != 'darwin':
+            dc.SetLogicalFunction(wx.INVERT)
 
         if type == feedback_RECT:
             dc.DrawRectangle(startPt.x, startPt.y,
