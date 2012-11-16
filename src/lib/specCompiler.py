@@ -21,9 +21,9 @@ class SpecCompiler(object):
             return
     
         # Remove comments
-        self.proj.specText = re.sub(r"#.*$", "", self.proj.specText, flags=re.MULTILINE)
+        self.specText = re.sub(r"#.*$", "", self.proj.specText, flags=re.MULTILINE)
 
-        if self.proj.specText.strip() == "":
+        if self.specText.strip() == "":
             print "ERROR: Please write a specification before compiling."
             return
 
@@ -60,7 +60,7 @@ class SpecCompiler(object):
         self.proj.writeSpecFile()
         
         # substitute the regions name in specs
-        text = self.proj.specText
+        text = self.specText
         for m in re.finditer(r'near (?P<rA>\w+)', text):
             text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+str(50)])+")", text)
         for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
@@ -89,7 +89,7 @@ class SpecCompiler(object):
         if self.decomposedSpecText is not None:
             text = self.decomposedSpecText
         else:
-            text = self.proj.specText
+            text = self.specText
 
         spec, traceback, failed = writeSpec(text, sensorList, regionList, robotPropList)
 
