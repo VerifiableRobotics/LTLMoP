@@ -58,7 +58,7 @@ class motionControlHandler:
     def __init__(self, proj, shared_data,Space_Dimension,planner,robot_type,Geometric_Control,maxHeight,max_angle_goal,max_angle_overlap,plotting):
         """
         Space_Dimension(int): dimension of the space operating in. Enter 2 for 2D and 3 for 3D. Only quadrotor in ROS is supported for 3D now.(default=2)
-        planner(string): Planner to be used. Enter RRT,KPIECE1 or PRM. (default='PRM')
+        planner(string): Planner to be used. Enter RRT,KPIECE1 or PRM, RRTConnect. (default='PRM')
         robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
         Geometric_Control(string): Specify if you want to planner to sample in geometric or control space. G for geometric and C for control. (default='G')
         maxHeight(float): maximum height for the 3D space. Units:m(default=1)
@@ -93,7 +93,7 @@ class motionControlHandler:
         self.Space_Dimension = Space_Dimension
         
         # Information about the planner
-        if planner not in ['RRT','KPIECE1','PRM']:
+        if planner not in ['RRT','KPIECE1','PRM','RRTConnect','EST']:
             planner = 'PRM'
         self.planner = planner
         
@@ -140,6 +140,8 @@ class motionControlHandler:
         self.planner_dictionary['G']['PRM'] = og.PRM
         self.planner_dictionary['G']['RRT'] = og.RRT
         self.planner_dictionary['G']['KPIECE1'] = og.KPIECE1
+        self.planner_dictionary['G']['RRTConnect'] = og.RRTConnect
+        self.planner_dictionary['G']['EST'] = og.EST
         #self.planner_dictionary['C']['PRM'] = oc.PRM
         self.planner_dictionary['C']['RRT'] = oc.RRT
         self.planner_dictionary['C']['KPIECE1'] = oc.KPIECE1
@@ -442,9 +444,12 @@ class motionControlHandler:
     
     # This function generates control space needed information
     def propagate(self, start, control, duration, state):
-        #print "control[0]: " + str(control[0])
-        #print "control[1]: " + str(control[1])
-        #print "duration: " + str(duration)
+        # control[0] = velocity
+        # control[1] = omega
+        # duration  = setPropagationStepSize (in plan)
+        print >>sys.__stdout__,"control[0]: " + str(control[0])
+        print >>sys.__stdout__,"control[1]: " + str(control[1])
+        print >>sys.__stdout__,"duration: " + str(duration)
         state.setX( start.getX() + control[0] * duration * cos(start.getYaw()) )
         state.setY( start.getY() + control[0] * duration * sin(start.getYaw()) )
         state.setYaw(start.getYaw() + control[1] * duration)
@@ -496,10 +501,11 @@ class motionControlHandler:
         if self.Geometric_Control == 'G':
             # define a simple setup class
             ss = og.SimpleSetup(space)
-            # set state validity checking for this space
+            
         else:
             # define a simple setup class
             ss = oc.SimpleSetup(cspace)
+            # set state validity checking for this space
             ss.setStatePropagator(oc.StatePropagatorFn(self.propagate))
         ss.setStateValidityChecker(ob.StateValidityCheckerFn(self.isStateValid)) 
         
@@ -538,7 +544,8 @@ class motionControlHandler:
                 goal().setZ(z_goalPoint)           
                 #goal().setZ(self.maxHeight/2)
                 goal().rotation().setIdentity()
-            #goal().setYaw(0.0)
+            else:
+                goal().setYaw(0.0)
             """
             goal[0] = goalPoints[0,i]
             goal[1] = goalPoints[1,i]
@@ -549,6 +556,7 @@ class motionControlHandler:
                 else:
                     self.ax.plot([goalPoints[0,i]],[goalPoints[1,i]],'ro')
                 self.setPlotLimitXYZ()
+                self.ax.get_figure().canvas.draw()
                 
             goalStates.addState(goal)
         print goalStates
@@ -584,43 +592,28 @@ class motionControlHandler:
 
         # set sampler (optional; the default is uniform sampling)
         si = ss.getSpaceInformation()
-        """
-        if samplerIndex==1:
-            # use obstacle-based sampling
-            si.setValidStateSamplerAllocator(ob.ValidStateSamplerAllocator(self.allocOBValidStateSampler))
-        elif samplerIndex==2:
-            # use my sampler
-            si.setValidStateSamplerAllocator(ob.ValidStateSamplerAllocator(self.alloc_MyValidStateSampler))
-        """
         
+        # set planner
         planner_prep = self.planner_dictionary[self.Geometric_Control][self.planner]
         planner = planner_prep(si)
-        
-        """
-        # create a planner for the defined space
-        if self.planner == 'PRM':
-            planner = og.PRM(si)
-        elif self.planner == 'RRT':
-            planner = og.RRT(si)
-        elif self.planner == 'KPIECE1':
-            planner = og.KPIECE1(si)
-        else:   
-            planner = og.PRM(si)
-        """
         ss.setPlanner(planner)
         
         if self.Geometric_Control == 'G':            
             if not self.planner == 'PRM':
-                pass
-                #planner.setRange(self.radius*2)
-                #print "planner.getRange():" + str(planner.getRange())
-                #planner.setGoalBias(0.5)
+                #pass
+                planner.setRange(self.radius*2)
+                print "planner.getRange():" + str(planner.getRange())
+                #if not self.planner == 'RRTConnect':
+                #    planner.setGoalBias(0.5)
             
         else:
             # (optionally) set propagation step size
-            si.setPropagationStepSize(self.radius/5)
+            si.setPropagationStepSize(1)  #actually is the duration in propagate
+            #si.setMinMaxControlDuration(3,3) # is the no of steps taken with the same velocity and omega
             print "radius: " +str(self.radius)
-            print "si.getPropagationStepSize():" + str(si.getPropagationStepSize())         
+            print "si.getPropagationStepSize():" + str(si.getPropagationStepSize())  
+            #print "si.getMinControlDuration():" + str(si.getMinControlDuration())  
+            #print "si.getMaxControlDuration():" + str(si.getMaxControlDuration())       
             planner.setGoalBias(0.5)
         ss.setup()
         

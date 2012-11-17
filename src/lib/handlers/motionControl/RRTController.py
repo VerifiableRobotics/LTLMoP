@@ -239,11 +239,14 @@ class motionControlHandler:
             """
 
         # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
-        self.Velocity = self.getVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E)
+        #self.Velocity = self.getVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E)
+        self.Node = self.getNode([pose[0], pose[1]], self.RRT_V,self.RRT_E)
         self.previous_next_reg = next_reg
 
         # Pass this desired velocity on to the drive handler
-        self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0], pose[2])
+        #self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0], pose[2])
+        ############### TO CHANGE#################################
+        self.drive_handler.setVelocity(self.Node[0,0], self.Node[1,0], pose[2])
         RobotPoly = Polygon.Shapes.Circle(self.radius,(pose[0],pose[1]))
         
         # check if robot is inside the current region
@@ -305,6 +308,41 @@ class motionControlHandler:
         Vel = zeros([2,1])
         Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
         return Vel
+        
+    def getNode(self,p, V, E, last=False):
+        """
+
+        This function calculates the velocity for the robot with RRT.
+        The inputs are (given in order):
+            p        = the current x-y position of the robot
+
+            E        = edges of the tree  (2 x No. of nodes on the tree)
+            V        = points of the tree (2 x No. of vertices)
+            last = True, if the current region is the last region
+                 = False, if the current region is NOT the last region
+
+        """
+
+        pose     = mat(p).T
+        
+        #dis_cur = distance between current position and the next point
+        dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- pose
+        
+        heading = E[1,self.E_current_column]        # index of the current heading point on the tree
+        if norm(dis_cur) < 1.5*self.radius:         # go to next point
+            if not heading == shape(V)[1]-1:
+                self.E_current_column = self.E_current_column + 1
+                dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- pose
+
+            #else:
+            #    dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- vstack((V[1,E[0,self.E_current_column]],V[2,E[0,self.E_current_column]]))
+        
+        Node = zeros([2,1])
+        Node[0,0] = V[1,E[1,self.E_current_column]]
+        Node[1,0] = V[2,E[1,self.E_current_column]]
+        #Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
+        return Node
+        
 
     def buildTree(self,p,theta,regionPoly,nextRegionPoly,q_gBundle,face_normal, last=False):
         """
