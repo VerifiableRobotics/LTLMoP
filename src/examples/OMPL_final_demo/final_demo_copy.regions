@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" width="914" height="619">
+<path style="fill:red;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 914, 619 L 738, 619 L 738, 525 L 739, 525 L 914, 525 z "/>
+<path style="fill:green;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 914, 525 L 739, 525 L 739, 125 L 914, 125 z "/>
+<path style="fill:blue;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 553, 511 L 659, 511 L 660, 294 L 544, 293 L 544, 234 L 663, 235 L 664, 125 L 739, 125 L 914, 125 L 911, 0 L 598, 0 L 598, 178 L 446, 178 L 452, 341 L 526, 341 L 526, 396 L 451, 396 L 451, 557 L 166, 557 L 166, 502 L 397, 502 L 387, 437 L 8, 437 L 0, 619 L 553, 619 z "/>
+<path style="fill:yellow;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 387, 437 L 8, 437 L 8, 297 L 387, 297 z "/>
+<path style="fill:red;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 598, 178 L 446, 178 L 387, 178 L 387, 0 L 598, 0 z "/>
+<path style="fill:green;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 387, 178 L 387, 297 L 8, 297 L 8, 0 L 387, 0 z "/>
+</svg>
