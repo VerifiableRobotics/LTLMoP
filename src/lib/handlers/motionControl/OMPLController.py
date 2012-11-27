@@ -55,16 +55,18 @@ import threading
 
 
 class motionControlHandler:
-    def __init__(self, proj, shared_data,Space_Dimension,planner,robot_type,Geometric_Control,maxHeight,max_angle_goal,max_angle_overlap,plotting):
+    def __init__(self, proj, shared_data,Space_Dimension,planner,robot_type,Geometric_Control,plotting):
         """
         Space_Dimension(int): dimension of the space operating in. Enter 2 for 2D and 3 for 3D. Only quadrotor in ROS is supported for 3D now.(default=2)
         planner(string): Planner to be used. Enter RRT,KPIECE1 or PRM, RRTConnect. (default='PRM')
         robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
         Geometric_Control(string): Specify if you want to planner to sample in geometric or control space. G for geometric and C for control. (default='G')
+        plotting (bool): Check the box to enable plotting (default=True)
+        """
+        """
         maxHeight(float): maximum height for the 3D space. Units:m(default=1)
         max_angle_goal (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 6.28 = 2*pi (default=6.28)
         max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
-        plotting (bool): Check the box to enable plotting (default=True)
         """
         
         #Parameters
@@ -111,10 +113,7 @@ class motionControlHandler:
         if plotting is True:
             self.plotting          = True
         else:
-            self.plotting          = False  
-            
-        # Information about the maximum height in z direction
-        self.maxHeight = maxHeight          
+            self.plotting          = False            
             
         # Operate_system (int): Which operating system is used for execution.
         # Ubuntu and Mac is 1, Windows is 2
@@ -129,12 +128,47 @@ class motionControlHandler:
             print "Geometric/Control space: " + str(self.Geometric_Control)
             print "Space Dimension: " + str(self.Space_Dimension)
         
-        # Generate polygon for regions in the map
+        # Generate polygon for regions in the map        
+        
+        # getting raw region inputs from user. To be used for 3D path planning
+        self.original_regions = self.proj.loadRegionFile()
+        #print self.original_regions.filename
+        print "MAXHEIGHT:" +str(self.original_regions.getMaximumHeight())
+        #print self.proj.rfi.filename
+        
+        # Information about the maximum height in z direction
+        self.maxHeight = self.original_regions.getMaximumHeight()
+           
+        self.map = {'polygon':{},'original_name':{},'height':{}}
         for region in self.proj.rfi.regions:
-            self.map[region.name] = self.createRegionPolygon(region)
+            self.map['polygon'][region.name] = self.createRegionPolygon(region)
             for n in range(len(region.holeList)): # no of holes
-                self.map[region.name] -= self.createRegionPolygon(region,n)
-     
+                self.map['polygon'][region.name] -= self.createRegionPolygon(region,n)
+        
+        # map the names back to the old original names specified by the user  
+        for rname, rlist in self.proj.regionMapping.iteritems():
+            #print rname,rlist[0]  
+            self.map['original_name'][rlist[0]] = rname
+            #store the height of the regions
+            for region in self.original_regions.regions:
+                if region.name.lower() == rname.lower():
+                    self.map['height'][rlist[0]]  = region.height
+                    
+        # ****** only substract.. never add the region.. so obstacle in the middle will be taken care of   
+        
+        self.original_map = {'polygon':{},'height':{},'isObstacle':{}}   
+        for region in self.original_regions.regions:
+            self.original_map['polygon'][region.name] = self.createRegionPolygon(region)
+            self.original_map['height'][region.name]  = region.height
+            self.original_map['isObstacle'][region.name] = region.isObstacle
+        """   
+        if self.system_print is True:
+            print self.map
+            for region in self.original_regions.regions:
+                print "name: "+ str(region.name) + " isObstacle:" +str(region.isObstacle) + " height:" +str(region.height)
+            print self.original_map
+        """
+        
         # building the planner dictionary
         self.planner_dictionary = {'G':{},'C':{}}
         self.planner_dictionary['G']['PRM'] = og.PRM
@@ -147,7 +181,7 @@ class motionControlHandler:
         self.planner_dictionary['C']['KPIECE1'] = oc.KPIECE1
         
         # Generate the boundary polygon 
-        for regionName,regionPoly in self.map.iteritems():
+        for regionName,regionPoly in self.map['polygon'].iteritems():
             self.all += regionPoly
         
         # Specify the size of the robot 
@@ -159,9 +193,10 @@ class motionControlHandler:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
             self.radius = self.ROSInitHandler.robotPhysicalWidth/2
             if self.ROSInitHandler.modelName == 'quadrotor':
-                self.height = 0.15 #(m)
+                self.height = 0.30 #(m) height of the robot
         elif self.system == 3:
             self.radius = 5
+            self.height = 0.30     ########### CHANGE TO BE DELETED
         elif self.system == 4:
             self.radius = 0.15
         
@@ -189,7 +224,7 @@ class motionControlHandler:
             
             if self.operate_system == 1:
                 if self.Space_Dimension == 3:
-                    self.ax.plot([pose[0]],[pose[1]],[pose[3]],'ko')    
+                    self.ax.plot([pose[0]],[pose[1]],[pose[3]],'ko')  
                 else:
                     self.ax.plot([pose[0]],[pose[1]],'ko') 
                 self.setPlotLimitXYZ()
@@ -216,14 +251,26 @@ class motionControlHandler:
                 self.ax.cla()
                 self.plotMap()
                 if self.Space_Dimension == 3:
-                    self.ax.plot([pose[0]],[pose[1]],[pose[3]],'ko')   
+                    self.ax.plot([pose[0]],[pose[1]],[pose[3]],'ko')  
                 else:
                     self.ax.plot([pose[0]],[pose[1]],'ko')             
 
             # Entered a new region. New tree should be formed.
-            self.nextRegionPoly    = self.map[self.proj.rfi.regions[next_reg].name]
-            self.currentRegionPoly = self.map[self.proj.rfi.regions[current_reg].name]
-            self.nextAndcurrentRegionPoly = self.nextRegionPoly+self.currentRegionPoly
+            if self.Space_Dimension == 3:
+                self.nextRegionPoly    = self.original_map['polygon'][self.map['original_name'][self.proj.rfi.regions[next_reg].name]]
+                self.currentRegionPoly = self.original_map['polygon'][self.map['original_name'][self.proj.rfi.regions[current_reg].name]]
+                """
+                ############### CAN BE DELETED LATER)
+                self.plotPoly(self.nextRegionPoly,'r')
+                print "next region:" +str(self.nextRegionPoly)
+                self.plotPoly(self.currentRegionPoly,'b')
+                plt.show()
+                """
+                self.nextAndcurrentRegionPoly = self.nextRegionPoly+self.currentRegionPoly
+            else:
+                self.nextRegionPoly    = self.map['polygon'][self.proj.rfi.regions[next_reg].name]
+                self.currentRegionPoly = self.map['polygon'][self.proj.rfi.regions[current_reg].name]
+                self.nextAndcurrentRegionPoly = self.nextRegionPoly+self.currentRegionPoly
             
             if self.system_print == True:
                 print "next Region is " + str(self.proj.rfi.regions[next_reg].name)
@@ -265,7 +312,7 @@ class motionControlHandler:
                 if transFace is None:
                     print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
                     
-            self.OMPLpath = self.plan(goalPoints,0) 
+            self.OMPLpath = self.plan(goalPoints,self.proj.rfi.regions[current_reg].name,self.proj.rfi.regions[next_reg].name,0) 
             self.currentState = 1
             print "Going to generate velocity"
             #print OMPLpath
@@ -277,6 +324,13 @@ class motionControlHandler:
         else:
             self.Velocity = self.getVelocity([pose[0], pose[1]], self.OMPLpath)
         self.previous_next_reg = next_reg
+        
+        """
+        # FOR ROBERT
+        self.Node = self.getNode([pose[0], pose[1]], self.OMPLpath)
+        print "self.Node:" + str(self.Node) 
+        self.drive_handler.setDestination(self.Node[0,0], self.Node[1,0], pose[2])
+        """
 
         # Pass this desired velocity on to the drive handler
         if self.Space_Dimension == 3:
@@ -351,7 +405,36 @@ class motionControlHandler:
             Vel = zeros([2,1])
             Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
         return Vel
-                       
+    
+    def getNode(self,p, OMPLpath, last=False):
+        """
+
+        This function return the heading node of the robot. (for 2D only now)
+        The inputs are (given in order):
+            p        = the current x-y position of the robot
+
+            E        = edges of the tree  (2 x No. of nodes on the tree)
+            V        = points of the tree (2 x No. of vertices)
+            last = True, if the current region is the last region
+                 = False, if the current region is NOT the last region
+
+        """
+
+        pose     = mat(p).T
+        
+        #dis_cur = distance between current position and the next point
+        dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose[0:2]
+        
+        if norm(dis_cur) < 1.5*self.radius:         # go to next point
+            if not (self.currentState+1) == OMPLpath.getSolutionPath().getStateCount():
+                # head to the next node
+                self.currentState = self.currentState + 1
+        
+        Node = zeros([2,1])
+        Node[0,0] = (OMPLpath.getSolutionPath().getState(self.currentState)).getX()
+        Node[1,0] = (OMPLpath.getSolutionPath().getState(self.currentState)).getY()
+        return Node 
+                         
     
     def createRegionPolygon(self,region,hole = None):
         """
@@ -374,7 +457,7 @@ class motionControlHandler:
         """
 
         if self.operate_system == 1:
-            for regionName,regionPoly in self.map.iteritems():
+            for regionName,regionPoly in self.map['polygon'].iteritems():
                 self.plotPoly(regionPoly,'k')
     
     def setPlotLimitXYZ(self):
@@ -431,13 +514,22 @@ class motionControlHandler:
         #print "state: " + str(state)
         #print "state.getX(): " + str(state.getX())
         if self.Space_Dimension == 3:
+            """
             # check if the robot is in the region, below the maxHeight and above 0
             #print "xy:"+ str(self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY())))) + " top:" + str((state.getZ()+self.height) < self.maxHeight) + " bottom: " + str((state.getZ()-self.height) > 0 )
             #self.ax.plot([state.getX()],[state.getY()],[state.getZ()],'ro')
             #self.setPlotLimitXYZ()
             #self.ax.get_figure().canvas.draw()
-            return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY()))) and (state.getZ()+self.height) < self.maxHeight and (state.getZ()-self.height) > 0
+            return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY()))) and (state.getZ()+self.height/2) < self.maxHeight and (state.getZ()-self.height/2) > 0
+            """
+            region_considered = Polygon.Polygon(self.nextAndcurrentRegionPoly)
+            bottom = state.getZ()-self.height/2  # bottom of the robot
+            for i, name in enumerate(self.original_map['polygon']):
+                if self.original_map['isObstacle'][name] is True:
+                    if self.original_map['height'][name] >= bottom:
+                        region_considered -=self.original_map['polygon'][name]
             
+            return region_considered.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY()))) and (state.getZ()+self.height/2) < self.maxHeight and (state.getZ()-self.height/2) > 0
         else: 
             return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY())))
              
@@ -454,9 +546,11 @@ class motionControlHandler:
         state.setY( start.getY() + control[0] * duration * sin(start.getYaw()) )
         state.setYaw(start.getYaw() + control[1] * duration)
 
-    def plan(self,goalPoints,samplerIndex):
+    def plan(self,goalPoints,current_region,next_region,samplerIndex):
         """
         goal points: array that contains the coordinates of all the possible goal states
+        current_reg: name of the current region (p1 etc)
+        next_reg   : name of the next region (p1 etc)
         """
         # construct the state space we are planning in
         #space = ob.RealVectorStateSpace(self.Space_Dimension)
@@ -474,8 +568,8 @@ class motionControlHandler:
         bounds.setHigh(1,BoundaryMaxMin[3])
         
         if self.Space_Dimension == 3:
-            bounds.setLow(2,BoundaryMaxMin[2])  # 2 stands for z axis
-            bounds.setHigh(2,BoundaryMaxMin[3])
+            bounds.setLow(2,0)  # 2 stands for z axis
+            bounds.setHigh(2,self.maxHeight)
         
         space.setBounds(bounds)
         if self.system_print == True:
@@ -522,7 +616,8 @@ class motionControlHandler:
         if self.Space_Dimension == 2:
             start().setYaw(0) #pose[2]
         else:
-            start().setZ(pose[3])
+            start().setZ(1.5)            ############ CHANGE!!!!
+            #start().setZ(pose[3])
             start().rotation().setIdentity()
         """
         start[0] = pose[0]
@@ -539,10 +634,16 @@ class motionControlHandler:
             goal().setX(goalPoints[0,i])
             goal().setY(goalPoints[1,i])
             if self.Space_Dimension == 3:
-                # pick a random height
+                """
+                # pick a random height 
                 z_goalPoint = random.uniform(0+self.height, self.maxHeight-self.height)
                 goal().setZ(z_goalPoint)           
                 #goal().setZ(self.maxHeight/2)
+                """
+                print current_region,next_region
+                print self.map['height'][current_region],self.map['height'][next_region]
+                z_goalPoint = min(self.map['height'][current_region]/2,self.map['height'][next_region]/2)
+                goal().setZ(z_goalPoint)
                 goal().rotation().setIdentity()
             else:
                 goal().setYaw(0.0)

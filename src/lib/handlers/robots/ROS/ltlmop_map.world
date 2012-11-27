@@ -7,7 +7,7 @@
       <shadows enabled="false"/>
     </scene>
 
-    <physics type="ode">
+    <physics type="ode" update_rate="1000">
       <gravity xyz="0 0 -9.8"/>
       <ode>
         <solver type="quick" dt="0.001" iters="10" sor="1.3"/>

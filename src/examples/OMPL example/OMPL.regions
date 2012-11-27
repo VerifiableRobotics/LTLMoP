@@ -22,6 +22,7 @@ Regions: # Stored as JSON string
             0
         ], 
         "holeList": [], 
+        "height": 0, 
         "points": [
             [
                 0, 
@@ -74,6 +75,7 @@ Regions: # Stored as JSON string
             255
         ], 
         "holeList": [], 
+        "height": 0, 
         "points": [
             [
                 0, 
@@ -106,6 +108,7 @@ Regions: # Stored as JSON string
             240
         ], 
         "holeList": [], 
+        "height": 10.0, 
         "points": [
             [
                 0, 
@@ -154,6 +157,7 @@ Regions: # Stored as JSON string
             0
         ], 
         "holeList": [], 
+        "height": 0, 
         "points": [
             [
                 135, 
@@ -206,6 +210,7 @@ Regions: # Stored as JSON string
             0
         ], 
         "holeList": [], 
+        "height": 0, 
         "points": [
             [
                 0, 
@@ -258,6 +263,7 @@ Regions: # Stored as JSON string
             0
         ], 
         "holeList": [], 
+        "height": 0, 
         "points": [
             [
                 0, 

@@ -29,8 +29,8 @@ r7 = p2
 r1 = p8
 r2 = p7
 r3 = p6
-others = 
 r8 = p1
+others = 
 
 Spec: # Specification in structured English
 visit r1
