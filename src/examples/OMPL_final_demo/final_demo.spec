@@ -5,6 +5,7 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+inASL, 1
 
 CompileOptions:
 convexify: False
@@ -19,23 +20,28 @@ RegionFile: # Relative path of region description file
 final_demo.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
+present_delivered, 1
 
 
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-r6 = p3
-r7 = p2
-r1 = p8
-r2 = p7
-r3 = p6
-r8 = p1
+Rovaniemi = p5
+Cornell = p3
+Atlantic_Ocean = p2
 others = 
+NYC = p4
+ASL = p1
 
 Spec: # Specification in structured English
-visit r1
-visit r3
-visit r8
-visit r6
-visit r7
+Robot starts in Rovaniemi with false
+
+inASL is set on ASL and reset on false
+
+if you are not activating inASL then visit Atlantic_Ocean
+if you are not activating inASL then visit NYC
+if you are not activating inASL then visit Cornell
+if you are not activating inASL then visit ASL
+
+if you are sensing present_delivered then go to Rovaniemi
 

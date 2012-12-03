@@ -132,9 +132,8 @@ class motionControlHandler:
         
         # getting raw region inputs from user. To be used for 3D path planning
         self.original_regions = self.proj.loadRegionFile()
-        #print self.original_regions.filename
-        print "MAXHEIGHT:" +str(self.original_regions.getMaximumHeight())
-        #print self.proj.rfi.filename
+        if self.system_print is True:
+            print "MAXHEIGHT:" +str(self.original_regions.getMaximumHeight())
         
         # Information about the maximum height in z direction
         self.maxHeight = self.original_regions.getMaximumHeight()
@@ -146,28 +145,18 @@ class motionControlHandler:
                 self.map['polygon'][region.name] -= self.createRegionPolygon(region,n)
         
         # map the names back to the old original names specified by the user  
-        for rname, rlist in self.proj.regionMapping.iteritems():
-            #print rname,rlist[0]  
+        for rname, rlist in self.proj.regionMapping.iteritems(): 
             self.map['original_name'][rlist[0]] = rname
             #store the height of the regions
             for region in self.original_regions.regions:
                 if region.name.lower() == rname.lower():
-                    self.map['height'][rlist[0]]  = region.height
-                    
-        # ****** only substract.. never add the region.. so obstacle in the middle will be taken care of   
+                    self.map['height'][rlist[0]]  = region.height 
         
         self.original_map = {'polygon':{},'height':{},'isObstacle':{}}   
         for region in self.original_regions.regions:
             self.original_map['polygon'][region.name] = self.createRegionPolygon(region)
             self.original_map['height'][region.name]  = region.height
             self.original_map['isObstacle'][region.name] = region.isObstacle
-        """   
-        if self.system_print is True:
-            print self.map
-            for region in self.original_regions.regions:
-                print "name: "+ str(region.name) + " isObstacle:" +str(region.isObstacle) + " height:" +str(region.height)
-            print self.original_map
-        """
         
         # building the planner dictionary
         self.planner_dictionary = {'G':{},'C':{}}
@@ -191,15 +180,14 @@ class motionControlHandler:
             self.radius = 0.15*1.2
         elif self.system == 2:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
-            self.radius = self.ROSInitHandler.robotPhysicalWidth/2
+            self.radius = self.ROSInitHandler.robotPhysicalWidth/2*2   ###2
             if self.ROSInitHandler.modelName == 'quadrotor':
-                self.height = 0.30 #(m) height of the robot
+                self.height = 0.40*1.2 #(m) height of the robot
         elif self.system == 3:
             self.radius = 5
             self.height = 0.30     ########### CHANGE TO BE DELETED
         elif self.system == 4:
             self.radius = 0.15
-        
 
         if self.plotting == True: 
             app = _MyTkApp()
@@ -211,6 +199,9 @@ class motionControlHandler:
             self.BoundaryMaxMin = self.all.boundingBox()  #0-3:xmin, xmax, ymin and ymax          
             self.plotMap()     
             self.setPlotLimitXYZ()
+        
+        self.current_reg = None
+        self.next_reg    = None
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
@@ -219,6 +210,8 @@ class motionControlHandler:
         """
         # Find our current configuration
         pose = self.pose_handler.getPose()
+        self.current_reg = current_reg
+        self.next_reg    = next_reg
         
         if self.plotting == True:
             
@@ -259,18 +252,13 @@ class motionControlHandler:
             if self.Space_Dimension == 3:
                 self.nextRegionPoly    = self.original_map['polygon'][self.map['original_name'][self.proj.rfi.regions[next_reg].name]]
                 self.currentRegionPoly = self.original_map['polygon'][self.map['original_name'][self.proj.rfi.regions[current_reg].name]]
-                """
-                ############### CAN BE DELETED LATER)
-                self.plotPoly(self.nextRegionPoly,'r')
-                print "next region:" +str(self.nextRegionPoly)
-                self.plotPoly(self.currentRegionPoly,'b')
-                plt.show()
-                """
                 self.nextAndcurrentRegionPoly = self.nextRegionPoly+self.currentRegionPoly
             else:
                 self.nextRegionPoly    = self.map['polygon'][self.proj.rfi.regions[next_reg].name]
                 self.currentRegionPoly = self.map['polygon'][self.proj.rfi.regions[current_reg].name]
                 self.nextAndcurrentRegionPoly = self.nextRegionPoly+self.currentRegionPoly
+            #just to make sure a path can be generated
+            self.nextAndcurrentRegionPoly += Polygon.Shapes.Circle(self.radius*2,(pose[0],pose[1]))
             
             if self.system_print == True:
                 print "next Region is " + str(self.proj.rfi.regions[next_reg].name)
@@ -313,10 +301,7 @@ class motionControlHandler:
                     print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.proj.rfi.regions[current_reg].name, self.proj.rfi.regions[next_reg].name)
                     
             self.OMPLpath = self.plan(goalPoints,self.proj.rfi.regions[current_reg].name,self.proj.rfi.regions[next_reg].name,0) 
-            self.currentState = 1
-            print "Going to generate velocity"
-            #print OMPLpath
-                
+            self.currentState = 1          
             
         # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
         if self.Space_Dimension == 3:
@@ -374,25 +359,15 @@ class motionControlHandler:
             print (OMPLpath.getSolutionPath().getState(self.currentState))[0]   # x-coordinate of the current state  
         """ 
         if self.Space_Dimension == 3:    
-            #print (OMPLpath.getSolutionPath().getState(self.currentState))[0]
-            
-            #dis_cur = distance between current position and the next point
-            #dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
             dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY(),(OMPLpath.getSolutionPath().getState(self.currentState)).getZ()))- pose
 
             if norm(dis_cur) < 1.5*self.radius:         # go to next point
-                #print self.currentState == OMPLpath.getSolutionPath().getStateCount()
-                #print "self.currentState: " + str(self.currentState)
-                #print "OMPLpath.getSolutionPath().getStateCount(): " + str(OMPLpath.getSolutionPath().getStateCount())
                 if not (self.currentState+1) == OMPLpath.getSolutionPath().getStateCount():
-                    #print "adding current state number"
                     self.currentState = self.currentState + 1
-                    #dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState))[0],(OMPLpath.getSolutionPath().getState(self.currentState))[1]))- pose
                     dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY(),(OMPLpath.getSolutionPath().getState(self.currentState)).getZ()))- pose
-                    #print "get new distance"
             
             Vel = zeros([3,1])
-            Vel[0:3,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
+            Vel[0:3,0] = dis_cur/norm(dis_cur)*0.3              #TUNE THE SPEED LATER
             
         else:
             dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose[0:2]
@@ -477,11 +452,9 @@ class motionControlHandler:
         """
         if bool(c):
             for i in range(len(c)):
-                #toPlot = Polygon.Polygon(c.contour(i))
                 toPlot = Polygon.Polygon(c.contour(i)) & self.all
                 if bool(toPlot):
                     for j in range(len(toPlot)):
-                        #BoundPolyPoints = asarray(PolyUtils.pointList(toPlot.contour(j)))
                         BoundPolyPoints = asarray(PolyUtils.pointList(Polygon.Polygon(toPlot.contour(j))))
                         if self.operate_system == 2:
                             self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
@@ -511,17 +484,8 @@ class motionControlHandler:
         sleep(.001)
         # Valid states satisfy the following constraints:
         # inside the current region and the next region   
-        #print "state: " + str(state)
-        #print "state.getX(): " + str(state.getX())
         if self.Space_Dimension == 3:
-            """
-            # check if the robot is in the region, below the maxHeight and above 0
-            #print "xy:"+ str(self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY())))) + " top:" + str((state.getZ()+self.height) < self.maxHeight) + " bottom: " + str((state.getZ()-self.height) > 0 )
-            #self.ax.plot([state.getX()],[state.getY()],[state.getZ()],'ro')
-            #self.setPlotLimitXYZ()
-            #self.ax.get_figure().canvas.draw()
-            return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY()))) and (state.getZ()+self.height/2) < self.maxHeight and (state.getZ()-self.height/2) > 0
-            """
+
             region_considered = Polygon.Polygon(self.nextAndcurrentRegionPoly)
             bottom = state.getZ()-self.height/2  # bottom of the robot
             for i, name in enumerate(self.original_map['polygon']):
@@ -529,19 +493,27 @@ class motionControlHandler:
                     if self.original_map['height'][name] >= bottom:
                         region_considered -=self.original_map['polygon'][name]
             
-            return region_considered.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY()))) and (state.getZ()+self.height/2) < self.maxHeight and (state.getZ()-self.height/2) > 0
+            state_polygon = PolyShapes.Circle(self.radius,(state.getX(),state.getY()))
+            current_region = self.proj.rfi.regions[self.current_reg].name
+            next_region    = self.proj.rfi.regions[self.next_reg].name
+            if self.currentRegionPoly.covers(state_polygon):
+                height = self.map['height'][current_region]
+            elif self.nextRegionPoly.covers(state_polygon):
+                height = self.map['height'][next_region]
+            else:
+                height = min(self.map['height'][current_region],self.map['height'][next_region])           
+            
+            return region_considered.covers(state_polygon) and (state.getZ()+self.height/2) < height and (state.getZ()-self.height/2) > 0
         else: 
             return self.nextAndcurrentRegionPoly.covers(PolyShapes.Circle(self.radius,(state.getX(),state.getY())))
              
     
     # This function generates control space needed information
     def propagate(self, start, control, duration, state):
-        # control[0] = velocity
-        # control[1] = omega
-        # duration  = setPropagationStepSize (in plan)
-        print >>sys.__stdout__,"control[0]: " + str(control[0])
-        print >>sys.__stdout__,"control[1]: " + str(control[1])
-        print >>sys.__stdout__,"duration: " + str(duration)
+        if self.system_print is True:
+            print >>sys.__stdout__,"control[0]: " + str(control[0])
+            print >>sys.__stdout__,"control[1]: " + str(control[1])
+            print >>sys.__stdout__,"duration: " + str(duration)
         state.setX( start.getX() + control[0] * duration * cos(start.getYaw()) )
         state.setY( start.getY() + control[0] * duration * sin(start.getYaw()) )
         state.setYaw(start.getYaw() + control[1] * duration)
@@ -581,9 +553,11 @@ class motionControlHandler:
             cspace = oc.RealVectorControlSpace(space, self.Space_Dimension)
 
             # set the bounds for the control space
-            cbounds = ob.RealVectorBounds(self.Space_Dimension)            
-            cbounds.setLow(0,-max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/25)
-            cbounds.setHigh(0,max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/25)
+            cbounds = ob.RealVectorBounds(self.Space_Dimension) 
+            cbounds.setLow(0,0)    
+            cbounds.setHigh(0,max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/100)       
+            #cbounds.setLow(0,-max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/25)
+            #cbounds.setHigh(0,max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/25)
             cbounds.setLow(1,-pi/5)
             cbounds.setHigh(1,pi/5)
             cspace.setBounds(cbounds) 
@@ -607,50 +581,35 @@ class motionControlHandler:
         # create a start state
         start = ob.State(space)
         pose = self.pose_handler.getPose()  #x,y,w,(z if using ROS quadrotor)
-        if not self.currentRegionPoly.covers(PolyShapes.Circle(self.radius,(pose[0],pose[1]))):
-            print "going to use last goal state as the start state."
-            pose[0] = (self.OMPLpath.getSolutionPath().getState(self.OMPLpath.getSolutionPath().getStateCount()-1)).getX()
-            pose[1] = (self.OMPLpath.getSolutionPath().getState(self.OMPLpath.getSolutionPath().getStateCount()-1)).getY()
         start().setX(pose[0]) 
         start().setY(pose[1])
         if self.Space_Dimension == 2:
-            start().setYaw(0) #pose[2]
+            start().setYaw(pose[2]) #
+            #start().setYaw(0) #pose[2]
         else:
-            start().setZ(1.5)            ############ CHANGE!!!!
-            #start().setZ(pose[3])
+            start().setZ(pose[3])
             start().rotation().setIdentity()
-        """
-        start[0] = pose[0]
-        start[1] = pose[1]
-        """
-        print start()
+        
+        if self.system_print is True and self.Space_Dimension == 3:
+            print "start:" + str(start().getX())+","+str(start().getY()) +"," + str(start().getZ())
+            print goalPoints
         
         # create goal states
-        
-        print goalPoints
         goalStates = ob.GoalStates(ss.getSpaceInformation())
         for i in range(shape(goalPoints)[1]):
             goal = ob.State(space)
             goal().setX(goalPoints[0,i])
             goal().setY(goalPoints[1,i])
             if self.Space_Dimension == 3:
-                """
-                # pick a random height 
-                z_goalPoint = random.uniform(0+self.height, self.maxHeight-self.height)
-                goal().setZ(z_goalPoint)           
-                #goal().setZ(self.maxHeight/2)
-                """
-                print current_region,next_region
-                print self.map['height'][current_region],self.map['height'][next_region]
+                if self.system_print is True:
+                    print current_region,next_region
+                    print self.map['height'][current_region],self.map['height'][next_region]
                 z_goalPoint = min(self.map['height'][current_region]/2,self.map['height'][next_region]/2)
                 goal().setZ(z_goalPoint)
                 goal().rotation().setIdentity()
             else:
                 goal().setYaw(0.0)
-            """
-            goal[0] = goalPoints[0,i]
-            goal[1] = goalPoints[1,i]
-            """
+
             if self.plotting == True:
                 if self.Space_Dimension == 3:
                     self.ax.plot([goalPoints[0,i]],[goalPoints[1,i]],[z_goalPoint],'ro')
@@ -660,34 +619,11 @@ class motionControlHandler:
                 self.ax.get_figure().canvas.draw()
                 
             goalStates.addState(goal)
-        print goalStates
-        
-        """
-        goalStates = ob.GoalStates(ss.getSpaceInformation())
-        NextRegionCenter = self.nextRegionPoly.center()
-        # check if the robot is covered by the next reion when it stands in the middle of the region
-        if self.nextRegionPoly.covers(PolyShapes.Circle(self.radius,NextRegionCenter)):
-            setAsGoal = NextRegionCenter
-            if self.system_print == True:
-                print "Goal point is the center of the next region"
-        else:   # find a random point in the region that the robot can be covered by when it stands there
-            goalPointInsideNextRegion = False
-            while not goalPointInsideNextRegion:
-                sample = self.nextRegionPoly.sample(random.random)
-                if self.nextRegionPoly.covers(PolyShapes.Circle(self.radius,sample)):
-                    setAsGoal = sample
-                    goalPointInsideNextRegion = True
-                    if self.system_print == True:
-                        print "Goal point is a random point inside the next region: " + str(setAsGoal) 
-        goal = ob.State(space)
-        goal[0] = setAsGoal[0]
-        goal[1] = setAsGoal[1]
-        goalStates.addState(goal)   
-        """
-
+            
+        if self.system_print is True:
+            print goalStates        
 
         # set the start and goal states;
-        #ss.setStartAndGoalStates(start, goal)
         ss.setGoal(goalStates)
         ss.setStartState(start)
 
@@ -703,18 +639,18 @@ class motionControlHandler:
             if not self.planner == 'PRM':
                 #pass
                 planner.setRange(self.radius*2)
-                print "planner.getRange():" + str(planner.getRange())
+                if self.system_print is True:
+                    print "planner.getRange():" + str(planner.getRange())
                 #if not self.planner == 'RRTConnect':
                 #    planner.setGoalBias(0.5)
             
         else:
             # (optionally) set propagation step size
             si.setPropagationStepSize(1)  #actually is the duration in propagate
-            #si.setMinMaxControlDuration(3,3) # is the no of steps taken with the same velocity and omega
-            print "radius: " +str(self.radius)
-            print "si.getPropagationStepSize():" + str(si.getPropagationStepSize())  
-            #print "si.getMinControlDuration():" + str(si.getMinControlDuration())  
-            #print "si.getMaxControlDuration():" + str(si.getMaxControlDuration())       
+            si.setMinMaxControlDuration(3,3) # is the no of steps taken with the same velocity and omega
+            if self.system_print is True:
+                print "radius: " +str(self.radius)
+                print "si.getPropagationStepSize():" + str(si.getPropagationStepSize())    
             planner.setGoalBias(0.5)
         ss.setup()
         
@@ -726,13 +662,6 @@ class motionControlHandler:
             print("Found solution:")
             # print the path to screen
             print >>sys.__stdout__,(ss.getSolutionPath())
-            #print(ss.getSolutionPath().getStates())
-            #print(ss.getSolutionPath().getState(0)).getX()
-            #print(ss.getSolutionPath().getState(0))[0]
-            #print(ss.getSolutionPath().getState(0))[1]
-            #print(ss.getSolutionPath().getStateCount())
-            #PlannerData = ob.PlannerData(si)
-            #print "get planner data: " + str(ss.getPlannerData(PlannerData))
         else:
             print("No solution found")
         
@@ -742,29 +671,21 @@ class motionControlHandler:
             self.ax.set_xlabel('x')
             self.ax.set_ylabel('y')
             for i in range(ss.getSolutionPath().getStateCount()-1):
-                #print i
-    
-                """            
-                plt.plot(((ss.getSolutionPath().getStates())[i][0],(ss.getSolutionPath().getStates())[i+1][0]),((ss.getSolutionPath().getStates())[i][1],(ss.getSolutionPath().getStates())[i+1][1]),'b')
-                plt.figure(1).canvas.draw()
-                """
+                
                 if self.Space_Dimension == 3:
                     self.ax.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),((ss.getSolutionPath().getState(i)).getZ(),(ss.getSolutionPath().getState(i+1)).getZ()),'b')
-                    self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i)).getZ(), i,fontsize=12)
+                    ro=Polygon.Shapes.Circle (self.radius,((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY()))
+                    #self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i)).getZ(), i,fontsize=12)
+                    self.plotPoly(ro,'r')     
                     
+                      
                 else:
                     self.ax.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),0,'b')
-                    self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),0, i,fontsize=12)
-                
-            #print [(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX()]
-            if self.Space_Dimension == 3:
-                self.ax.text((ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getY(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getZ(), ss.getSolutionPath().getStateCount()-1, fontsize=12)
-            else:
-                self.ax.text((ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getX(),(ss.getSolutionPath().getState(ss.getSolutionPath().getStateCount()-1)).getY(),0, ss.getSolutionPath().getStateCount()-1, fontsize=12)
+                    #self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),0, i,fontsize=12)
+
             self.setPlotLimitXYZ()
             #self.ax.get_figure().canvas.draw()
         
-        #print ss
         return ss
 
 class _MyTkApp(threading.Thread):
@@ -774,9 +695,9 @@ class _MyTkApp(threading.Thread):
         threading.Thread.__init__(self)
         
     def getSharedData(self):
-		# A dictionary of any objects that will need to be shared with other handlers
-		return self    
-		
+        # A dictionary of any objects that will need to be shared with other handlers
+        return self    
+        
     def _quit(self):
         self.root.quit()     # stops mainloop
         self.root.destroy()  # this is necessary on Windows to prevent
@@ -785,12 +706,6 @@ class _MyTkApp(threading.Thread):
         self.root=Tk.Tk() #root
         self.root.wm_title("Embedding in TK")
      
-        #self.ax = self.fig.gca(projection='3d')
-        #t = arange(0.0,3.0,0.01)
-        #s = sin(2*pi*t)
-        #self.ax.plot(t,s,1)
-        
-        # a tk.DrawingArea
         canvas = FigureCanvasTkAgg(self.fig, master=self.root)
         self.ax.mouse_init()
         canvas.show()
@@ -802,60 +717,6 @@ class _MyTkApp(threading.Thread):
         
         button = Tk.Button(master=self.root, text='Quit', command=self._quit)
         button.pack(side=Tk.BOTTOM)
-        #self.s = Tkinter.StringVar()
-        #self.s.set('Foo')
-        #l = Tkinter.Label(self.root,textvariable=self.s)
-        #l.pack()
+
         self.root.mainloop()
 
-                    
-## @cond IGNORE
-
-# This is a problem-specific sampler that automatically generates valid
-# states; it doesn't need to call SpaceInformation::isValid. This is an
-# example of constrained sampling. If you can explicitly describe the set valid
-# states and can draw samples from it, then this is typically much more
-# efficient than generating random samples from the entire state space and
-# checking for validity.
-class _MyValidStateSampler(ob.ValidStateSampler):
-    def __init__(self, si):
-        super(_MyValidStateSampler, self).__init__(si)
-        self.name_ = "my sampler"
-        self.rng_ = ou.RNG()
-
-    # Generate a sample in the valid part of the R^2 state space.
-    # Valid states satisfy the following constraints:
-    # -1<= x,y,z <=1
-    # if .25 <= z <= .5, then |x|>.8 and |y|>.8
-    def sample(self, state):
-        z = self.rng_.uniformReal(-1,1)
-
-        if z>.25 and z<.5:
-            x = self.rng_.uniformReal(0,1.8)
-            y = self.rng_.uniformReal(0,.2)
-            i = self.rng_.uniformInt(0,3)
-            if i==0:
-                state[0]=x-1
-                state[1]=y-1
-            elif i==1:
-                state[0]=x-.8
-                state[1]=y+.8
-            elif i==2:
-                state[0]=y-1
-                state[1]=x-1
-            elif i==3:
-                state[0]=y+.8
-                state[1]=x-.8
-        else:
-            state[0] = self.rng_.uniformReal(-1,1)
-            state[1] = self.rng_.uniformReal(-1,1)
-        state[2] = z
-        return True
-
-if __name__ == '__main__':
-    print("Using default uniform sampler:")
-    motionControlHandler.plan(0)
-    print("\nUsing obstacle-based sampler:")
-    plan(1)
-    print("\nUsing my sampler:")
-    plan(2)

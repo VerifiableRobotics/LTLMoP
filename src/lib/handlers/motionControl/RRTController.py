@@ -239,14 +239,14 @@ class motionControlHandler:
             """
 
         # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
-        #self.Velocity = self.getVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E)
-        self.Node = self.getNode([pose[0], pose[1]], self.RRT_V,self.RRT_E)
+        self.Velocity = self.getVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E)
+        #self.Node = self.getNode([pose[0], pose[1]], self.RRT_V,self.RRT_E)
         self.previous_next_reg = next_reg
 
         # Pass this desired velocity on to the drive handler
-        #self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0], pose[2])
+        self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0], pose[2])
         ############### TO CHANGE#################################
-        self.drive_handler.setVelocity(self.Node[0,0], self.Node[1,0], pose[2])
+        #self.drive_handler.setVelocity(self.Node[0,0], self.Node[1,0], pose[2])
         RobotPoly = Polygon.Shapes.Circle(self.radius,(pose[0],pose[1]))
         
         # check if robot is inside the current region
