@@ -318,6 +318,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Colour(200, 200, 0))
 
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
+
+        #self.text_ctrl_spec.SetEOLMode(wx.stc.STC_EOL_LF)
         
         # Listen for changes to the text
         self.text_ctrl_spec.SetModEventMask(self.text_ctrl_spec.GetModEventMask() & ~(wx.stc.STC_MOD_CHANGESTYLE | wx.stc.STC_MOD_CHANGEMARKER))
@@ -376,7 +378,7 @@ class SpecEditorFrame(wx.Frame):
         end = e.GetPosition()          # this is the last character that needs styling
 
         # Move back to the beginning of the line because apparently we aren't guaranteed to process line-wise chunks
-        while start > 1 and self.text_ctrl_spec.GetCharAt(start-1) != "\n":
+        while start > 0 and chr(self.text_ctrl_spec.GetCharAt(start-1)) != "\n":
             start -= 1
 
         # Set everything to the default style
@@ -401,7 +403,7 @@ class SpecEditorFrame(wx.Frame):
 
         # Find comment lines
         text = self.text_ctrl_spec.GetTextRange(start,end)
-        for m in re.finditer("^#.*?\n", text, re.MULTILINE):
+        for m in re.finditer("^#.*?$", text, re.MULTILINE):
             self.text_ctrl_spec.StartStyling(start+m.start(), 31)
             self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_COMMENTLINE)
 
@@ -720,6 +722,8 @@ class SpecEditorFrame(wx.Frame):
         #####################################
 
         self.text_ctrl_spec.AppendText(self.proj.specText)
+        #self.text_ctrl_spec.ConvertEOLs(wx.stc.STC_EOL_LF)
+
         if self.proj.rfi is not None:
             self.updateFromRFI()
 
