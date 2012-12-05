@@ -1131,7 +1131,8 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        compiler = self.onMenuCompile(event, with_safety_aut=True)
+        #TODO: check to see if we need to recompile
+        compiler = self.onMenuCompile(event, with_safety_aut=False)
 
         # Redirect all output to the log
         redir = RedirectText(self,self.text_ctrl_log)
