@@ -107,6 +107,9 @@ class Automaton:
             print "Transitions: "
             for trans in state.transitions:
                 print trans.name
+                
+                
+                
 
     def updateOutputs(self, state=None):
         """
@@ -324,6 +327,72 @@ class Automaton:
         FILE.write('} \n')
         FILE.close()
 
+    def writeSMV(self, filename):
+        """
+        Write an SMV file so we can model check the synthesized automaton.
+        """
+
+        FILE = open(filename,"w")
+
+        # Write the header
+        FILE.write('MODULE main\n')
+        FILE.write('\tVAR\n')
+        state1 = self.states[1]
+        for key, val in state1.inputs.iteritems():
+            FILE.write("\t\t"+key+": boolean;\n")
+        for key, val in state1.outputs.iteritems():
+          FILE.write("\t\t"+key+": boolean;\n")
+        FILE.write("\t\t"+"rank : 0..10;\n")
+        FILE.write("\tINIT\n")
+        FILE.close()
+        cmd = "grep -v '[\[;-]' "+self.proj.getFilenamePrefix()+".ltl | grep -v next | grep -v \($ | sed -e 's/s\.//g' -e 's/e\.//g' >> "+filename 
+        os.system(cmd)      
+        
+        
+        # Write the transitions as a disjunction of conjunctions
+        FILE = open(filename,"a")
+        FILE.write("TRUE\n")
+        FILE.write("\tTRANS\n")
+        for state in self.states:
+            for nextState in state.transitions:
+                #FILE.write('\t'+ "&".join( map( lambda x: str(x[0] + " = " + str(x[1])), state.inputs.items())) + "&".join( map( lambda x: str(x[0] + " = " + str(x[1])), state.outputs.items() ) ) + "|" )
+                # Check the next state to figure out which inputs have to be on
+                FILE.write(' ((')
+                for key in state.inputs.keys():
+                    if state.inputs[key] == '1':
+                        FILE.write( key + ' & ')
+                    else:
+                        FILE.write( '!' + key + ' & ')                        
+                for key in state.outputs.keys():
+                    if state.outputs[key] == '1':
+                        FILE.write( key + ' & ')
+                    else:
+                        FILE.write( '!' + key + ' & ') 
+                FILE.write( "rank = " + state.rank + ' ) & ')
+                for key in nextState.inputs.keys():
+                    if nextState.inputs[key] == '1':
+                        FILE.write("next("+ key + ') & ')
+                    else:
+                        FILE.write( "! next("+ key + ') & ')                        
+                for key in nextState.outputs.keys():
+                    if nextState.outputs[key] == '1':
+                        FILE.write("next("+ key + ') & ')
+                    else:
+                        FILE.write( "! next("+ key + ') & ') 
+                FILE.write( "next(rank) = " + nextState.rank + ' & ')
+                FILE.write(' TRUE) | ')
+        FILE.write('FALSE')
+        FILE.write('\n')
+        FILE.write("\tLTLSPEC\n")
+        FILE.close()
+        cmd = "cat " + self.proj.getFilenamePrefix()+".ltl | sed -e 's/\[\]/G /g' -e 's/^<^>/F /g'  -e 's/next/X /g' -e 's/s\.//g' -e 's/e\.//g' -e '0,/;/s/;/-^>/' -e '/LTLSPEC/ d' -e '/--/d' >> " + filename
+        os.system(cmd)
+        
+
+        
+
+        # Write the transitions with the input labels (only inputs that are true)
+    
     def findTransitionableStates(self, initial=False):
         """
         Returns a list of states that we could conceivably transition to, given
