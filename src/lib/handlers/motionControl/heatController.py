@@ -87,29 +87,27 @@ class motionControlHandler:
         # Let's go get a controller!
 
         if last:
-            transFace = None
+            transFaceIdx = None
         else:
             # Find a face to go through
             # TODO: Account for non-determinacy?
             # For now, let's just choose the largest face available, because we are probably using a big clunky robot
-            max_magsq = 0
-            for tf in self.rfi.transitions[current][next]:
-                magsq = (tf[0].x - tf[1].x)**2 + (tf[0].y - tf[1].y)**2
-                if magsq > max_magsq:
-                    pt1, pt2 = tf
-                    max_magsq = magsq
-            
-            transFace = None
-            # Find the index of this face
             # TODO: Why don't we just store this as the index?
-            for i, face in enumerate([x for x in self.rfi.regions[current].getFaces()]):
-                # Account for both face orientations...
-                if (pt1 == face[0] and pt2 == face[1]) or (pt1 == face[1] and pt2 == face[0]):
-                    transFace = i
-                    break
-            
-            if transFace is None:
-                print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.rfi.regions[current].name, self.rfi.regions[next].name)
+            transFaceIdx = None
+            max_magsq = 0
+            for i, face in enumerate(self.rfi.regions[current_reg].getFaces()):
+                if face not in self.rfi.transitions[current_reg][next_reg]:
+                    continue
+
+                tf_pta, tf_ptb = face
+                tf_vector = tf_ptb - tf_pta
+                magsq = (tf_vector.x)**2 + (tf_vector.y)**2
+                if magsq > max_magsq:
+                    transFaceIdx = i
+                    max_magsq = magsq
+                
+            if transFaceIdx is None:
+                print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.rfi.regions[current_reg].name, self.rfi.regions[next_reg].name)
          
         # Transform the region vertices into real coordinates
         pointArray = [x for x in self.rfi.regions[current].getPoints()]
@@ -117,7 +115,7 @@ class motionControlHandler:
         vertices = mat(pointArray).T 
         
         # Get a controller function
-        controller = heatControllerHelper.getController(vertices, transFace, last)
+        controller = heatControllerHelper.getController(vertices, transFaceIdx, last)
 
         # Cache it in
         cache[current][next] = controller

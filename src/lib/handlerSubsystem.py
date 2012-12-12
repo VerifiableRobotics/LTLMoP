@@ -790,6 +790,7 @@ class RobotFileParser:
 
         # load handler configs
         for key,val in robot_data.iteritems():
+            fullval = "".join(val).strip()
             if key.endswith('Handler'):
                 # find which type of the handler
                 handler_type = None
@@ -813,7 +814,7 @@ class RobotFileParser:
                             handlerList = self.handler_dic[handler_type][robotFolder]
                         else:
                             handlerParser = HandlerParser(self.handler_path)
-                            fileName = '.'.join(['handlers','robots',robotFolder,val[0].split('(')[0]])
+                            fileName = '.'.join(['handlers','robots',robotFolder,fullval.split('(')[0]])
                             if handler_type in ['init','locomotionCommand']:
                                 onlyLoadInit = True
                             else:
@@ -830,16 +831,16 @@ class RobotFileParser:
                         handlerList = self.handler_dic[handler_type]
                     else:
                         handlerParser = HandlerParser(self.handler_path)
-                        fileName = '.'.join(['handlers',handler_type,val[0].split('(')[0]])
+                        fileName = '.'.join(['handlers',handler_type,fullval.split('(')[0]])
                         handlerList = [handlerParser.parseHandlers(fileName,handler_type,True)]
 
                 # copy the handler object from the dictionary
                 for handlerObj in handlerList:
-                    if handlerObj is not None and handlerObj.name == val[0].split('(')[0]:
+                    if handlerObj is not None and handlerObj.name == fullval.split('(')[0]:
                         robotObj.handlers[handler_type] = deepcopy(handlerObj)
 
                         # overwrite the parameter values
-                        para_list = [x.strip() for x in val[0].split('(')[1].replace(')','').split(',')]
+                        para_list = [x.strip() for x in fullval.split('(')[1].replace(')','').split(',')]
 
                         for methodObj in robotObj.handlers[handler_type].methods:
                             if methodObj.name == '__init__':
@@ -997,8 +998,16 @@ class ConfigFileParser:
         return configObj
 
     def saveAllConfigFiles(self):
+        # save all config objects
+        savedFileName = []
         for configObj in self.configs:
             self.saveConfigFile(configObj)
+            savedFileName.append(configObj.name.replace(' ','_'))
+        # remove delected files
+        for configFile in os.listdir(self.config_path):
+            if configFile.split('.')[0] not in savedFileName:
+                os.remove(os.path.join(self.config_path,configFile))
+
 
     def saveConfigFile(self,configObj,fileName=''):
         """

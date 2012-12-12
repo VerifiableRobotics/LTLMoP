@@ -9,7 +9,7 @@ import sys, os, re, copy
 import numpy
 
 # Climb the tree to find out where we are
-p = os.path.abspath(sys.argv[0])
+p = os.path.abspath(__file__)
 t = ""
 while t != "src":
     (p, t) = os.path.split(p)
@@ -24,22 +24,6 @@ import mapRenderer
 
 # begin wxGlade: extracode
 # end wxGlade
-
-class SysDummySensorHandler:
-    def __init__(self, parent):
-        self.parent = parent
-
-    def __getitem__(self, name):
-        if name == "initializing_handler":
-            return {}
-        else:
-            return compile("self.sensor_handler.getSensorValue('%s')" % name, "<string>", "eval")
-
-    def __contains__(self, name):
-        return True
-
-    def getSensorValue(self, name):
-        return self.parent.sensorStates[name]
 
 class EnvDummySensorHandler:
     def __init__(self, parent):
@@ -65,22 +49,6 @@ class EnvDummySensorHandler:
             return bs[bitnum]
         else:
             return self.parent.actuatorStates[name]
-
-class SysDummyActuatorHandler:
-    def __init__(self):
-        pass
-
-    def __getitem__(self, name):
-        if name == "initializing_handler":
-            return {}
-        else:
-            return compile("self.actuator_handler.setActuator('%s', new_val)" % name, "<string>", "eval")
-
-    def __contains__(self, name):
-        return True
-
-    def setActuator(self, name, val):
-        pass
 
 class EnvDummyActuatorHandler:
     def __init__(self, parent):
@@ -162,26 +130,15 @@ class MopsyFrame(wx.Frame):
 
         self.proj.determineEnabledPropositions()
 
-        # Load in automatons
-        self.sysDummySensorHandler = SysDummySensorHandler(self)
+        # Load in counter-strategy automaton
         self.envDummySensorHandler = EnvDummySensorHandler(self)
-        self.sysDummyActuatorHandler = SysDummyActuatorHandler()
         self.envDummyActuatorHandler = EnvDummyActuatorHandler(self)
         self.dummyMotionHandler = DummyMotionHandler()
         self.proj.sensor_handler, self.proj.actuator_handler, self.proj.h_instance = [None]*3
 
-        print "Loading safety constraints..."
-        self.safety_aut = fsa.Automaton(self.proj)
-        self.safety_aut.sensor_handler = self.sysDummySensorHandler
-        self.safety_aut.actuator_handler = self.sysDummyActuatorHandler
-        self.safety_aut.motion_handler = self.dummyMotionHandler
-
-        self.safety_aut.loadFile(self.proj.getFilenamePrefix() + "_safety.aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
-
         print "Loading environment counter-strategy..."
         self.num_bits = int(numpy.ceil(numpy.log2(len(self.proj.rfi.regions))))  # Number of bits necessary to encode all regions
         region_props = ["bit" + str(n) for n in xrange(self.num_bits)]
-
 
         self.env_aut = fsa.Automaton(self.proj)
         self.env_aut.sensor_handler = self.envDummySensorHandler
@@ -210,13 +167,8 @@ class MopsyFrame(wx.Frame):
             if re.match('^bit\d+$', k): continue
             self.actuatorStates[k] = int(v)
 
-        # Figure out what region the system should start from (ripped from regionFromState)
-        self.current_region = 0
-        for bit in range(self.num_bits):
-            if (int(self.env_aut.current_state.inputs["bit" + str(bit)]) == 1):
-                # bit0 is MSB
-                self.current_region += int(2**(self.num_bits-bit-1))
-
+        # Figure out what region the system should start from
+        self.current_region = self.regionFromEnvState(self.env_aut.current_state)
         self.dest_region = self.current_region
 
         # Create all the sensor/actuator buttons
@@ -224,12 +176,8 @@ class MopsyFrame(wx.Frame):
         self.act_buttons = [] # This will later hold our buttons
         self.cust_buttons = [] # This will later hold our buttons
 
-        actprops = copy.deepcopy(self.actuatorStates)
-        for s in self.proj.all_customs:
-            del(actprops[s])
-        custprops = copy.deepcopy(self.actuatorStates)
-        for s in self.proj.enabled_actuators:
-            del(custprops[s])
+        actprops = dict((k,v) for k,v in self.actuatorStates.iteritems() if k in self.proj.enabled_actuators)
+        custprops = dict((k,v) for k,v in self.actuatorStates.iteritems() if k in self.proj.all_customs)
 
         self.populateToggleButtons(self.sizer_env, self.env_buttons, self.sensorStates)
         self.populateToggleButtons(self.sizer_act, self.act_buttons, actprops)
@@ -246,7 +194,7 @@ class MopsyFrame(wx.Frame):
         colheaders = self.proj.enabled_sensors + ["Region"] + self.proj.enabled_actuators + self.proj.all_customs
         self.history_grid.CreateGrid(0,len(colheaders))
         for i,n in enumerate(colheaders):
-            self.history_grid.SetColLabelValue(i," " + n + " ")
+            self.history_grid.SetColLabelValue(i, " " + n + " ")
             self.history_grid.SetColSize(i,-1)  # Auto-size
         self.history_grid.EnableEditing(False)
 
@@ -254,42 +202,54 @@ class MopsyFrame(wx.Frame):
         # Put initial condition into log
         self.appendToHistory()
 
-        # Find the appropriate starting state in the sys safety aut
-        init_outputs = [o for o in self.actuatorStates.keys() if (self.actuatorStates[o] == 1)]
-
-        if self.safety_aut.chooseInitialState(self.current_region, init_outputs) is None:
-            print "Counterstrategy initial state not found in system safety automaton. Something's off."
-            return
-
         # Start initial environment move
         # All transitionable states have the same env move, so just use the first
         if (len(self.env_aut.current_state.transitions) >=1 ):
             self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
 
-        self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
+        self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.current_region))
         self.applySafetyConstraints()
 
+    def regionFromEnvState(self, state):
+        # adaptation of fsa.py's regionFromState, to work with env_aut
+        r_num = 0
+        for bit in range(self.num_bits):
+            if (int(state.inputs["bit" + str(bit)]) == 1):
+                # bit0 is MSB
+                r_num += int(2**(self.num_bits-bit-1))
+
+        return r_num
+
     def applySafetyConstraints(self):
+        # If there is no next state, this implies that the system has no possible move (including staying in place)
+        if len(self.env_aut.current_state.transitions[0].inputs) == 0:
+            self.label_violation.SetLabel("Checkmate: no possible system moves.")
+            for b in self.act_buttons + self.cust_buttons + [self.button_next]:
+                b.Enable(False)
+            self.regionsToHide = [r.name for r in self.proj.rfi.regions]
+
+            self.onResize() # Force map redraw
+            return
+
         # Determine transitionable regions
 
         goable = []
         goable_states = []
-        trans = self.safety_aut.findTransitionableStates()
 
         # Look for any transition states that agree with our current outputs (ignoring dest_region)
-        for s in trans:
+        for s in self.env_aut.current_state.transitions:
             okay = True
-            for k,v in s.outputs.iteritems():
+            for k,v in s.inputs.iteritems():
                 # Skip any "bitX" region encodings
                 if re.match('^bit\d+$', k): continue
                 if int(v) != int(self.actuatorStates[k]):
                     okay = False
                     break
             if okay:
-                goable.append(self.proj.rfi.regions[self.safety_aut.regionFromState(s)].name)
+                goable.append(self.proj.rfi.regions[self.regionFromEnvState(s)].name)
                 goable_states.append(s)
 
-        region_constrained_goable_states = [s for s in goable_states if (self.safety_aut.regionFromState(s) == self.dest_region)]
+        region_constrained_goable_states = [s for s in goable_states if (self.regionFromEnvState(s) == self.dest_region)]
         if region_constrained_goable_states == []:
             #print "Safety violation!"
             self.label_violation.SetLabel("Current move invalid under system constraints")
@@ -302,16 +262,11 @@ class MopsyFrame(wx.Frame):
 
         self.onResize() # Force map redraw
 
-        # If there is no next state, this implies that the system has no possible move (including staying in place)
-        if len(self.env_aut.current_state.transitions[0].transitions) == 0:
-            self.label_violation.SetLabel("Checkmate: no possible system moves.")
-            for b in self.act_buttons + self.cust_buttons + [self.button_next]:
-                b.Enable(False)
 
     def appendToHistory(self):
         self.history_grid.AppendRows(1)
         newvals = [self.sensorStates[s] for s in self.proj.enabled_sensors] + \
-                  [self.safety_aut.getAnnotatedRegionName(self.current_region)] + \
+                  [self.env_aut.getAnnotatedRegionName(self.current_region)] + \
                   [self.actuatorStates[s] for s in self.proj.enabled_actuators] + \
                   [self.actuatorStates[s] for s in self.proj.all_customs]
         lastrow = self.history_grid.GetNumberRows()-1
@@ -339,9 +294,9 @@ class MopsyFrame(wx.Frame):
             if region.objectContainsPoint(x, y) and region.name not in self.regionsToHide:
                 self.dest_region = i
                 if self.dest_region == self.current_region:
-                    self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.proj.rfi.regions.index(region)))
+                    self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.proj.rfi.regions.index(region)))
                 else:
-                    self.label_movingto.SetLabel("Move to region " + self.safety_aut.getAnnotatedRegionName(self.proj.rfi.regions.index(region)))
+                    self.label_movingto.SetLabel("Move to region " + self.env_aut.getAnnotatedRegionName(self.proj.rfi.regions.index(region)))
 
                 self.applySafetyConstraints()
                 break
@@ -423,7 +378,6 @@ class MopsyFrame(wx.Frame):
             else:
                 self.panel_1.PrepareDC(pdc)
 
-        self.panel_1.PrepareDC(dc)
         dc.BeginDrawing()
 
         # Draw background
@@ -509,18 +463,11 @@ class MopsyFrame(wx.Frame):
         self.appendToHistory()
         self.env_aut.runIteration()
 
-        # Find the new state in the sys safety aut (to check contraints in the next step)
-        init_outputs = [o for o in self.actuatorStates.keys() if (self.actuatorStates[o] == 1)]
-
-        if self.safety_aut.chooseInitialState(self.current_region, init_outputs) is None:
-            print "New state not found in system safety automaton. Something's off."
-            return
-
         ### Make environment move
 
         # All transitionable states have the same env move, so just use the first
         self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
-        self.label_movingto.SetLabel("Stay in region " + self.safety_aut.getAnnotatedRegionName(self.current_region))
+        self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.current_region))
         self.applySafetyConstraints()
 
         event.Skip()

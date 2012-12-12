@@ -16,11 +16,11 @@ from numpy import matrix
 
 
 class initHandler:
-    def __init__(self,proj,listenIP = '0.0.0.0',broadCastIP = '192.168.1.120',createPort=8865,beaglePort=8866,artagPort=8844,sonarPort=8833,buffer=1024):
+    def __init__(self,proj,listenIP = "0.0.0.0",broadCastIP = "192.168.1.120",createPort=8865,beaglePort=8866,artagPort=8844,sonarPort=8833,buffer=1024):
         """
         Initialization handler for iRobotCreate robot
         
-        listenIP (string): the ip address of the device that is currently running LTLMoP (default='0.0.0.0'_)
+        listenIP (string): the ip address of the device that is currently running LTLMoP (default="0.0.0.0")
         broadCastIP (string): The ip address of the iRobotCreate. Not sure? Log on to the Create router and checkout the ip address! (default='192.168.1.120')
         createPort (int): BeagleBoard's port for transferring commands directly to iCreate (default=8865)
         beaglePort (int): BeagleBoard's control port (default=8866)

@@ -1,84 +1,43 @@
 # This is a specification definition file for the LTLMoP toolkit.
 # Format details are described at the beginning of each section below.
-# Note that all values are separated by *tabs*.
-
-
-======== EXPERIMENT CONFIG 0 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0145090906457,-7.97493804517,-0.0163607845119,5.97177404282
-
-InitialRegion: # Initial region number
-0
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-playerstage.lab
-
-Name: # Name of the experiment
-PlayerStage
-
-RobotFile: # Relative path of robot description file
-pioneer_stage.robot
-
-
-======== EXPERIMENT CONFIG 1 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.00667619043562,0.519140956528,-0.00536700273334,2.25351186904
-
-InitialRegion: # Initial region number
-0
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-cornell_asl.lab
-
-Name: # Name of the experiment
-ASL
-
-RobotFile: # Relative path of robot description file
-pioneer_real.robot
 
 
 ======== SETTINGS ========
 
-Actions: # List of actions and their state (enabled = 1, disabled = 0)
-pick_up,0
-drop,1
-radio,0
-extinguish,0
+Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+pick_up, 1
+drop, 1
+radio, 0
+extinguish, 0
+
+CompileOptions:
+convexify: True
+fastslow: False
 
 Customs: # List of custom propositions
 carrying_item
 
 RegionFile: # Relative path of region description file
-unsynth.regions
+../firefighting/floorplan.regions
 
-Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-fire,1
-person,0
-hazardous_item,0
-
-currentExperimentName:
-ASL
+Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
+fire, 1
+person, 0
+hazardous_item, 1
 
 
 ======== SPECIFICATION ========
 
-RegionMapping:
+RegionMapping: # Mapping between region names and their decomposed counterparts
+living = p4
+porch = p3
+deck = p7
+others = 
+dining = p6
+bedroom = p8
+kitchen = p5
 
-living=p5
-deck=p8
-porch=p4
-dining=p19,p20
-bedroom=p9
-others=p10,p11,p12,p13,p14,p15,p16,p17,p18
-kitchen=p6
-
-Spec: # Specification in simple English
+Spec: # Specification in structured English
 #SIMPLE EXAMPLES OF EACH CASE OF UNSYNTHESIZABILITY:
 
 ##############################################
@@ -97,11 +56,11 @@ Spec: # Specification in simple English
 
 
 ##Multi-step unsatisfiability
-Env starts with false
-Robot starts with not drop
-If you activated drop then do not drop
-If you activated drop then do drop
-If you did not activate drop then do drop
+#Env starts with false
+#Robot starts with not drop
+#If you activated drop then do not drop
+#If you activated drop then do drop
+#If you did not activate drop then do drop
 
 ##############################################
 
@@ -147,7 +106,7 @@ If you did not activate drop then do drop
 #Env starts with false
 #Robot starts in deck
 #Visit porch
-#If you are sensing person then do not porch
+#If you are sensing fire then do not porch
 
 ##Environment liveness unrealizable
 #Env starts with false
@@ -156,5 +115,4 @@ If you did not activate drop then do drop
 #If you are sensing person then do not porch
 #Visit not person
 #If you were in deck then do person
-
 

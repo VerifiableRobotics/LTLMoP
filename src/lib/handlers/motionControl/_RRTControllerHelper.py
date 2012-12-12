@@ -9,7 +9,7 @@
 from numpy import *
 from scipy.linalg import norm
 from numpy.matlib import zeros
-import is_inside
+import __is_inside
 import time, sys,os
 import scipy as Sci
 import scipy.linalg

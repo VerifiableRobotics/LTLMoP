@@ -72,6 +72,7 @@ class sensorHandler:
 
         UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        UDPSock.settimeout(1200)
         try:
             UDPSock.bind(addr)
         except:
