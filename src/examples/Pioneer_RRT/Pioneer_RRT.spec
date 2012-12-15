@@ -5,13 +5,14 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+tuck_arm, 1
 
 CompileOptions:
 convexify: False
 fastslow: False
 
 CurrentConfigName:
-RRT with quadrotor
+RRT with ROS
 
 Customs: # List of custom propositions
 
@@ -19,6 +20,7 @@ RegionFile: # Relative path of region description file
 Pioneer_RRT.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
+flag, 1
 
 
 ======== SPECIFICATION ========
@@ -31,8 +33,8 @@ r2 = p3
 r3 = p2
 
 Spec: # Specification in structured English
-#robot starts in r1
 visit r1
 visit r3
 visit r4
+if you are sensing flag then do tuck_arm
 

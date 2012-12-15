@@ -59,6 +59,7 @@ class initHandler:
         f = open(self.state,"w")
         f.close()
         
+        print "INITINIT haha"
         # start the world file with the necessities
         source="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/worlds/ltlmop_essential_front.world"
         self.appendObject(source,self.destination)
@@ -108,18 +109,29 @@ class initHandler:
                 source="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/worlds/ltlmop_essential_state.world"
                 self.appendObject(source,self.state)
                 i = 0
-                for region in self.original_regions.regions:                
-                    if region.isObstacle is True:
+                
+                ######### ADDED
+                self.proj = proj
+                self.map = {'polygon':{},'original_name':{},'height':{}}
+                for region in self.proj.rfi.regions:
+                    self.map['polygon'][region.name] = self.createRegionPolygon(region)
+                    for n in range(len(region.holeList)): # no of holes
+                        self.map['polygon'][region.name] -= self.createRegionPolygon(region,n)
+                
+                ###########
+                for region in self.original_regions.regions:                                
+                    if region.isObstacle is True:                                
                         poly_region = self.createRegionPolygon(region)
                         center = poly_region.center()
-                        print "center:" +str(center)
+                        print >>sys.__stdout__,"center:" +str(center)
                         pose = self.coordmap_map2lab(region.getCenter())
-                        print "pose:" + str(pose)
+                        print >>sys.__stdout__,"pose:" + str(pose)
                         pose = center
                         height = region.height
                         if height == 0:
                             height = self.original_regions.getMaximumHeight()
                         
+                        """
                         #Fina the height and width of the region
                         pointArray = [x for x in region.getPoints()]
                         pointArray = map(self.coordmap_map2lab, pointArray)
@@ -142,9 +154,12 @@ class initHandler:
                                 if pt[1] > botRightY:
                                     botRightY = pt[1]
                     
+                        
                         size = [botRightX - topLeftX, botRightY - topLeftY]
-                        print size
-                        print size[0]
+                        """
+                        
+                        a = poly_region.boundingBox()
+                        size = [a[1]-a[0],a[3]-a[2]] #xmax,xmin,ymax,ymin
                                     
                         if "pillar" in region.name.lower():    # cylinders
                            radius = min(size[0],size[1])/2

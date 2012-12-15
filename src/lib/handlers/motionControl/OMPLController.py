@@ -70,7 +70,7 @@ class motionControlHandler:
         """
         
         #Parameters
-        self.system_print = True
+        self.system_print       = False
         self.currentRegionPoly  = None                  # polygon of the current region
         self.nextRegionPoly     = None                  # polygon of the next region
         self.map                = {}                    # dictionary of polygons of different regions
@@ -180,7 +180,7 @@ class motionControlHandler:
             self.radius = 0.15*1.2
         elif self.system == 2:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
-            self.radius = self.ROSInitHandler.robotPhysicalWidth/2*2   ###2
+            self.radius = self.ROSInitHandler.robotPhysicalWidth   ###2
             if self.ROSInitHandler.modelName == 'quadrotor':
                 self.height = 0.40*1.2 #(m) height of the robot
         elif self.system == 3:
