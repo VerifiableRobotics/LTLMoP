@@ -24,6 +24,20 @@ sudo apt-get install python-rsvg
 PATHSM='/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds'
 sudo cp ltlmop_map.world $PATHSM/worlds/ltlmop_map.world
 sudo chmod 777 $PATHSM/worlds/ltlmop_map.world
+sudo cp ltlmop_state.world $PATHSM/worlds/ltlmop_state.world
+sudo chmod 777 $PATHSM/worlds/ltlmop_state.world
+sudo cp ltlmop_box.world $PATHSM/worlds/ltlmop_box.world
+sudo chmod 777 $PATHSM/worlds/ltlmop_box.world
+sudo cp ltlmop_cylinder.world $PATHSM/worlds/ltlmop_cylinder.world
+sudo chmod 777 $PATHSM/worlds/ltlmop_cylinder.world
+sudo cp ltlmop_essential_front.world $PATHSM/worlds/ltlmop_essential_front.world
+sudo chmod 777 $PATHSM/worlds/ltlmop_essential_front.world
+sudo cp ltlmop_essential_end.world $PATHSM/worlds/ltlmop_essential_end.world
+sudo chmod 777 $PATHSM/worlds/ltlmop_essential_end.world
+sudo cp ltlmop_essential_state.world $PATHSM/worlds/ltlmop_essential_state.world
+sudo chmod 777 $PATHSM/worlds/ltlmop_essential_state.world
+sudo cp ltlmop_state_cylinder.world $PATHSM/worlds/ltlmop_state_cylinder.world
+sudo chmod 777 $PATHSM/worlds/ltlmop_state_cylinder.world
 sudo chmod 777 $PATHSM/worlds
 sudo chmod 777 $PATHSM/launch
 sudo cp ltlmop.launch $PATHSM/launch/ltlmop.launch

@@ -63,11 +63,6 @@ class motionControlHandler:
         Geometric_Control(string): Specify if you want to planner to sample in geometric or control space. G for geometric and C for control. (default='G')
         plotting (bool): Check the box to enable plotting (default=True)
         """
-        """
-        maxHeight(float): maximum height for the 3D space. Units:m(default=1)
-        max_angle_goal (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 6.28 = 2*pi (default=6.28)
-        max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
-        """
         
         #Parameters
         self.system_print       = False
@@ -165,7 +160,6 @@ class motionControlHandler:
         self.planner_dictionary['G']['KPIECE1'] = og.KPIECE1
         self.planner_dictionary['G']['RRTConnect'] = og.RRTConnect
         self.planner_dictionary['G']['EST'] = og.EST
-        #self.planner_dictionary['C']['PRM'] = oc.PRM
         self.planner_dictionary['C']['RRT'] = oc.RRT
         self.planner_dictionary['C']['KPIECE1'] = oc.KPIECE1
         
@@ -180,12 +174,11 @@ class motionControlHandler:
             self.radius = 0.15*1.2
         elif self.system == 2:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
-            self.radius = self.ROSInitHandler.robotPhysicalWidth   ###2
+            self.radius = self.ROSInitHandler.robotPhysicalWidth   
             if self.ROSInitHandler.modelName == 'quadrotor':
                 self.height = 0.40*1.2 #(m) height of the robot
         elif self.system == 3:
             self.radius = 5
-            self.height = 0.30     ########### CHANGE TO BE DELETED
         elif self.system == 4:
             self.radius = 0.15
 
@@ -509,7 +502,9 @@ class motionControlHandler:
              
     
     # This function generates control space needed information
-    def propagate(self, start, control, duration, state):
+    # control[0] for velocity
+    # control[1] for angular velocity
+    def propagate(self, start, control, duration, state):       
         if self.system_print is True:
             print >>sys.__stdout__,"control[0]: " + str(control[0])
             print >>sys.__stdout__,"control[1]: " + str(control[1])
@@ -525,7 +520,6 @@ class motionControlHandler:
         next_reg   : name of the next region (p1 etc)
         """
         # construct the state space we are planning in
-        #space = ob.RealVectorStateSpace(self.Space_Dimension)
         if self.Space_Dimension == 2:
             space = ob.SE2StateSpace()
         else:
@@ -552,12 +546,12 @@ class motionControlHandler:
             # create a control space
             cspace = oc.RealVectorControlSpace(space, self.Space_Dimension)
 
-            # set the bounds for the control space
+            # set the bounds for the control space 
+            # cbounds[0] for velocity
+            # cbounds[1] for angular velocity
             cbounds = ob.RealVectorBounds(self.Space_Dimension) 
             cbounds.setLow(0,0)    
             cbounds.setHigh(0,max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/100)       
-            #cbounds.setLow(0,-max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/25)
-            #cbounds.setHigh(0,max((BoundaryMaxMin[1]-BoundaryMaxMin[0]),(BoundaryMaxMin[3]-BoundaryMaxMin[2]))/25)
             cbounds.setLow(1,-pi/5)
             cbounds.setHigh(1,pi/5)
             cspace.setBounds(cbounds) 
@@ -637,7 +631,6 @@ class motionControlHandler:
         
         if self.Geometric_Control == 'G':            
             if not self.planner == 'PRM':
-                #pass
                 planner.setRange(self.radius*2)
                 if self.system_print is True:
                     print "planner.getRange():" + str(planner.getRange())
@@ -675,13 +668,11 @@ class motionControlHandler:
                 if self.Space_Dimension == 3:
                     self.ax.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),((ss.getSolutionPath().getState(i)).getZ(),(ss.getSolutionPath().getState(i+1)).getZ()),'b')
                     ro=Polygon.Shapes.Circle (self.radius,((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY()))
-                    #self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i)).getZ(), i,fontsize=12)
                     self.plotPoly(ro,'r')     
                     
                       
                 else:
                     self.ax.plot(((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i+1)).getX()),((ss.getSolutionPath().getState(i)).getY(),(ss.getSolutionPath().getState(i+1)).getY()),0,'b')
-                    #self.ax.text((ss.getSolutionPath().getState(i)).getX(),(ss.getSolutionPath().getState(i)).getY(),0, i,fontsize=12)
 
             self.setPlotLimitXYZ()
             #self.ax.get_figure().canvas.draw()
