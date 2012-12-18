@@ -106,7 +106,7 @@ def drawParamConfigPane(target, method, proj):
             return
 
         if this_param.type.lower() == "region":
-            this_param.setValue(param_controls[this_param].GetStringSelection())
+            this_param.setValue(param_controls[this_param].GetValue())
         elif this_param.type.lower().startswith("bool"):
             this_param.setValue(str(param_controls[this_param].GetValue()))
         elif this_param.type.lower().startswith("int"):
@@ -242,7 +242,7 @@ class handlerConfigDialog(wx.Dialog):
                     print "ERROR: Received invalid data from calibration tool."
                 else:
                     # Update the display
-                    self._handler2dialog(self.handler)
+                    wx.CallAfter(self._handler2dialog, self.handler)
 
                 break
 
@@ -590,6 +590,10 @@ class simSetupDialog(wx.Dialog):
         if dlg.ShowModal() != wx.ID_CANCEL:
             obj = self._getSelectedConfigObject()
             obj.robots += [dlg.robot]
+
+            # Disallow spaces and non-alphanums in robot name
+            dlg.robot.name = re.sub(r"\W", "_", dlg.robot.name.strip())
+
             if obj.main_robot == '':
                 obj.main_robot = dlg.robot.name
             self._cfg2dialog(obj)
@@ -608,6 +612,10 @@ class simSetupDialog(wx.Dialog):
         dlg._robot2dialog(deepcopy(r))
         if dlg.ShowModal() != wx.ID_CANCEL:
             obj = self._getSelectedConfigObject()
+
+            # Disallow spaces and non-alphanums in robot name
+            dlg.robot.name = re.sub(r"\W", "_", dlg.robot.name.strip())
+
             # Update the name of the main robot if necessary
             if obj.main_robot == obj.robots[pos].name:
                 obj.main_robot = dlg.robot.name

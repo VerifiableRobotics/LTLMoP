@@ -44,11 +44,11 @@ class Project:
                                 "fastslow": False}  # Enable "fast-slow" synthesis algorithm
 
         # Climb the tree to find out where we are
-        p = os.path.abspath(sys.argv[0])
+        p = os.path.abspath(__file__)
         t = ""
         while t != "src":
             (p, t) = os.path.split(p)
-            if p == "":
+            if p == "" or p == "/":
                 print "I have no idea where I am; this is ridiculous"
                 return None
 

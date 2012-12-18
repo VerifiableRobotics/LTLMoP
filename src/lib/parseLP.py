@@ -44,7 +44,7 @@ class parseLP:
             return
 
         # turn list of string into one string
-        spec = "\n".join(self.proj.spec_data['SPECIFICATION']['Spec'])
+        spec = "\n".join([line for line in self.proj.spec_data['SPECIFICATION']['Spec'] if not line.startswith("#")])
         
         # get all regions that need to find "region near"
         # the items in the list are tuple with region name and distance from the region boundary, default value is 50
@@ -153,21 +153,56 @@ class parseLP:
                         nonHoleList.append(Polygon.Polygon(result[i]))
                     else:
                         holeList.append(Polygon.Polygon(result[i]))
-                for poly in nonHoleList:
-                    portionName = 'p'+str(self.count)
-                    p = self.intAllPoints(poly)
-                    for hole in holeList:
-                        p = p - self.intAllPoints(hole)
-                    self.portionOfRegion[portionName] = p
-                    if len(tempRegionList) == 0:
-                        self.newPolysMap['others'].append(portionName)
-                    else:
-                        for regionName in tempRegionList:
-                            # update the maping dictionary
-                            self.newPolysMap[regionName].append(portionName)
-                
-                    self.count = self.count + 1
+                for nonHolePoly in nonHoleList:
+                    polyWithoutOverlapNode = self.decomposeWithOverlappingPoint(nonHolePoly)
+                    for poly in polyWithoutOverlapNode:
+                        portionName = 'p'+str(self.count)
+                        p = self.intAllPoints(poly)
+                        for hole in holeList:
+                            p = p - self.intAllPoints(hole)
+                        self.portionOfRegion[portionName] = p
+                        if len(tempRegionList) == 0:
+                            self.newPolysMap['others'].append(portionName)
+                        else:
+                            for regionName in tempRegionList:
+                                # update the maping dictionary
+                                self.newPolysMap[regionName].append(portionName)
+                    
+                        self.count = self.count + 1
 
+        
+    def decomposeWithOverlappingPoint(self,polygon):
+        """
+        When there are points overlapping each other in a given polygon
+        First decompose this polygon into sub-polygons at the overlapping point
+        """
+        
+        # recursively break the polygon at any overlap point into two polygons until no overlap points are found
+        # here we are sure there is only one contour in the given polygon
+
+        
+        ptDic = {}
+        overlapPtIndex = None
+        # look for overlap point and stop when one is found
+        for i,pt in enumerate(polygon[0]):
+            if pt not in ptDic:
+                ptDic[pt]=[i]
+            else:
+                ptDic[pt].append(i) 
+                overlapPtIndex = ptDic[pt]
+                break
+
+        if overlapPtIndex:
+            polyWithoutOverlapNode = []
+            # break the polygon into sub-polygons
+            newPoly = Polygon.Polygon(polygon[0][overlapPtIndex[0]:overlapPtIndex[1]])
+            polyWithoutOverlapNode.extend(self.decomposeWithOverlappingPoint(newPoly))
+            polyWithoutOverlapNode.extend(self.decomposeWithOverlappingPoint(polygon-newPoly))
+        else:
+            # no overlap point is found
+            return [polygon]
+
+        return polyWithoutOverlapNode
 
     def decomp(self):
         """
@@ -296,3 +331,4 @@ class parseLP:
         self.proj.rfi.recalcAdjacency()
         self.proj.rfi.writeFile(fileName)
         
+

@@ -133,6 +133,10 @@ class SimGUI_Frame(wx.Frame):
                 self.markerPos = (x, y)
                 wx.CallAfter(self.onPaint)
             elif input.startswith("VEL:"):
+                # We can't plot anything before we have a map
+                if self.mapBitmap is None:
+                    print "Received drawing command before map.  You probably have an old execute.py process running; please kill it and try again."
+                    continue
                 [x,y] = map(float, input.split(":")[1].split(","))
                 [x,y] = map(int, (self.mapScale*x, self.mapScale*y)) 
                 self.robotVel = (x, y)
