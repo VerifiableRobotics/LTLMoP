@@ -367,6 +367,9 @@ class motionControlHandler:
         self.omega_range = linspace(omegaLowerBound,omegaUpperBound,omegaNoOfSteps)
         self.omega_range_escape = linspace(omegaLowerBound*4,omegaUpperBound*4,omegaNoOfSteps*4)    # range used when stuck > stuck_thres
 
+        regionPolyOld = Polygon.Polygon(regionPoly)     
+        regionPoly += PolyShapes.Circle(self.radius*2.5,(q_init[0,0],q_init[1,0]))        
+        
         # check faces of the current region for goal points
         E     = [[],[]]       # the tree matrix
         Other = [[],[]]
@@ -399,7 +402,7 @@ class motionControlHandler:
                 q_g_original = q_gBundle[:,i]
                 q_g = q_gBundle[:,i]+face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
                 #q_g = q_gBundle[:,i]+(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*1.5*self.radius    ##original 2*self.radius
-                if not regionPoly.isInside(q_g[0],q_g[1]):
+                if not regionPolyOld.isInside(q_g[0],q_g[1]):
                     #q_g = q_gBundle[:,i]-(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])/norm(q_gBundle[:,i]-V[1:,(shape(V)[1]-1)])*1.5*self.radius    ##original 2*self.radius
                     q_g = q_gBundle[:,i]-face_normal[:,i]*1.5*self.radius    ##original 2*self.radius
 
@@ -554,7 +557,7 @@ class motionControlHandler:
                     plt.text(V[1,E[1,i]],V[2,E[1,i]], V[0,E[1,i]], fontsize=12)
                 plt.figure(1).canvas.draw()
             else:
-                BoundPolyPoints = asarray(PolyUtils.pointList(regionPolyf))
+                BoundPolyPoints = asarray(PolyUtils.pointList(regionPoly))
                 self.ax.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],'k')
                 self.ax.plot(V[1,:],V[2,:],'b')
                 for i in range(shape(E)[1]):
