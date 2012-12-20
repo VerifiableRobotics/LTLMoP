@@ -26,11 +26,11 @@ flag, 1
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-r4 = p1
+r4 = p4
 others = 
-r1 = p4
-r2 = p3
-r3 = p2
+r1 = p1
+r2 = p2
+r3 = p3
 
 Spec: # Specification in structured English
 visit r1

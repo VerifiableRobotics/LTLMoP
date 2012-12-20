@@ -11,9 +11,28 @@ boundary	1
 boundary	4
 
 Obstacles: # Names of regions to treat as obstacles
+r6
 
 Regions: # Stored as JSON string
 [
+    {
+        "name": "r6", 
+        "color": [
+            0, 
+            255, 
+            0
+        ], 
+        "height": 1.0, 
+        "position": [
+            496, 
+            88
+        ], 
+        "type": "rect", 
+        "size": [
+            103, 
+            60
+        ]
+    }, 
     {
         "name": "boundary", 
         "color": [
@@ -322,7 +341,7 @@ Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (fac
 boundary	r5	733	548	736	420	541	543	733	548
 boundary	r4	735	205	736	420	483	540	541	543
 boundary	r2	31	541	483	540	31	31	31	541
-boundary	r1	735	205	737	31	31	31	737	31
+boundary	r1	31	31	737	31	735	205	737	31
 r5	r4	541	543	736	420
 r4	r2	482	346	483	540
 r4	r1	625	311	735	205	473	254	625	311	473	254	482	346

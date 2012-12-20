@@ -59,7 +59,6 @@ class initHandler:
         f = open(self.state,"w")
         f.close()
         
-        print "INITINIT haha"
         # start the world file with the necessities
         source="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/worlds/ltlmop_essential_front.world"
         self.appendObject(source,self.destination)
@@ -99,17 +98,18 @@ class initHandler:
                 if region.isObstacle is True:
                     addObstacle = True   
                     break
-                    
+            
+            source="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/worlds/ltlmop_essential_state.world"
+            self.appendObject(source,self.state)
+        
             if addObstacle is False:
-                print "INIT:NOT An obstacle"                  
+                print "INIT:NO obstacle"                  
             
             if addObstacle is True:
                 print "INIT:OBSTACLES!!" 
                 # start the ltlmop_state.world file with the necessities
-                source="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/worlds/ltlmop_essential_state.world"
-                self.appendObject(source,self.state)
-                i = 0
                 
+                i = 0
                 ######### ADDED
                 self.proj = proj
                 self.map = {'polygon':{},'original_name':{},'height':{}}
@@ -172,8 +172,8 @@ class initHandler:
                             self.addBox(i,length,depth,height,pose)
                         i += 1
                 
-                #append ltlmop_state.world to worldfile
-                self.appendObject(self.state,self.destination)
+            #append ltlmop_state.world to worldfile
+            self.appendObject(self.state,self.destination)
             
             # close the world file with the necessities
             source="/opt/ros/fuerte/stacks/simulator_gazebo/gazebo_worlds/worlds/ltlmop_essential_end.world"

@@ -28,10 +28,10 @@ present_delivered, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 Rovaniemi = p5
 Cornell = p3
-Atlantic_Ocean = p2
-others = 
 NYC = p4
+Atlantic_Ocean = p2
 ASL = p1
+others = 
 
 Spec: # Specification in structured English
 Robot starts in Rovaniemi with false

@@ -117,11 +117,11 @@ class motionControlHandler:
         else:
             self.operate_system = 1   
                      
-        if self.system_print == True:
-            print "Operate_system: "+ str(self.operate_system)
-            print "Planner: " + str(self.planner)
-            print "Geometric/Control space: " + str(self.Geometric_Control)
-            print "Space Dimension: " + str(self.Space_Dimension)
+
+        print "Operate_system: "+ str(self.operate_system)
+        print "Planner: " + str(self.planner)
+        print "Geometric/Control space: " + str(self.Geometric_Control)
+        print "Space Dimension: " + str(self.Space_Dimension)
         
         # Generate polygon for regions in the map        
         

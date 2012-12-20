@@ -43,6 +43,11 @@ sudo chmod 777 $PATHSM/worlds
 sudo chmod 777 $PATHSM/launch
 sudo cp ltlmop.launch $PATHSM/launch/ltlmop.launch
 sudo chmod 777 $PATHSM/launch/ltlmop.launch
+
+PATHS='/opt/ros/fuerte/stacks/hector_quadrotor/hector_quadrotor_gazebo'
+sudo cp spawn_quadrotor.launch $PATHS/launch/spawn_quadrotor.launch
+sudo chmod 777 $PATHS/launch spawn_quadrotor.launch
+
 PATHLOC='/opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials'
 sudo chmod 777 /opt/ros/fuerte/stacks/simulator_gazebo/gazebo/gazebo/share/gazebo-1.0.2/Media/materials/textures
 sudo chmod 777 $PATHLOC/scripts/Gazebo.material
