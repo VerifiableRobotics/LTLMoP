@@ -1,15 +1,16 @@
 #! /bin/bash
 echo Installing ROS...
 sudo apt-get install python-wxglade
-wget https://github.com/downloads/jraedler/Polygon2/Polygon-2.0.5.zip
-unzip Polygon-2.0.5.zip
-cd Polygon-2.0.5
-sudo python setup.py install
-cd ..
+# wget https://github.com/downloads/jraedler/Polygon2/Polygon-2.0.5.zip
+# unzip Polygon-2.0.5.zip
+# cd Polygon-2.0.5
+# sudo python setup.py install
+# cd ..
 sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
 wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
 sudo apt-get update
 sudo apt-get install ros-fuerte-desktop-full
+sudo apt-get install ros-fuerte-hector-quadrotor
 echo "source /opt/ros/fuerte/setup.bash" >> ~/.bashrc
 . ~/.bashrc
 source /opt/ros/fuerte/setup.bash
