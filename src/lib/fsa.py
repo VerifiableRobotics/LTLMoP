@@ -350,9 +350,21 @@ class Automaton:
         FILE.write("\t\t"+"rank : 0..10;\n")
         FILE.write("\tINIT\n")
         FILE.close()
-        cmd = "grep -v '[\[;-]' "+self.proj.getFilenamePrefix()+".ltl | grep -v next | grep -v \($ | sed -e 's/s\.//g' -e 's/e\.//g' >> "+filename 
-        os.system(cmd)      
         
+        
+        #Select the initial conditions (i.e. substitutions on the initial conditions
+        #grab all lines that do not have any temporal operators, i.e. the initial conditions.   
+        #cmd = "grep -v '[\[;-]' "+self.proj.getFilenamePrefix()+".ltl | grep -v next | grep -v \($ | sed -e 's/s\.//g' -e 's/e\.//g' >> "+filename
+        #os.system(cmd)
+        input = open(self.proj.getFilenamePrefix()+".ltl")
+        output = open(filename, 'a')
+        for line in input:
+            if (re.search("[\[;-]", line) is None and re.search("next", line) is None and re.search("\($", line) is None):
+                line = re.sub("s\.", "", line)
+                line = re.sub("e\.", "", line)            
+                output.write(line)
+        input.close()
+        output.close()
         
         # Write the transitions as a disjunction of conjunctions
         FILE = open(filename,"a")
@@ -361,7 +373,8 @@ class Automaton:
         for state in self.states:
             for nextState in state.transitions:
                 #FILE.write('\t'+ "&".join( map( lambda x: str(x[0] + " = " + str(x[1])), state.inputs.items())) + "&".join( map( lambda x: str(x[0] + " = " + str(x[1])), state.outputs.items() ) ) + "|" )
-                # Check the next state to figure out which inputs have to be on
+                # Check the next state to figure out which inputs have to be on                
+                #The extra TRUE and FALSE clauses circumvent the need to account for trailing &s.
                 FILE.write(' ((')
                 for key in state.inputs.keys():
                     if state.inputs[key] == '1':
@@ -390,8 +403,26 @@ class Automaton:
         FILE.write('\n')
         FILE.write("\tLTLSPEC\n")
         FILE.close()
-        cmd = "cat " + self.proj.getFilenamePrefix()+".ltl | sed -e 's/\[\]/G /g' -e 's/^<^>/F /g'  -e 's/next/X /g' -e 's/s\.//g' -e 's/e\.//g' -e '0,/;/s/;/-^>/' -e '/LTLSPEC/ d' -e '/--/d' >> " + filename
-        os.system(cmd)
+        
+        #replace next, <> and [] with X, F and G, and gets rid of the e. and s. prefixes. It also puts an implication between the two parts of the spec.
+        #cmd = "cat " + self.proj.getFilenamePrefix()+".ltl | sed -e 's/\[\]/G /g' -e 's/^<^>/F /g'  -e 's/next/X /g' -e 's/s\.//g' -e 's/e\.//g' -e '0,/;/s/;/-^>/' -e '/LTLSPEC/ d' -e '/--/d' >> " + filename
+        #os.system(cmd)
+        input = open(self.proj.getFilenamePrefix()+".ltl")
+        output = open(filename, 'a')
+        impFlag = False
+        for line in input:
+            if (re.search("LTLSPEC", line) is None and re.search("--", line) is None):
+                line = re.sub("\[\]", "G ", line)
+                line = re.sub("<>", "F ", line)
+                line = re.sub("next", "X ", line)
+                line = re.sub("s\.", "", line)
+                line = re.sub("e\.", "", line)
+                if not impFlag and not re.search(";", line) is None:
+                    line = re.sub(";", "->", line)
+                    impFlag = True
+                output.write(line)
+        input.close()
+        output.close()
         
 
         
