@@ -11,8 +11,10 @@
 
 import re, sys, os, subprocess
 import wx, wx.richtext, wx.stc
+import numpy
 
 sys.path.append("lib")
+sys.path.append("lib/cores")
 
 from regions import *
 import fileMethods
@@ -20,6 +22,8 @@ import project
 import fsa
 import mapRenderer
 from specCompiler import SpecCompiler
+from parseEnglishToLTL import writeSpec
+from coreUtils import *
 from copy import deepcopy
 import threading, time
 
@@ -883,7 +887,10 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Creating LTL file...\n", "BLUE")
 
-        self.traceback = compiler._writeLTLFile()
+        (self.text, self.sensorList, self.robotPropList, self.regionList,self.spec,self.traceback,self.LTL2LineNo) = compiler._writeLTLFile()
+        regNum = len(self.regionList)
+        regList = map(lambda i: "bit"+str(i), range(0,int(numpy.ceil(numpy.log2(regNum)))))
+        self.propList = self.sensorList + self.robotPropList + regList;
 
         if self.traceback is None:
             sys.stdout = sys.__stdout__
@@ -1141,7 +1148,6 @@ class SpecEditorFrame(wx.Frame):
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         #TODO: check to see if we need to recompile
         compiler = self.onMenuCompile(event, with_safety_aut=False)
-
         # Redirect all output to the log
         redir = RedirectText(self,self.text_ctrl_log)
 
@@ -1160,21 +1166,164 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "RED")
 
+        conjuncts = self.highlightedConjuncts(to_highlight)
+        if conjuncts!=[]:
+            mapping = conjunctsToCNF(conjuncts, self.propList,self.proj.getFilenamePrefix()+".cnf")
+
+
+            cmd = self._getPicosatCommand()
+            if cmd is None:
+                return (False, False, [], "")
+    
+            #find minimal unsatisfiable core
+            satFileName = self.proj.getFilenamePrefix()+".sat"
+            outputFile = open(satFileName,'w')
+            subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+            while subp.poll():
+                time.sleep(0.1)
+        
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            output = subp.stdout.read()
+            outputFile.write(output)
+            outputFile.close()
+            
+    #        cmd = "grep '^v' "+satFileName
+    #        os.system(cmd)
+    
+            
+            input = open(satFileName, 'r')
+            cnfIndices = []
+            for line in input:
+                if re.match('^v', line):
+                    cnfIndices.append(int(line.strip('v').strip()))
+            input.close()                    
+            
+            guilty = cnfToConjuncts(cnfIndices, mapping)
+            
+            self.highlightCores(guilty)
+            
+      
+
+        # TODO: Make this output live
+        
+        
+    def _getPicosatCommand(self):
+        # Check that GROneMain, etc. is compiled
+        if not os.path.exists(os.path.join(self.proj.ltlmop_root,"lib","cores","picosat-951")):
+            print "Where is your sat solver? We use Picomus."
+            # TODO: automatically compile for the user
+            return None
+
+        classpath = os.path.join(self.proj.ltlmop_root, "lib","cores","picosat-951")
+
+        cmd = os.path.join(classpath,"picomus.exe ")+ self.proj.getFilenamePrefix() + ".cnf"
+
+        return cmd
+    
+    
+    def highlightCores(self, guilty):               
+        
+        
+            for g in guilty:
+                for k,v in self.LTL2LineNo.iteritems():
+                    newCs = k.split('\n')
+                    if not set(guilty).isdisjoint(newCs):
+                        self.highlight(v, 'init')
+                
+
+#            tb_key = h_item[0].title() + h_item[1].title()            
+#            if h_item[1] == "goals":
+#                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)           
+#            else:
+#                textLines = self.text.split("\n")                             
+#                textLines = filter(None, textLines)
+#                print textLines # fastest
+#                for l in self.traceback[tb_key]:   
+#                    print l
+                    #conjuncts = []
+#                    conjunctsAll = ""        
+#                    spec, traceback, failed = writeSpec(textLines[l], self.sensorList, self.regionList, self.robotPropList)
+#                    cTemp = spec[tb_key]
+#                    cTemp = re.sub('[\t\n]*','',cTemp)            
+#                    cTemp = re.sub('s\.','',cTemp)
+#                    cTemp = re.sub('e\.','',cTemp)   
+#                    cTemp = re.sub(r'(next\()', r'(next_', cTemp)                 
+#                    conjunctsTemp = (cTemp.split("[]"))                    
+#                    for c in conjunctsTemp:
+#                        c = c.strip()
+#                        if c=='':
+#                            continue
+#                        if c[-1] == '(':
+#                        #get rid of trailing (s and &s
+#                           conjunctsAll = conjunctsAll+(c[:-1].strip()[:-1]+"\n(")
+#                        else:
+#                           conjunctsAll = conjunctsAll+(c.strip()[:-1]+"\n") 
+#                    
+#                    conjuncts = filter(lambda s: s!="",conjunctsAll.split('\n'))
+#                    print textLines[l]
+#                    print conjuncts                        
+                    #if not set(conjuncts).isdisjoint(guilty):
+#            i = 1
+#            for l in conjunctsInd: 
+#                if i in guilty:
+#                    self.highlight(l, 'init')
+#                i = i+1 
+#            print guilty
+                        
+    
+    def highlight(self, l, type):
+        if type == "init":
+           self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
+        elif type == "trans":
+           self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
+        
+    def highlightedConjuncts(self, to_highlight):  
+        conjuncts = []
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
 
             if h_item[1] == "goals":
                 self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)           
             else:
-                for l in self.traceback[tb_key]:
-                    if h_item[1] == "init":
-                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
-                    elif h_item[1] == "trans":
-                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
-                    
-
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
+#                cTemp = []
+##                for l in self.traceback[tb_key]:
+##                    if h_item[1] == "init":
+##                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
+##                    elif h_item[1] == "trans":
+##                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
+                
+                newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
+                conjuncts = conjuncts + [item for sublist in newCs for item in sublist]
+                
+##                cTemp = re.sub('[\t\n]*','',cTemp)            
+##                cTemp = re.sub('s\.','',cTemp)
+##                cTemp = re.sub('e\.','',cTemp)   
+##                cTemp = re.sub(r'(next\()', r'(next_', cTemp)                 
+#                #conjunctsTemp = (cTemp.split("[]"))  
+#                conjunctsInd = conjunctsInd + self.traceback[tb_key]                  
+#                for c in cTemp:
+#                    c = re.sub('[\t\n]*','',c)            
+#                    c = re.sub('s\.','',c)
+#                    c = re.sub('e\.','',c)   
+#                    c = re.sub(r'(next\()', r'(next_', c) 
+#                    c = re.sub('\[\]','',c)  
+#                    c = c.strip()
+#                    #training &
+#                    c = c[:-1]
+#                    if c=='':
+#                        continue
+##                    if c[-1] == '(':
+##                    #get rid of trailing (s and &s
+##                       conjunctsAll = conjunctsAll+(c[:-1].strip()[:-1]+"\n(")
+##                    else:
+##                       conjunctsAll = conjunctsAll+(c.strip()[:-1]+"\n") 
+#                        
+##        conjuncts = filter(lambda s: s!="",conjunctsAll.split('\n'))
+#                    conjuncts.append(c)
+        
+        return conjuncts
+                
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Opens the counterstrategy visualization interfacs ("Mopsy")
