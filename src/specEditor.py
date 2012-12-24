@@ -887,10 +887,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Creating LTL file...\n", "BLUE")
 
-        (self.text, self.sensorList, self.robotPropList, self.regionList,self.spec,self.traceback,self.LTL2LineNo) = compiler._writeLTLFile()
-        regNum = len(self.regionList)
-        regList = map(lambda i: "bit"+str(i), range(0,int(numpy.ceil(numpy.log2(regNum)))))
-        self.propList = self.sensorList + self.robotPropList + regList;
+        (self.propList, self.spec, self.traceback, self.LTL2LineNo) = compiler._writeLTLFile()        
 
         if self.traceback is None:
             sys.stdout = sys.__stdout__
@@ -1166,6 +1163,7 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "RED")
 
+        #get conjuncts to be minimized
         conjuncts = self.highlightedConjuncts(to_highlight)
         if conjuncts!=[]:
             mapping = conjunctsToCNF(conjuncts, self.propList,self.proj.getFilenamePrefix()+".cnf")
@@ -1188,10 +1186,7 @@ class SpecEditorFrame(wx.Frame):
             outputFile.write(output)
             outputFile.close()
             
-    #        cmd = "grep '^v' "+satFileName
-    #        os.system(cmd)
-    
-            
+            #get indices of contributing clauses
             input = open(satFileName, 'r')
             cnfIndices = []
             for line in input:
@@ -1199,8 +1194,10 @@ class SpecEditorFrame(wx.Frame):
                     cnfIndices.append(int(line.strip('v').strip()))
             input.close()                    
             
+            #get contributing conjuncts from CNF indices
             guilty = cnfToConjuncts(cnfIndices, mapping)
             
+            #highlight guilty sentences
             self.highlightCores(guilty)
             
       
@@ -1223,54 +1220,12 @@ class SpecEditorFrame(wx.Frame):
     
     
     def highlightCores(self, guilty):               
-        
-        
-            for g in guilty:
+           for g in guilty:
                 for k,v in self.LTL2LineNo.iteritems():
                     newCs = k.split('\n')
                     if not set(guilty).isdisjoint(newCs):
+                        #for now, just highlight with the colour originally used for initial conditions
                         self.highlight(v, 'init')
-                
-
-#            tb_key = h_item[0].title() + h_item[1].title()            
-#            if h_item[1] == "goals":
-#                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)           
-#            else:
-#                textLines = self.text.split("\n")                             
-#                textLines = filter(None, textLines)
-#                print textLines # fastest
-#                for l in self.traceback[tb_key]:   
-#                    print l
-                    #conjuncts = []
-#                    conjunctsAll = ""        
-#                    spec, traceback, failed = writeSpec(textLines[l], self.sensorList, self.regionList, self.robotPropList)
-#                    cTemp = spec[tb_key]
-#                    cTemp = re.sub('[\t\n]*','',cTemp)            
-#                    cTemp = re.sub('s\.','',cTemp)
-#                    cTemp = re.sub('e\.','',cTemp)   
-#                    cTemp = re.sub(r'(next\()', r'(next_', cTemp)                 
-#                    conjunctsTemp = (cTemp.split("[]"))                    
-#                    for c in conjunctsTemp:
-#                        c = c.strip()
-#                        if c=='':
-#                            continue
-#                        if c[-1] == '(':
-#                        #get rid of trailing (s and &s
-#                           conjunctsAll = conjunctsAll+(c[:-1].strip()[:-1]+"\n(")
-#                        else:
-#                           conjunctsAll = conjunctsAll+(c.strip()[:-1]+"\n") 
-#                    
-#                    conjuncts = filter(lambda s: s!="",conjunctsAll.split('\n'))
-#                    print textLines[l]
-#                    print conjuncts                        
-                    #if not set(conjuncts).isdisjoint(guilty):
-#            i = 1
-#            for l in conjunctsInd: 
-#                if i in guilty:
-#                    self.highlight(l, 'init')
-#                i = i+1 
-#            print guilty
-                        
     
     def highlight(self, l, type):
         if type == "init":
@@ -1286,42 +1241,8 @@ class SpecEditorFrame(wx.Frame):
             if h_item[1] == "goals":
                 self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)           
             else:
-#                cTemp = []
-##                for l in self.traceback[tb_key]:
-##                    if h_item[1] == "init":
-##                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
-##                    elif h_item[1] == "trans":
-##                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
-                
                 newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
                 conjuncts = conjuncts + [item for sublist in newCs for item in sublist]
-                
-##                cTemp = re.sub('[\t\n]*','',cTemp)            
-##                cTemp = re.sub('s\.','',cTemp)
-##                cTemp = re.sub('e\.','',cTemp)   
-##                cTemp = re.sub(r'(next\()', r'(next_', cTemp)                 
-#                #conjunctsTemp = (cTemp.split("[]"))  
-#                conjunctsInd = conjunctsInd + self.traceback[tb_key]                  
-#                for c in cTemp:
-#                    c = re.sub('[\t\n]*','',c)            
-#                    c = re.sub('s\.','',c)
-#                    c = re.sub('e\.','',c)   
-#                    c = re.sub(r'(next\()', r'(next_', c) 
-#                    c = re.sub('\[\]','',c)  
-#                    c = c.strip()
-#                    #training &
-#                    c = c[:-1]
-#                    if c=='':
-#                        continue
-##                    if c[-1] == '(':
-##                    #get rid of trailing (s and &s
-##                       conjunctsAll = conjunctsAll+(c[:-1].strip()[:-1]+"\n(")
-##                    else:
-##                       conjunctsAll = conjunctsAll+(c.strip()[:-1]+"\n") 
-#                        
-##        conjuncts = filter(lambda s: s!="",conjunctsAll.split('\n'))
-#                    conjuncts.append(c)
-        
         return conjuncts
                 
 

@@ -2,6 +2,7 @@ import os, sys
 import re
 import time
 import subprocess
+import numpy
 
 sys.path.append("lib")
 
@@ -100,8 +101,12 @@ class SpecCompiler(object):
         adjData = self.parser.proj.rfi.transitions
 
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, spec)
+        
+        regNum = len(regionList)
+        regList = map(lambda i: "bit"+str(i), range(0,int(numpy.ceil(numpy.log2(regNum)))))
+        propList = sensorList + robotPropList + regList;
 
-        return (text,sensorList, robotPropList, regionList, spec,traceback,LTL2LineNo)
+        return (propList, spec,traceback,LTL2LineNo)
         
     def _checkForEmptyGaits(self):
         from simulator.ode.ckbot import CKBotLib

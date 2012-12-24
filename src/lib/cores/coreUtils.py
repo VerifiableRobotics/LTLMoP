@@ -87,7 +87,8 @@ def conjunctsToCNF(conjuncts, propList, outFilename):
             for k in propsNext.keys():
                 clause = re.sub(k,str(propsNext[k]), clause)
             for k in props.keys():
-                clause = re.sub(k,str(props[k]), clause)            
+                clause = re.sub(k,str(props[k]), clause)   
+            #add trailing 0         
             cnfClauses.append(clause.strip()+" 0\n")
             
     #write CNFs to file        
@@ -107,67 +108,3 @@ def cnfToConjuncts(cnfIndices, mapping):
         if not set(mapping[k]).isdisjoint(cnfIndices):
             conjuncts.append(k)
     return conjuncts
-#for line in input:
-#    temp = open("temp.exp", 'w')
-#    line = re.sub('&\s*\n', '', line)
-#    line = re.sub('[\s]+', ' ', line)
-#    line = line.strip()   
-#    temp.write(line+'\n')
-#    temp.close()
-#    
-#    cmd = "a.exe < temp.exp > temp.cnf"
-#    os.system(cmd)
-#    
-#    
-#    
-#    cnfs = open("temp.cnf", 'r')
-#    output = open("out.cnf", 'a')
-#    
-#    newp = 0
-#    newn = 0
-#    for clause in cnfs:
-#     #clauses = re.findall(r'\d+', cnfs)
-#         if re.match('p', clause) is None:
-#            increment(clause,n)
-#            output.write(clause)
-#         else:
-#            nums = re.split('\W+', clause)
-#            newp = int(nums[2])
-#            newn = int(nums[3])
-#    
-#    cnfs.close()
-#    output.close()
-#     
-#    p = p + newp
-#    n = n + newn
-#    
-#input.close()
-#     
-      
-
-
-
-#last_number = re.compile(r'\d+(?=[^\d]*$)')
-
-#def increment(string, k):
-#  def increment_number(match):
-#    num_str = match.group(1)
-#      str( int(num_str) + k).zfill( len(num_str) )
-
-#return last_number.sub(increment_number, string)
-
-
-     
-      
-
-
-
-#last_number = re.compile(r'\d+(?=[^\d]*$)')
-
-#def increment(string, k):
-#  def increment_number(match):
-#    num_str = match.group(1)
-#      str( int(num_str) + k).zfill( len(num_str) )
-
-#return last_number.sub(increment_number, string)
-
