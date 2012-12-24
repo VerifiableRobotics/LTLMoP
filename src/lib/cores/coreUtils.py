@@ -2,44 +2,7 @@
 import math, re, sys, random, os, subprocess, time
 from logic import to_cnf
 
-def fileToconjuncts(ltlFile, component):
-    
-    p = 0
-    n = 0
-    props = {propList[x]:x+1 for x in range(0,len(propList))}
-    mapping = {conjuncts[x]:[] for x in range(0,len(conjuncts))}
-    
-    cnfClauses = []
-    n = 0
-    p = len(props)
-        
-    for line in conjuncts:
-        lineOld = line
-        line = re.sub('!', '~', line)
-        #line = re.sub('&\s*\n', '', line)
-        line = re.sub('[\s]+', ' ', line)
-        line = line.strip()       
-        cnf = str(to_cnf(line))
-        allClauses = cnf.split("&");
-        #associate original conjuncts with CNF clauses
-        mapping[lineOld] = range(n+1,n+1+len(allClauses))
-        n = n + len(allClauses)
-        for clause in allClauses:    
-            clause = re.sub('[()]', '', clause)   
-            clause = re.sub('[|]', '', clause)           
-            clause = re.sub('~', '-', clause)    
-            for k in props.keys():
-                clause = re.sub(k,str(props[k]), clause)
-            cnfClauses.append(clause.strip()+" 0\n")
-            
-    #write CNFs to file        
-    open('out.cnf', 'w').close()
-    output = open("out.cnf", 'a')
-    output.write("p cnf "+str(p)+" "+str(n)+"\n")
-    output.writelines(cnfClauses)
-    output.close()
-    
-    return mapping
+
 
 def conjunctsToCNF(conjuncts, propList, outFilename):
     
