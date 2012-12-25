@@ -1166,7 +1166,7 @@ class SpecEditorFrame(wx.Frame):
         #get conjuncts to be minimized
         conjuncts = self.highlightedConjuncts(to_highlight)
         if conjuncts!=[]:
-            mapping = conjunctsToCNF(conjuncts, self.propList,self.proj.getFilenamePrefix()+".cnf")
+            mapping = conjunctsToCNF(conjuncts, self.propList,self.proj.getFilenamePrefix()+".cnf",1)
 
 
             cmd = self._getPicosatCommand()
@@ -1239,7 +1239,18 @@ class SpecEditorFrame(wx.Frame):
             tb_key = h_item[0].title() + h_item[1].title()
 
             if h_item[1] == "goals":
-                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)           
+                #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
+                #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
+                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
+                for k,v in self.LTL2LineNo.iteritems():
+                    if v == self.traceback[tb_key][h_item[2]]:
+                        newCs = k.split('\n') 
+                conjuncts = conjuncts + newCs
+                for p in self.propList:
+                    old = ''+str(p)
+                    new = 'next('+str(p)+')'
+                    newCs = map(lambda s: s.replace(old,new), newCs)
+                conjuncts = conjuncts + newCs            
             else:
                 newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
                 conjuncts = conjuncts + [item for sublist in newCs for item in sublist]

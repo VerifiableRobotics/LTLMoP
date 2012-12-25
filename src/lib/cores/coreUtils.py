@@ -4,10 +4,8 @@ from logic import to_cnf
 
 
 
-def conjunctsToCNF(conjuncts, propList, outFilename):
+def conjunctsToCNF(conjuncts, propList, outFilename, depth):
     
-    p = 0
-    n = 0
     propListNext = map(lambda s: 'next_'+s, propList)
     
     props = {propList[x]:x+1 for x in range(0,len(propList))}
@@ -25,7 +23,8 @@ def conjunctsToCNF(conjuncts, propList, outFilename):
         line = re.sub('[\t\n]*','',line)            
         line = re.sub('s\.','',line)
         line = re.sub('e\.','',line)   
-        line = re.sub(r'(next\()', r'(next_', line) 
+        line = re.sub(r'(next\()', r'(next_', line)         
+        line = re.sub('\<\>','',line)  
         line = re.sub('\[\]','',line)  
         line = line.strip()
         #training &
@@ -37,7 +36,7 @@ def conjunctsToCNF(conjuncts, propList, outFilename):
         line = re.sub('[\s]+', ' ', line)        
         line = re.sub('\<-\>', '<=>', line)
         line = re.sub('->', '>>', line)
-        line = line.strip()   
+        line = line.strip() 
         cnf = str(to_cnf(line))
         allClauses = cnf.split("&");
         #associate original conjuncts with CNF clauses
@@ -53,6 +52,29 @@ def conjunctsToCNF(conjuncts, propList, outFilename):
                 clause = re.sub(k,str(props[k]), clause)   
             #add trailing 0         
             cnfClauses.append(clause.strip()+" 0\n")
+    
+    #Duplicating clauses for depth greater than 1        
+    for i in range(1,depth):
+        cnfClausesNew = []
+        for clause in cnfClauses:
+            newClause = ""
+            for c in clause.split():
+                intC = int(c)
+                if intC is not 0:                    
+                    newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props))) +" "
+                else:
+                    newClause= newClause +c+" "
+            newClause=newClause+"\n"
+            cnfClausesNew.append(newClause)\
+            
+        for line in conjuncts:        
+            mapping[line] = mapping[line] + (range(n+1,n+1+len(cnfClauses)))
+            
+        n = n + len(cnfClauses)
+        p = p + len(props)
+        cnfClauses = cnfClauses + cnfClausesNew
+        
+            
             
     #write CNFs to file        
     open(outFilename, 'w').close()
