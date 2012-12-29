@@ -1198,7 +1198,7 @@ class SpecEditorFrame(wx.Frame):
                 sys.stderr = sys.__stderr__
                 output = subp.stdout.read()
                 #this is the BMC part: keep adding cnf clauses fro mthe transitions until the spec becomes unsatisfiable
-                if "UNSATISFIABLE" in output:
+                if "UNSATISFIABLE" in output or depth >= maxDepth:
                     break
                 depth = depth +1
             
