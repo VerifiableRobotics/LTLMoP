@@ -1163,28 +1163,45 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "RED")
                 
-        depth = 1;
-
-        #get conjuncts to be minimized
-        conjuncts, isTrans = self.highlightedConjuncts(to_highlight)
-        if conjuncts!=[]:
-            mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",depth)
-
-
-            cmd = self._getPicosatCommand()
-            if cmd is None:
-                return (False, False, [], "")
-    
-            #find minimal unsatisfiable core
-            satFileName = self.proj.getFilenamePrefix()+".sat"
-            outputFile = open(satFileName,'w')
-            subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-            while subp.poll():
-                time.sleep(0.1)
+        guilty = self.findCores(to_highlight)
         
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-            output = subp.stdout.read()
+        #highlight guilty sentences
+        self.highlightCores(guilty)
+                
+                
+        
+    def findCores(self,to_highlight):
+        #get conjuncts to be minimized
+        conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
+        
+        if conjuncts!=[]:
+            maxDepth = 10
+            depth = 1
+            output = ""
+            
+            while True:
+                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",depth)
+    
+    
+                cmd = self._getPicosatCommand()
+                if cmd is None:
+                    return (False, False, [], "")
+        
+                #find minimal unsatisfiable core
+                satFileName = self.proj.getFilenamePrefix()+".sat"
+                outputFile = open(satFileName,'w')
+                subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+                while subp.poll():
+                    time.sleep(0.1)
+            
+                sys.stdout = sys.__stdout__
+                sys.stderr = sys.__stderr__
+                output = subp.stdout.read()
+                #this is the BMC part: keep adding cnf clauses fro mthe transitions until the spec becomes unsatisfiable
+                if "UNSATISFIABLE" in output:
+                    break
+                depth = depth +1
+            
             outputFile.write(output)
             outputFile.close()
             
@@ -1196,18 +1213,12 @@ class SpecEditorFrame(wx.Frame):
                     index = int(line.strip('v').strip())
                     if index!=0:
                         cnfIndices.append(index)
-                        print index
             input.close()                    
             
             #get contributing conjuncts from CNF indices
             guilty = cnfToConjuncts(cnfIndices, mapping)
             
-            #highlight guilty sentences
-            self.highlightCores(guilty)
-            
-      
-
-        # TODO: Make this output live
+            return guilty
         
         
     def _getPicosatCommand(self):
@@ -1238,7 +1249,10 @@ class SpecEditorFrame(wx.Frame):
         elif type == "trans":
            self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
         
-    def highlightedConjuncts(self, to_highlight):  
+    def getGuiltyConjuncts(self, to_highlight):  
+        #inverse dictionary for goal lookups
+        ivd=dict([(v,k) for (k,v) in self.LTL2LineNo.items()])
+        
         conjuncts = []
         isTrans = {}
         for h_item in to_highlight:
@@ -1248,9 +1262,7 @@ class SpecEditorFrame(wx.Frame):
                 #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
                 #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
                 self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
-                for k,v in self.LTL2LineNo.iteritems():
-                    if v == self.traceback[tb_key][h_item[2]]:
-                        newCs = k.split('\n')                 
+                newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
                 for p in self.propList:
                     old = ''+str(p)
                     new = 'next('+str(p)+')'
