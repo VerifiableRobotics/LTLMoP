@@ -4,7 +4,7 @@ from logic import to_cnf
 
 
 
-def conjunctsToCNF(conjuncts, propList, outFilename, depth):
+def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     
     propListNext = map(lambda s: 'next_'+s, propList)
     
@@ -13,6 +13,7 @@ def conjunctsToCNF(conjuncts, propList, outFilename, depth):
     mapping = {conjuncts[x]:[] for x in range(0,len(conjuncts))}
     
     cnfClauses = []
+    transClauses = []
     n = 0
     p = len(props)+len(propsNext)
     
@@ -52,11 +53,13 @@ def conjunctsToCNF(conjuncts, propList, outFilename, depth):
                 clause = re.sub(k,str(props[k]), clause)   
             #add trailing 0         
             cnfClauses.append(clause.strip()+" 0\n")
+            if isTrans[lineOld]:
+                transClauses.append(clause.strip()+" 0\n")
     
     #Duplicating clauses for depth greater than 1        
     for i in range(1,depth):
-        cnfClausesNew = []
-        for clause in cnfClauses:
+        transClausesNew = []
+        for clause in transClauses:
             newClause = ""
             for c in clause.split():
                 intC = int(c)
@@ -65,16 +68,16 @@ def conjunctsToCNF(conjuncts, propList, outFilename, depth):
                 else:
                     newClause= newClause +c+" "
             newClause=newClause+"\n"
-            cnfClausesNew.append(newClause)\
+            transClausesNew.append(newClause)
             
-        for line in conjuncts:        
-            mapping[line] = mapping[line] + (range(n+1,n+1+len(cnfClauses)))
+        for line in conjuncts:
+            if isTrans[line]:       
+                mapping[line] = mapping[line] + (map(lambda x: x+len(transClausesNew), mapping[line]))
             
-        n = n + len(cnfClauses)
+        n = n + len(transClausesNew)
         p = p + len(props)
-        cnfClauses = cnfClauses + cnfClausesNew
+        cnfClauses = cnfClauses + transClausesNew
         
-            
             
     #write CNFs to file        
     open(outFilename, 'w').close()
@@ -92,4 +95,5 @@ def cnfToConjuncts(cnfIndices, mapping):
         i = i + 1
         if not set(mapping[k]).isdisjoint(cnfIndices):
             conjuncts.append(k)
+            print k
     return conjuncts

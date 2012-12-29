@@ -1162,11 +1162,13 @@ class SpecEditorFrame(wx.Frame):
                 self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "RED")
+                
+        depth = 1;
 
         #get conjuncts to be minimized
-        conjuncts = self.highlightedConjuncts(to_highlight)
+        conjuncts, isTrans = self.highlightedConjuncts(to_highlight)
         if conjuncts!=[]:
-            mapping = conjunctsToCNF(conjuncts, self.propList,self.proj.getFilenamePrefix()+".cnf",1)
+            mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",depth)
 
 
             cmd = self._getPicosatCommand()
@@ -1191,7 +1193,10 @@ class SpecEditorFrame(wx.Frame):
             cnfIndices = []
             for line in input:
                 if re.match('^v', line):
-                    cnfIndices.append(int(line.strip('v').strip()))
+                    index = int(line.strip('v').strip())
+                    if index!=0:
+                        cnfIndices.append(index)
+                        print index
             input.close()                    
             
             #get contributing conjuncts from CNF indices
@@ -1235,6 +1240,7 @@ class SpecEditorFrame(wx.Frame):
         
     def highlightedConjuncts(self, to_highlight):  
         conjuncts = []
+        isTrans = {}
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
 
@@ -1244,17 +1250,21 @@ class SpecEditorFrame(wx.Frame):
                 self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
                 for k,v in self.LTL2LineNo.iteritems():
                     if v == self.traceback[tb_key][h_item[2]]:
-                        newCs = k.split('\n') 
-                conjuncts = conjuncts + newCs
+                        newCs = k.split('\n')                 
                 for p in self.propList:
                     old = ''+str(p)
                     new = 'next('+str(p)+')'
-                    newCs = map(lambda s: s.replace(old,new), newCs)
-                conjuncts = conjuncts + newCs            
+                    newCs = map(lambda s: s.replace(old,new), newCs)                            
             else:
                 newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
-                conjuncts = conjuncts + [item for sublist in newCs for item in sublist]
-        return conjuncts
+                newCs = [item for sublist in newCs for item in sublist]
+            for clause in newCs:
+                if h_item[1] == "trans":
+                    isTrans[clause] = 1
+                else:
+                    isTrans[clause] = 0  
+            conjuncts = conjuncts + newCs              
+        return conjuncts, isTrans
                 
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
