@@ -97,7 +97,7 @@ public class GROneDebug {
 			 debugInfo += "System initial condition is unsatisfiable." + "\n";
 			 explainSys = 1;
 		 
-		 } else if ((sys.initial().and(sys.trans())).isZero()) {
+		 } else if (((sys.trans())).isZero()) {
 			 debugInfo += "System transition relation is unsatisfiable." + "\n";
 			 explainSys = 1;
 		 } 
@@ -105,7 +105,7 @@ public class GROneDebug {
 		 if (env.initial().isZero()) {
 			  debugInfo += "Environment initial condition is unsatisfiable." + "\n";
 			  explainEnv = 1;	 
-		 } else if ((env.initial().and(env.trans())).isZero()) {
+		 } else if (((env.trans())).isZero()) {
 			  debugInfo += "Environment transition relation is unsatisfiable." + "\n";
 			  explainEnv = 1;
 		 } 
@@ -120,14 +120,14 @@ public class GROneDebug {
 		 
 		  BDD counter_example = g.envWinningStates().and(all_init);
 		  try { 
-			  if (!counter_example.isZero()) {
+			  if (explainSys == 0 && !counter_example.isZero()) {
 				//checking for multi-step unsatisfiability between sys transitions/safety and initial condition					 
 				//since the second argument is false, we are looking for deadlock 	
 				if (g.calculate_counterstrategy(counter_example, false, false)) { 			 
 					 debugInfo += "System initial condition inconsistent with transition relation." + "\n";
 					 explainSys = 1;
 				 }
-			  } else {		  
+			  } else if (explainEnv == 0 && counter_example.isZero()) {		  
 				//checking for multi-step unsatisfiability between env transitions/safety and initial condition
 				//since the first argument is 1, we only allow system transitions of type \rho_1
 				//so we are looking for sequences of moves that take us to deadlock only
@@ -184,7 +184,7 @@ public class GROneDebug {
 			debugInfo += "Specification is realizable assuming instantaneous actions.\n";
 		}	
 			
-		if (!(env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
+		if (!(explainEnv == 1 || env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
 			
 			boolean flagRealPrev = false;
 		
@@ -239,7 +239,7 @@ public class GROneDebug {
 			System.err.println("Error: " + e.getMessage());
 		}*/
 		
-		if (!(sys.justiceNum()==1 && sys.justiceAt(0).equals(Env.TRUE()))) {
+		if (!(explainSys == 1 || sys.justiceNum()==1 && sys.justiceAt(0).equals(Env.TRUE()))) {
 			for (int i = 1; i <= sys.justiceNum(); i++){
 				 if (sys.justiceAt(i-1).isZero()) {
 					 debugInfo += "System highlighted goal(s) unsatisfiable " + (i-1) + "\n";
