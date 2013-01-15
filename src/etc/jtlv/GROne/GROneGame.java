@@ -1043,6 +1043,7 @@ public class GROneGame {
 				}
 				for (BDDIterator envIter = primed_cur_succ_all.iterator(env.modulePrimeVars()); envIter.hasNext();) {
 					//oldInput = input;
+					input = Env.FALSE();
 					BDD primed_cur_succ = ((BDD) envIter.next());
 					
 					
@@ -1051,7 +1052,8 @@ public class GROneGame {
 					//special caze when we are in Z_0. Either we force a safety violation, or we go to the relevant y2_mem[a][j], 
 					//and continue to violate the system liveness j						
 						//FIRST, WE CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
-						input = (p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
+						input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
+						input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az])))) )));
 						//input = input.or(p_st.and((sys.yieldStates(env,Env.FALSE()))));//CONSIDERS ALL ENV. MOVES
 						
 //						//OTHERWISE (subsumed by \rho_4):
@@ -1071,7 +1073,7 @@ public class GROneGame {
 						
 					} else {	
 						
-						input = (p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az-1])))) )));
+						input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az-1])))) )));
 						//System.out.println(p_st.and((primed_cur_succ.and((sys.yieldStates(env,sys.justiceAt(p_j).not().or(z2_mem[p_az-1])))))));	
 
 					}
@@ -1110,8 +1112,8 @@ public class GROneGame {
 					//\rho_2 transitions		                
 					if (rank_j == -1) {
 						//same thing as above -- Z_0 is special
-						if (p_az == 0) input = (p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,Env.FALSE())).not()));
-						else input = (p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,z2_mem[p_az-1])).not()));
+						if (p_az == 0) input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,Env.FALSE())).not()));
+						else input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,z2_mem[p_az-1])).not()));
 						//if (p_az == 0) input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))));
 						//else input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))));
 						if (!input.isZero()) {
@@ -1181,6 +1183,7 @@ public class GROneGame {
 					if (oldInput.isZero() && !det) return false; 	
 				}
 				
+				
 				assert (!(oldInput.isZero() && det)) : p_st + "No successor was found";
 				addState(new_state, oldInput, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
 				
@@ -1188,7 +1191,7 @@ public class GROneGame {
                 //when detecting system unsatisfiability, all env actions in primed_cur_succ_all (which is actualy Env.TRUE() in the nondet case) should be valid
 				//result = result & (input.equals(p_st.and(env.trans())));
 				result = result & (oldInput.equals(p_st.and(primed_cur_succ_all)));
-                if (!result) break;
+                if (!result && !det) break;
 				//result is true if for every state, all environment actions take us into a lower iterate of Z
 				//this means the environment can do anything to prevent the system from achieving some goal.
 				
