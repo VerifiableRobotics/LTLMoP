@@ -102,6 +102,7 @@ class SimGUI_Frame(wx.Frame):
         self.markerPos = None
 
         self.dialogueManager = None
+        self.currentGoal = None
 
         self.Bind( wx.EVT_CLOSE, self.onClose)
 
@@ -180,6 +181,12 @@ class SimGUI_Frame(wx.Frame):
             elif input.startswith("REGIONS:"):
                 wx.CallAfter(self.loadRegionFile, input.split(":",1)[1])
             else:
+                # Detect our current goal index
+                if input.startswith("Now in state"):
+                    m = re.search(r"\(z = (\d+)\)", input)
+                    if m is not None:
+                        self.currentGoal = int(m.group(1))
+
                 if self.checkbox_statusLog_other.GetValue():
                     if input != "":
                         wx.CallAfter(self.appendLog, input + "\n", color="BLACK") 
@@ -430,7 +437,7 @@ class SimGUI_Frame(wx.Frame):
             self.text_ctrl_slurpout.AppendText("Error: Dialogue Manager not initialized")
             self.text_ctrl_slurpout.EndBold()
         else:
-            sys_text = self.dialogueManager.tell(user_text, 0) #TODO: use actual goal number
+            sys_text = self.dialogueManager.tell(user_text, self.currentGoal)
             self.text_ctrl_slurpout.BeginBold()
             self.text_ctrl_slurpout.AppendText("System: ")
             self.text_ctrl_slurpout.EndBold()
