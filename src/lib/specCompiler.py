@@ -197,13 +197,32 @@ class SpecCompiler(object):
             LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
             LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
 
-            # substitute decomposed region names
+            # substitute decomposed region 
             for r in self.proj.rfi.regions:
                 if not (r.isObstacle or r.name.lower() == "boundary"):
                     LTLspec_env = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
                     LTLspec_sys = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
 
             traceback = [] # HACK: needs to be something other than None
+        elif self.proj.compile_options["parser"] == "structured":
+            import parseEnglishToLTL
+
+            # substitute decomposed region 
+            for r in self.proj.rfi.regions:
+                if not (r.isObstacle or r.name.lower() == "boundary"):
+                    text = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
+
+            regionList = ["s."+x.name for x in self.parser.proj.rfi.regions]
+
+            spec, traceback, failed = parseEnglishToLTL.writeSpec(text, sensorList, regionList, robotPropList)
+
+            # Abort compilation if there were any errors
+            if failed:
+                return None
+
+            LTLspec_env = spec["EnvInit"] + spec["EnvTrans"] + spec["EnvGoals"]
+            LTLspec_sys = spec["SysInit"] + spec["SysTrans"] + spec["SysGoals"]
+
         else:
             print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
             return None
@@ -218,8 +237,7 @@ class SpecCompiler(object):
             text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
             robotPropList[i] = "s." + robotPropList[i]
 
-        if self.proj.compile_options["decompose"]:
-            regionList = [x.name for x in self.parser.proj.rfi.regions]
+        regionList = [x.name for x in self.parser.proj.rfi.regions]
 
         # Define the number of bits needed to encode the regions
         numBits = int(math.ceil(math.log(len(regionList),2)))

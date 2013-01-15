@@ -581,11 +581,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         if QuantifierFlag is not None:
             allRobotProp.remove("QUANTIFIER_PLACEHOLDER")
 
-    # replace all region names with the bit encoding
-    for key in spec:
-        spec[key] = replaceRegionName(spec[key],bitEncode,regionList)
-        
-    
     # Setting all empty subformulas to TRUE, and removing last & in 'EnvGoals' and 'SysGoals'
     if spec['EnvInit'] == '':
         spec['EnvInit'] = '\t\t\tTRUE & \n'

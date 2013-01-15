@@ -10,6 +10,12 @@ drop, 1
 radio, 1
 extinguish, 0
 
+CompileOptions:
+convexify: True
+parser: structured
+fastslow: False
+decompose: True
+
 CurrentConfigName:
 Basic Simulation
 

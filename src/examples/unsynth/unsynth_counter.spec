@@ -12,7 +12,9 @@ extinguish, 0
 
 CompileOptions:
 convexify: True
+parser: structured
 fastslow: False
+decompose: True
 
 Customs: # List of custom propositions
 
