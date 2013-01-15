@@ -303,19 +303,20 @@ def main(argv):
     
             toc = timer_func()
     
-            # TODO: Possibly implement max rate-limiting?
-            #while (toc - tic) < 0.05:
-            #   time.sleep(0.01)
-            #   toc = time.time()
-    
-            # Update GUI, no faster than 20Hz
-            if show_gui and (time.time() - last_gui_update_time > 0.05):
-                avg_freq = 0.9*avg_freq + 0.1*1/(toc-tic) # IIR filter
-                UDPSockTo.sendto("Running at approximately %dHz..." % int(avg_freq),addrTo)
+            # Rate limiting of execution and GUI update
+            while (toc - tic) < 0.05:
+                time.sleep(0.005)
+                toc = timer_func()
+
+            # Update GUI
+            # If rate limiting is disabled in the future add in rate limiting here for the GUI:
+            # if show_gui and (timer_func() - last_gui_update_time > 0.05)
+            if show_gui:
+                avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic) # IIR filter
+                UDPSockTo.sendto("Running at approximately %dHz..." % int(math.ceil(avg_freq)),addrTo)
                 pose = proj.h_instance['pose'].getPose(cached=True)[0:2]
                 UDPSockTo.sendto("POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose))),addrTo)
     
-                last_gui_update_time = time.time()
                 
     print "execute.py quitting..."
 
