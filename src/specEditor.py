@@ -1469,7 +1469,7 @@ class RedirectText:
 
         m = re.search(r"Could not parse the sentence in line (\d+)", string)
         if m:
-            self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1))-1,MARKER_PARSEERROR)
+            self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1)),MARKER_PARSEERROR)
 
 
 if __name__ == "__main__":
