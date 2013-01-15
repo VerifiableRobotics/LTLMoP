@@ -17,6 +17,7 @@ import wx, wx.richtext, wx.grid
 import threading
 import project, mapRenderer, regions
 from socket import *
+import copy
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -100,6 +101,8 @@ class SimGUI_Frame(wx.Frame):
 
         self.markerPos = None
 
+        self.dialogueManager = None
+
         self.Bind( wx.EVT_CLOSE, self.onClose)
 
         # Let everyone know we're ready
@@ -116,6 +119,10 @@ class SimGUI_Frame(wx.Frame):
         self.proj.loadProject(filename)
 
         self.Bind(wx.EVT_SIZE, self.onResize, self)
+
+        if self.proj.compile_options["parser"] == "slurp":
+            self.initDialogue()
+
         self.onResize()
 
     def controllerListen(self):
@@ -377,20 +384,61 @@ class SimGUI_Frame(wx.Frame):
         self.text_ctrl_sim_log.Clear()
         event.Skip()
 
+    def initDialogue(self):
+        # Add SLURP to path for import
+        p = os.path.dirname(os.path.abspath(__file__))
+        sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
+        from ltlbroom.specgeneration import SpecGenerator
+        _SLURP_SPEC_GENERATOR = SpecGenerator()
+    
+        # Filter out regions it shouldn't know about
+        filtered_regions = [region.name for region in self.proj.rfi.regions 
+                            if not (region.isObstacle or region.name.lower() == "boundary")]
+
+        sensorList = copy.deepcopy(self.proj.enabled_sensors)
+        robotPropList = self.proj.enabled_actuators + self.proj.all_customs
+        
+        text = self.proj.specText
+
+        LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
+            _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList)
+
+        from ltlbroom.dialog import DialogManager
+        self.dialogueManager = DialogManager(traceback)
+
     def onSLURPSubmit(self, event): # wxGlade: SimGUI_Frame.<event_handler>
         if self.text_ctrl_slurpin.GetValue() == "":
             event.Skip()
             return
+        
+        user_text = self.text_ctrl_slurpin.GetValue()
 
+        # echo
         self.text_ctrl_slurpout.BeginBold()
         self.text_ctrl_slurpout.AppendText("User: ")
         self.text_ctrl_slurpout.EndBold()
-        self.text_ctrl_slurpout.AppendText(self.text_ctrl_slurpin.GetValue() + "\n")
+        self.text_ctrl_slurpout.AppendText(user_text + "\n")
 
         self.text_ctrl_slurpout.ShowPosition(self.text_ctrl_slurpout.GetLastPosition())
         self.text_ctrl_slurpout.Refresh()
 
         self.text_ctrl_slurpin.Clear()
+
+        # response
+        if self.dialogueManager is None:
+            self.text_ctrl_slurpout.BeginBold()
+            self.text_ctrl_slurpout.AppendText("Error: Dialogue Manager not initialized")
+            self.text_ctrl_slurpout.EndBold()
+        else:
+            sys_text = self.dialogueManager.tell(user_text, 0) #TODO: use actual goal number
+            self.text_ctrl_slurpout.BeginBold()
+            self.text_ctrl_slurpout.AppendText("System: ")
+            self.text_ctrl_slurpout.EndBold()
+            self.text_ctrl_slurpout.AppendText(sys_text + "\n")
+
+        self.text_ctrl_slurpout.ShowPosition(self.text_ctrl_slurpout.GetLastPosition())
+        self.text_ctrl_slurpout.Refresh()
+
         event.Skip()
 
 # end of class SimGUI_Frame

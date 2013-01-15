@@ -208,7 +208,7 @@ def main(argv):
             time.sleep(0.05) # We need to sleep to give up the CPU
 
         # Tell GUI to load background image
-        message = "BG:" + proj.getFilenamePrefix() + ".spec"
+        message = "SPEC:" + proj.getFilenamePrefix() + ".spec"
         UDPSockTo.sendto(message,addrTo)
 
         # Redirect all output to the log
