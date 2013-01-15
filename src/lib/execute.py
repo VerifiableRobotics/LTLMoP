@@ -88,10 +88,10 @@ def guiListen(proj):
             print "PAUSED."
         elif input == "QUIT":
             runFSA = False
-            print "QUITTING."
+            print >>sys.__stderr__, "QUITTING."
             all_handler_types = ['init','pose','locomotionCommand','drive','motionControl','sensor','actuator']
             for htype in all_handler_types:
-                print "terminating {} handler...".format(htype)
+                print >>sys.__stderr__, "terminating {} handler...".format(htype)
                 if htype in proj.h_instance:
                     if isinstance(proj.h_instance[htype], dict):
                         handlers = [v for k,v in proj.h_instance[htype].iteritems()]
@@ -101,13 +101,13 @@ def guiListen(proj):
                     for h in handlers:
                            
                         if hasattr(h, "_stop"):
-                            print "> calling _stop() on {}".format(h.__class__.__name__) 
+                            print >>sys.__stderr__, "> calling _stop() on {}".format(h.__class__.__name__) 
                             h._stop()
                         else:
-                            print "> {} does not have _stop() function".format(h.__class__.__name__) 
+                            print >>sys.__stderr__, "> {} does not have _stop() function".format(h.__class__.__name__) 
                 else:
-                    print "not found in h_instance"
-            print "ending gui listen thread..."
+                    print >>sys.__stderr__, "not found in h_instance"
+            print >>sys.__stderr__, "ending gui listen thread..."
             return
                 
         else:
