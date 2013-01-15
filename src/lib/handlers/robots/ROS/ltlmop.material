@@ -1,0 +1,15 @@
+material Gazebo/LTLMoP
+{
+    technique
+    {
+        pass
+        {
+            texture_unit
+            {
+                texture ltlmop_map.png
+				rotate 90
+            }
+        }
+    }
+}
+

@@ -71,12 +71,14 @@ class Automaton:
             self.motion_handler = None
         self.h_instance = proj.h_instance
 
+        self.initialize()
+
+    def initialize(self):
         # Variables for keeping track of the current state
         self.current_state = None
         self.current_region = None
         self.current_outputs = {}
         self.arrived = False
-
 
     def stateWithName(self, name):
         """
@@ -179,6 +181,9 @@ class Automaton:
 
         Basically just a lot of regexes.
         """
+        # Clear any existing states
+        self.states = []
+        self.initialize()
 
         # These will be used later by updateOutputs() and findTransitionableState()
         self.actuators = actuators

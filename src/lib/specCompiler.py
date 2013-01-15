@@ -34,7 +34,10 @@ class SpecCompiler(object):
             print "ERROR: Please define regions before compiling."
             return
     
-        if self.proj.specText.strip() == "":
+        # Remove comments
+        self.specText = re.sub(r"#.*$", "", self.proj.specText, flags=re.MULTILINE)
+
+        if self.specText.strip() == "":
             print "ERROR: Please write a specification before compiling."
             return
 
@@ -457,8 +460,11 @@ class SpecCompiler(object):
 
     def compile(self, with_safety_aut=False):
         if self.proj.compile_options["decompose"]:
+            print "--> Decomposing..."
             self._decompose()
+        print "--> Writing LTL file..."
         tb = self._writeLTLFile()
+        print "--> Writing SMV file..."
         self._writeSMVFile()
 
         if tb is None:
@@ -466,5 +472,6 @@ class SpecCompiler(object):
             return 
 
         #self._checkForEmptyGaits()
+        print "--> Synthesizing..."
         return self._synthesize(with_safety_aut)
 

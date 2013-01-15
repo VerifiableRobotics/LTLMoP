@@ -426,6 +426,8 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Colour(200, 200, 0))
 
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
+
+        #self.text_ctrl_spec.SetEOLMode(wx.stc.STC_EOL_LF)
         
         # Listen for changes to the text
         self.text_ctrl_spec.SetModEventMask(self.text_ctrl_spec.GetModEventMask() & ~(wx.stc.STC_MOD_CHANGESTYLE | wx.stc.STC_MOD_CHANGEMARKER))
@@ -492,7 +494,7 @@ class SpecEditorFrame(wx.Frame):
         end = e.GetPosition()          # this is the last character that needs styling
 
         # Move back to the beginning of the line because apparently we aren't guaranteed to process line-wise chunks
-        while start > 1 and self.text_ctrl_spec.GetCharAt(start-1) != "\n":
+        while start > 0 and chr(self.text_ctrl_spec.GetCharAt(start-1)) != "\n":
             start -= 1
 
         # Set everything to the default style
@@ -517,7 +519,7 @@ class SpecEditorFrame(wx.Frame):
 
         # Find comment lines
         text = self.text_ctrl_spec.GetTextRange(start,end)
-        for m in re.finditer("^#.*?\n", text, re.MULTILINE):
+        for m in re.finditer("^#.*?$", text, re.MULTILINE):
             self.text_ctrl_spec.StartStyling(start+m.start(), 31)
             self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_COMMENTLINE)
 
@@ -779,8 +781,9 @@ class SpecEditorFrame(wx.Frame):
             default = self.proj.getFilenamePrefix() + ".spec"
 
         # Get a filename
-        filename = wx.FileSelector("Save File As", "examples",
-                                  default_filename=default,
+        filename = wx.FileSelector("Save File As", 
+                                  default_path=os.path.dirname(default),
+                                  default_filename=os.path.basename(default),
                                   default_extension="spec",
                                   wildcard="Specification files (*.spec)|*.spec",
                                   flags = wx.SAVE | wx.OVERWRITE_PROMPT)
@@ -835,6 +838,8 @@ class SpecEditorFrame(wx.Frame):
         #####################################
 
         self.text_ctrl_spec.AppendText(self.proj.specText)
+        #self.text_ctrl_spec.ConvertEOLs(wx.stc.STC_EOL_LF)
+
         if self.proj.rfi is not None:
             self.updateFromRFI()
 
@@ -1262,8 +1267,8 @@ class SpecEditorFrame(wx.Frame):
         event.Skip()
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        # auto-compile the specification before analysis 
-        compiler = self.onMenuCompile(event, with_safety_aut=True)
+        #TODO: check to see if we need to recompile
+        compiler = self.onMenuCompile(event, with_safety_aut=False)
 
         # instantiate if necessary
         if self.analysisDialog is None:
@@ -1368,6 +1373,11 @@ class SpecEditorFrame(wx.Frame):
         name = wx.GetTextFromUser("Name:", "New %s Proposition" % prop_prefix.title(), default_name)
 
         if name != "":
+            if name[0].isdigit():
+                wx.MessageBox("Propositions must begin with a letter.", "Invalid proposition name",
+                            style = wx.OK | wx.ICON_ERROR)
+                return
+
             # If it's valid, add it, select it and enable it
             lb.Insert(name, lb.GetCount())
             lb.Select(lb.GetCount()-1)
@@ -1459,7 +1469,7 @@ class RedirectText:
 
         m = re.search(r"Could not parse the sentence in line (\d+)", string)
         if m:
-            self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1)),MARKER_PARSEERROR)
+            self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1))-1,MARKER_PARSEERROR)
 
 
 if __name__ == "__main__":

@@ -51,10 +51,6 @@ SNAP_RADIUS = 10
  menu_POLY,         menu_ADD_PT,        menu_DEL_PT,
  menu_CALIB_PT,     menu_ABOUT] = [wx.NewId() for i in range(14)]
 
-# Timer IDs:
-
-id_SNAP_TIMER = wx.NewId()
-
 # Tool IDs:
 
 [id_SELECT,     id_RECT,    id_POLY,
@@ -105,7 +101,7 @@ class DrawingFrame(wx.Frame):
 
         # Setup our snapping support.
 
-        self.snapTimer = wx.Timer(self, id_SNAP_TIMER)
+        self.snapTimer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.onTimerEvent)
         self.lastCursor = None
         self.snapCoords = None
@@ -178,7 +174,6 @@ class DrawingFrame(wx.Frame):
         self.toolbar.AddSimpleTool(menu_UNDO,
                                    wx.ArtProvider.GetBitmap(wx.ART_UNDO, wx.ART_TOOLBAR, tsize),
                                    "Undo")
-        self.toolbar.AddSeparator()
         self.toolbar.AddSimpleTool(menu_DUPLICATE,
                                    wx.Bitmap("images/duplicate.bmp",
                                             wx.BITMAP_TYPE_BMP),
@@ -374,14 +369,13 @@ class DrawingFrame(wx.Frame):
     
     def testNear(self):
         newReg = self.selection[0].findRegionNear(20, mode='overEstimate')
-        obj = DrawableRegion(newReg.type)
-        obj.setData(newReg.getData())
+        obj = DrawableRegion.fromRegion(newReg)
         self.rfi.regions.append(obj)
         self.drawPanel.Refresh()
 
     def testBetween(self):
         newReg = findRegionBetween(self.selection[0], self.selection[1])
-        obj = DrawableRegion(newReg.type)
+        obj = DrawableRegion.fromRegion(newReg)
         obj.setData(newReg.getData())
         self.rfi.regions.append(obj)
         self.drawPanel.Refresh()
@@ -716,8 +710,8 @@ class DrawingFrame(wx.Frame):
                         if obj in self.selection:
                             # TODO: because of the getObjectAt call,
                             # clicks outside the object will not be recognized
-                            for i, face in enumerate(obj.getFaces()):
-                                [on_segment, d, pint] = pointLineIntersection(wx.Point(*face[0]), wx.Point(*face[1]), mousePt)
+                            for i, (face_pta, face_ptb) in enumerate(obj.getFaces()):
+                                [on_segment, d, pint] = pointLineIntersection(face_pta, face_ptb, mousePt)
                                 if on_segment and d <= 4:
                                     self._saveUndoInfo()
                                     obj.addPoint(pint-obj.position, i+1)
@@ -734,7 +728,7 @@ class DrawingFrame(wx.Frame):
 
                     for obj in self.rfi.regions:
                         topLeft = obj.position
-                        botRight = obj.position + wx.Point(obj.size.GetWidth(), obj.size.GetHeight())
+                        botRight = obj.position + Point(obj.size.GetWidth(), obj.size.GetHeight())
                             
                         # First do rough checking based on obj bound rects
                         if (topLeft.x > mousePt.x + SNAP_RADIUS or botRight.x < mousePt.x - SNAP_RADIUS or
@@ -791,7 +785,9 @@ class DrawingFrame(wx.Frame):
     def onTimerEvent(self, event):
         timerID = event.GetEventObject().GetId()
 
-        if timerID == id_SNAP_TIMER:
+        # temporary workaround for what appears to be a bug on OS X with wxversion=2.9.3.1 osx-cocoa (classic)
+        #if timerID == self.snapTimer.GetId():
+        if True:
             if self.curTool == self.selectIcon and self.mouseMode != mouse_RESIZE: return
 
             # Allow snapping to first point of polygon in creation
@@ -807,7 +803,7 @@ class DrawingFrame(wx.Frame):
                 if self.mouseMode == mouse_RESIZE and len(self.selection) != 0 and self.selection[0] == obj: continue
 
                 topLeft = obj.position
-                botRight = obj.position + wx.Point(obj.size.GetWidth(), obj.size.GetHeight())
+                botRight = obj.position + Point(obj.size.GetWidth(), obj.size.GetHeight())
                     
                 # First do rough checking based on obj bound rects
                 if (topLeft.x > self.curPt.x + SNAP_RADIUS or botRight.x < self.curPt.x - SNAP_RADIUS or
@@ -915,8 +911,8 @@ class DrawingFrame(wx.Frame):
                 textWidth, textHeight = dc.GetTextExtent(labelText)
                 
                 # TODO: Better text placement algorithm for concave polygons?
-                dc.SetBrush(wx.Brush(obj.color, wx.SOLID))
-                dc.SetPen(wx.Pen(obj.color, 1, wx.SOLID))
+                dc.SetBrush(wx.Brush(wx.Colour(*obj.color), wx.SOLID))
+                dc.SetPen(wx.Pen(wx.Colour(*obj.color), 1, wx.SOLID))
                 center = obj.getCenter()
                 if obj.name.lower() == "boundary":
                     textX = obj.position.x
@@ -1022,6 +1018,7 @@ class DrawingFrame(wx.Frame):
         """
 
         self.transitionFaces = self.rfi.recalcAdjacency() # This is just a list of faces to draw dotted lines on
+        #self.transitionFaces = dict((face, None) for face in self.rfi.getExternalFaces())
 
         #self.drawPanel.Refresh()
 
@@ -1425,8 +1422,8 @@ class DrawingFrame(wx.Frame):
         """
         self._saveUndoInfo()
 
-        obj = DrawableRegion(reg_RECT, position=wx.Point(x, y),
-                            size=wx.Size(width, height))
+        obj = DrawableRegion(reg_RECT, position=Point(x, y),
+                            size=Size(width, height))
         self.rfi.setToDefaultName(obj)
         self.checkSubfaces(obj)
         self.rfi.regions.insert(0, obj)
@@ -1505,8 +1502,7 @@ class DrawingFrame(wx.Frame):
 
         # Convert from Regions to DrawableRegions
         for i, region in enumerate(self.rfi.regions):
-            obj = DrawableRegion(region.type)
-            obj.setData(region.getData())
+            obj = DrawableRegion.fromRegion(region)
             self.rfi.regions[i] = obj
             del region
 
@@ -1665,10 +1661,10 @@ class DrawingFrame(wx.Frame):
 
             obj.recalcBoundingBox()
         else:
-            topLeft  = wx.Point(min(anchorPt.x, newPt.x),
-                               min(anchorPt.y, newPt.y))
-            botRight = wx.Point(max(anchorPt.x, newPt.x),
-                               max(anchorPt.y, newPt.y))
+            topLeft  = Point(min(anchorPt.x, newPt.x),
+                             min(anchorPt.y, newPt.y))
+            botRight = Point(max(anchorPt.x, newPt.x),
+                             max(anchorPt.y, newPt.y))
 
             newWidth  = botRight.x - topLeft.x
             newHeight = botRight.y - topLeft.y
@@ -1676,7 +1672,7 @@ class DrawingFrame(wx.Frame):
             # Finally, adjust the bounds of the object to match the new dimensions.
     
             obj.position = topLeft
-            obj.size = wx.Size(botRight.x - topLeft.x, botRight.y - topLeft.y)
+            obj.size = Size(botRight.x - topLeft.x, botRight.y - topLeft.y)
 
         self.checkSubfaces(obj)
 
@@ -1692,10 +1688,7 @@ class DrawingFrame(wx.Frame):
         self._saveUndoInfo()
 
         for obj in self.selection:
-            pos = obj.position
-            pos.x = pos.x + offsetX
-            pos.y = pos.y + offsetY
-            obj.position = pos
+            obj.position += Point(offsetX, offsetY)
 
         self.drawPanel.Refresh()
         self.dirty = True
@@ -1750,9 +1743,7 @@ class DrawingFrame(wx.Frame):
                 # Special case for boundary: only react to clicks on perimeter
 
                 # Check faces
-                for face in obj.getFaces():
-                    pta = wx.Point(*face[0])
-                    ptb = wx.Point(*face[1])
+                for pta, ptb in obj.getFaces():
                     [on_segment, d, pint] = pointLineIntersection(pta, ptb, pt)
                     if on_segment and d <= BOUNDARY_TOLERANCE:
                         return obj
@@ -1780,14 +1771,17 @@ class DrawingFrame(wx.Frame):
         dc.BeginDrawing()
         dc.SetPen(wx.BLACK_DASHED_PEN)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        dc.SetLogicalFunction(wx.INVERT)
+        
+        # workaround; INVERT seems not to work on OS X
+        if sys.platform != 'darwin':
+            dc.SetLogicalFunction(wx.INVERT)
 
         for i in xrange(len(self.selection)):
             position = self.selection[i].position
             size     = self.selection[i].size
     
             if self.selection[i].type == reg_POLY:
-                dc.DrawLines(self.selection[i].pointArray + [self.selection[i].pointArray[0]],
+                dc.DrawLines([wx.Point(p.x, p.y) for p in self.selection[i].pointArray + [self.selection[i].pointArray[0]]],
                              position.x + offsetX, position.y + offsetY)
             else:
                 dc.DrawRectangle(position.x + offsetX, position.y + offsetY,
@@ -1822,7 +1816,10 @@ class DrawingFrame(wx.Frame):
         else:
             dc.SetPen(wx.BLACK_PEN)
         dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        dc.SetLogicalFunction(wx.INVERT)
+
+        # workaround; INVERT seems not to work on OS X
+        if sys.platform != 'darwin':
+            dc.SetLogicalFunction(wx.INVERT)
 
         if type == feedback_RECT:
             dc.DrawRectangle(startPt.x, startPt.y,
@@ -1980,14 +1977,14 @@ class EditRegionDialog(wx.Dialog):
         """
         self.textCtrl.SetValue(obj.name)
         self.textCtrl.SetSelection(0, len(obj.name))
-        self.colorPicker.SetColour(obj.color)
+        self.colorPicker.SetColour(wx.Colour(*obj.color))
         self.checkbox_obstacle.SetValue(obj.isObstacle)
 
     def dialogToObject(self, obj):
         """ Copy the properties from the dialog box into the given text object.
         """
         obj.name = self.textCtrl.GetValue()
-        obj.color = self.colorPicker.GetColour()
+        obj.color = Color(*self.colorPicker.GetColour())
         obj.isObstacle = self.checkbox_obstacle.GetValue()
 
 #----------------------------------------------------------------------------

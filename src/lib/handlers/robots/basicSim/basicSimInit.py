@@ -13,14 +13,13 @@ class initHandler:
 
         init_region (region): The name of the region where the simulated robot starts
         """
+        
+        rfi_original = proj.loadRegionFile(decomposed=False)
 
         # Start in the center of the defined initial region
-        for i,r in enumerate(proj.rfiold.regions):
-            if r.name == init_region:
-                init_region = r
-                break
-        init_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName(proj.regionMapping[init_region.name][0])]
-        center = init_region.getCenter()
+        init_region_obj = rfi_original.regions[rfi_original.indexOfRegionWithName(init_region)]
+        center = init_region_obj.getCenter()
+
         #initialize the simulator
         self.simulator =  basicSimulator.basicSimulator([center[0],center[1],0.0])
 
