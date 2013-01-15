@@ -91,6 +91,10 @@ class SensorEditorFrame(wx.Frame):
         """
         line = input.get().strip()
 
+        if line == ":QUIT":
+            wx.CallAfter(self.Close)
+            return
+
         try: 
             # Read in the information
             [sensor_type, sensor_name, sensor_value] = line.split(",")

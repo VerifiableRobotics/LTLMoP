@@ -9,6 +9,7 @@ Displays a silly little window for faking sensor values by clicking on buttons.
 
 import threading, subprocess, os, time, socket
 import numpy, math
+import sys
 
 class sensorHandler:
     def __init__(self, proj, shared_data):
@@ -21,16 +22,25 @@ class sensorHandler:
         self.sensorValue = {}
         self.proj = proj
         self.sensorListenInitialized = False
+        self._running = True
 
+    def _stop(self):
+        print >>sys.__stderr__, "(SENS) Killing dummysensor GUI..."
+        self.p_sensorHandler.stdin.write(":QUIT\n")
+
+        print >>sys.__stderr__, "(SENS) Terminating dummysensor GUI listen thread..."
+        self._running = False
+        self.sensorListenThread.join()
+        
     def _createSubwindow(self):
             # Create a subprocess
             print "(SENS) Starting sensorHandler window and listen thread..."
             self.p_sensorHandler = subprocess.Popen(["python", "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stdin=subprocess.PIPE)
-
+        
             # Create new thread to communicate with subwindow
-            sensorListenThread = threading.Thread(target = self._sensorListen)
-            sensorListenThread.daemon = True
-            sensorListenThread.start()
+            self.sensorListenThread = threading.Thread(target = self._sensorListen)
+            self.sensorListenThread.daemon = True
+            self.sensorListenThread.start()
 
             # Block until the sensor listener gets the go-ahead from the subwindow
             while not self.sensorListenInitialized:
@@ -104,16 +114,20 @@ class sensorHandler:
 
         UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         UDPSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        UDPSock.settimeout(1200)
+        UDPSock.settimeout(1)
         try:
             UDPSock.bind(addr)
         except:
             print "ERROR: Cannot bind to port.  Try killing all Python processes and trying again."
             return
 
-        while 1:
+        while self._running:
             # Wait for and receive a message from the subwindow
-            input,addrFrom = UDPSock.recvfrom(1024)
+            try:
+                input,addrFrom = UDPSock.recvfrom(1024)
+            except socket.timeout:
+                continue
+
             if input == '':  # EOF indicates that the connection has been destroyed
                 print "(SENS) Sensor handler listen thread is shutting down."
                 break

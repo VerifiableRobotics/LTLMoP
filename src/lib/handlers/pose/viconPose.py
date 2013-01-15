@@ -36,7 +36,12 @@ class poseHandler:
 
         # Wait for first data to come in
         while self.s.getData() is None: pass
-
+    
+    def _stop(self):
+        print "Vicon pose handler quitting..."
+        self.s.stopStreams()
+        print "Terminated."
+        
     def getPose(self, cached=False):
         
         (t, x, y, o) = self.s.getData()

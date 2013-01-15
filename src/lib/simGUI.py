@@ -97,10 +97,10 @@ class SimGUI_Frame(wx.Frame):
 
         self.markerPos = None
 
+        self.Bind( wx.EVT_CLOSE, self.onClose)
+
         # Let everyone know we're ready
         self.UDPSockTo.sendto("Hello!",self.addrTo)
-
-        self.Bind(wx.EVT_CLOSE, self.onQuit)
 
     def setMapImage(self, filename):
         # Load and display the map
@@ -359,14 +359,14 @@ class SimGUI_Frame(wx.Frame):
 
         f.close()
 
-    def onSimClear(self, event): # wxGlade: SimGUI_Frame.<event_handler>
-        self.text_ctrl_sim_log.Clear()
+    def onClose(self, event):
+        print >>sys.__stderr__, "Telling execute.py to quit!"
+        self.UDPSockTo.sendto("QUIT",self.addrTo) # This goes to the controller
+        time.sleep(2)
         event.Skip()
 
-    def onQuit(self, event):
-        print "Telling execute.py to quit..."
-        self.UDPSockTo.sendto("QUIT",self.addrTo) # This goes to the controller
-        self.UDPSockTo.sendto("\n",self.addrTo) # This goes to the controller
+    def onSimClear(self, event): # wxGlade: SimGUI_Frame.<event_handler>
+        self.text_ctrl_sim_log.Clear()
         event.Skip()
 
     def onSLURPSubmit(self, event): # wxGlade: SimGUI_Frame.<event_handler>

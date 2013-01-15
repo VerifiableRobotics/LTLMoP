@@ -24,6 +24,7 @@ from numpy import *
 from handlers.motionControl.__is_inside import is_inside
 from socket import *
 
+
 ####################
 # HELPER FUNCTIONS #
 ####################
@@ -47,7 +48,7 @@ def usage(script_name):
 # THREAD FUNCTIONS #
 ####################
 
-def guiListen():
+def guiListen(proj):
     """
     Processes messages from the GUI window, and reacts accordingly
     """
@@ -86,8 +87,29 @@ def guiListen():
             runFSA = False
             print "PAUSED."
         elif input == "QUIT":
-            print "Quitting."
-            sys.exit(0)
+            runFSA = False
+            print >>sys.__stderr__, "QUITTING."
+            all_handler_types = ['init','pose','locomotionCommand','drive','motionControl','sensor','actuator']
+            for htype in all_handler_types:
+                print >>sys.__stderr__, "terminating {} handler...".format(htype)
+                if htype in proj.h_instance:
+                    if isinstance(proj.h_instance[htype], dict):
+                        handlers = [v for k,v in proj.h_instance[htype].iteritems()]
+                    else:
+                        handlers = [proj.h_instance[htype]]
+                    
+                    for h in handlers:
+                           
+                        if hasattr(h, "_stop"):
+                            print >>sys.__stderr__, "> calling _stop() on {}".format(h.__class__.__name__) 
+                            h._stop()
+                        else:
+                            print >>sys.__stderr__, "> {} does not have _stop() function".format(h.__class__.__name__) 
+                else:
+                    print >>sys.__stderr__, "not found in h_instance"
+            print >>sys.__stderr__, "ending gui listen thread..."
+            return
+                
         else:
             print "WARNING: Unknown command received from GUI: " + input
 
@@ -171,7 +193,7 @@ def main(argv):
 
 
         # Create new thread to communicate with subwindow
-        guiListenThread = threading.Thread(target = guiListen)
+        guiListenThread = threading.Thread(target = guiListen, args=(proj,))
         guiListenThread.daemon = True
         guiListenThread.start()
 
@@ -193,7 +215,7 @@ def main(argv):
         redir = RedirectText(UDPSockTo, addrTo)
 
         sys.stdout = redir
-        sys.stderr = redir
+        #sys.stderr = redir
 
     #######################
     # Load automaton file #
@@ -269,30 +291,33 @@ def main(argv):
     else:
         timer_func = time.time
 
-    while True:
+    while not show_gui or guiListenThread.isAlive():
         # Idle if we're not running
-        while not runFSA:
+        if not runFSA:
             proj.h_instance['drive'].setVelocity(0,0)
             time.sleep(0.05) # We need to sleep to give up the CPU
-
-        tic = timer_func()
-        FSA.runIteration()
-        toc = timer_func()
-        
-        # Rate limiting of execution and GUI update
-        while (toc - tic) < 0.05:
-            time.sleep(0.005)
+        else:    
+            tic = timer_func()
+    
+            FSA.runIteration()
+    
             toc = timer_func()
-
-        # Update GUI
-        # If rate limiting is disabled in the future add in rate limiting here for the GUI:
-        # if show_gui and (timer_func() - last_gui_update_time > 0.05)
-        if show_gui:
-            avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic) # IIR filter
-            UDPSockTo.sendto("Running at approximately %dHz..." % int(avg_freq),addrTo)
-            pose = proj.h_instance['pose'].getPose(cached=True)[0:2]
-            UDPSockTo.sendto("POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose))),addrTo)
-
+    
+            # TODO: Possibly implement max rate-limiting?
+            #while (toc - tic) < 0.05:
+            #   time.sleep(0.01)
+            #   toc = time.time()
+    
+            # Update GUI, no faster than 20Hz
+            if show_gui and (time.time() - last_gui_update_time > 0.05):
+                avg_freq = 0.9*avg_freq + 0.1*1/(toc-tic) # IIR filter
+                UDPSockTo.sendto("Running at approximately %dHz..." % int(avg_freq),addrTo)
+                pose = proj.h_instance['pose'].getPose(cached=True)[0:2]
+                UDPSockTo.sendto("POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose))),addrTo)
+    
+                last_gui_update_time = time.time()
+                
+    print "execute.py quitting..."
 
 class RedirectText:
     """
@@ -310,5 +335,6 @@ class RedirectText:
 
 
 if __name__ == "__main__":
+    #import rpdb2; rpdb2.start_embedded_debugger("asdf")
     main(sys.argv)
 
