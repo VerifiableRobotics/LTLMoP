@@ -164,6 +164,7 @@ class SpecCompiler(object):
             time.sleep(0.1)
 
         realizable = False    
+        unsat = False
         nonTrivial = False
 
         output = ""
@@ -223,6 +224,9 @@ class SpecCompiler(object):
                 to_highlight.append(("env", "trans"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("env", "goals", int(l)))
+                    
+            if "unsatisfiable" in dline or "inconsistent" in dline :
+                unsat = True
 
         # check for trivial initial-state automaton with no transitions
         if realizable:
@@ -240,7 +244,7 @@ class SpecCompiler(object):
 
         subp.stdout.close()
 
-        return (realizable, nonTrivial, to_highlight, output)
+        return (realizable, unsat, nonTrivial, to_highlight, output)
 
     def _synthesize(self, with_safety_aut=False):
         cmd = self._getGROneCommand("GROneMain")

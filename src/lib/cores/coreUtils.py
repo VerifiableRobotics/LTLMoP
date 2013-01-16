@@ -95,5 +95,4 @@ def cnfToConjuncts(cnfIndices, mapping):
         i = i + 1
         if not set(mapping[k]).isdisjoint(cnfIndices):
             conjuncts.append(k)
-            print k
     return conjuncts

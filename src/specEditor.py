@@ -1153,7 +1153,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Running analysis...\n", "BLUE")
 
-        (realizable, nonTrivial, to_highlight, output) = compiler._analyze()
+        (realizable, unsat, nonTrivial, to_highlight, output) = compiler._analyze()
 
         self.appendLog(output, "BLACK")
 
@@ -1163,14 +1163,17 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "RED")
                 
-        guilty = self.findCores(to_highlight)
+       if unsat:
+            guilty = self.findCoresUnsat(to_highlight)#returns LTL  
+        else:
+            guilty = self.findCoresUnsat(to_highlight)#returns LTL        
         
         #highlight guilty sentences
         self.highlightCores(guilty)
                 
                 
         
-    def findCores(self,to_highlight):
+    def findCoresUnsat(self,to_highlight):
         #get conjuncts to be minimized
         conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
         
@@ -1197,7 +1200,58 @@ class SpecEditorFrame(wx.Frame):
                 sys.stdout = sys.__stdout__
                 sys.stderr = sys.__stderr__
                 output = subp.stdout.read()
-                #this is the BMC part: keep adding cnf clauses fro mthe transitions until the spec becomes unsatisfiable
+                #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
+                if "UNSATISFIABLE" in output or depth >= maxDepth:
+                    break
+                depth = depth +1
+            
+            outputFile.write(output)
+            outputFile.close()
+            
+            #get indices of contributing clauses
+            input = open(satFileName, 'r')
+            cnfIndices = []
+            for line in input:
+                if re.match('^v', line):
+                    index = int(line.strip('v').strip())
+                    if index!=0:
+                        cnfIndices.append(index)
+            input.close()                    
+            
+            #get contributing conjuncts from CNF indices
+            guilty = cnfToConjuncts(cnfIndices, mapping)
+            
+            return guilty
+        
+        
+    def findCoresUnreal(self,to_highlight):
+        #get conjuncts to be minimized
+        conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
+        
+        if conjuncts!=[]:
+            maxDepth = 10
+            depth = 1
+            output = ""
+            
+            while True:
+                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",depth)
+    
+    
+                cmd = self._getPicosatCommand()
+                if cmd is None:
+                    return (False, False, [], "")
+        
+                #find minimal unsatisfiable core
+                satFileName = self.proj.getFilenamePrefix()+".sat"
+                outputFile = open(satFileName,'w')
+                subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+                while subp.poll():
+                    time.sleep(0.1)
+            
+                sys.stdout = sys.__stdout__
+                sys.stderr = sys.__stderr__
+                output = subp.stdout.read()
+                #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
                 if "UNSATISFIABLE" in output or depth >= maxDepth:
                     break
                 depth = depth +1
@@ -1236,7 +1290,8 @@ class SpecEditorFrame(wx.Frame):
     
     
     def highlightCores(self, guilty):               
-           for g in guilty:
+           if guilty is not None:
+            for g in guilty:
                 for k,v in self.LTL2LineNo.iteritems():
                     newCs = k.split('\n')
                     if not set(guilty).isdisjoint(newCs):
