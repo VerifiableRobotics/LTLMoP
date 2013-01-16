@@ -176,6 +176,8 @@ class SpecCompiler(object):
                         LTLspec_sys = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
                         LTLspec_sys = re.sub('\\be\.' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
 
+            response = responses
+
         elif self.proj.compile_options["parser"] == "ltl":
             # delete comments
             text = re.sub(r"#.*$", "", text, flags=re.MULTILINE)
@@ -311,8 +313,6 @@ class SpecCompiler(object):
         ##############################################################################
 
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
-
-        response = responses
 
         return traceback, response
         
