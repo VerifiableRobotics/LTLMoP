@@ -145,7 +145,8 @@ class SpecCompiler(object):
             filtered_regions = [region.name for region in self.proj.rfi.regions 
                                 if not (region.isObstacle or region.name.lower() == "boundary")]
             LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
-                _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList)
+                _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList,
+                                               self.proj.currentConfig.region_tags)
 
             for ln, response in enumerate(responses):
                 if not response:

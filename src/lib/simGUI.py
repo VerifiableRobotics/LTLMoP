@@ -408,7 +408,8 @@ class SimGUI_Frame(wx.Frame):
         text = self.proj.specText
 
         LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
-            _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList)
+            _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList,
+                                           self.proj.currentConfig.region_tags)
 
         from ltlbroom.dialog import DialogManager
         self.dialogueManager = DialogManager(traceback)
