@@ -125,6 +125,8 @@ class SpecCompiler(object):
         
         text = self.proj.specText
 
+        response = None
+
         # Create LTL using selected parser
         # TODO: rename decomposition object to something other than 'parser'
         if self.proj.compile_options["parser"] == "slurp":
@@ -151,7 +153,7 @@ class SpecCompiler(object):
 
             # Abort compilation if there were any errors
             if not all(responses):
-                return None
+                return None, responses
         
             # Add in the sensors so they go into the SMV and spec files
             for s in internal_sensors:
@@ -309,7 +311,9 @@ class SpecCompiler(object):
 
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
 
-        return traceback
+        response = responses
+
+        return traceback, response
         
     def _checkForEmptyGaits(self):
         from simulator.ode.ckbot import CKBotLib
@@ -481,7 +485,7 @@ class SpecCompiler(object):
             print "--> Decomposing..."
             self._decompose()
         print "--> Writing LTL file..."
-        tb = self._writeLTLFile()
+        tb, resp = self._writeLTLFile()
         print "--> Writing SMV file..."
         self._writeSMVFile()
 

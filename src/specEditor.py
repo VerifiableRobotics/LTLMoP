@@ -426,6 +426,10 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_STRING, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Colour(200, 200, 0))
 
+        self.text_ctrl_spec.SetMouseDwellTime(500)
+        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLSTART, self.onMouseDwellStart)
+        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLEND, self.onMouseDwellEnd)
+
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
 
         #self.text_ctrl_spec.SetEOLMode(wx.stc.STC_EOL_LF)
@@ -453,11 +457,26 @@ class SpecEditorFrame(wx.Frame):
         #if sys.argv[-1] != "-dontbreak":
         #    os.system("taskkill /im python.exe /f & " + " ".join(sys.argv) + " -dontbreak")
 
+    def onMouseDwellStart(self, event):
+        pos = event.GetPosition()
+        line = self.text_ctrl_spec.LineFromPosition(pos) # 0-indexed
+
+        if pos == -1:
+            return
+        
+        if self.response is not None:
+            self.text_ctrl_spec.CallTipShow( pos, "Response: {}".format(self.response[line]))
+
+    def onMouseDwellEnd(self, event):
+        if self.text_ctrl_spec.CallTipActive():
+            self.text_ctrl_spec.CallTipCancel()
+
     def initializeNewSpec(self):
         # Initialize values
         self.mapDialog = None
         self.analysisDialog = None
         self.tracebackTree = None
+        self.response = None
         self.proj = project.Project()
         self.decomposedRFI = None
 
@@ -660,6 +679,9 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_PARSEERROR)
+
+        # Stop showing response tooltips, too
+        self.response = None
 
         self.proj.specText = self.text_ctrl_spec.GetText()
 
@@ -1003,7 +1025,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Creating LTL...\n", "BLUE")
 
-        self.tracebackTree = compiler._writeLTLFile()
+        self.tracebackTree, self.response = compiler._writeLTLFile()
         
         # Add any auto-generated propositions to the list
         # TODO: what about removing old ones?
