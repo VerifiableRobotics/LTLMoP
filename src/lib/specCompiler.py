@@ -205,6 +205,7 @@ class SpecCompiler(object):
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("env", "goals", int(l)))
             elif "Environment highlighted goal(s) inconsistent with transition relation" in dline:
+                to_highlight.append(("env", "init"))
                 to_highlight.append(("env", "trans"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("env", "goals", int(l)))
