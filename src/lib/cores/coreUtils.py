@@ -47,6 +47,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             clause = re.sub('[()]', '', clause)   
             clause = re.sub('[|]', '', clause)           
             clause = re.sub('~', '-', clause)    
+            #replace prop names with var numbers
             for k in propsNext.keys():
                 clause = re.sub(k,str(propsNext[k]), clause)
             for k in props.keys():
@@ -55,8 +56,9 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             cnfClauses.append(clause.strip()+" 0\n")
             if isTrans[lineOld]:
                 transClauses.append(clause.strip()+" 0\n")
+        
     
-    #Duplicating clauses for depth greater than 1        
+    #Duplicating transition clauses for depth greater than 1        
     for i in range(1,depth):
         transClausesNew = []
         for clause in transClauses:
@@ -69,16 +71,30 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                     newClause= newClause +c+" "
             newClause=newClause+"\n"
             transClausesNew.append(newClause)
-            
+        i = 0    
         for line in conjuncts:
             if isTrans[line]:       
-                mapping[line] = mapping[line] + (map(lambda x: x+len(transClausesNew), mapping[line]))
+                mapping[line] = mapping[line] + (map(lambda x: x+len(cnfClauses)+i, mapping[line]))
+                i = i + 1
+            # add disjuncts to the goal clause (goal is satisfied in at least one of the time steps)
+            # assumes goals all contain <> on line (so no line breaks within goals)
+            if "<>" in line:
+                for v in mapping[line]:
+                    newDisjuncts = ""
+                    for c in cnfClauses[v-1].split():
+                        intC = int(c)
+                        if intC is not 0:                    
+                            newDisjuncts= newDisjuncts + str(cmp(intC,0)*(abs(intC)+len(props))) +" "
+                            
+                    # adding disjuncts here
+                    cnfClauses[v-1] = newDisjuncts + " " + cnfClauses[v-1]                                              
+                    
+                
             
         n = n + len(transClausesNew)
         p = p + len(props)
         cnfClauses = cnfClauses + transClausesNew
         
-            
     #write CNFs to file        
     open(outFilename, 'w').close()
     output = open(outFilename, 'a')

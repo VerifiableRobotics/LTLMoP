@@ -10,6 +10,9 @@ import project
 import parseLP
 from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import writeSpec
+import fsa
+from copy import deepcopy
+
 
 class SpecCompiler(object):
     def __init__(self, spec_filename):
@@ -186,6 +189,7 @@ class SpecCompiler(object):
                     to_highlight.append(("sys", "goals", int(l)))
             elif "System highlighted goal(s) inconsistent with transition relation" in dline:
                 to_highlight.append(("sys", "trans"))
+                to_highlight.append(("sys", "init"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("sys", "goals", int(l)))
             elif "System initial condition inconsistent with transition relation" in dline:
@@ -229,16 +233,16 @@ class SpecCompiler(object):
                 unsat = True
 
         # check for trivial initial-state automaton with no transitions
-        if realizable:
+        if realizable:           
             proj_copy = deepcopy(self.proj)
-            proj_copy.rfi = self.proj.parser.rfi
+            proj_copy.rfi = self.parser.proj.rfi
             proj_copy.sensor_handler = None
             proj_copy.actuator_handler = None
             proj_copy.h_instance = None
-
+    
             aut = fsa.Automaton(proj_copy)
-
-            aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
+    
+            aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
             
             nonTrivial = any([s.transitions != [] for s in aut.states])
 

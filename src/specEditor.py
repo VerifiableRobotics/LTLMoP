@@ -1154,6 +1154,16 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Running analysis...\n", "BLUE")
 
         (realizable, unsat, nonTrivial, to_highlight, output) = compiler._analyze()
+        
+        #find number of states in automaton/counter for unsat/unreal core max unrolling depth ("recurrence diameter")
+        proj_copy = deepcopy(self.proj)
+        proj_copy.rfi = self.decomposedRFI
+        proj_copy.sensor_handler = None
+        proj_copy.actuator_handler = None
+        proj_copy.h_instance = None
+        aut = fsa.Automaton(proj_copy)
+        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
+        numStates = len(aut.states)
 
         self.appendLog(output, "BLACK")
 
@@ -1163,27 +1173,26 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "RED")
                 
-       if unsat:
-            guilty = self.findCoresUnsat(to_highlight)#returns LTL  
+        if unsat:
+            guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL  
         else:
-            guilty = self.findCoresUnsat(to_highlight)#returns LTL        
+            guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL        
         
         #highlight guilty sentences
         self.highlightCores(guilty)
                 
                 
         
-    def findCoresUnsat(self,to_highlight):
+    def findCoresUnsat(self,to_highlight,maxDepth):
         #get conjuncts to be minimized
         conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
         
         if conjuncts!=[]:
-            maxDepth = 10
             depth = 1
             output = ""
             
             while True:
-                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",depth)
+                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
     
     
                 cmd = self._getPicosatCommand()
@@ -1224,17 +1233,16 @@ class SpecEditorFrame(wx.Frame):
             return guilty
         
         
-    def findCoresUnreal(self,to_highlight):
+    def findCoresUnreal(self,to_highlight,maxDepth):
         #get conjuncts to be minimized
         conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
         
         if conjuncts!=[]:
-            maxDepth = 10
             depth = 1
             output = ""
             
             while True:
-                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",depth)
+                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
     
     
                 cmd = self._getPicosatCommand()
@@ -1318,14 +1326,17 @@ class SpecEditorFrame(wx.Frame):
                 #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
                 self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
                 newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
+                newCsOld = newCs
                 for p in self.propList:
                     old = ''+str(p)
                     new = 'next('+str(p)+')'
                     newCs = map(lambda s: s.replace(old,new), newCs)                            
+                newCs = newCs + newCsOld
             else:
                 newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
                 newCs = [item for sublist in newCs for item in sublist]
             for clause in newCs:
+                #need to mark trans lines because they do not always contain [] because of line breaks
                 if h_item[1] == "trans":
                     isTrans[clause] = 1
                 else:
