@@ -13,7 +13,9 @@ sweep, 1
 
 CompileOptions:
 convexify: True
+parser: slurp
 fastslow: False
+decompose: True
 
 CurrentConfigName:
 basicsim
@@ -43,6 +45,6 @@ kitchen = p5
 
 Spec: # Specification in structured English
 Search the porch and the deck.
-Avoid the kitchen.
-Start in the bedroom.
+Don't go to the kitchen.
+Go to the kitchen.
 

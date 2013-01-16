@@ -72,25 +72,32 @@ class AnalysisResultsDialog(wx.Dialog):
         self.Layout()
         # end wxGlade
 
-    def populateTree(self, subtree, parentNode=None):
-        if parentNode is None:
-            self.statements["env"] = []
-            self.statements["sys"] = []
-            self.tree_ctrl_traceback.DeleteAllItems()
-            parentNode = self.tree_ctrl_traceback.AddRoot("Root")
+    def populateTree(self, gentree):
+        from ltlbroom.specgeneration import SpecLines
+        # Create the root
+        self.statements["env"] = []
+        self.statements["sys"] = []
+        self.tree_ctrl_traceback.DeleteAllItems()
+        root_node = self.tree_ctrl_traceback.AddRoot("Root")
+        
+        # Build the traceback tree
+        for input, command_tree in gentree.items():
+            # Add a node for each input line
+            input_node = self.tree_ctrl_traceback.AppendItem(root_node, input)
+            # Then fill in the tree for each command it generates
+            for command, spec_lines_list in command_tree.items():
+                # Add a node fot the  command
+                command_node = self.tree_ctrl_traceback.AppendItem(input_node, command)
+                # Fill in the explanation and lines for each list of lines created
+                for spec_lines in spec_lines_list:
+                    explanation_node = self.tree_ctrl_traceback.AppendItem(command_node, spec_lines.explanation)
+                    for stmt in spec_lines.lines:
+                        stmt_node = self.tree_ctrl_traceback.AppendItem(explanation_node, stmt)
+                        if spec_lines.type == SpecLines.SYS:
+                            self.statements["sys"].append((stmt, stmt_node))
+                        else:
+                            self.statements["env"].append((stmt, stmt_node))
 
-        for j, item in enumerate(subtree):
-            if len(item) == 2 and isinstance(item[0], str) and isinstance(item[1], list):
-                newnode = self.tree_ctrl_traceback.AppendItem(parentNode,item[0])
-                if len(item) > 1:
-                    self.populateTree(item[1], newnode)
-            else:
-                for statement in item:
-                    newnode = self.tree_ctrl_traceback.AppendItem(parentNode,statement)
-                    if j == 0:
-                        self.statements["env"].append((statement,newnode))
-                    elif j == 1:
-                        self.statements["sys"].append((statement,newnode))
 
     def markFragments(self, agent, section, jx=None):
         jx_this = 0 # debug output is 1-indexed
