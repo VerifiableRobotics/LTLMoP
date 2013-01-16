@@ -15,6 +15,7 @@ import inspect,types
 from numpy import *
 from copy import deepcopy
 import project
+import json
 
 
 class ParameterObject:
@@ -869,6 +870,7 @@ class ConfigObject:
         self.robots = []    # list of robot object used in this config file
         self.prop_mapping = {}  # dictionary for storing the propositions mapping
         self.initial_truths = [] # list of initially true propoisitions
+        self.region_tags = {} # dictionary mapping tag names to region groups, for quantification
         self.main_robot = '' # name of robot for moving in this config
 
     def getRobotByName(self, name):
@@ -955,8 +957,14 @@ class ConfigFileParser:
                 try:
                     configObj.initial_truths.append(propName)
                 except IOError:
-                    if not self.silent: print "ERROR: Wrong initially true propositions -- %s"
+                    if not self.silent: print "ERROR: Wrong initially true propositions"
 
+        if 'Region_Tags' in config_data['General Config']:
+            # parse the region tags
+            try:
+                configObj.region_tags = json.loads("".join(config_data['General Config']['Region_Tags']))
+            except ValueError:
+                if not self.silent: print "ERROR: Wrong region tags"
 
         try:
             configObj.main_robot = config_data['General Config']['Main_Robot'][0]
@@ -1039,6 +1047,7 @@ class ConfigFileParser:
         data['General Config']['Actuator_Proposition_Mapping'] = actuatorMappingList
         data['General Config']['Main_Robot'] = configObj.main_robot
         data['General Config']['Initial_Truths'] = configObj.initial_truths
+        data['General Config']['Region_Tags'] = json.dumps(configObj.region_tags)
 
         for i,robot in enumerate(configObj.robots):
             header = 'Robot'+str(i+1)+' Config'
@@ -1074,7 +1083,8 @@ class ConfigFileParser:
                     "Sensor_Proposition_Mapping": "Mapping between sensor propositions and sensor handler functions",
                     "Name": 'Configuration name',
                     "Main_Robot":'The name of the robot used for moving in this config',
-                    "Initial_Truths": "Initially true propositions"}
+                    "Initial_Truths": "Initially true propositions",
+                    "Region_Tags": "Mapping from tag names to region groups, for quantification"}
 
         fileMethods.writeToFile(os.path.join(self.config_path,fileName), data, comments)
 
