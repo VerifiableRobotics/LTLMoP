@@ -954,8 +954,9 @@ public class GROneGame {
 		Stack<Integer> i_stack = new Stack<Integer>();
 		Stack<Integer> j_stack = new Stack<Integer>();	
 		Stack<RawCState> aut = new Stack<RawCState>();
-		boolean result;
+		boolean result, noDeadlock;
 		if (ini.isZero()) result = false; else result = true;
+		if (ini.isZero()) noDeadlock = false; else noDeadlock = true;
 		
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
 		
@@ -1053,7 +1054,7 @@ public class GROneGame {
 					//and continue to violate the system liveness j						
 						//FIRST, WE CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
 						input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
-						input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az])))) )));
+						if (!enable_234) input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az])))) )));
 						//input = input.or(p_st.and((sys.yieldStates(env,Env.FALSE()))));//CONSIDERS ALL ENV. MOVES
 						
 //						//OTHERWISE (subsumed by \rho_4):
@@ -1185,7 +1186,8 @@ public class GROneGame {
 				
 				
 				assert (!(oldInput.isZero() && det)) : p_st + "No successor was found";
-				addState(new_state, oldInput, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
+				noDeadlock = noDeadlock & addState(new_state, oldInput, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
+				result = result & noDeadlock;
 				
 				
                 //when detecting system unsatisfiability, all env actions in primed_cur_succ_all (which is actualy Env.TRUE() in the nondet case) should be valid
@@ -1212,7 +1214,11 @@ public class GROneGame {
 	        System.out.print("\n\n");
 	        System.out.print(res);
         }
-        return result;
+        if (!enable_234) {
+        	return (!noDeadlock);
+        } else {
+        	return result;
+        }
         
 	}
          	
@@ -1224,7 +1230,8 @@ public class GROneGame {
 	
 	
 	//method for adding stated to the aut and state stack, based on whether we want a deterministic or nondet automaton
- 	private void addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
+ 	private boolean addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
+    	   boolean noDeadlock = true;
     	   for (BDDIterator inputIter = input.iterator(env
                     .modulePrimeVars()); inputIter.hasNext();) {
 						
@@ -1252,7 +1259,8 @@ public class GROneGame {
                         idx = aut.indexOf(gsucc);
                     }
                     new_state.add_succ(aut.elementAt(idx));
-                    
+                    noDeadlock = false;
+					
                 	continue;                	
                 }               	
                 
@@ -1286,11 +1294,12 @@ public class GROneGame {
 							aut.add(gsucc);
 							idx = aut.indexOf(gsucc);
 						}
-						new_state.add_succ(aut.elementAt(idx));
-					}
+						new_state.add_succ(aut.elementAt(idx));						
+					} 
                 }
                 if (det) break;
     	 	}
+    	   return noDeadlock;
      }
 		
 	@SuppressWarnings("unused")
