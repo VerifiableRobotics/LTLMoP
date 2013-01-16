@@ -56,6 +56,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             cnfClauses.append(clause.strip()+" 0\n")
             if isTrans[lineOld]:
                 transClauses.append(clause.strip()+" 0\n")
+    
         
     
     #Duplicating transition clauses for depth greater than 1        
@@ -66,34 +67,39 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             for c in clause.split():
                 intC = int(c)
                 if intC is not 0:                    
-                    newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props))) +" "
+                    newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
                 else:
                     newClause= newClause +c+" "
             newClause=newClause+"\n"
             transClausesNew.append(newClause)
-        i = 0    
+        j = 0    
         for line in conjuncts:
-            if isTrans[line]:       
-                mapping[line] = mapping[line] + (map(lambda x: x+len(cnfClauses)+i, mapping[line]))
-                i = i + 1
+            if isTrans[line]:                       
+                numVarsInTrans = (len(mapping[line]))/i
+                mapping[line] = mapping[line] + (map(lambda x: x+len(transClauses), mapping[line][-numVarsInTrans:]))
+                j = j + 1
             # add disjuncts to the goal clause (goal is satisfied in at least one of the time steps)
             # assumes goals all contain <> on line (so no line breaks within goals)
             if "<>" in line:
                 for v in mapping[line]:
                     newDisjuncts = ""
-                    for c in cnfClauses[v-1].split():
+                    currGoals = cnfClauses[v-1].split()
+                    numVarsInGoal = (len(currGoals) - 1)/i
+                    
+                    for c in currGoals[-(numVarsInGoal+1):-1]:
                         intC = int(c)
                         if intC is not 0:                    
-                            newDisjuncts= newDisjuncts + str(cmp(intC,0)*(abs(intC)+len(props))) +" "
+                            newDisjuncts= newDisjuncts + str(cmp(intC,0)*(abs(intC)+len(props)*(i))) +" "
                             
                     # adding disjuncts here
-                    cnfClauses[v-1] = newDisjuncts + " " + cnfClauses[v-1]                                              
+                    cnfClauses[v-1] = newDisjuncts + cnfClauses[v-1]            
                     
                 
             
         n = n + len(transClausesNew)
         p = p + len(props)
         cnfClauses = cnfClauses + transClausesNew
+        
         
     #write CNFs to file        
     open(outFilename, 'w').close()
@@ -110,5 +116,5 @@ def cnfToConjuncts(cnfIndices, mapping):
     for k in mapping.keys():
         i = i + 1
         if not set(mapping[k]).isdisjoint(cnfIndices):
-            conjuncts.append(k)
+            conjuncts.append(k)                
     return conjuncts
