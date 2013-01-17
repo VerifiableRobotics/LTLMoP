@@ -26,6 +26,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         line = re.sub('s\.','',line)
         line = re.sub('e\.','',line)   
         line = re.sub(r'(next\()', r'(next_', line)         
+        line = re.sub(r'(next\(\s*!)', r'(!next_', line)         
         line = re.sub('\<\>','',line)  
         line = re.sub('\[\]','',line)  
         line = line.strip()
@@ -75,6 +76,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         for clause in transClauses:
             newClause = ""
             for c in clause.split():
+                print propList
                 intC = int(c)
                 if intC is not 0:                    
                     newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
@@ -185,4 +187,5 @@ def cnfToConjuncts(cnfIndices, mapping):
         if not set(mapping[k]).isdisjoint(cnfIndices):
             conjuncts.append(k)     
             #print k + str(set(mapping[k]).intersection(cnfIndices))
+            #print k
     return conjuncts
