@@ -1143,8 +1143,9 @@ def replaceRegionName(formula,bitEncode,regionList):
     tempFormula = formula[:]
     
     # first replace all 'next' region names with the next encoding
-    for nextProp in re.findall('(next\(s\.\w+\))',tempFormula):
-        prop = nextProp.replace('next(s.','')
+    for nextProp in re.findall('(next\(s\.\w+\)|next\(\(s\.\w+\)\))',tempFormula):
+        prop = nextProp.replace('next((s.','')
+        prop = prop.replace('next(s.','')
         prop = prop.replace(')','')
 
         if prop in regionList:
