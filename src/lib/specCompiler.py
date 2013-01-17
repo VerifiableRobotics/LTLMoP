@@ -175,7 +175,7 @@ class SpecCompiler(object):
         to_highlight = []
         for dline in subp.stdout:
             output += dline
-            if "Specification is realizable." in dline:   
+            if "Specification is realizable" in dline:   
                 realizable = True            
             
             ### Highlight sentences corresponding to identified errors ###
@@ -249,7 +249,7 @@ class SpecCompiler(object):
             nonTrivial = any([s.transitions != [] for s in aut.states])
 
         subp.stdout.close()
-
+        
         return (realizable, unsat, nonTrivial, to_highlight, output)
     
     
@@ -407,12 +407,12 @@ class SpecCompiler(object):
                 #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
                 #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
                 newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
-                newCsOld = newCs
+                #newCsOld = newCs
                 for p in self.propList:
                     old = ''+str(p)
                     new = 'next('+str(p)+')'
                     newCs = map(lambda s: s.replace(old,new), newCs)                            
-                newCs = newCs + newCsOld
+                #newCs = newCs + newCsOld
             else:
                 newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
                 newCs = [item for sublist in newCs for item in sublist]                
