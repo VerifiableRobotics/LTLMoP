@@ -77,6 +77,9 @@ class AnalysisResultsDialog(wx.Dialog):
         # end wxGlade
 
     def populateTree(self, gentree):
+        # Add SLURP to path for import
+        p = os.path.dirname(os.path.abspath(__file__))
+        sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
         from ltlbroom.specgeneration import SpecLines
         # Create the root
         self.statements["env"] = []
@@ -1036,7 +1039,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Creating LTL...\n", "BLUE")
 
-        self.tracebackTree, self.response = compiler._writeLTLFile()
+        spec, self.tracebackTree, self.response = compiler._writeLTLFile()
         
         # Add any auto-generated propositions to the list
         # TODO: what about removing old ones?
@@ -1321,10 +1324,11 @@ class SpecEditorFrame(wx.Frame):
 
         # Populate tree based on traceback data
 
-        if self.tracebackTree is not None:
-            self.analysisDialog.populateTree(self.tracebackTree) 
+        if self.proj.compile_options["parser"] == "slurp":
+            if self.tracebackTree is not None:
+                self.analysisDialog.populateTree(self.tracebackTree) 
 
-        self.analysisDialog.tree_ctrl_traceback.ExpandAll()
+            self.analysisDialog.tree_ctrl_traceback.ExpandAll()
 
         # Redirect all output to the log
         redir = RedirectText(self,self.text_ctrl_log)
@@ -1356,44 +1360,42 @@ class SpecEditorFrame(wx.Frame):
                 
         #highlight guilty sentences
         #special treatment for goals: we already know which one to highlight                
-        for h_item in to_highlight:
-            tb_key = h_item[0].title() + h_item[1].title()
-            if h_item[1] == "goals":
-                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
+        if self.proj.compile_options["parser"] == "structured":
+            for h_item in to_highlight:
+                tb_key = h_item[0].title() + h_item[1].title()
+                if h_item[1] == "goals":
+                    self.text_ctrl_spec.MarkerAdd(self.tracebackTree[tb_key][h_item[2]]-1, MARKER_LIVE)
+        elif self.proj.compile_options["parser"] == "slurp":
+            for frag in to_highlight:
+                self.analysisDialog.markFragments(*frag)
+        else:
+            print "Fragment marking not yet supported for this parser type"
+
+        self.analysisDialog.Show()
+
+        self.appendLog("Analysis complete.\n", "BLUE")
         
         if not realizable:
             guilty = compiler._coreFinding(to_highlight, unsat)
             self.highlightCores(guilty)
-                
-                
-        
-
-    
     
     def highlightCores(self, guilty):               
-           if guilty is not None:
-            for g in guilty:
+        if self.proj.compile_options["parser"] == "structured":
+            if guilty is not None:
                 for k,v in self.LTL2LineNo.iteritems():
                     newCs = k.split('\n')
                     if not set(guilty).isdisjoint(newCs):
                         #for now, just highlight with the colour originally used for initial conditions
                         self.highlight(v, 'init')
+        else:
+            print guilty
     
     def highlight(self, l, type):
         if type == "init":
            self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
         elif type == "trans":
            self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
-        
-    
-                
 
-        for frag in to_highlight:
-            self.analysisDialog.markFragments(*frag)
-
-        self.analysisDialog.Show()
-
-        self.appendLog("Analysis complete.\n", "BLUE")
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Opens the counterstrategy visualization interfacs ("Mopsy")

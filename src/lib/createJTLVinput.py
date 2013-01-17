@@ -64,6 +64,35 @@ def createSMVfile(fileName, numRegions, sensorList, robotPropList):
     smvFile.close()
     
 
+def createTopologyFragment(adjData):
+    numBits = int(math.ceil(math.log(len(adjData),2)))
+    # TODO: only calc bitencoding once
+    bitEncode = parseEnglishToLTL.bitEncoding(len(adjData), numBits)
+    currBitEnc = bitEncode['current']
+    nextBitEnc = bitEncode['next']
+
+    # The topological relation (adjacency)
+    adjFormula = ""
+    for Origin in range(len(adjData)):
+        # from region i we can stay in region i
+        adjFormula = adjFormula + '\t\t\t []( ('
+        adjFormula = adjFormula + currBitEnc[Origin]
+        adjFormula = adjFormula + ') -> ( ('
+        adjFormula = adjFormula + nextBitEnc[Origin]
+        adjFormula = adjFormula + ')'
+        
+        for dest in range(len(adjData)):
+            if adjData[Origin][dest]:
+                # not empty, hence there is a transition
+                adjFormula = adjFormula + '\n\t\t\t\t\t\t\t\t\t| ('
+                adjFormula = adjFormula + nextBitEnc[dest]
+                adjFormula = adjFormula + ') '
+
+        # closing this region
+        adjFormula = adjFormula + ' ) ) & \n '
+
+    return adjFormula
+
 def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_sys):
     ''' This function writes the LTL file. It encodes the specification and 
     topological relation. 
@@ -105,27 +134,7 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
     # TODO: only do this if necessary
     ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) & \n')
 
-    # The topological relation (adjacency)
-    adjFormula = ""
-    for Origin in range(len(adjData)):
-        # from region i we can stay in region i
-        adjFormula = adjFormula + '\t\t\t []( ('
-        adjFormula = adjFormula + currBitEnc[Origin]
-        adjFormula = adjFormula + ') -> ( ('
-        adjFormula = adjFormula + nextBitEnc[Origin]
-        adjFormula = adjFormula + ')'
-        
-        for dest in range(len(adjData)):
-            if adjData[Origin][dest]:
-                # not empty, hence there is a transition
-                adjFormula = adjFormula + '\n\t\t\t\t\t\t\t\t\t| ('
-                adjFormula = adjFormula + nextBitEnc[dest]
-                adjFormula = adjFormula + ') '
-
-        # closing this region
-        adjFormula = adjFormula + ' ) ) & \n '
-    
-    ltlFile.write(adjFormula) # TODO: save this somewhere
+    ltlFile.write(createTopologyFragment(adjData))
 
     # Setting the system initial formula to allow only valid
     #  region encoding. This may be redundent if an initial region is

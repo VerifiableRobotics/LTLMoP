@@ -4,13 +4,14 @@ import time, copy
 import math
 import subprocess
 import numpy
+import glob
 
 sys.path.append("lib")
 
 import project
 import regions
 import parseLP
-from createJTLVinput import createLTLfile, createSMVfile
+from createJTLVinput import createLTLfile, createSMVfile, createTopologyFragment
 from parseEnglishToLTL import bitEncoding, replaceRegionName
 import fsa
 from copy import deepcopy
@@ -54,7 +55,7 @@ class SpecCompiler(object):
         adj is a list of tuples [(region1,region2),...]
         """
 
-        if outputfile is "":
+        if outputfile == "":
             print "need to specify output filename"
             return
 
@@ -150,7 +151,7 @@ class SpecCompiler(object):
             LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
                 _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList,
                                                self.proj.currentConfig.region_tags)
-
+ 
             for ln, response in enumerate(responses):
                 if not response:
                     print "WARNING: Could not parse the sentence in line {0}".format(ln)
@@ -222,7 +223,7 @@ class SpecCompiler(object):
 
             regionList = ["s."+x.name for x in self.parser.proj.rfi.regions]
 
-            spec, traceback, failed = parseEnglishToLTL.writeSpec(text, sensorList, regionList, robotPropList)
+            spec, traceback, failed, self.LTL2SpecLineNumber = parseEnglishToLTL.writeSpec(text, sensorList, regionList, robotPropList)
 
             # Abort compilation if there were any errors
             if failed:
@@ -231,6 +232,8 @@ class SpecCompiler(object):
             LTLspec_env = spec["EnvInit"] + spec["EnvTrans"] + spec["EnvGoals"]
             LTLspec_sys = spec["SysInit"] + spec["SysTrans"] + spec["SysGoals"]
 
+            # HACK: account for the []<>TRUE goal we are adding
+            traceback['SysGoals'].insert(0, None)
         else:
             print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
             return None
@@ -263,6 +266,7 @@ class SpecCompiler(object):
             adjData = self.parser.proj.rfi.transitions
         else:
             adjData = self.proj.rfi.transitions
+
         ##############################################################################
         ######### BEGIN HACK: generate env topology info for follow scenario #########
         ##############################################################################
@@ -315,9 +319,31 @@ class SpecCompiler(object):
         #################################### END HACK ################################
         ##############################################################################
 
+        spec = self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys)
+        spec['Topo'] = createTopologyFragment(adjData)
+
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
 
-        return traceback, response
+
+        return spec, traceback, response
+    
+    def splitSpecIntoComponents(self, env, sys):
+        spec = {}
+
+        for agent, text in (("env", env), ("sys", sys)):
+            for line in text.split("\n"):
+                if line.strip() == '': continue
+
+                if "[]<>" in line: 
+                    linetype = "goals"
+                elif "[]" in line:
+                    linetype = "trans"
+                else:
+                    linetype = "init"
+
+                spec[agent.title()+linetype.title()] = line.strip()
+
+        return spec
         
     def _checkForEmptyGaits(self):
         from simulator.ode.ckbot import CKBotLib
@@ -583,15 +609,20 @@ class SpecCompiler(object):
         
         
     def _getPicosatCommand(self):
-        # Check that GROneMain, etc. is compiled
-        if not os.path.exists(os.path.join(self.proj.ltlmop_root,"lib","cores","picosat-951")):
-            print "Where is your sat solver? We use Picomus."
+        # look for picosat
+
+        paths = glob.glob(os.path.join(self.proj.ltlmop_root,"lib","cores","picosat-*"))
+        if len(paths) == 0:
+            print "Where is your sat solver? We use Picosat."
             # TODO: automatically compile for the user
             return None
+        else:
+            print "Found Picosat in " + paths[0]
 
-        classpath = os.path.join(self.proj.ltlmop_root, "lib","cores","picosat-951")
-
-        cmd = os.path.join(classpath,"picomus.exe ")+ self.proj.getFilenamePrefix() + ".cnf"
+        if os.name == "nt":
+            cmd = os.path.join(paths[0],"picomus.exe ") + self.proj.getFilenamePrefix() + ".cnf"
+        else:
+            cmd = [os.path.join(paths[0],"picomus"), self.proj.getFilenamePrefix() + ".cnf"]
 
         return cmd
     
@@ -671,7 +702,7 @@ class SpecCompiler(object):
             print "--> Decomposing..."
             self._decompose()
         print "--> Writing LTL file..."
-        tb, resp = self._writeLTLFile()
+        spec, tb, resp = self._writeLTLFile()
         print "--> Writing SMV file..."
         self._writeSMVFile()
 
