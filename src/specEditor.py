@@ -58,7 +58,7 @@ class AnalysisResultsDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: AnalysisResultsDialog.__set_properties
         self.SetTitle("Analysis Results")
-        self.SetSize((562, 403))
+        self.SetSize((562, 602))
         # end wxGlade
 
     def __do_layout(self):
@@ -68,7 +68,7 @@ class AnalysisResultsDialog(wx.Dialog):
         sizer_11.Add(self.label_3, 0, wx.ALL, 5)
         sizer_11.Add(self.text_ctrl_summary, 1, wx.ALL | wx.EXPAND, 5)
         sizer_11.Add(self.label_10, 0, wx.ALL, 5)
-        sizer_11.Add(self.tree_ctrl_traceback, 4, wx.ALL | wx.EXPAND, 5)
+        sizer_11.Add(self.tree_ctrl_traceback, 3, wx.ALL | wx.EXPAND, 5)
         sizer_16.Add((20, 20), 1, wx.EXPAND, 0)
         sizer_16.Add(self.button_1, 0, wx.ALL | wx.EXPAND, 5)
         sizer_11.Add(sizer_16, 0, wx.EXPAND, 0)
@@ -104,6 +104,7 @@ class AnalysisResultsDialog(wx.Dialog):
                             self.statements["sys"].append((stmt, stmt_node))
                         else:
                             self.statements["env"].append((stmt, stmt_node))
+        self.Layout()
 
 
     def markFragments(self, agent, section, jx=None):
