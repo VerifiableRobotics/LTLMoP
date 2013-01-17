@@ -104,25 +104,27 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec):
     ltlFile.write(spec['SysInit'])
 
     # The topological relation (adjacency)
+    adjFormula = ""
     for Origin in range(len(adjData)):
         # from region i we can stay in region i
-        ltlFile.write('\t\t\t []( (')
-        ltlFile.write(currBitEnc[Origin])
-        ltlFile.write(') -> ( (')
-        ltlFile.write(nextBitEnc[Origin])
-        ltlFile.write(')')
+        adjFormula = adjFormula + '\t\t\t []( ('
+        adjFormula = adjFormula + currBitEnc[Origin]
+        adjFormula = adjFormula + ') -> ( ('
+        adjFormula = adjFormula + nextBitEnc[Origin]
+        adjFormula = adjFormula + ')'
         
         for dest in range(len(adjData)):
             if adjData[Origin][dest]:
                 # not empty, hence there is a transition
-                ltlFile.write('\n\t\t\t\t\t\t\t\t\t| (')
-                ltlFile.write(nextBitEnc[dest])
-                ltlFile.write(') ')
+                adjFormula = adjFormula + '\n\t\t\t\t\t\t\t\t\t| ('
+                adjFormula = adjFormula + nextBitEnc[dest]
+                adjFormula = adjFormula + ') '
 
         # closing this region
-        ltlFile.write(' ) ) & \n ')
+        adjFormula = adjFormula + ' ) ) & \n '
     
-
+    spec['Topo'] = adjFormula
+    ltlFile.write(spec['Topo'])
     # The rest of the spec
     ltlFile.write(spec['SysTrans'])
     ltlFile.write(spec['SysGoals'])

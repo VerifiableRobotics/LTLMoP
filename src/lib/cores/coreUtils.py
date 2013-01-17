@@ -123,7 +123,6 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     # You can write:
     
     finalConj = []
-    print finalDisj
     if finalDisj is not "":
         for c in str(to_cnf(finalDisj)).split('&'):
             finalConj.append(re.sub('[\(\)|&]*','',c) + " 0\n")
