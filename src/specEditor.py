@@ -86,21 +86,22 @@ class AnalysisResultsDialog(wx.Dialog):
         self.statements["sys"] = []
         self.tree_ctrl_traceback.DeleteAllItems()
         root_node = self.tree_ctrl_traceback.AddRoot("Root")
-        
+
         # Build the traceback tree
-        for input, command_tree in gentree.items():
+        for user_input, command_tree in gentree.items():
             # Add a node for each input line
-            input_node = self.tree_ctrl_traceback.AppendItem(root_node, input)
+            input_node = self.tree_ctrl_traceback.AppendItem(root_node, user_input)
             # Then fill in the tree for each command it generates
             for command, spec_lines_list in command_tree.items():
                 # Add a node fot the  command
                 command_node = self.tree_ctrl_traceback.AppendItem(input_node, command)
                 # Fill in the explanation and lines for each list of lines created
                 for spec_lines in spec_lines_list:
-                    explanation_node = self.tree_ctrl_traceback.AppendItem(command_node, spec_lines.explanation)
+                    explanation_node = \
+                        self.tree_ctrl_traceback.AppendItem(command_node, spec_lines.explanation)
                     for stmt in spec_lines.lines:
                         stmt_node = self.tree_ctrl_traceback.AppendItem(explanation_node, stmt)
-                        if spec_lines.type == SpecLines.SYS:
+                        if spec_lines.issys():
                             self.statements["sys"].append((stmt, stmt_node))
                         else:
                             self.statements["env"].append((stmt, stmt_node))
