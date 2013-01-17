@@ -182,8 +182,8 @@ class SimGUI_Frame(wx.Frame):
                 wx.CallAfter(self.loadRegionFile, input.split(":",1)[1])
             else:
                 # Detect our current goal index
-                if input.startswith("Now in state"):
-                    m = re.search(r"\(z = (\d+)\)", input)
+                if input.startswith("Currently pursuing goal"):
+                    m = re.search(r"#(\d+)", input)
                     if m is not None:
                         self.currentGoal = int(m.group(1))
 

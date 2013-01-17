@@ -485,6 +485,8 @@ class Automaton:
             self.next_state = random.choice(next_states)
             self.next_region = self.regionFromState(self.next_state)
 
+            print "Currently pursuing goal #{}".format(self.next_state.rank)
+
             # See what we, as the system, need to do to get to this new state
             self.transition_contains_motion = self.next_region is not None and (self.next_region != self.current_region)
 
