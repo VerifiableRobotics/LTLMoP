@@ -70,7 +70,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     
     #Duplicating transition clauses for depth greater than 1     
     numOrigClauses = len(cnfClauses)   
-    for i in range(1,depth):
+    for i in range(1,depth+1):
         transClausesNew = []
         for clause in transClauses:
             newClause = ""
@@ -98,7 +98,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     finalDisj = ""     
     
     firstDisj = True        
-    for i in range(1,depth+1):   
+    for i in range(1,depth+2):   
         newClause = ""                                           
         firstConj = True
         for clause in goalClauses:
