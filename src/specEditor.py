@@ -1375,12 +1375,14 @@ class SpecEditorFrame(wx.Frame):
         
         if not realizable:
             guilty = compiler._coreFinding(to_highlight, unsat)
-            self.highlightCores(guilty)
+            self.highlightCores(guilty, compiler.LTL2SpecLineNumber)
     
-    def highlightCores(self, guilty):               
+    def highlightCores(self, guilty, mapping):               
+        print guilty
+
         if self.proj.compile_options["parser"] == "structured":
             if guilty is not None:
-                for k,v in self.LTL2LineNo.iteritems():
+                for k,v in mapping.iteritems():
                     newCs = k.split('\n')
                     if not set(guilty).isdisjoint(newCs):
                         #for now, just highlight with the colour originally used for initial conditions

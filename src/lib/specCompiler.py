@@ -266,6 +266,12 @@ class SpecCompiler(object):
         # switch to bit encodings for regions
         LTLspec_env = replaceRegionName(LTLspec_env, bitEncode, regionList)
         LTLspec_sys = replaceRegionName(LTLspec_sys, bitEncode, regionList)
+    
+        for k in self.LTL2SpecLineNumber.keys():
+            new_k = replaceRegionName(k, bitEncode, regionList)
+            if new_k != k:
+                self.LTL2SpecLineNumber[new_k] = self.LTL2SpecLineNumber[k]
+                del self.LTL2SpecLineNumber[k]
 
         if self.proj.compile_options["decompose"]:
             adjData = self.parser.proj.rfi.transitions
@@ -351,7 +357,7 @@ class SpecCompiler(object):
                 if key not in spec:
                     spec[key] = ""
 
-                spec[key] += line.strip() + "\n"
+                spec[key] += line + "\n"
 
         return spec
         
@@ -650,7 +656,6 @@ class SpecCompiler(object):
     def getGuiltyConjuncts(self, to_highlight):  
         #inverse dictionary for goal lookups
         #ivd=dict([(v,k) for (k,v) in self.LTL2LineNo.items()])
-        
         isTrans = {}
         topoCs=self.spec['Topo'].replace('\n','')
         topoCs = topoCs.replace('\t','')
