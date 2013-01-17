@@ -1054,7 +1054,7 @@ public class GROneGame {
 					//and continue to violate the system liveness j						
 						//FIRST, WE CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
 						input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
-						if (!enable_234) input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az])))) )));
+						input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az])))) )));
 						//input = input.or(p_st.and((sys.yieldStates(env,Env.FALSE()))));//CONSIDERS ALL ENV. MOVES
 						
 //						//OTHERWISE (subsumed by \rho_4):
@@ -1072,8 +1072,7 @@ public class GROneGame {
 //						}
 
 						
-					} else {	
-						
+					} else {							
 						input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az-1])))) )));
 						//System.out.println(p_st.and((primed_cur_succ.and((sys.yieldStates(env,sys.justiceAt(p_j).not().or(z2_mem[p_az-1])))))));	
 
