@@ -239,6 +239,11 @@ class SpecCompiler(object):
             return None
 
 
+        regNum = len(regionList)                                                         
+        regList = map(lambda i: "bit"+str(i), range(0,int(numpy.ceil(numpy.log2(regNum)))))
+        self.propList = sensorList + robotPropList + regList + self.proj.internal_props
+
+
         # Prepend "e." or "s." to propositions for JTLV
         for i, sensor in enumerate(sensorList):
             text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
@@ -319,13 +324,14 @@ class SpecCompiler(object):
         #################################### END HACK ################################
         ##############################################################################
 
-        spec = self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys)
-        spec['Topo'] = createTopologyFragment(adjData)
+        # Store some data needed for later analysis
+        self.spec = self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys)
+        self.spec['Topo'] = createTopologyFragment(adjData)
 
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
 
 
-        return spec, traceback, response
+        return self.spec, traceback, response
     
     def splitSpecIntoComponents(self, env, sys):
         spec = {}
@@ -341,7 +347,11 @@ class SpecCompiler(object):
                 else:
                     linetype = "init"
 
-                spec[agent.title()+linetype.title()] = line.strip()
+                key = agent.title()+linetype.title()
+                if key not in spec:
+                    spec[key] = ""
+
+                spec[key] += line.strip() + "\n"
 
         return spec
         
@@ -556,6 +566,10 @@ class SpecCompiler(object):
                         cnfIndices.append(index)
             input.close()                    
             
+            #print maxDepth
+            #print mapping
+            #print cnfIndices
+
             #get contributing conjuncts from CNF indices
             guilty = cnfToConjuncts(cnfIndices, mapping)
             return guilty
@@ -644,7 +658,6 @@ class SpecCompiler(object):
         
         conjuncts = [topoCs]
         
-                
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
 
@@ -653,7 +666,7 @@ class SpecCompiler(object):
                 #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
                 #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
                 #newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
-                goals = self.spec[tb_key].split('\n')
+                goals = ["[]<>(TRUE)"] + self.spec[tb_key].split('\n')
                 newCs = [goals[h_item[2]]]
                 #newCsOld = newCs
                 for p in self.propList:
@@ -673,7 +686,6 @@ class SpecCompiler(object):
                     isTrans[clause] = 0  
             conjuncts = conjuncts + newCs 
 
-            
         
         return conjuncts, isTrans
 
