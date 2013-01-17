@@ -154,6 +154,9 @@ class SpecCompiler(object):
             LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
                 _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList,
                                                self.proj.currentConfig.region_tags)
+
+            oldspec_env = LTLspec_env
+            oldspec_sys = LTLspec_sys
  
             for ln, response in enumerate(responses):
                 if not response:
@@ -339,9 +342,49 @@ class SpecCompiler(object):
         self.spec['Topo'] = createTopologyFragment(adjData)
 
         createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
+        
+        if self.proj.compile_options["parser"] == "slurp":
+            self.reversemapping = {self.postprocessLTL(line,sensorList,robotPropList).strip():line.strip() for line in oldspec_env + oldspec_sys}
+            self.reversemapping[self.spec['Topo'].replace("\n","").replace("\t","").lstrip().rstrip("\n\t &")] = "TOPOLOGY"
+            print repr(self.spec['Topo'].replace("\n\t","").lstrip().rstrip("\n\t &"))
 
+        #for k,v in self.reversemapping.iteritems():
+        #    print "{!r}:{!r}".format(k,v)        
 
         return self.spec, traceback, response
+    
+    def postprocessLTL(self, text, sensorList, robotPropList):
+        # TODO: make everything use this
+        if self.proj.compile_options["decompose"]:
+            # substitute decomposed region names
+            for r in self.proj.rfi.regions:
+                if not (r.isObstacle or r.name.lower() == "boundary"):
+                    text = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
+                    text = re.sub('\\be\.' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
+
+        # Prepend "e." or "s." to propositions for JTLV
+        for i, sensor in enumerate(sensorList):
+            text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
+            sensorList[i] = "e." + sensorList[i]
+
+        for i, prop in enumerate(robotPropList):
+            text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
+            robotPropList[i] = "s." + robotPropList[i]
+
+        regionList = [x.name for x in self.parser.proj.rfi.regions]
+
+        # Define the number of bits needed to encode the regions
+        numBits = int(math.ceil(math.log(len(regionList),2)))
+
+        # creating the region bit encoding
+        bitEncode = bitEncoding(len(regionList),numBits)
+        currBitEnc = bitEncode['current']
+        nextBitEnc = bitEncode['next']
+
+        # switch to bit encodings for regions
+        text = replaceRegionName(text, bitEncode, regionList)
+
+        return text
     
     def splitSpecIntoComponents(self, env, sys):
         spec = {}

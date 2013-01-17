@@ -1375,20 +1375,28 @@ class SpecEditorFrame(wx.Frame):
         
         if not realizable:
             guilty = compiler._coreFinding(to_highlight, unsat)
-            self.highlightCores(guilty, compiler.LTL2SpecLineNumber)
+            self.highlightCores(guilty, compiler)
     
-    def highlightCores(self, guilty, mapping):               
+    def highlightCores(self, guilty, compiler):               
         print guilty
 
         if self.proj.compile_options["parser"] == "structured":
             if guilty is not None:
-                for k,v in mapping.iteritems():
+                for k,v in compiler.LTL2SpecLineNumber.iteritems():
                     newCs = k.split('\n')
                     if not set(guilty).isdisjoint(newCs):
                         #for now, just highlight with the colour originally used for initial conditions
                         self.highlight(v, 'init')
         else:
-            print guilty
+            guilty_clean = [compiler.reversemapping[s.lstrip().rstrip("\n\t &")] for s in guilty if "[]<>" not in s]
+            # TODO: fix KeyError: '([]<>(s.next(mem_visit_r2)))' 
+            print guilty_clean
+            # Add SLURP to path for import
+            p = os.path.dirname(os.path.abspath(__file__))
+            sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
+            from ltlbroom.specgeneration import explain_conflict
+            msg, highlight_tree = explain_conflict(guilty_clean, self.tracebackTree)
+            self.analysisDialog.appendLog(msg)
     
     def highlight(self, l, type):
         if type == "init":
