@@ -90,13 +90,14 @@ public class GROneDebug {
 			 cox = cox.or((env.yieldStates(sys, cox.not())).not());			 
 		 }		 
 		 sysUnreal = cox.id().and(all_init);
+		 BDD unrealCause = (env.yieldStates(sys, Env.TRUE()).not()).exist(sys.modulePrimeVars());	
 		 
 		 //Some simple satisfiability tests
 		 if (sys.initial().isZero()) {
 			 debugInfo += "System initial condition is unsatisfiable." + "\n";
 			 explainSys = 1;
 		 
-		 } else if ((sys.initial().and(sys.trans())).isZero()) {
+		 } else if (((sys.trans())).isZero()) {
 			 debugInfo += "System transition relation is unsatisfiable." + "\n";
 			 explainSys = 1;
 		 } 
@@ -104,7 +105,7 @@ public class GROneDebug {
 		 if (env.initial().isZero()) {
 			  debugInfo += "Environment initial condition is unsatisfiable." + "\n";
 			  explainEnv = 1;	 
-		 } else if ((env.initial().and(env.trans())).isZero()) {
+		 } else if (((env.trans())).isZero()) {
 			  debugInfo += "Environment transition relation is unsatisfiable." + "\n";
 			  explainEnv = 1;
 		 } 
@@ -119,14 +120,14 @@ public class GROneDebug {
 		 
 		  BDD counter_example = g.envWinningStates().and(all_init);
 		  try { 
-			  if (!counter_example.isZero()) {
+			  if (explainSys == 0 && !counter_example.isZero()) {
 				//checking for multi-step unsatisfiability between sys transitions/safety and initial condition					 
 				//since the second argument is false, we are looking for deadlock 	
 				if (g.calculate_counterstrategy(counter_example, false, false)) { 			 
 					 debugInfo += "System initial condition inconsistent with transition relation." + "\n";
 					 explainSys = 1;
 				 }
-			  } else {		  
+			  } else if (explainEnv == 0 && counter_example.isZero()) {		  
 				//checking for multi-step unsatisfiability between env transitions/safety and initial condition
 				//since the first argument is 1, we only allow system transitions of type \rho_1
 				//so we are looking for sequences of moves that take us to deadlock only
@@ -140,7 +141,7 @@ public class GROneDebug {
 	  }  
 
 		  if (explainSys ==0 && !sysUnreal.equals(Env.FALSE())) {
-				 debugInfo += "System is unrealizable because the environment can force a safety violation."+ "\n"; //TRUE if unsat
+				 debugInfo += "System is unrealizable because the environment can force a safety violation."+unrealCause+ "\n"; //TRUE if unsat
 		  		 explainSys = 1;
 		  }
 		  
@@ -180,10 +181,12 @@ public class GROneDebug {
 			
 		counter_exmple = g.envWinningStates().and(all_init);		 
 		if (counter_exmple.isZero()) {	//no winning environment states		
-			debugInfo += "Specification is realizable.\n";
+			debugInfo += "Specification is realizable assuming instantaneous actions.\n";
 		}	
 			
-		if (!(env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
+		if (!(explainEnv == 1 || env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
+			
+			boolean flagRealPrev = false;
 		
 			
 			for (int i = env.justiceNum(); i >=1; i--){		
@@ -208,14 +211,20 @@ public class GROneDebug {
 						 explainEnv = 1;
 						 i = 0;
 					 //} else if (counter_exmple.isZero() && !env.justiceAt(i-1).equals(Env.TRUE())) {// && (!prev.isZero())) {
-					 } else if (i < env.justiceNum()) {
+					 } else if (i < env.justiceNum() & !flagRealPrev) {
 						 //if we get here, the env is unrealizable because of the current goal
 						 debugInfo += "Environment highlighted goal(s) unrealizable: " + (i-1) + "\n";	
 						 explainEnv = 1;
 						 i = 0;
 					 }
+					 else flagRealPrev = true;	//flags that the previous set of livenesses was also realizable				 
+				 } else if (explainEnv ==0 && !counter_exmple.isZero() & flagRealPrev) {
+					 //if we get here, the env is unrealizable because of the previous goal (this is important mainly for the case where the last goal is unrealiable)
+					 debugInfo += "Environment highlighted goal(s) unrealizable: " + (i) + "\n";	
 					 explainEnv = 1;
-				 } 
+					 i = 0;
+				 }
+						 
 			}
 		}
 		
@@ -230,7 +239,7 @@ public class GROneDebug {
 			System.err.println("Error: " + e.getMessage());
 		}*/
 		
-		if (!(sys.justiceNum()==1 && sys.justiceAt(0).equals(Env.TRUE()))) {
+		if (!(explainSys == 1 || sys.justiceNum()==1 && sys.justiceAt(0).equals(Env.TRUE()))) {
 			for (int i = 1; i <= sys.justiceNum(); i++){
 				 if (sys.justiceAt(i-1).isZero()) {
 					 debugInfo += "System highlighted goal(s) unsatisfiable: " + (i-1) + "\n";

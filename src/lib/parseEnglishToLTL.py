@@ -68,6 +68,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     linemap['SysInit']= []    
     linemap['SysTrans']= []
     linemap['SysGoals']= []
+    
+    LTL2LineNo = {}
 
     RegionGroups = {}
 
@@ -112,6 +114,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     StayFormula = createStayFormula(numBits)
 
     lineInd = 0
+    
+
 
     # iterate over the lines in the file
     for line in text.split("\n"):
@@ -216,6 +220,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             spec['EnvInit']= spec['EnvInit'] + LTLsubformula
             linemap['EnvInit'].append(lineInd)
             
+            LTL2LineNo[replaceRegionName(LTLsubformula,bitEncode,regionList)] = lineInd
+            
         # If the sentence describes the initial state of the robot
         elif SysInitRE.search(line):
             # remove the first words     
@@ -258,10 +264,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 LTLRegSubformula = LTLRegSubformula.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
 
             spec['SysInit']= spec['SysInit'] + LTLRegSubformula + LTLActSubformula
-            linemap['SysInit'].append(lineInd)
-
-
-                
+            linemap['SysInit'].append(lineInd)            
+            LTL2LineNo[replaceRegionName(LTLRegSubformula + LTLActSubformula,bitEncode,regionList)] = lineInd    
 
         # If the sentence is a conditional 
         elif IfThenRE.search(line) or UnlessRE.search(line) or IffRE.search(line) :
@@ -341,6 +345,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
                     spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
                     linemap[CondFormulaInfo['type']].append(lineInd)
+                    LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
+
                 else:
                     # parse requirement normally
                     ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
@@ -386,6 +392,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 if CondFormulaInfo['formula'] == '': failed = True
                 spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
                 linemap[CondFormulaInfo['type']].append(lineInd)
+                LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
             elif QuantifierFlag == "ALL":
                 for r in RegionGroups[quant_group]:
                     tmp_req = copy.deepcopy(ReqFormulaInfo)
@@ -396,13 +403,15 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     if CondFormulaInfo['formula'] == '': failed = True
                     spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
                     linemap[CondFormulaInfo['type']].append(lineInd)
+                    LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
             else:
                 # Parse the condition and add it to the requirement
                 CondFormulaInfo = parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,lineInd)
                 if CondFormulaInfo['formula'] == '': failed = True
                 spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
                 linemap[CondFormulaInfo['type']].append(lineInd)
-
+                LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
+                
         # An event definition
         elif EventRE.search(line):
             # get the groups
@@ -426,6 +435,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
             linemap['SysTrans'].append(lineInd)
+            LTL2LineNo[replaceRegionName(EventFormula,bitEncode,regionList)] = lineInd
 
 
         # A toggle event definition
@@ -449,6 +459,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
             linemap['SysTrans'].append(lineInd)
+            LTL2LineNo[replaceRegionName(EventFormula,bitEncode,regionList)] = lineInd
 
         # A 'Go to and stay there' requirement
         elif LivenessRE.search(line) and StayRE.search(line):
@@ -480,7 +491,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # Add the liveness ('go to') to the spec
             spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
             linemap[formulaInfo['type']].append(lineInd)
-
+            LTL2LineNo[replaceRegionName(formulaInfo['formula'],bitEncode,regionList)] = lineInd
 
             # add the 'stay there' as a condition (if R then stay there)
             regCond = formulaInfo['formula'].replace('\t\t\t []<>','')
@@ -489,6 +500,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             spec['SysTrans'] = spec['SysTrans'] + condStayFormula
             linemap['SysTrans'].append(lineInd)
+            LTL2LineNo[replaceRegionName(condStayFormula,bitEncode,regionList)] = lineInd
 
 
 
@@ -516,6 +528,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             else:
                 spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
                 linemap[formulaInfo['type']].append(lineInd)
+           
+            
+            LTL2LineNo[replaceRegionName(formulaInfo['formula'],bitEncode,regionList)] = lineInd
+
 
         # A safety requirement
         elif SafetyRE.search(line):
@@ -544,6 +560,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             else:
                 spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
                 linemap[formulaInfo['type']].append(lineInd)
+            
+            LTL2LineNo[replaceRegionName(formulaInfo['formula'],bitEncode,regionList)] = lineInd
+
 
             
         # Cannot parse
@@ -628,7 +647,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         print 'They should be removed from the proposition lists\n'
     
 
-    return spec,linemap,failed
+    return spec,linemap,failed,LTL2LineNo
 
 
 def parseInit(sentence,PropList,lineInd):

@@ -3,15 +3,18 @@ import re
 import time, copy
 import math
 import subprocess
+import numpy
 
 sys.path.append("lib")
 
 import project
 import regions
 import parseLP
-import fsa
 from createJTLVinput import createLTLfile, createSMVfile
 from parseEnglishToLTL import bitEncoding, replaceRegionName
+import fsa
+from copy import deepcopy
+from coreUtils import *
 
 # Hack needed to ensure there's only one
 _SLURP_SPEC_GENERATOR = None
@@ -372,13 +375,14 @@ class SpecCompiler(object):
             time.sleep(0.1)
 
         realizable = False    
+        unsat = False
         nonTrivial = False
 
         output = ""
         to_highlight = []
         for dline in subp.stdout:
             output += dline
-            if "Specification is realizable." in dline:   
+            if "Specification is realizable" in dline:   
                 realizable = True            
             
             ### Highlight sentences corresponding to identified errors ###
@@ -393,6 +397,7 @@ class SpecCompiler(object):
                     to_highlight.append(("sys", "goals", int(l)))
             elif "System highlighted goal(s) inconsistent with transition relation" in dline:
                 to_highlight.append(("sys", "trans"))
+                to_highlight.append(("sys", "init"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("sys", "goals", int(l)))
             elif "System initial condition inconsistent with transition relation" in dline:
@@ -408,6 +413,7 @@ class SpecCompiler(object):
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("env", "goals", int(l)))
             elif "Environment highlighted goal(s) inconsistent with transition relation" in dline:
+                to_highlight.append(("env", "init"))
                 to_highlight.append(("env", "trans"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("env", "goals", int(l)))
@@ -431,23 +437,202 @@ class SpecCompiler(object):
                 to_highlight.append(("env", "trans"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("env", "goals", int(l)))
+                    
+            if "unsatisfiable" in dline or "inconsistent" in dline :
+                unsat = True
 
         # check for trivial initial-state automaton with no transitions
-        if realizable:
-            proj_copy = copy.deepcopy(self.proj)
+        if realizable:           
+            proj_copy = deepcopy(self.proj)
+            proj_copy.rfi = self.parser.proj.rfi
             proj_copy.sensor_handler = None
             proj_copy.actuator_handler = None
             proj_copy.h_instance = None
-
+    
             aut = fsa.Automaton(proj_copy)
-
-            aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
+    
+            aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
             
             nonTrivial = any([s.transitions != [] for s in aut.states])
 
         subp.stdout.close()
+        
+        return (realizable, unsat, nonTrivial, to_highlight, output)
+    
+    
+    def _coreFinding(self, to_highlight, unsat):
+        #find number of states in automaton/counter for unsat/unreal core max unrolling depth ("recurrence diameter")
+        proj_copy = deepcopy(self.proj)
+        proj_copy.rfi = self.parser.proj.rfi
+        proj_copy.sensor_handler = None
+        proj_copy.actuator_handler = None
+        proj_copy.h_instance = None
+    
+        aut = fsa.Automaton(proj_copy)
+        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
+        numStates = len(aut.states)
+        if unsat:
+            guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL  
+        else:
+            guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL   
+        return guilty
+        
+        
+        
+    
+    def findCoresUnsat(self,to_highlight,maxDepth):
+        #get conjuncts to be minimized
+        conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
+        if conjuncts!=[]:
+            depth = 1
+            output = ""
+            
+            while depth == 1:
+                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
+    
+    
+                cmd = self._getPicosatCommand()
+                if cmd is None:
+                    return (False, False, [], "")
+        
+                #find minimal unsatisfiable core
+                satFileName = self.proj.getFilenamePrefix()+".sat"
+                outputFile = open(satFileName,'w')
+                subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+                while subp.poll():
+                    time.sleep(0.1)
+            
+                sys.stdout = sys.__stdout__
+                sys.stderr = sys.__stderr__
+                output = subp.stdout.read()
+                #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
+                if "UNSATISFIABLE" in output:# or depth >= maxDepth:
+                    break
+                depth = depth +1
+            
+            outputFile.write(output)
+            outputFile.close()
+            
+            #get indices of contributing clauses
+            input = open(satFileName, 'r')
+            cnfIndices = []
+            for line in input:
+                if re.match('^v', line):
+                    index = int(line.strip('v').strip())
+                    if index!=0:
+                        cnfIndices.append(index)
+            input.close()                    
+            
+            #get contributing conjuncts from CNF indices
+            guilty = cnfToConjuncts(cnfIndices, mapping)
+            return guilty
+        
+        
+    def findCoresUnreal(self,to_highlight,maxDepth):
+        #get conjuncts to be minimized
+        conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
+        
+        
+        if conjuncts!=[]:
+            depth = 1
+            output = ""
+            
+            while True:
+                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)                
+                
+    
+    
+                cmd = self._getPicosatCommand()
+                if cmd is None:
+                    return (False, False, [], "")
+        
+                #find minimal unsatisfiable core
+                satFileName = self.proj.getFilenamePrefix()+".sat"
+                outputFile = open(satFileName,'w')
+                subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+                while subp.poll():
+                    time.sleep(0.1)
+            
+                sys.stdout = sys.__stdout__
+                sys.stderr = sys.__stderr__
+                output = subp.stdout.read()
+                #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
+                if "UNSATISFIABLE" in output:# or depth >= maxDepth:
+                    break
+                depth = depth +1
+            
+            outputFile.write(output)
+            outputFile.close()
+            
+            #get indices of contributing clauses
+            input = open(satFileName, 'r')
+            cnfIndices = []
+            for line in input:
+                if re.match('^v', line):
+                    index = int(line.strip('v').strip())
+                    if index!=0:
+                        cnfIndices.append(index)
+            input.close()                    
+            
+            #get contributing conjuncts from CNF indices
+            guilty = cnfToConjuncts(cnfIndices, mapping)
+            
+           
+            
+            return guilty
+        
+        
+    def _getPicosatCommand(self):
+        # Check that GROneMain, etc. is compiled
+        if not os.path.exists(os.path.join(self.proj.ltlmop_root,"lib","cores","picosat-951")):
+            print "Where is your sat solver? We use Picomus."
+            # TODO: automatically compile for the user
+            return None
 
-        return (realizable, nonTrivial, to_highlight, output)
+        classpath = os.path.join(self.proj.ltlmop_root, "lib","cores","picosat-951")
+
+        cmd = os.path.join(classpath,"picomus.exe ")+ self.proj.getFilenamePrefix() + ".cnf"
+
+        return cmd
+    
+    def getGuiltyConjuncts(self, to_highlight):  
+        #inverse dictionary for goal lookups
+        ivd=dict([(v,k) for (k,v) in self.LTL2LineNo.items()])
+        
+        isTrans = {}
+        topoCs=self.spec['Topo'].replace('\n','')
+        topoCs = topoCs.replace('\t','')
+        isTrans[topoCs] = True
+        
+        conjuncts = [topoCs]
+        
+                
+        for h_item in to_highlight:
+            tb_key = h_item[0].title() + h_item[1].title()
+
+            if h_item[1] == "goals":
+                #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
+                #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
+                newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
+                #newCsOld = newCs
+                for p in self.propList:
+                    old = ''+str(p)
+                    new = 'next('+str(p)+')'
+                    newCs = map(lambda s: s.replace(old,new), newCs)                            
+                #newCs = newCs + newCsOld
+            else:
+                newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
+                newCs = [item for sublist in newCs for item in sublist]                
+            for clause in newCs:
+                #need to mark trans lines because they do not always contain [] because of line breaks
+                if h_item[1] == "trans":
+                    isTrans[clause] = 1                    
+                else:
+                    isTrans[clause] = 0  
+            conjuncts = conjuncts + newCs 
+            
+        
+        return conjuncts, isTrans
 
     def _synthesize(self, with_safety_aut=False):
         cmd = self._getGROneCommand("GROneMain")

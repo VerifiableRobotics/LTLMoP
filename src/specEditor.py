@@ -11,8 +11,10 @@
 
 import re, sys, os, subprocess
 import wx, wx.richtext, wx.stc
+import numpy
 
 sys.path.append("lib")
+sys.path.append(os.path.join("lib","cores"))
 
 from regions import *
 import fileMethods
@@ -20,6 +22,8 @@ import project
 import fsa
 import mapRenderer
 from specCompiler import SpecCompiler
+from parseEnglishToLTL import writeSpec
+
 from copy import deepcopy
 import threading, time
 
@@ -1241,7 +1245,15 @@ class SpecEditorFrame(wx.Frame):
         aut = fsa.Automaton(proj_copy)
 
         aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
-        aut.writeDot(self.proj.getFilenamePrefix()+".dot")
+        #aut.writeDot(self.proj.getFilenamePrefix()+".dot")
+        
+        
+    #def _exportSMVFile(self):              
+        aut.writeSMV(self.proj.getFilenamePrefix()+"MC.smv")
+        
+        
+
+        
 
     def onMenuViewAut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         if not os.path.isfile(self.proj.getFilenamePrefix()+".aut"):
@@ -1322,7 +1334,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Running analysis...\n", "BLUE")
 
-        (realizable, nonTrivial, to_highlight, output) = compiler._analyze()
+        (realizable, unsat, nonTrivial, to_highlight, output) = compiler._analyze()
         
         # Remove lines about garbage collection from the output and remove extraenous lines
         output_lines = [line for line in output.split('\n') if line.strip() and
@@ -1341,6 +1353,40 @@ class SpecEditorFrame(wx.Frame):
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+                
+        #highlight guilty sentences
+        #special treatment for goals: we already know which one to highlight                
+        for h_item in to_highlight:
+            tb_key = h_item[0].title() + h_item[1].title()
+            if h_item[1] == "goals":
+                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
+        
+        if not realizable:
+            guilty = compiler._coreFinding(to_highlight, unsat)
+            self.highlightCores(guilty)
+                
+                
+        
+
+    
+    
+    def highlightCores(self, guilty):               
+           if guilty is not None:
+            for g in guilty:
+                for k,v in self.LTL2LineNo.iteritems():
+                    newCs = k.split('\n')
+                    if not set(guilty).isdisjoint(newCs):
+                        #for now, just highlight with the colour originally used for initial conditions
+                        self.highlight(v, 'init')
+    
+    def highlight(self, l, type):
+        if type == "init":
+           self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
+        elif type == "trans":
+           self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
+        
+    
+                
 
         for frag in to_highlight:
             self.analysisDialog.markFragments(*frag)

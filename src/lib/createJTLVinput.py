@@ -106,24 +106,27 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
     ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) & \n')
 
     # The topological relation (adjacency)
+    adjFormula = ""
     for Origin in range(len(adjData)):
         # from region i we can stay in region i
-        ltlFile.write('\t\t\t []( (')
-        ltlFile.write(currBitEnc[Origin])
-        ltlFile.write(') -> ( (')
-        ltlFile.write(nextBitEnc[Origin])
-        ltlFile.write(')')
+        adjFormula = adjFormula + '\t\t\t []( ('
+        adjFormula = adjFormula + currBitEnc[Origin]
+        adjFormula = adjFormula + ') -> ( ('
+        adjFormula = adjFormula + nextBitEnc[Origin]
+        adjFormula = adjFormula + ')'
         
         for dest in range(len(adjData)):
             if adjData[Origin][dest]:
                 # not empty, hence there is a transition
-                ltlFile.write('\n\t\t\t\t\t\t\t\t\t| (')
-                ltlFile.write(nextBitEnc[dest])
-                ltlFile.write(') ')
+                adjFormula = adjFormula + '\n\t\t\t\t\t\t\t\t\t| ('
+                adjFormula = adjFormula + nextBitEnc[dest]
+                adjFormula = adjFormula + ') '
 
         # closing this region
-        ltlFile.write(' ) ) & \n ')
+        adjFormula = adjFormula + ' ) ) & \n '
     
+    ltlFile.write(adjFormula) # TODO: save this somewhere
+
     # Setting the system initial formula to allow only valid
     #  region encoding. This may be redundent if an initial region is
     #  specified, but it is here to ensure the system cannot start from
