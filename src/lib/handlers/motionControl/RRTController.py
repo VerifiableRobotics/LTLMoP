@@ -34,7 +34,7 @@ class motionControlHandler:
         """
         Rapidly-Exploring Random Trees alogorithm motion planning controller
 
-        robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
+        robot_type (int): Which robot is used for execution. BasicSim is 1, ODE is 2, ROS is 3, Nao is 4, Pioneer is 5(default=1)
         max_angle_goal (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 6.28 = 2*pi (default=6.28)
         max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
         plotting (bool): Check the box to enable plotting. Uncheck to disable plotting (default=True)
@@ -68,8 +68,8 @@ class motionControlHandler:
         self.stuck_thres        = 20          # threshold for changing the range of sampling omega
 
         # Information about the robot (default set to ODE)
-        if robot_type not in [1,2,3,4]:
-            robot_type = 3
+        if robot_type not in [1,2,3,4,5]:
+            robot_type = 1
         self.system = robot_type
 
         # Information about maximum turning angle allowed from the latest node to the goal point
@@ -94,28 +94,33 @@ class motionControlHandler:
             self.plotting          = False
 
         # Specify the size of the robot 
-        # 1: Nao ; 2: ROS; 3: 0DE; 4: Pioneer
+        # 1: basicSim; 2: ODE; 3: ROS  4: Nao; 5: Pioneer
         #  self.radius: radius of the robot
         #  self.timestep  : number of linear segments to break the curve into for calculation of x, y position
         #  self.step_size  : the length of each step for connection to goal point
         #  self.velocity   : Velocity of the robot in m/s in control space (m/s)
-        if  self.system == 1:
-            self.radius = 0.15*1.2
-            self.step_size  = 0.2      #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
-            self.timeStep = 5
-            self.velocity  = 0.05 
-        elif self.system == 2:
+        if self.system  == 1:
+            self.radius = 5
+            self.step_size  = 25
+            self.timeStep = 10
+            self.velocity = 2    # 1.5       
+        if  self.system == 2:
+            self.radius = 5
+            self.step_size  = 15
+            self.timeStep = 10
+            self.velocity = 2    # 1.5       
+        elif self.system == 3:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
             self.radius = self.ROSInitHandler.robotPhysicalWidth/2
             self.step_size  = self.radius*3 #0.2
             self.timeStep = 8
             self.velocity  = self.radius/2  #0.08
-        elif self.system == 3:
-            self.radius = 5
-            self.step_size  = 15
-            self.timeStep = 10
-            self.velocity = 2    # 1.5
         elif self.system == 4:
+            self.radius = 0.15*1.2
+            self.step_size  = 0.2      #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
+            self.timeStep = 5
+            self.velocity  = 0.05 
+        elif self.system == 5:
             self.radius = 0.15
             self.step_size  = 0.2      #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
             self.timeStep = 5
@@ -245,7 +250,6 @@ class motionControlHandler:
 
         # Pass this desired velocity on to the drive handler
         self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0], pose[2])
-        ############### TO CHANGE#################################
         #self.drive_handler.setVelocity(self.Node[0,0], self.Node[1,0], pose[2])
         RobotPoly = Polygon.Shapes.Circle(self.radius,(pose[0],pose[1]))
         
@@ -306,7 +310,10 @@ class motionControlHandler:
             #    dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- vstack((V[1,E[0,self.E_current_column]],V[2,E[0,self.E_current_column]]))
         
         Vel = zeros([2,1])
-        Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
+        if self.system == 1:
+            Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5/25                # correct for self.multiplexer in honolomic drive
+        else:
+            Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
         return Vel
         
     def getNode(self,p, V, E, last=False):
@@ -334,8 +341,6 @@ class motionControlHandler:
                 self.E_current_column = self.E_current_column + 1
                 dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- pose
 
-            #else:
-            #    dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- vstack((V[1,E[0,self.E_current_column]],V[2,E[0,self.E_current_column]]))
         
         Node = zeros([2,1])
         Node[0,0] = V[1,E[1,self.E_current_column]]
