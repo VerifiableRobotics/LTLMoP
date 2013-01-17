@@ -122,6 +122,9 @@ class SpecCompiler(object):
         createSMVfile(self.proj.getFilenamePrefix(), numRegions, sensorList, robotPropList)
 
     def _writeLTLFile(self):
+
+        self.LTL2SpecLineNumber = None
+
         #regionList = [r.name for r in self.parser.proj.rfi.regions]
         regionList = [r.name for r in self.proj.rfi.regions]
         sensorList = copy.deepcopy(self.proj.enabled_sensors)
@@ -267,11 +270,12 @@ class SpecCompiler(object):
         LTLspec_env = replaceRegionName(LTLspec_env, bitEncode, regionList)
         LTLspec_sys = replaceRegionName(LTLspec_sys, bitEncode, regionList)
     
-        for k in self.LTL2SpecLineNumber.keys():
-            new_k = replaceRegionName(k, bitEncode, regionList)
-            if new_k != k:
-                self.LTL2SpecLineNumber[new_k] = self.LTL2SpecLineNumber[k]
-                del self.LTL2SpecLineNumber[k]
+        if self.LTL2SpecLineNumber is not None:
+            for k in self.LTL2SpecLineNumber.keys():
+                new_k = replaceRegionName(k, bitEncode, regionList)
+                if new_k != k:
+                    self.LTL2SpecLineNumber[new_k] = self.LTL2SpecLineNumber[k]
+                    del self.LTL2SpecLineNumber[k]
 
         if self.proj.compile_options["decompose"]:
             adjData = self.parser.proj.rfi.transitions
