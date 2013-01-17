@@ -63,7 +63,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                 cnfClauses.append(clause.strip()+" 0\n")         
         
         if not "<>" in lineOld:
-            mapping[lineOld] = mapping[lineOld] + (range(n+1,n+1+len(allClauses)))    
+            mapping[lineOld].extend(range(n+1,n+1+len(allClauses)))    
             n = n + len(allClauses)
         
     
@@ -88,11 +88,11 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         for line in conjuncts:
             if isTrans[line]:                       
                 numVarsInTrans = (len(mapping[line]))/i
-                mapping[line] = mapping[line] + (map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
+                mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                 j = j + 1
         n = n + len(transClausesNew)
         p = p + len(props)
-        cnfClauses = cnfClauses + transClausesNew
+        cnfClauses.extend(transClausesNew)
         numOrigClauses = len(transClausesNew)   
     
         
@@ -156,7 +156,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             mapping[line] = range(n+1,n+len(finalConj)+1)                       
     
     n = n + len(finalConj)
-    cnfClauses = cnfClauses + finalConj
+    cnfClauses.extend(finalConj)
 
  
             

@@ -433,7 +433,7 @@ class SpecCompiler(object):
                     isTrans[clause] = 1                    
                 else:
                     isTrans[clause] = 0  
-            conjuncts = conjuncts + newCs 
+            conjuncts = conjuncts.extend(newCs) 
 
             
         
