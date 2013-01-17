@@ -76,7 +76,6 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         for clause in transClauses:
             newClause = ""
             for c in clause.split():
-                print propList
                 intC = int(c)
                 if intC is not 0:                    
                     newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
