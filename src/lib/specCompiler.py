@@ -497,6 +497,13 @@ class SpecCompiler(object):
         aut = fsa.Automaton(proj_copy)
         aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
         numStates = len(aut.states)
+        
+#        regionList = [r.name for r in self.parser.proj.rfi.regions]
+#        robotPropList = self.proj.enabled_actuators + self.proj.all_customs
+#        regList = map(lambda i: "bit"+str(i), range(0,int(numpy.ceil(numpy.log2(len(regionList))))))
+        
+#        numStates = 2**len(regList + robotPropList)
+        
         if unsat:
             guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL  
         else:
@@ -628,7 +635,7 @@ class SpecCompiler(object):
     
     def getGuiltyConjuncts(self, to_highlight):  
         #inverse dictionary for goal lookups
-        ivd=dict([(v,k) for (k,v) in self.LTL2LineNo.items()])
+        #ivd=dict([(v,k) for (k,v) in self.LTL2LineNo.items()])
         
         isTrans = {}
         topoCs=self.spec['Topo'].replace('\n','')
@@ -641,10 +648,13 @@ class SpecCompiler(object):
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
 
+            newCs = []
             if h_item[1] == "goals":
                 #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
                 #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
-                newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
+                #newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
+                goals = self.spec[tb_key].split('\n')
+                newCs = [goals[h_item[2]]]
                 #newCsOld = newCs
                 for p in self.propList:
                     old = ''+str(p)
@@ -652,8 +662,9 @@ class SpecCompiler(object):
                     newCs = map(lambda s: s.replace(old,new), newCs)                            
                 #newCs = newCs + newCsOld
             else:
-                newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
-                newCs = [item for sublist in newCs for item in sublist]                
+                newCs = self.spec[tb_key].split('\n')
+                #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
+                #newCs = [item for sublist in newCs for item in sublist]                
             for clause in newCs:
                 #need to mark trans lines because they do not always contain [] because of line breaks
                 if h_item[1] == "trans":
@@ -661,6 +672,7 @@ class SpecCompiler(object):
                 else:
                     isTrans[clause] = 0  
             conjuncts = conjuncts + newCs 
+
             
         
         return conjuncts, isTrans

@@ -29,8 +29,8 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         line = re.sub('\<\>','',line)  
         line = re.sub('\[\]','',line)  
         line = line.strip()
-        #training &
-        line = line[:-1]
+        #trailing &
+        line = re.sub('&\s*$','',line)  
         if line=='':
             continue
         line = re.sub('!', '~', line)
@@ -114,13 +114,13 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                      newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*(i-1)))
                  f = False
              firstConj = False
-        if not firstDisj:
+        if finalDisj is not "":
             finalDisj = finalDisj + "|" 
         finalDisj = finalDisj + newClause
         firstDisj = False
 
         
-    # You can write:
+
     
     finalConj = []
     if finalDisj is not "":
@@ -128,6 +128,25 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             finalConj.append(re.sub('[\(\)|&]*','',c) + " 0\n")
     
     
+    """        
+            # add disjuncts to the goal clause (goal is satisfied in at least one of the time steps)
+            # assumes goals all contain <> on line (so no line breaks within goals)
+            if "<>" in line:
+                for v in mapping[line]:
+                    newDisjuncts = ""
+                    currGoals = cnfClauses[v-1].split()
+                    numVarsInGoal = (len(currGoals) - 1)/i
+                    
+                    for c in currGoals[-(numVarsInGoal+1):-1]:
+                        intC = int(c)
+                        if intC is not 0:                    
+                            newDisjuncts= newDisjuncts + str(cmp(intC,0)*(abs(intC)+len(props)*(i))) +" "
+                            
+                    # adding disjuncts here
+                    cnfClauses[v-1] = newDisjuncts + cnfClauses[v-1]            
+                    
+"""                
+
     
     
     for line in conjuncts:        
