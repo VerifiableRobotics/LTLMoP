@@ -77,10 +77,6 @@ class AnalysisResultsDialog(wx.Dialog):
         # end wxGlade
 
     def populateTree(self, gentree):
-        # Add SLURP to path for import
-        p = os.path.dirname(os.path.abspath(__file__))
-        sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
-        from ltlbroom.specgeneration import SpecLines
         # Create the root
         self.statements["env"] = []
         self.statements["sys"] = []
