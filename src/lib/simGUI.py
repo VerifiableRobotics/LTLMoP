@@ -259,7 +259,7 @@ class SimGUI_Frame(wx.Frame):
     def onResize(self, event=None): # wxGlade: SimGUI_Frame.<event_handler>
         size = self.window_1_pane_1.GetSize()
         self.mapBitmap = wx.EmptyBitmap(size.x, size.y)
-        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=True, memory=True)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=mapRenderer.LABELS_ALL_EXCEPT_OBSTACLES, memory=True)
 
         self.Refresh()
         self.Update()
@@ -384,7 +384,7 @@ class SimGUI_Frame(wx.Frame):
     def onClose(self, event):
         print >>sys.__stderr__, "Telling execute.py to quit!"
         self.UDPSockTo.sendto("QUIT",self.addrTo) # This goes to the controller
-        time.sleep(2)
+        #time.sleep(2)
         event.Skip()
 
     def onSimClear(self, event): # wxGlade: SimGUI_Frame.<event_handler>

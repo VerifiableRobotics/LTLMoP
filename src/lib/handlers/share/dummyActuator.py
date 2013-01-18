@@ -18,7 +18,12 @@ class actuatorHandler:
     def _stop(self):
         if self.p_gui is not None:
             print >>sys.__stderr__, "(SENS) Killing dummyactuator GUI..."
-            self.p_gui.stdin.write(":QUIT\n")
+            try:
+                self.p_gui.stdin.write(":QUIT\n")
+                self.p_gui.stdin.close()
+            except IOError:
+                # Probably already closed by user
+                pass
 
     def setActuator(self, name, actuatorVal,initial):
         """

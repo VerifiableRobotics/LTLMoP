@@ -23,14 +23,17 @@ class sensorHandler:
         self.proj = proj
         self.sensorListenInitialized = False
         self._running = True
+        self.p_sensorHandler = None
 
     def _stop(self):
-        print >>sys.__stderr__, "(SENS) Killing dummysensor GUI..."
-        self.p_sensorHandler.stdin.write(":QUIT\n")
+        if self.p_sensorHandler is not None:
+            print >>sys.__stderr__, "(SENS) Killing dummysensor GUI..."
+            self.p_sensorHandler.stdin.write(":QUIT\n")
+            self.p_sensorHandler.stdin.close()
 
-        print >>sys.__stderr__, "(SENS) Terminating dummysensor GUI listen thread..."
-        self._running = False
-        self.sensorListenThread.join()
+            print >>sys.__stderr__, "(SENS) Terminating dummysensor GUI listen thread..."
+            self._running = False
+            self.sensorListenThread.join()
         
     def _createSubwindow(self):
             # Create a subprocess
