@@ -420,7 +420,7 @@ class SpecCompiler(object):
                 #newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
                 goals = self.spec[tb_key].split('\n')
                 newCs = [goals[h_item[2]]]
-                #newCsOld = newCs
+                newCsOld = newCs
                 """for p in self.propList:
                     old = ''+str(p)
                     new = 'next('+str(p)+')'
