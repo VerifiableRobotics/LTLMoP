@@ -218,8 +218,11 @@ class SpecCompiler(object):
             # System unrealizability
             elif "System is unrealizable because the environment can force a safety violation" in dline:
                 to_highlight.append(("sys", "trans"))
+                to_highlight.append(("sys", "init"))
+                to_highlight.append(("env", "init"))
             elif "System highlighted goal(s) unrealizable" in dline:
                 to_highlight.append(("sys", "trans"))
+                to_highlight.append(("sys", "init"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("sys", "goals", int(l)))
             
@@ -418,11 +421,12 @@ class SpecCompiler(object):
                 goals = self.spec[tb_key].split('\n')
                 newCs = [goals[h_item[2]]]
                 #newCsOld = newCs
-                for p in self.propList:
+                """for p in self.propList:
                     old = ''+str(p)
                     new = 'next('+str(p)+')'
-                    newCs = map(lambda s: s.replace(old,new), newCs)                            
-                #newCs = newCs + newCsOld
+                    newCs = map(lambda s: s.replace(old,new), newCs) 
+                """                           
+                newCs.extend(newCsOld)
             else:
                 newCs = self.spec[tb_key].split('\n')
                 #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
