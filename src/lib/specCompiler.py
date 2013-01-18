@@ -346,7 +346,6 @@ class SpecCompiler(object):
         if self.proj.compile_options["parser"] == "slurp":
             self.reversemapping = {self.postprocessLTL(line,sensorList,robotPropList).strip():line.strip() for line in oldspec_env + oldspec_sys}
             self.reversemapping[self.spec['Topo'].replace("\n","").replace("\t","").lstrip().rstrip("\n\t &")] = "TOPOLOGY"
-            print repr(self.spec['Topo'].replace("\n\t","").lstrip().rstrip("\n\t &"))
 
         #for k,v in self.reversemapping.iteritems():
         #    print "{!r}:{!r}".format(k,v)        
