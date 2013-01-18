@@ -2,6 +2,10 @@ import wx
 import sys, os
 from regions import *
 
+LABELS_NONE = False
+LABELS_ALL = True
+LABELS_ALL_EXCEPT_OBSTACLES = 2
+
 #----------------------------------------------------------------------------
 
 class DrawableRegion(Region):
@@ -140,7 +144,7 @@ class DrawableRegion(Region):
 
 #----------------------------------------------------------------------------
 
-def drawMap(target, rfi, scaleToFit=True, drawLabels=True, highlightList=[], deemphasizeList=[], memory=False):
+def drawMap(target, rfi, scaleToFit=True, drawLabels=LABELS_ALL, highlightList=[], deemphasizeList=[], memory=False):
     """ Draw the map contained in the given RegionFileInterface onto the target canvas.
     """
 
@@ -211,7 +215,8 @@ def drawMap(target, rfi, scaleToFit=True, drawLabels=True, highlightList=[], dee
 
         obj.draw(dc, pdc, False, mapScale, showAlignmentPoints=False, highlight=doHighlight, deemphasize=doDeemphasize)
 
-        if drawLabels:
+        if (drawLabels == LABELS_ALL) or \
+           (drawLabels == LABELS_ALL_EXCEPT_OBSTACLES and not (obj.isObstacle or obj.name.lower() == "boundary")):
             # Draw region labels
             dc.SetTextForeground(wx.BLACK)
             dc.SetBackgroundMode(wx.TRANSPARENT)
