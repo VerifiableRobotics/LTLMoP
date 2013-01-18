@@ -59,6 +59,7 @@ class ActuatorDisplayFrame(wx.Frame):
 
             if data == ':QUIT':  # EOF indicates that the connection has been destroyed
                 print "Listen thread is shutting down."
+                wx.CallAfter(self.Destroy())
                 break
 
             name, val = data.split(",")

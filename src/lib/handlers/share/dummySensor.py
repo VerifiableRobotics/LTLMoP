@@ -22,14 +22,17 @@ class sensorHandler:
         self.proj = proj
         self.sensorListenInitialized = False
         self._running = True
+        self.p_sensorHandler = None
 
     def _stop(self):
-        print >>sys.__stderr__, "(SENS) Killing dummysensor GUI..."
-        self.p_sensorHandler.stdin.write(":QUIT\n")
+        if self.p_sensorHandler is not None:
+            print >>sys.__stderr__, "(SENS) Killing dummysensor GUI..."
+            self.p_sensorHandler.stdin.write(":QUIT\n")
+            self.p_sensorHandler.stdin.close()
 
-        print >>sys.__stderr__, "(SENS) Terminating dummysensor GUI listen thread..."
-        self._running = False
-        self.sensorListenThread.join()
+            print >>sys.__stderr__, "(SENS) Terminating dummysensor GUI listen thread..."
+            self._running = False
+            self.sensorListenThread.join()
 
     def buttonPress(self,button_name,init_value,initial=False):
         """
@@ -45,8 +48,6 @@ class sensorHandler:
                 # Create a subprocess
                 print "(SENS) Starting sensorHandler window and listen thread..."
                 self.p_sensorHandler = subprocess.Popen(["python", "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-
-                self.fd_sensorHandler = self.p_sensorHandler.stderr
 
                 # Create new thread to communicate with subwindow
                 self.sensorListenThread = threading.Thread(target = self._sensorListen)

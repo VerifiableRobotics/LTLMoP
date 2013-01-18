@@ -344,7 +344,7 @@ class SimGUI_Frame(wx.Frame):
     def onClose(self, event):
         print >>sys.__stderr__, "Telling execute.py to quit!"
         self.UDPSockTo.sendto("QUIT",self.addrTo) # This goes to the controller
-        time.sleep(2)
+        #time.sleep(2)
         event.Skip()
 
     def onSimClear(self, event): # wxGlade: SimGUI_Frame.<event_handler>
