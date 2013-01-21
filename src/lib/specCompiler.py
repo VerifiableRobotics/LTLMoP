@@ -154,10 +154,6 @@ class SpecCompiler(object):
 
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
 
-        # TODO: Make this output live
-        while subp.poll():
-            time.sleep(0.1)
-
         realizable = False    
         nonTrivial = False
 
@@ -250,10 +246,6 @@ class SpecCompiler(object):
 
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
         
-        # TODO: Make this output live
-        while subp.poll():
-            time.sleep(0.1)
-
         realizable = False
         realizableFS = False
 
