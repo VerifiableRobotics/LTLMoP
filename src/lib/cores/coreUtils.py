@@ -1,6 +1,8 @@
 
 import math, re, sys, random, os, subprocess, time
 from logic import to_cnf
+from multiprocessing import Pool
+
 
 
 
@@ -19,28 +21,12 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     p = len(props)+len(propsNext)
     
     
+    pool = Pool(processes=len(conjuncts))              # start 4 worker processes
+    allCnfs = pool.map(toCnfParellel, conjuncts)            
+    
         
-    for line in conjuncts:
-        lineOld = line
-        line = re.sub('[\t\n]*','',line)            
-        line = re.sub('s\.','',line)
-        line = re.sub('e\.','',line)   
-        line = re.sub(r'(next\()', r'(next_', line)         
-        line = re.sub(r'(next\(\s*!)', r'(!next_', line)         
-        line = re.sub('\<\>','',line)  
-        line = re.sub('\[\]','',line)  
-        line = line.strip()
-        #trailing &
-        line = re.sub('&\s*$','',line)  
-        if line=='':
-            continue
-        line = re.sub('!', '~', line)
-        #line = re.sub('&\s*\n', '', line)
-        line = re.sub('[\s]+', ' ', line)        
-        line = re.sub('\<-\>', '<=>', line)
-        line = re.sub('->', '>>', line)
-        line = line.strip() 
-        cnf = str(to_cnf(line))
+    for cnf, lineOld in zip(allCnfs,conjuncts):
+      if cnf is not None: 
         allClauses = cnf.split("&");
         #associate original conjuncts with CNF clauses
         for clause in allClauses:    
@@ -51,9 +37,9 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             for k in propsNext.keys():
                 clause = re.sub(k,str(propsNext[k]), clause)
             for k in props.keys():
-                clause = re.sub(k,str(props[k]), clause)   
-            #add trailing 0         
-            
+                    clause = re.sub(k,str(props[k]), clause)   
+                #add trailing 0         
+                
             if "<>" in lineOld:
                 goalClauses.append(clause.strip()+" 0\n")
             elif isTrans[lineOld]:
@@ -61,14 +47,11 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                 cnfClauses.append(clause.strip()+" 0\n")
             else:
                 cnfClauses.append(clause.strip()+" 0\n")         
-        
+            
         if not "<>" in lineOld:
             mapping[lineOld].extend(range(n+1,n+1+len(allClauses)))    
             n = n + len(allClauses)
-        
-    
-        
-    
+                
     #Duplicating transition clauses for depth greater than 1     
     numOrigClauses = len(cnfClauses)   
     for i in range(1,depth+1):
@@ -76,7 +59,6 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         for clause in transClauses:
             newClause = ""
             for c in clause.split():
-                print propList
                 intC = int(c)
                 if intC is not 0:                    
                     newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
@@ -189,3 +171,28 @@ def cnfToConjuncts(cnfIndices, mapping):
             #print k + str(set(mapping[k]).intersection(cnfIndices))
             #print k
     return conjuncts
+
+
+def toCnfParellel(line):
+        lineOld = line
+        line = re.sub('[\t\n]*','',line)            
+        line = re.sub('s\.','',line)
+        line = re.sub('e\.','',line)   
+        line = re.sub(r'(next\()', r'(next_', line)         
+        line = re.sub(r'(next\(\s*!)', r'(!next_', line)         
+        line = re.sub('\<\>','',line)  
+        line = re.sub('\[\]','',line)  
+        line = line.strip()
+        #trailing &
+        line = re.sub('&\s*$','',line)  
+        if line!='':
+            
+            line = re.sub('!', '~', line)
+            #line = re.sub('&\s*\n', '', line)
+            line = re.sub('[\s]+', ' ', line)        
+            line = re.sub('\<-\>', '<=>', line)
+            line = re.sub('->', '>>', line)
+            line = line.strip() 
+            cnf = str(to_cnf(line))
+            return cnf
+        
