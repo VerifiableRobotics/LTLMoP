@@ -291,17 +291,21 @@ class SpecCompiler(object):
             output = ""
             
             while depth == 1:
-                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
-    
+                mapping, input = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
+                
     
                 cmd = self._getPicosatCommand()
+                
                 if cmd is None:
                     return (False, False, [], "")
         
                 #find minimal unsatisfiable core
                 satFileName = self.proj.getFilenamePrefix()+".sat"
                 outputFile = open(satFileName,'w')
-                subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+                
+                subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+                subp.communicate(input)
+                
                 while subp.poll():
                     time.sleep(0.1)
             
@@ -341,18 +345,22 @@ class SpecCompiler(object):
             output = ""
             
             while True:
-                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)                
+                mapping, input = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)                
                 
-    
-    
-                cmd = self._getPicosatCommand()
+                with open(self.proj.getFilenamePrefix()+".cnf") as f:
+                    cnfdata = f.readlines()
+
+                cmd = elf._getPicosatCommand()
                 if cmd is None:
                     return (False, False, [], "")
+                
+                subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+
+                out = subp.communicate("\n".join(cnfdata))
         
-                #find minimal unsatisfiable core
-                satFileName = self.proj.getFilenamePrefix()+".sat"
-                outputFile = open(satFileName,'w')
-                subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+                
+                print out[0]
+                 
                 while subp.poll():
                     time.sleep(0.1)
             
@@ -364,6 +372,8 @@ class SpecCompiler(object):
                     break
                 depth = depth +1
             
+            satFileName = self.proj.getFilenamePrefix()+".sat"
+            outputFile = open(satFileName,'w')
             outputFile.write(output)
             outputFile.close()
             
@@ -394,7 +404,9 @@ class SpecCompiler(object):
 
         classpath = os.path.join(self.proj.ltlmop_root, "lib","cores","picosat-951")
 
-        cmd = os.path.join(classpath,"picomus.exe ")+ self.proj.getFilenamePrefix() + ".cnf"
+        #cmd = os.path.join(classpath,"picomus.exe ")+ self.proj.getFilenamePrefix() + ".cnf"
+        cmd = os.path.join(classpath,"picomus.exe ")
+        
 
         return cmd
     
@@ -440,7 +452,6 @@ class SpecCompiler(object):
             conjuncts = conjuncts + newCs 
 
             
-        
         return conjuncts, isTrans
 
     def _synthesize(self, with_safety_aut=False):

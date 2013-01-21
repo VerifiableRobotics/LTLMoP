@@ -21,9 +21,13 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     p = len(props)+len(propsNext)
     
     
-    pool = Pool(processes=len(conjuncts))              # start 4 worker processes
-    allCnfs = pool.map(toCnfParellel, conjuncts)            
+    #pool = Pool(processes=len(conjuncts))              
     
+    print conjuncts
+    #allCnfs = map(toCnfParallel, conjuncts)   
+    allCnfs = []       
+    for line in conjuncts:
+       allCnfs.append(toCnfParallel(line))
         
     for cnf, lineOld in zip(allCnfs,conjuncts):
       if cnf is not None: 
@@ -103,6 +107,27 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         finalDisj = finalDisj + newClause
         firstDisj = False
 
+     
+    for i in range(1,depth+2):   
+        newClause = ""                                           
+        firstConj = True
+        for clause in goalClauses:
+             if not firstConj:
+                 newClause= newClause + " & "
+             f = True
+             for c in clause.split():
+                 intC = int(c)
+                 if intC is not 0:                    
+                  if not f:
+                     newClause= newClause + " | " + str(cmp(intC,0)*(abs(intC)+len(props)*(i-1)))
+                  else:
+                     newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*(i-1)))
+                 f = False
+             firstConj = False
+        if finalDisj is not "":
+            finalDisj = finalDisj + "|" 
+        finalDisj = finalDisj + newClause
+        firstDisj = False
         
 
     
@@ -145,14 +170,17 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
 
         
         
-    #write CNFs to file        
+    """#write CNFs to file        
     open(outFilename, 'w').close()
     output = open(outFilename, 'a')
     output.write("p cnf "+str(p)+" "+str(n)+"\n")
     output.writelines(cnfClauses)
     output.close()
-    
-    return mapping
+    """
+    dimacs = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfClauses)
+
+    print dimacs
+    return mapping, dimacs
     
     #for i in range(0,depth):
     #        for k in propsNext.keys():
@@ -173,7 +201,10 @@ def cnfToConjuncts(cnfIndices, mapping):
     return conjuncts
 
 
-def toCnfParellel(line):
+def toCnfParallel(line):
+    
+        print line
+            
         lineOld = line
         line = re.sub('[\t\n]*','',line)            
         line = re.sub('s\.','',line)
@@ -195,4 +226,8 @@ def toCnfParellel(line):
             line = line.strip() 
             cnf = str(to_cnf(line))
             return cnf
+        else:
+            return None
+        
+        
         
