@@ -21,9 +21,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     p = len(props)+len(propsNext)
     
     
-    #pool = Pool(processes=len(conjuncts))              
-    
-    print conjuncts
+    #pool = Pool(processes=len(conjuncts))
     #allCnfs = map(toCnfParallel, conjuncts)   
     allCnfs = []       
     for line in conjuncts:
@@ -179,7 +177,6 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     """
     dimacs = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfClauses)
 
-    print dimacs
     return mapping, dimacs
     
     #for i in range(0,depth):
@@ -202,8 +199,6 @@ def cnfToConjuncts(cnfIndices, mapping):
 
 
 def toCnfParallel(line):
-    
-        print line
             
         lineOld = line
         line = re.sub('[\t\n]*','',line)            

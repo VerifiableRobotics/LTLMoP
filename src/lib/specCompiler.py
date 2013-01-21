@@ -303,70 +303,25 @@ class SpecCompiler(object):
                 satFileName = self.proj.getFilenamePrefix()+".sat"
                 outputFile = open(satFileName,'w')
                 
-                subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-                subp.communicate(input)
-                
-                while subp.poll():
-                    time.sleep(0.1)
-            
-                sys.stdout = sys.__stdout__
-                sys.stderr = sys.__stderr__
-                output = subp.stdout.read()
-                #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
-                if "UNSATISFIABLE" in output:# or depth >= maxDepth:
-                    break
-                depth = depth +1
-            
-            outputFile.write(output)
-            outputFile.close()
-            
-            #get indices of contributing clauses
-            input = open(satFileName, 'r')
-            cnfIndices = []
-            for line in input:
-                if re.match('^v', line):
-                    index = int(line.strip('v').strip())
-                    if index!=0:
-                        cnfIndices.append(index)
-            input.close()                    
-            
-            #get contributing conjuncts from CNF indices
-            guilty = cnfToConjuncts(cnfIndices, mapping)
-            return guilty
-        
-        
-    def findCoresUnreal(self,to_highlight,maxDepth):
-        #get conjuncts to be minimized
-        conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
-        
-        
-        if conjuncts!=[]:
-            depth = 1
-            output = ""
-            
-            while True:
                 mapping, input = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)                
                 
-                with open(self.proj.getFilenamePrefix()+".cnf") as f:
-                    cnfdata = f.readlines()
+                #with open(self.proj.getFilenamePrefix()+".cnf") as f:
+                #    cnfdata = f.readlines()
 
-                cmd = elf._getPicosatCommand()
+                cmd = self._getPicosatCommand()
                 if cmd is None:
                     return (False, False, [], "")
                 
-                subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-
-                out = subp.communicate("\n".join(cnfdata))
-        
+                #subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+                #out = subp.communicate("\n".join(cnfdata))
                 
-                print out[0]
-                 
-                while subp.poll():
-                    time.sleep(0.1)
-            
+                subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
+                output = subp.communicate(input)[0]                                      
+                                                                                        
+                                                                                      
                 sys.stdout = sys.__stdout__
                 sys.stderr = sys.__stderr__
-                output = subp.stdout.read()
+                
                 #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
                 if "UNSATISFIABLE" in output:# or depth >= maxDepth:
                     break
@@ -389,10 +344,12 @@ class SpecCompiler(object):
             
             #get contributing conjuncts from CNF indices
             guilty = cnfToConjuncts(cnfIndices, mapping)
-            
-           
-            
             return guilty
+        
+        
+    def findCoresUnreal(self,to_highlight,maxDepth):
+        #get conjuncts to be minimized
+        return self.findCoresUnsat(to_highlight, maxDepth)
         
         
     def _getPicosatCommand(self):
