@@ -1155,13 +1155,11 @@ class SpecEditorFrame(wx.Frame):
 
         (realizable, unsat, nonTrivial, to_highlight, output) = compiler._analyze()        
         
-            
-        self.appendLog(output, "BLACK")
-        
 
-            
-        
-        
+
+
+        self.appendLog(output, "BLACK")
+
         if realizable:
             if nonTrivial:
                 self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")

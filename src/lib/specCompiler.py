@@ -4,6 +4,8 @@ import time
 import subprocess
 import numpy
 
+from multiprocessing import Pool
+
 sys.path.append("lib")
 
 import project
@@ -13,6 +15,7 @@ from parseEnglishToLTL import writeSpec
 import fsa
 from copy import deepcopy
 from coreUtils import *
+
 
 
 class SpecCompiler(object):
@@ -274,6 +277,7 @@ class SpecCompiler(object):
         
 #        numStates = 2**len(regList + robotPropList)
         
+        
         if unsat:
             guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL  
         else:
@@ -290,61 +294,77 @@ class SpecCompiler(object):
             depth = 1
             output = ""
             
-            while depth == 1:
-                mapping, input = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
-                
-    
-                cmd = self._getPicosatCommand()
-                
-                if cmd is None:
-                    return (False, False, [], "")
-        
-                #find minimal unsatisfiable core
-                satFileName = self.proj.getFilenamePrefix()+".sat"
-                outputFile = open(satFileName,'w')
-                
-                mapping, input = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)                
-                
-                #with open(self.proj.getFilenamePrefix()+".cnf") as f:
-                #    cnfdata = f.readlines()
-
-                cmd = self._getPicosatCommand()
-                if cmd is None:
-                    return (False, False, [], "")
-                
-                #subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-                #out = subp.communicate("\n".join(cnfdata))
-                
-                subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
-                output = subp.communicate(input)[0]                                      
-                                                                                        
-                                                                                      
-                sys.stdout = sys.__stdout__
-                sys.stderr = sys.__stderr__
-                
-                #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
-                if "UNSATISFIABLE" in output:# or depth >= maxDepth:
-                    break
-                depth = depth +1
+            mapping, trans, goals = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
             
+            
+            def duplicateGoals(g, d):
+                dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+len(self.propList)*(d-1))), x.split(' '))) + '\n', g)
+                return dg
+            
+            
+            dupGoals = map(lambda x: duplicateGoals(goals, x), range(1,maxDepth+2))
+            
+            allCnfs = map(lambda x: trans + x, dupGoals)
+            
+            pool = Pool(processes=len(allCnfs))
+                      
+            #allGuilty = pool.map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+            allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+            
+            return [item for sublist in allGuilty for item in sublist]
+
+           
+            
+            
+            
+    def guiltyParallel(self, depth, cnfs, mapping): 
+        p = (depth+3)*len(self.propList)
+        n = len(cnfs)       
+        input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)
+                
+        cmd = self._getPicosatCommand()        
+        
+                
+        #find minimal unsatisfiable core by calling picomus
+        if cmd is None:
+            return (False, False, [], "")        
+ 
+        subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
+        output = subp.communicate(input)[0]                                         
+                                                                                      
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        """#this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
+            if "UNSATISFIABLE" in output or depth >= maxDepth:
+                    break
+            depth = depth +1
+            """
+        if "UNSATISFIABLE" not in output:
+            print "Unsatisfiable core test on satisfiable components at depth" + str(depth)
+            
+            
+        """#Write output to file (mainly for debugging purposes)
             satFileName = self.proj.getFilenamePrefix()+".sat"
             outputFile = open(satFileName,'w')
             outputFile.write(output)
             outputFile.close()
+            """
             
             #get indices of contributing clauses
-            input = open(satFileName, 'r')
-            cnfIndices = []
-            for line in input:
+        """cnfIndices = []
+            for line in output:
                 if re.match('^v', line):
                     index = int(line.strip('v').strip())
                     if index!=0:
                         cnfIndices.append(index)
-            input.close()                    
+            """
+        #pythonified the above
+        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output.split('\n'))))
             
-            #get contributing conjuncts from CNF indices
-            guilty = cnfToConjuncts(cnfIndices, mapping)
-            return guilty
+        #get contributing conjuncts from CNF indices
+        guilty = cnfToConjuncts(cnfIndices, mapping)
+        return guilty
         
         
     def findCoresUnreal(self,to_highlight,maxDepth):

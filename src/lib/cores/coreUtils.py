@@ -18,14 +18,11 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     transClauses = []
     goalClauses = []
     n = 0
-    p = len(props)+len(propsNext)
+    p = len(props)+len(propsNext)       
     
     
-    #pool = Pool(processes=len(conjuncts))
-    #allCnfs = map(toCnfParallel, conjuncts)   
-    allCnfs = []       
-    for line in conjuncts:
-       allCnfs.append(toCnfParallel(line))
+    pool = Pool(processes=len(conjuncts))
+    allCnfs = map(toCnfParallel, conjuncts)   
         
     for cnf, lineOld in zip(allCnfs,conjuncts):
       if cnf is not None: 
@@ -40,8 +37,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                 clause = re.sub(k,str(propsNext[k]), clause)
             for k in props.keys():
                     clause = re.sub(k,str(props[k]), clause)   
-                #add trailing 0         
-                
+                #add trailing 0   
             if "<>" in lineOld:
                 goalClauses.append(clause.strip()+" 0\n")
             elif isTrans[lineOld]:
@@ -54,7 +50,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             mapping[lineOld].extend(range(n+1,n+1+len(allClauses)))    
             n = n + len(allClauses)
                 
-    #Duplicating transition clauses for depth greater than 1     
+    #Duplicating transition clauses for depth greater than 1         
     numOrigClauses = len(cnfClauses)   
     for i in range(1,depth+1):
         transClausesNew = []
@@ -62,10 +58,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             newClause = ""
             for c in clause.split():
                 intC = int(c)
-                if intC is not 0:                    
-                    newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
-                else:
-                    newClause= newClause +c+" "
+                newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
             newClause=newClause+"\n"
             transClausesNew.append(newClause)
         j = 0    
@@ -81,7 +74,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     
         
     # Create disjunction of goal over all the time steps         
-    finalDisj = ""     
+    """finalDisj = ""     
     
     firstDisj = True        
     for i in range(1,depth+2):   
@@ -105,27 +98,6 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         finalDisj = finalDisj + newClause
         firstDisj = False
 
-     
-    for i in range(1,depth+2):   
-        newClause = ""                                           
-        firstConj = True
-        for clause in goalClauses:
-             if not firstConj:
-                 newClause= newClause + " & "
-             f = True
-             for c in clause.split():
-                 intC = int(c)
-                 if intC is not 0:                    
-                  if not f:
-                     newClause= newClause + " | " + str(cmp(intC,0)*(abs(intC)+len(props)*(i-1)))
-                  else:
-                     newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*(i-1)))
-                 f = False
-             firstConj = False
-        if finalDisj is not "":
-            finalDisj = finalDisj + "|" 
-        finalDisj = finalDisj + newClause
-        firstDisj = False
         
 
     
@@ -134,8 +106,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         for c in str(to_cnf(finalDisj)).split('&'):
             finalConj.append(re.sub('[\(\)|&]*','',c) + " 0\n")
     
-    
-    """        
+            
             # add disjuncts to the goal clause (goal is satisfied in at least one of the time steps)
             # assumes goals all contain <> on line (so no line breaks within goals)
             if "<>" in line:
@@ -156,12 +127,12 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
 
     
     
-    for line in conjuncts:        
-        if "<>" in line:
-            mapping[line] = range(n+1,n+len(finalConj)+1)                       
+    #for line in conjuncts:        
+        #if "<>" in line:
+            #mapping[line] = range(n+1,n+len(finalConj)+1)                       
     
-    n = n + len(finalConj)
-    cnfClauses.extend(finalConj)
+    #n = n + len(finalConj)
+    #cnfClauses.extend(finalConj)
 
  
             
@@ -175,9 +146,13 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     output.writelines(cnfClauses)
     output.close()
     """
-    dimacs = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfClauses)
-
-    return mapping, dimacs
+    #dimacs = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfClauses)
+    
+    for line in conjuncts:        
+        if "<>" in line:
+            mapping[line] = range(n+1,n+len(goalClauses)+1)   
+                        
+    return mapping, cnfClauses, goalClauses
     
     #for i in range(0,depth):
     #        for k in propsNext.keys():
