@@ -133,7 +133,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             mapping[line] = range(n+1,n+len(goalClauses)+1)   
             """
                         
-    return mapping, transClauses, goalClauses
+    return mapping, cnfClauses, goalClauses
     
     #for i in range(0,depth):
     #        for k in propsNext.keys():
