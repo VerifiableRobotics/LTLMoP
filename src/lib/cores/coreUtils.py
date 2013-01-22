@@ -22,7 +22,9 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     
     
     pool = Pool(processes=len(conjuncts))
-    allCnfs = map(toCnfParallel, conjuncts)   
+    print "STARTING CNF MAP"
+    allCnfs = map(lineToCnf, conjuncts)   
+    print "STARTING CNF MAP"
         
     for cnf, lineOld in zip(allCnfs,conjuncts):
       if cnf is not None: 
@@ -121,8 +123,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                             newDisjuncts= newDisjuncts + str(cmp(intC,0)*(abs(intC)+len(props)*(i))) +" "
                             
                     # adding disjuncts here
-                    cnfClauses[v-1] = newDisjuncts + cnfClauses[v-1]            
-                    
+                    cnfClauses[v-1] = newDisjuncts + cnfClauses[v-1]                               
 """                
 
     
@@ -173,7 +174,7 @@ def cnfToConjuncts(cnfIndices, mapping):
     return conjuncts
 
 
-def toCnfParallel(line):
+def lineToCnf(line):
             
         lineOld = line
         line = re.sub('[\t\n]*','',line)            
@@ -198,6 +199,57 @@ def toCnfParallel(line):
             return cnf
         else:
             return None
+        
+def findGuiltyClauseIndsWrapper(x):        
+        return findGuiltyClauseInds(*x)
+        
+def findGuiltyClauseInds(cmd, depth, numProps, cnfs, mapping): 
+        p = (depth+3)*numProps
+        n = len(cnfs)       
+        input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
+            
+        
+                
+        #find minimal unsatisfiable core by calling picomus
+        if cmd is None:
+            return (False, False, [], "")        
+ 
+        subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
+        output = subp.communicate(input)[0]                                         
+                                                                                      
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        """#this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
+            if "UNSATISFIABLE" in output or depth >= maxDepth:
+                    break
+            depth = depth +1
+            """
+        if "UNSATISFIABLE" not in output:
+            print "Satisfiable at depth" + str(depth)
+        else:
+            print "Unsatisfiable core found at depth" + str(depth)
+                    
+            
+            
+        """#Write output to file (mainly for debugging purposes)
+            satFileName = self.proj.getFilenamePrefix()+".sat"
+            outputFile = open(satFileName,'w')
+            outputFile.write(output)
+            outputFile.close()
+            """
+            
+            #get indices of contributing clauses
+        """cnfIndices = []
+            for line in output:
+                if re.match('^v', line):
+                    index = int(line.strip('v').strip())
+                    if index!=0:
+                        cnfIndices.append(index)
+            """
+        #pythonified the above
+        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output.split('\n'))))
+        return cnfIndices
         
         
         

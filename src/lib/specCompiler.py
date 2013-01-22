@@ -3,6 +3,7 @@ import re
 import time
 import subprocess
 import numpy
+import itertools
 
 from multiprocessing import Pool
 
@@ -222,7 +223,6 @@ class SpecCompiler(object):
             elif "System is unrealizable because the environment can force a safety violation" in dline:
                 to_highlight.append(("sys", "trans"))
                 to_highlight.append(("sys", "init"))
-                to_highlight.append(("env", "init"))
             elif "System highlighted goal(s) unrealizable" in dline:
                 to_highlight.append(("sys", "trans"))
                 to_highlight.append(("sys", "init"))
@@ -307,65 +307,27 @@ class SpecCompiler(object):
             allCnfs = map(lambda x: trans + x, dupGoals)
             
             pool = Pool(processes=len(allCnfs))
+            
+            
+            cmd = self._getPicosatCommand() 
+            numProps = len(self.propList)
                       
-            #allGuilty = pool.map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+            print "STARTING PICO MAP"
             
-            return [item for sublist in allGuilty for item in sublist]
-
-           
+            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,len(allCnfs)+1), itertools.repeat(numProps), allCnfs, itertools.repeat(mapping)))
+            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+            print "ENDING PICO MAP"
             
+            allIndices = set([item for sublist in guiltyIndsList for item in sublist])
             
-            
-    def guiltyParallel(self, depth, cnfs, mapping): 
-        p = (depth+3)*len(self.propList)
-        n = len(cnfs)       
-        input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)
-                
-        cmd = self._getPicosatCommand()        
+            #get contributing conjuncts from CNF indices            
+            guilty = cnfToConjuncts(allIndices, mapping)
+            return guilty
+    
+          
         
                 
-        #find minimal unsatisfiable core by calling picomus
-        if cmd is None:
-            return (False, False, [], "")        
- 
-        subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
-        output = subp.communicate(input)[0]                                         
-                                                                                      
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-
-        """#this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
-            if "UNSATISFIABLE" in output or depth >= maxDepth:
-                    break
-            depth = depth +1
-            """
-        if "UNSATISFIABLE" not in output:
-            print "Unsatisfiable core test on satisfiable components at depth" + str(depth)
-            
-            
-        """#Write output to file (mainly for debugging purposes)
-            satFileName = self.proj.getFilenamePrefix()+".sat"
-            outputFile = open(satFileName,'w')
-            outputFile.write(output)
-            outputFile.close()
-            """
-            
-            #get indices of contributing clauses
-        """cnfIndices = []
-            for line in output:
-                if re.match('^v', line):
-                    index = int(line.strip('v').strip())
-                    if index!=0:
-                        cnfIndices.append(index)
-            """
-        #pythonified the above
-        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output.split('\n'))))
-            
-        #get contributing conjuncts from CNF indices
-        guilty = cnfToConjuncts(cnfIndices, mapping)
-        return guilty
-        
+    
         
     def findCoresUnreal(self,to_highlight,maxDepth):
         #get conjuncts to be minimized
