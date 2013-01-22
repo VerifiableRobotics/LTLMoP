@@ -1,6 +1,8 @@
 
 import math, re, sys, random, os, subprocess, time
 from logic import to_cnf
+from multiprocessing import Pool
+
 
 
 
@@ -16,31 +18,16 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     transClauses = []
     goalClauses = []
     n = 0
-    p = len(props)+len(propsNext)
+    p = len(props)+len(propsNext)       
     
     
+    pool = Pool(processes=len(conjuncts))
+    print "STARTING CNF MAP"
+    allCnfs = map(lineToCnf, conjuncts)   
+    print "STARTING CNF MAP"
         
-    for line in conjuncts:
-        lineOld = line
-        line = re.sub('[\t\n]*','',line)            
-        line = re.sub('s\.','',line)
-        line = re.sub('e\.','',line)   
-        line = re.sub(r'(next\()', r'(next_', line)         
-        line = re.sub(r'(next\(\s*!)', r'(!next_', line)         
-        line = re.sub('\<\>','',line)  
-        line = re.sub('\[\]','',line)  
-        line = line.strip()
-        #trailing &
-        line = re.sub('&\s*$','',line)  
-        if line=='':
-            continue
-        line = re.sub('!', '~', line)
-        #line = re.sub('&\s*\n', '', line)
-        line = re.sub('[\s]+', ' ', line)        
-        line = re.sub('\<-\>', '<=>', line)
-        line = re.sub('->', '>>', line)
-        line = line.strip() 
-        cnf = str(to_cnf(line))
+    for cnf, lineOld in zip(allCnfs,conjuncts):
+      if cnf is not None: 
         allClauses = cnf.split("&");
         #associate original conjuncts with CNF clauses
         for clause in allClauses:    
@@ -51,9 +38,8 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             for k in propsNext.keys():
                 clause = re.sub(k,str(propsNext[k]), clause)
             for k in props.keys():
-                clause = re.sub(k,str(props[k]), clause)   
-            #add trailing 0         
-            
+                    clause = re.sub(k,str(props[k]), clause)   
+                #add trailing 0   
             if "<>" in lineOld:
                 goalClauses.append(clause.strip()+" 0\n")
             elif isTrans[lineOld]:
@@ -61,15 +47,12 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                 cnfClauses.append(clause.strip()+" 0\n")
             else:
                 cnfClauses.append(clause.strip()+" 0\n")         
-        
+            
         if not "<>" in lineOld:
-            mapping[lineOld] = mapping[lineOld] + (range(n+1,n+1+len(allClauses)))    
+            mapping[lineOld].extend(range(n+1,n+1+len(allClauses)))    
             n = n + len(allClauses)
-        
-    
-        
-    
-    #Duplicating transition clauses for depth greater than 1     
+                
+    #Duplicating transition clauses for depth greater than 1         
     numOrigClauses = len(cnfClauses)   
     for i in range(1,depth+1):
         transClausesNew = []
@@ -77,26 +60,23 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             newClause = ""
             for c in clause.split():
                 intC = int(c)
-                if intC is not 0:                    
-                    newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
-                else:
-                    newClause= newClause +c+" "
+                newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
             newClause=newClause+"\n"
             transClausesNew.append(newClause)
         j = 0    
         for line in conjuncts:
             if isTrans[line]:                       
                 numVarsInTrans = (len(mapping[line]))/i
-                mapping[line] = mapping[line] + (map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
+                mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                 j = j + 1
         n = n + len(transClausesNew)
         p = p + len(props)
-        cnfClauses = cnfClauses + transClausesNew
+        cnfClauses.extend(transClausesNew)
         numOrigClauses = len(transClausesNew)   
     
         
     # Create disjunction of goal over all the time steps         
-    finalDisj = ""     
+    """finalDisj = ""     
     
     firstDisj = True        
     for i in range(1,depth+2):   
@@ -128,8 +108,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
         for c in str(to_cnf(finalDisj)).split('&'):
             finalConj.append(re.sub('[\(\)|&]*','',c) + " 0\n")
     
-    
-    """        
+            
             # add disjuncts to the goal clause (goal is satisfied in at least one of the time steps)
             # assumes goals all contain <> on line (so no line breaks within goals)
             if "<>" in line:
@@ -144,32 +123,37 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                             newDisjuncts= newDisjuncts + str(cmp(intC,0)*(abs(intC)+len(props)*(i))) +" "
                             
                     # adding disjuncts here
-                    cnfClauses[v-1] = newDisjuncts + cnfClauses[v-1]            
-                    
+                    cnfClauses[v-1] = newDisjuncts + cnfClauses[v-1]                               
 """                
 
     
     
-    for line in conjuncts:        
-        if "<>" in line:
-            mapping[line] = range(n+1,n+len(finalConj)+1)                       
+    #for line in conjuncts:        
+        #if "<>" in line:
+            #mapping[line] = range(n+1,n+len(finalConj)+1)                       
     
-    n = n + len(finalConj)
-    cnfClauses = cnfClauses + finalConj
+    #n = n + len(finalConj)
+    #cnfClauses.extend(finalConj)
 
  
             
 
         
         
-    #write CNFs to file        
+    """#write CNFs to file        
     open(outFilename, 'w').close()
     output = open(outFilename, 'a')
     output.write("p cnf "+str(p)+" "+str(n)+"\n")
     output.writelines(cnfClauses)
     output.close()
+    """
+    #dimacs = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfClauses)
     
-    return mapping
+    for line in conjuncts:        
+        if "<>" in line:
+            mapping[line] = range(n+1,n+len(goalClauses)+1)   
+                        
+    return mapping, cnfClauses, goalClauses
     
     #for i in range(0,depth):
     #        for k in propsNext.keys():
@@ -188,3 +172,84 @@ def cnfToConjuncts(cnfIndices, mapping):
             #print k + str(set(mapping[k]).intersection(cnfIndices))
             #print k
     return conjuncts
+
+
+def lineToCnf(line):
+            
+        lineOld = line
+        line = re.sub('[\t\n]*','',line)            
+        line = re.sub('s\.','',line)
+        line = re.sub('e\.','',line)   
+        line = re.sub(r'(next\()', r'(next_', line)         
+        line = re.sub(r'(next\(\s*!)', r'(!next_', line)         
+        line = re.sub('\<\>','',line)  
+        line = re.sub('\[\]','',line)  
+        line = line.strip()
+        #trailing &
+        line = re.sub('&\s*$','',line)  
+        if line!='':
+            
+            line = re.sub('!', '~', line)
+            #line = re.sub('&\s*\n', '', line)
+            line = re.sub('[\s]+', ' ', line)        
+            line = re.sub('\<-\>', '<=>', line)
+            line = re.sub('->', '>>', line)
+            line = line.strip() 
+            cnf = str(to_cnf(line))
+            return cnf
+        else:
+            return None
+        
+def findGuiltyClauseIndsWrapper(x):        
+        return findGuiltyClauseInds(*x)
+        
+def findGuiltyClauseInds(cmd, depth, numProps, cnfs, mapping): 
+        p = (depth+3)*numProps
+        n = len(cnfs)       
+        input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
+            
+        
+                
+        #find minimal unsatisfiable core by calling picomus
+        if cmd is None:
+            return (False, False, [], "")        
+ 
+        subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
+        output = subp.communicate(input)[0]                                         
+                                                                                      
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        """#this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
+            if "UNSATISFIABLE" in output or depth >= maxDepth:
+                    break
+            depth = depth +1
+            """
+        if "UNSATISFIABLE" not in output:
+            print "Satisfiable at depth" + str(depth)
+        else:
+            print "Unsatisfiable core found at depth" + str(depth)
+                    
+            
+            
+        """#Write output to file (mainly for debugging purposes)
+            satFileName = self.proj.getFilenamePrefix()+".sat"
+            outputFile = open(satFileName,'w')
+            outputFile.write(output)
+            outputFile.close()
+            """
+            
+            #get indices of contributing clauses
+        """cnfIndices = []
+            for line in output:
+                if re.match('^v', line):
+                    index = int(line.strip('v').strip())
+                    if index!=0:
+                        cnfIndices.append(index)
+            """
+        #pythonified the above
+        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output.split('\n'))))
+        return cnfIndices
+        
+        
+        

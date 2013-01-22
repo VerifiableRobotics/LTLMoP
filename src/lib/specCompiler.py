@@ -4,7 +4,10 @@ import time, copy
 import math
 import subprocess
 import numpy
+import itertools
 import glob
+
+from multiprocessing import Pool
 
 sys.path.append("lib")
 
@@ -19,6 +22,7 @@ from coreUtils import *
 
 # Hack needed to ensure there's only one
 _SLURP_SPEC_GENERATOR = None
+
 
 class SpecCompiler(object):
     def __init__(self, spec_filename=None):
@@ -513,8 +517,10 @@ class SpecCompiler(object):
             # System unrealizability
             elif "System is unrealizable because the environment can force a safety violation" in dline:
                 to_highlight.append(("sys", "trans"))
+                to_highlight.append(("sys", "init"))
             elif "System highlighted goal(s) unrealizable" in dline:
                 to_highlight.append(("sys", "trans"))
+                to_highlight.append(("sys", "init"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("sys", "goals", int(l)))
             
@@ -566,6 +572,7 @@ class SpecCompiler(object):
         
 #        numStates = 2**len(regList + robotPropList)
         
+        
         if unsat:
             guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL  
         else:
@@ -582,103 +589,44 @@ class SpecCompiler(object):
             depth = 1
             output = ""
             
-            while depth == 1:
-                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
-    
-    
-                cmd = self._getPicosatCommand()
-                if cmd is None:
-                    return (False, False, [], "")
-        
-                #find minimal unsatisfiable core
-                satFileName = self.proj.getFilenamePrefix()+".sat"
-                outputFile = open(satFileName,'w')
-                subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-                while subp.poll():
-                    time.sleep(0.1)
+            mapping, trans, goals = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
             
-                sys.stdout = sys.__stdout__
-                sys.stderr = sys.__stderr__
-                output = subp.stdout.read()
-                #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
-                if "UNSATISFIABLE" in output:# or depth >= maxDepth:
-                    break
-                depth = depth +1
             
-            outputFile.write(output)
-            outputFile.close()
+            def duplicateGoals(g, d):
+                dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+len(self.propList)*(d-1))), x.split(' '))) + '\n', g)
+                return dg
             
-            #get indices of contributing clauses
-            input = open(satFileName, 'r')
-            cnfIndices = []
-            for line in input:
-                if re.match('^v', line):
-                    index = int(line.strip('v').strip())
-                    if index!=0:
-                        cnfIndices.append(index)
-            input.close()                    
             
-            #print maxDepth
-            #print mapping
-            #print cnfIndices
-
-            #get contributing conjuncts from CNF indices
-            guilty = cnfToConjuncts(cnfIndices, mapping)
+            dupGoals = map(lambda x: duplicateGoals(goals, x), range(1,maxDepth+2))
+            
+            allCnfs = map(lambda x: trans + x, dupGoals)
+            
+            pool = Pool(processes=len(allCnfs))
+            
+            
+            cmd = self._getPicosatCommand() 
+            numProps = len(self.propList)
+                      
+            print "STARTING PICO MAP"
+            
+            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,len(allCnfs)+1), itertools.repeat(numProps), allCnfs, itertools.repeat(mapping)))
+            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+            print "ENDING PICO MAP"
+            
+            allIndices = set([item for sublist in guiltyIndsList for item in sublist])
+            
+            #get contributing conjuncts from CNF indices            
+            guilty = cnfToConjuncts(allIndices, mapping)
             return guilty
+    
+          
         
+                
+    
         
     def findCoresUnreal(self,to_highlight,maxDepth):
         #get conjuncts to be minimized
-        conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
-        
-        
-        if conjuncts!=[]:
-            depth = 1
-            output = ""
-            
-            while True:
-                mapping = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)                
-                
-    
-    
-                cmd = self._getPicosatCommand()
-                if cmd is None:
-                    return (False, False, [], "")
-        
-                #find minimal unsatisfiable core
-                satFileName = self.proj.getFilenamePrefix()+".sat"
-                outputFile = open(satFileName,'w')
-                subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-                while subp.poll():
-                    time.sleep(0.1)
-            
-                sys.stdout = sys.__stdout__
-                sys.stderr = sys.__stderr__
-                output = subp.stdout.read()
-                #this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
-                if "UNSATISFIABLE" in output:# or depth >= maxDepth:
-                    break
-                depth = depth +1
-            
-            outputFile.write(output)
-            outputFile.close()
-            
-            #get indices of contributing clauses
-            input = open(satFileName, 'r')
-            cnfIndices = []
-            for line in input:
-                if re.match('^v', line):
-                    index = int(line.strip('v').strip())
-                    if index!=0:
-                        cnfIndices.append(index)
-            input.close()                    
-            
-            #get contributing conjuncts from CNF indices
-            guilty = cnfToConjuncts(cnfIndices, mapping)
-            
-           
-            
-            return guilty
+        return self.findCoresUnsat(to_highlight, maxDepth)
         
         
     def _getPicosatCommand(self):
@@ -693,9 +641,9 @@ class SpecCompiler(object):
             print "Found Picosat in " + paths[0]
 
         if os.name == "nt":
-            cmd = os.path.join(paths[0],"picomus.exe ") + self.proj.getFilenamePrefix() + ".cnf"
+            cmd = os.path.join(paths[0],"picomus.exe")
         else:
-            cmd = [os.path.join(paths[0],"picomus"), self.proj.getFilenamePrefix() + ".cnf"]
+            cmd = [os.path.join(paths[0],"picomus")]
 
         return cmd
     
@@ -719,12 +667,13 @@ class SpecCompiler(object):
                 #newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
                 goals = ["[]<>(TRUE)"] + self.spec[tb_key].split('\n')
                 newCs = [goals[h_item[2]]]
-                #newCsOld = newCs
-                for p in self.propList:
+                newCsOld = newCs
+                """for p in self.propList:
                     old = ''+str(p)
                     new = 'next('+str(p)+')'
-                    newCs = map(lambda s: s.replace(old,new), newCs)                            
-                #newCs = newCs + newCsOld
+                    newCs = map(lambda s: s.replace(old,new), newCs) 
+                """                           
+                newCs.extend(newCsOld)
             else:
                 newCs = self.spec[tb_key].split('\n')
                 #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
@@ -737,7 +686,7 @@ class SpecCompiler(object):
                     isTrans[clause] = 0  
             conjuncts = conjuncts + newCs 
 
-        
+            
         return conjuncts, isTrans
 
     def _synthesize(self, with_safety_aut=False):
