@@ -294,7 +294,7 @@ class SpecCompiler(object):
             depth = 1
             output = ""
             
-            mapping, trans, goals = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
+            mapping, init, trans, goals = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
             
             
             def duplicate(d):
@@ -318,17 +318,16 @@ class SpecCompiler(object):
                             j = j + 1
                     transClauses.extend(transClausesNew)
         
-        
                 dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+len(self.propList)*(d))), x.split(' '))) + '\n', goals)
-                n = len(transClauses)
+                n = len(transClauses) + len(init)
                 for line in conjuncts:
                         if "<>" in line:
                             mapping[line] = range(n+1,n+len(goals)+1)
-                transClauses.extend(dg)
-                return transClauses
+                
+                return init + transClauses + dg
             
             
-            allCnfs = map(lambda x: duplicate(x), range(1,maxDepth+2))
+            allCnfs = map(lambda x: duplicate(x), range(0,maxDepth+1))
             
             
                             
@@ -350,8 +349,10 @@ class SpecCompiler(object):
             
             allIndices = set([item for sublist in guiltyIndsList for item in sublist])
             
+            
             #get contributing conjuncts from CNF indices            
             guilty = cnfToConjuncts(allIndices, mapping)
+            
                         
             return guilty
     
@@ -390,7 +391,6 @@ class SpecCompiler(object):
         isTrans[topoCs] = True
         
         conjuncts = [topoCs]
-        
                 
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
@@ -408,7 +408,7 @@ class SpecCompiler(object):
                     new = 'next('+str(p)+')'
                     newCs = map(lambda s: s.replace(old,new), newCs) 
                 """                           
-                newCs.extend(newCsOld)
+                #newCs.extend(newCsOld)
             else:
                 newCs = self.spec[tb_key].split('\n')
                 #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]

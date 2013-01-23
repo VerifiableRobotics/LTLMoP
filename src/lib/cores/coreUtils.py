@@ -43,14 +43,13 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                 goalClauses.append(clause.strip()+" 0\n")
             elif isTrans[lineOld]:
                 transClauses.append(clause.strip()+" 0\n")
-                cnfClauses.append(clause.strip()+" 0\n")
+                cnfClauses.append(clause.strip()+" 0\n")                                
             else:
                 cnfClauses.append(clause.strip()+" 0\n")         
             
         if not "<>" in lineOld:
             mapping[lineOld].extend(range(n+1,n+1+len(allClauses)))    
             n = n + len(allClauses)
-                
     
     
         
@@ -133,7 +132,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
             mapping[line] = range(n+1,n+len(goalClauses)+1)   
             """
                         
-    return mapping, cnfClauses, goalClauses
+    return mapping, cnfClauses, transClauses, goalClauses
     
     #for i in range(0,depth):
     #        for k in propsNext.keys():
@@ -184,7 +183,7 @@ def findGuiltyClauseIndsWrapper(x):
         return findGuiltyClauseInds(*x)
         
 def findGuiltyClauseInds(cmd, depth, numProps, cnfs, mapping): 
-        p = (depth+3)*numProps
+        p = (depth)*(numProps*2)
         n = len(cnfs)       
         input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
             
@@ -205,11 +204,15 @@ def findGuiltyClauseInds(cmd, depth, numProps, cnfs, mapping):
                     break
             depth = depth +1
             """
-        if "UNSATISFIABLE" not in output:
-            print "Satisfiable at depth" + str(depth)
+        if "UNSATISFIABLE" in output:
+            print "Unsatisfiable core found at depth ", depth
+        elif "error" in output:
+            print "ERROR"
             print output
         else:
-            print "Unsatisfiable core found at depth" + str(depth)
+            print "Satisfiable at depth ", depth
+            
+            
                     
             
             
@@ -221,8 +224,9 @@ def findGuiltyClauseInds(cmd, depth, numProps, cnfs, mapping):
             """
             
             #get indices of contributing clauses
+        
         """cnfIndices = []
-            for line in output:
+        for line in output.split('\n'):
                 if re.match('^v', line):
                     index = int(line.strip('v').strip())
                     if index!=0:
