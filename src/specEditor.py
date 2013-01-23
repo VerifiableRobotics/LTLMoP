@@ -88,19 +88,32 @@ class AnalysisResultsDialog(wx.Dialog):
             # Add a node for each input line
             input_node = self.tree_ctrl_traceback.AppendItem(root_node, user_input)
             # Then fill in the tree for each command it generates
-            for command, spec_lines_list in command_tree.items():
+            for command, spec_chunks in command_tree.items():
                 # Add a node fot the  command
                 command_node = self.tree_ctrl_traceback.AppendItem(input_node, command)
                 # Fill in the explanation and lines for each list of lines created
-                for spec_lines in spec_lines_list:
+                for spec_chunk in spec_chunks:
                     explanation_node = \
-                        self.tree_ctrl_traceback.AppendItem(command_node, spec_lines.explanation)
-                    for stmt in spec_lines.lines:
+                        self.tree_ctrl_traceback.AppendItem(command_node, spec_chunk.explanation)
+                    for stmt, highlight in zip(spec_chunk.lines, spec_chunk.highlights):
                         stmt_node = self.tree_ctrl_traceback.AppendItem(explanation_node, stmt)
-                        if spec_lines.issys():
+                        if spec_chunk.issys():
                             self.statements["sys"].append((stmt, stmt_node))
                         else:
                             self.statements["env"].append((stmt, stmt_node))
+
+                        if highlight:
+                            if "[]<>" in stmt:
+                                # Goals colored differently than other statements
+                                self.tree_ctrl_traceback.SetItemBackgroundColour(stmt_node, "#FA58D0") # pale pink
+                            else:
+                                self.tree_ctrl_traceback.SetItemBackgroundColour(stmt_node, "#FE9A2E") # pale orange
+                            # Expand the relevant nodes
+                            self.tree_ctrl_traceback.Expand(input_node)
+                            self.tree_ctrl_traceback.Expand(command_node)
+                            self.tree_ctrl_traceback.Expand(explanation_node)
+                            self.tree_ctrl_traceback.Expand(stmt_node)
+
         self.Layout()
 
 
@@ -121,6 +134,7 @@ class AnalysisResultsDialog(wx.Dialog):
                     self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FA58D0") # pale pink
                 elif section != "goals":
                     self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FE9A2E") # pale orange
+                self.tree_ctrl_traceback.Expand(obj)
                 
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_summary.BeginTextColour(color)
@@ -1393,6 +1407,8 @@ class SpecEditorFrame(wx.Frame):
             sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
             from ltlbroom.specgeneration import explain_conflict
             msg, highlight_tree = explain_conflict(guilty_clean, self.tracebackTree)
+            # Reprocess the traceback tree
+            self.analysisDialog.populateTree(highlight_tree)
             self.analysisDialog.appendLog(msg)
     
     def highlight(self, l, type):
