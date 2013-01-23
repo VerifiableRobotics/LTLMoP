@@ -1327,20 +1327,19 @@ class SpecEditorFrame(wx.Frame):
                 self.analysisDialog.populateTree(self.tracebackTree) 
 
             self.analysisDialog.tree_ctrl_traceback.ExpandAll()
+        self.appendLog("Running analysis...\n","BLUE")
 
         # Redirect all output to the log
-        redir = RedirectText(self,self.text_ctrl_log)
-
+        redir = RedirectText(self, self.text_ctrl_log)
         sys.stdout = redir
         sys.stderr = redir
-
-        self.appendLog("Running analysis...\n", "BLUE")
-
         (realizable, unsat, nonTrivial, to_highlight, output) = compiler._analyze()
-        
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
         # Remove lines about garbage collection from the output and remove extraenous lines
         output_lines = [line for line in output.split('\n') if line.strip() and
-                        "Garbage collection" not in line and 
+                        "Garbage collection" not in line and
                         "Resizing node table" not in line]
 
         if realizable:
@@ -1352,9 +1351,7 @@ class SpecEditorFrame(wx.Frame):
                 self.analysisDialog.appendLog("\nSynthesized automaton is trivial.", "RED")
         else:
             self.analysisDialog.appendLog(output.rstrip(), "RED")
-
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
+        self.analysisDialog.appendLog('\n')
                 
         #highlight guilty sentences
         #special treatment for goals: we already know which one to highlight                

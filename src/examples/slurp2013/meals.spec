@@ -5,8 +5,8 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-pick_up, 1
-drop, 1
+pick_up, 0
+drop, 0
 
 CompileOptions:
 convexify: True
@@ -27,10 +27,26 @@ Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 
 
 ======== SPECIFICATION ========
 
+RegionMapping: # Mapping between region names and their decomposed counterparts
+r4 = p3
+r5 = p2
+r6 = p1
+r1 = p6
+closet = p12
+r3 = p4
+hall_W = p13, p14
+lounge = p7
+r2 = p5
+hall_N = p15, p16
+others = 
+hall_C = p11
+kitchen = p8
+
 Spec: # Specification in structured English
 # Example of unsatisfiability, and state-wise goal-local "optimal" planning.
 # Note: The robot can carry up to 2 meals at a time (this is somehow implicit...?)
 
-Don't take meals into any public area.
-Deliver meals from the kitchen to each patient room.
+Start in the closet.
+Go to all patient rooms.
+Don't go to all public rooms.
 
