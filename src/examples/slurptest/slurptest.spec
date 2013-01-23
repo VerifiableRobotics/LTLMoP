@@ -7,7 +7,7 @@
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
 pick_up, 0
 drop, 0
-radio, 1
+radio, 0
 extinguish, 0
 sweep, 1
 
@@ -36,11 +36,11 @@ sweep_done, 1
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
 living = p4
-porch = p3
 deck = p7
-others = 
+porch = p3
 dining = p6
 bedroom = p8
+others = 
 kitchen = p5
 
 Spec: # Specification in structured English
