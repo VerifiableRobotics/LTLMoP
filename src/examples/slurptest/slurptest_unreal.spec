@@ -7,12 +7,17 @@
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
 pick_up, 0
 drop, 0
-radio, 1
+radio, 0
 extinguish, 0
 
 CompileOptions:
 convexify: True
+parser: slurp
 fastslow: False
+decompose: True
+
+CurrentConfigName:
+basicsim
 
 Customs: # List of custom propositions
 
@@ -20,8 +25,8 @@ RegionFile: # Relative path of region description file
 iros10.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-fire, 1
-person, 1
+fire, 0
+person, 0
 hazardous_item, 0
 
 
