@@ -168,7 +168,7 @@ class SpecCompiler(object):
 
             # Abort compilation if there were any errors
             if not all(responses):
-                return None, responses
+                return None, responses, None
         
             # Add in the sensors so they go into the SMV and spec files
             for s in internal_sensors:
@@ -237,7 +237,7 @@ class SpecCompiler(object):
 
             # Abort compilation if there were any errors
             if failed:
-                return None
+                return None, None, None
 
             LTLspec_env = spec["EnvInit"] + spec["EnvTrans"] + spec["EnvGoals"]
             LTLspec_sys = spec["SysInit"] + spec["SysTrans"] + spec["SysGoals"]
@@ -246,7 +246,7 @@ class SpecCompiler(object):
             traceback['SysGoals'].insert(0, None)
         else:
             print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
-            return None
+            return None, None, None
 
 
         regNum = len(regionList)                                                         
