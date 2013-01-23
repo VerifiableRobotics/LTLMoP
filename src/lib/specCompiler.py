@@ -589,17 +589,46 @@ class SpecCompiler(object):
             depth = 1
             output = ""
             
-            mapping, trans, goals = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
+            mapping, init, trans, goals = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
             
             
-            def duplicateGoals(g, d):
-                dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+len(self.propList)*(d-1))), x.split(' '))) + '\n', g)
-                return dg
+            def duplicate(d):
+                transClauses = []
+                #Duplicating transition clauses for depth greater than 1         
+                numOrigClauses = len(trans)   
+                for i in range(1,d+1):
+                    transClausesNew = []
+                    for clause in trans:
+                        newClause = ""
+                        for c in clause.split():
+                            intC = int(c)
+                            newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(self.propList)*i)) +" "
+                        newClause=newClause+"\n"
+                        transClausesNew.append(newClause)
+                    j = 0    
+                    for line in conjuncts:
+                        if isTrans[line]:                       
+                            numVarsInTrans = (len(mapping[line]))/i
+                            mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
+                            j = j + 1
+                    transClauses.extend(transClausesNew)
+        
+                dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+len(self.propList)*(d))), x.split(' '))) + '\n', goals)
+                n = len(transClauses) + len(init)
+                for line in conjuncts:
+                        if "<>" in line:
+                            mapping[line] = range(n+1,n+len(goals)+1)
+                
+                return init + transClauses + dg
             
             
-            dupGoals = map(lambda x: duplicateGoals(goals, x), range(1,maxDepth+2))
+            allCnfs = map(lambda x: duplicate(x), range(0,maxDepth+1))
             
-            allCnfs = map(lambda x: trans + x, dupGoals)
+            
+                            
+                   
+            
+            #allCnfs = map(lambda x: trans + x, dupGoals)
             
             pool = Pool(processes=len(allCnfs))
             
@@ -607,16 +636,19 @@ class SpecCompiler(object):
             cmd = self._getPicosatCommand() 
             numProps = len(self.propList)
                       
-            print "STARTING PICO MAP"
+            #print "STARTING PICO MAP"
             
-            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,len(allCnfs)+1), itertools.repeat(numProps), allCnfs, itertools.repeat(mapping)))
+            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,len(allCnfs)+1), itertools.repeat(numProps), allCnfs, itertools.repeat(mapping)), chunksize = 1)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            print "ENDING PICO MAP"
+            #print "ENDING PICO MAP"
             
             allIndices = set([item for sublist in guiltyIndsList for item in sublist])
             
+            
             #get contributing conjuncts from CNF indices            
             guilty = cnfToConjuncts(allIndices, mapping)
+            
+                        
             return guilty
     
           
@@ -656,7 +688,7 @@ class SpecCompiler(object):
         isTrans[topoCs] = True
         
         conjuncts = [topoCs]
-        
+                
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
 
@@ -673,7 +705,7 @@ class SpecCompiler(object):
                     new = 'next('+str(p)+')'
                     newCs = map(lambda s: s.replace(old,new), newCs) 
                 """                           
-                newCs.extend(newCsOld)
+                #newCs.extend(newCsOld)
             else:
                 newCs = self.spec[tb_key].split('\n')
                 #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]

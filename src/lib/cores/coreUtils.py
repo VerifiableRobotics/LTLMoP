@@ -20,11 +20,10 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     n = 0
     p = len(props)+len(propsNext)       
     
-    
     pool = Pool(processes=len(conjuncts))
-    print "STARTING CNF MAP"
-    allCnfs = map(lineToCnf, conjuncts)   
-    print "STARTING CNF MAP"
+    #print "STARTING CNF MAP"
+    allCnfs = pool.map(lineToCnf, conjuncts, chunksize = 1)   
+    #print "ENDING CNF MAP"
         
     for cnf, lineOld in zip(allCnfs,conjuncts):
       if cnf is not None: 
@@ -44,35 +43,14 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                 goalClauses.append(clause.strip()+" 0\n")
             elif isTrans[lineOld]:
                 transClauses.append(clause.strip()+" 0\n")
-                cnfClauses.append(clause.strip()+" 0\n")
+                cnfClauses.append(clause.strip()+" 0\n")                                
             else:
                 cnfClauses.append(clause.strip()+" 0\n")         
             
         if not "<>" in lineOld:
             mapping[lineOld].extend(range(n+1,n+1+len(allClauses)))    
             n = n + len(allClauses)
-                
-    #Duplicating transition clauses for depth greater than 1         
-    numOrigClauses = len(cnfClauses)   
-    for i in range(1,depth+1):
-        transClausesNew = []
-        for clause in transClauses:
-            newClause = ""
-            for c in clause.split():
-                intC = int(c)
-                newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(props)*i)) +" "
-            newClause=newClause+"\n"
-            transClausesNew.append(newClause)
-        j = 0    
-        for line in conjuncts:
-            if isTrans[line]:                       
-                numVarsInTrans = (len(mapping[line]))/i
-                mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
-                j = j + 1
-        n = n + len(transClausesNew)
-        p = p + len(props)
-        cnfClauses.extend(transClausesNew)
-        numOrigClauses = len(transClausesNew)   
+    
     
         
     # Create disjunction of goal over all the time steps         
@@ -149,11 +127,12 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     """
     #dimacs = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfClauses)
     
-    for line in conjuncts:        
+    """for line in conjuncts:        
         if "<>" in line:
             mapping[line] = range(n+1,n+len(goalClauses)+1)   
+            """
                         
-    return mapping, cnfClauses, goalClauses
+    return mapping, cnfClauses, transClauses, goalClauses
     
     #for i in range(0,depth):
     #        for k in propsNext.keys():
@@ -204,7 +183,7 @@ def findGuiltyClauseIndsWrapper(x):
         return findGuiltyClauseInds(*x)
         
 def findGuiltyClauseInds(cmd, depth, numProps, cnfs, mapping): 
-        p = (depth+3)*numProps
+        p = (depth)*(numProps*2)
         n = len(cnfs)       
         input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
             
@@ -225,10 +204,15 @@ def findGuiltyClauseInds(cmd, depth, numProps, cnfs, mapping):
                     break
             depth = depth +1
             """
-        if "UNSATISFIABLE" not in output:
-            print "Satisfiable at depth" + str(depth)
+        if "UNSATISFIABLE" in output:
+            print "Unsatisfiable core found at depth ", depth
+        elif "error" in output:
+            print "ERROR"
+            print output
         else:
-            print "Unsatisfiable core found at depth" + str(depth)
+            print "Satisfiable at depth ", depth
+            
+            
                     
             
             
@@ -240,8 +224,9 @@ def findGuiltyClauseInds(cmd, depth, numProps, cnfs, mapping):
             """
             
             #get indices of contributing clauses
+        
         """cnfIndices = []
-            for line in output:
+        for line in output.split('\n'):
                 if re.match('^v', line):
                     index = int(line.strip('v').strip())
                     if index!=0:
