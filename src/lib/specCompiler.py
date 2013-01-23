@@ -168,7 +168,7 @@ class SpecCompiler(object):
 
             # Abort compilation if there were any errors
             if not all(responses):
-                return None, responses, None
+                return None, None, responses
         
             # Add in the sensors so they go into the SMV and spec files
             for s in internal_sensors:
