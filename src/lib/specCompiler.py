@@ -227,7 +227,7 @@ class SpecCompiler(object):
 
             aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
             
-            nonTrivial = any([s.transitions != [] for s in aut.states])
+            nonTrivial = any([len(s.transitions) > 0 for s in aut.states])
 
         subp.stdout.close()
 
