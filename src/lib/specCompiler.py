@@ -318,7 +318,8 @@ class SpecCompiler(object):
                             j = j + 1
                     transClauses.extend(transClausesNew)
         
-                dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+len(self.propList)*(d))), x.split(' '))) + '\n', goals)
+                dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+len(self.propList)*(d))), filter(lambda y: y is not '', x.split(' ')))) + '\n', goals)
+                
                 n = len(transClauses) + len(init)
                 for line in conjuncts:
                         if "<>" in line:
