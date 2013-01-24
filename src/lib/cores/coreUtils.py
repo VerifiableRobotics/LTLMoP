@@ -182,7 +182,7 @@ def lineToCnf(line):
 def findGuiltyClauseIndsWrapper(x):        
         return findGuiltyClauseInds(*x)
         
-def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
+def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conjuncts, isTrans): 
         transClauses = []
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)   
@@ -203,7 +203,7 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
                             j = j + 1
                     transClauses.extend(transClausesNew)
         
-        dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), filter(lambda y: y is not '', x.split()))) + '\n', goals)
+        dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)
                 
         n = len(transClauses) + len(init)
         for line in conjuncts:
