@@ -327,7 +327,7 @@ class SpecCompiler(object):
                 return init + transClauses + dg
             
             
-            allCnfs = map(lambda x: duplicate(x), range(0,maxDepth+1))
+            allCnfs = map(duplicate, range(0,maxDepth+1))
             
             
                             
@@ -335,7 +335,7 @@ class SpecCompiler(object):
             
             #allCnfs = map(lambda x: trans + x, dupGoals)
             
-            pool = Pool(processes=len(allCnfs))
+            pool = Pool()
             
             
             cmd = self._getPicosatCommand() 

@@ -20,7 +20,7 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     n = 0
     p = len(props)+len(propsNext)       
     
-    pool = Pool(processes=len(conjuncts))
+    pool = Pool()
     #print "STARTING CNF MAP"
     allCnfs = pool.map(lineToCnf, conjuncts, chunksize = 1)   
     #print "ENDING CNF MAP"
