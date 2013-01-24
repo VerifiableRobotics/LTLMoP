@@ -297,38 +297,10 @@ class SpecCompiler(object):
             mapping, init, trans, goals = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
             
             
-            def duplicate(d):
-                transClauses = []
-                #Duplicating transition clauses for depth greater than 1         
-                numOrigClauses = len(trans)   
-                for i in range(1,d+1):
-                    transClausesNew = []
-                    for clause in trans:
-                        newClause = ""
-                        for c in clause.split():
-                            intC = int(c)
-                            newClause= newClause + str(cmp(intC,0)*(abs(intC)+len(self.propList)*i)) +" "
-                        newClause=newClause+"\n"
-                        transClausesNew.append(newClause)
-                    j = 0    
-                    for line in conjuncts:
-                        if isTrans[line]:                       
-                            numVarsInTrans = (len(mapping[line]))/i
-                            mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
-                            j = j + 1
-                    transClauses.extend(transClausesNew)
-        
-                dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+len(self.propList)*(d))), filter(lambda y: y is not '', x.split(' ')))) + '\n', goals)
-                
-                n = len(transClauses) + len(init)
-                for line in conjuncts:
-                        if "<>" in line:
-                            mapping[line] = range(n+1,n+len(goals)+1)
-                
-                return init + transClauses + dg
             
             
-            allCnfs = map(duplicate, range(0,maxDepth+1))
+            
+            #allCnfs = map(lambda x: duplicate(x), range(0,maxDepth+1))
             
             
                             
@@ -344,7 +316,7 @@ class SpecCompiler(object):
                       
             #print "STARTING PICO MAP"
             
-            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,len(allCnfs)+1), itertools.repeat(numProps), allCnfs, itertools.repeat(mapping)), chunksize = 1)
+            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 2), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
