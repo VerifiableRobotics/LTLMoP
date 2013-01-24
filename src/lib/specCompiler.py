@@ -609,11 +609,11 @@ class SpecCompiler(object):
             cmd = self._getPicosatCommand() 
             numProps = len(self.propList)
                       
-            #print "STARTING PICO MAP"
+            print "STARTING PICO MAP"
             
             guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 2), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
+            print "ENDING PICO MAP"
             
             allIndices = set([item for sublist in guiltyIndsList for item in sublist])
             

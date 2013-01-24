@@ -21,9 +21,9 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
     p = len(props)+len(propsNext)       
     
     pool = Pool()
-    #print "STARTING CNF MAP"
+    print "STARTING CNF MAP"
     allCnfs = pool.map(lineToCnf, conjuncts, chunksize = 1)   
-    #print "ENDING CNF MAP"
+    print "ENDING CNF MAP"
         
     for cnf, lineOld in zip(allCnfs,conjuncts):
       if cnf is not None: 
