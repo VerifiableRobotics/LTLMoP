@@ -141,6 +141,12 @@ class SpecCompiler(object):
         # Create LTL using selected parser
         # TODO: rename decomposition object to something other than 'parser'
         if self.proj.compile_options["parser"] == "slurp":
+            # default to no region tags if no simconfig is defined, so we can compile without
+            if self.proj.currentConfig is None:
+                region_tags = {}
+            else:
+                region_tags = self.proj.currentConfig.region_tags
+ 
             # Hack: We need to make sure there's only one of these
             global _SLURP_SPEC_GENERATOR
             
@@ -156,8 +162,7 @@ class SpecCompiler(object):
             filtered_regions = [region.name for region in self.proj.rfi.regions 
                                 if not (region.isObstacle or region.name.lower() == "boundary")]
             LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
-                _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList,
-                                               self.proj.currentConfig.region_tags)
+                _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList, region_tags)
 
             oldspec_env = LTLspec_env
             oldspec_sys = LTLspec_sys
