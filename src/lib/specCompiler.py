@@ -462,10 +462,6 @@ class SpecCompiler(object):
 
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
 
-        # TODO: Make this output live
-        while subp.poll():
-            time.sleep(0.1)
-
         realizable = False    
         unsat = False
         nonTrivial = False
@@ -547,7 +543,7 @@ class SpecCompiler(object):
     
             aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
             
-            nonTrivial = any([s.transitions != [] for s in aut.states])
+            nonTrivial = any([len(s.transitions) > 0 for s in aut.states])
 
         subp.stdout.close()
         
@@ -707,10 +703,6 @@ class SpecCompiler(object):
 
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
         
-        # TODO: Make this output live
-        while subp.poll():
-            time.sleep(0.1)
-
         realizable = False
         realizableFS = False
 
