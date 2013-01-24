@@ -39,5 +39,4 @@ kitchen = p5
 
 Spec: # Specification in structured English
 Follow me.
-Avoid the porch.
 
