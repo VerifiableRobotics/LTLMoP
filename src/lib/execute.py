@@ -172,6 +172,11 @@ def main(argv):
     # Initialize each module #
     ##########################
 
+    if proj.currentConfig is None:
+        print "ERROR: Can not simulate without a simulation configuration."
+        print "Please create one by going to [Run] > [Configure Simulation...] in SpecEditor and then try again."
+        sys.exit(2)
+
     # Import the relevant handlers
     print "Importing handler functions..."
 
