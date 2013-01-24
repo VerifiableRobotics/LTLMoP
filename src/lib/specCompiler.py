@@ -585,7 +585,7 @@ class SpecCompiler(object):
     def findCoresUnsat(self,to_highlight,maxDepth):
         #get conjuncts to be minimized
         conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
-        if conjuncts!=[]:
+        if conjuncts:
             depth = 1
             output = ""
             
@@ -611,7 +611,7 @@ class SpecCompiler(object):
                       
             print "STARTING PICO MAP"
             
-            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 2), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
+            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 2), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts), itertools.repeat(isTrans)), chunksize = 1)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             print "ENDING PICO MAP"
             
