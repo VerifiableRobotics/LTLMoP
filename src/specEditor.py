@@ -1184,8 +1184,9 @@ class SpecEditorFrame(wx.Frame):
     
     def highlightCores(self, guilty):               
            if guilty is not None:
-            for k,v in self.LTL2LineNo.iteritems():
-                    newCs = k.split('\n')
+               for k,v in self.LTL2LineNo.iteritems():
+                    #newCs = k.split('\n')
+                    newCs = k.replace("\t", "\n").split("\n")
                     if not set(guilty).isdisjoint(newCs):
                         #for now, just highlight with the colour originally used for initial conditions
                         self.highlight(v, 'init')

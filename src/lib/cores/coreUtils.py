@@ -6,7 +6,7 @@ from multiprocessing import Pool
 
 
 
-def conjunctsToCNF(conjuncts, propList, outFilename, depth):
+def conjunctsToCNF(conjuncts, propList):
     
     propListNext = map(lambda s: 'next_'+s, propList)
     
@@ -149,8 +149,7 @@ def cnfToConjuncts(cnfIndices, mapping):
         i = i + 1
         if not set(mapping[k]).isdisjoint(cnfIndices):
             conjuncts.append(k)     
-            #print k + str(set(mapping[k]).intersection(cnfIndices))
-            #print k
+            #print k , (set(mapping[k]).intersection(cnfIndices))
     return conjuncts
 
 
@@ -184,7 +183,7 @@ def findGuiltyClauseIndsWrapper(x):
         return findGuiltyClauseInds(*x)
         
 def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
-        transClauses = []
+        transClauses = trans
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)   
         for i in range(1,depth+1):
@@ -214,7 +213,7 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
         cnfs = init + transClauses + dg            
         
     
-        p = (depth)*(numProps*2)
+        p = (depth+1)*(numProps*2)
         n = len(cnfs)       
         input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
             
@@ -237,12 +236,10 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
             """
         if "UNSATISFIABLE" in output:
             print "Unsatisfiable core found at depth ", depth
-        elif "error" in output:
-            print "ERROR"
-            print output
-        else:
+        elif "SATISFIABLE" in output:
             print "Satisfiable at depth ", depth
-            
+        else:
+            print "ERROR"
             
                     
             

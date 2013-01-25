@@ -295,10 +295,7 @@ class SpecCompiler(object):
             depth = 1
             output = ""
             
-            mapping, init, trans, goals = conjunctsToCNF(conjuncts, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
-            
-            
-            
+            mapping, init, trans, goals = conjunctsToCNF(conjuncts, self.propList)
             
             
             #allCnfs = map(lambda x: duplicate(x), range(0,maxDepth+1))
@@ -317,7 +314,7 @@ class SpecCompiler(object):
                       
             #print "STARTING PICO MAP"
             
-            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 2), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
+            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
@@ -382,7 +379,8 @@ class SpecCompiler(object):
                 """                           
                 #newCs.extend(newCsOld)
             else:
-                newCs = self.spec[tb_key].split('\n')
+                #newCs = self.spec[tb_key].split('\n')
+                newCs =  self.spec[tb_key].replace("\t", "\n").split("\n")
                 #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
                 #newCs = [item for sublist in newCs for item in sublist]                
             """for clause in newCs:
