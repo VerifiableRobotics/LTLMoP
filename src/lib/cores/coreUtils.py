@@ -185,27 +185,37 @@ def findGuiltyClausesWrapper(x):
 def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
         transClauses = trans
         #Duplicating transition clauses for depth greater than 1         
-        numOrigClauses = len(trans)   
-        for i in range(1,depth+1):
+        numOrigClauses = len(trans)  
+        #the depth tells you how many time steps of trans to use
+        #depth 0 just checks init with goals
+        p = 0
+        for i in range(0,depth+1):
                     transClausesNew = []
                     for clause in trans:
                         newClause = ""
                         for c in clause.split():
                             intC = int(c)
                             newClause= newClause + str(cmp(intC,0)*(abs(intC)+numProps*i)) +" "
+                            p = max(p, (abs(intC)+numProps*i))
                         newClause=newClause+"\n"
                         transClausesNew.append(newClause)
                     j = 0    
                     for line in conjuncts:
                         if "[]" in line and "<>" not in line:                      
-                            numVarsInTrans = (len(mapping[line]))/i
+                            if i > 0:
+                                numVarsInTrans = (len(mapping[line]))/i
+                            else:
+                                numVarsInTrans = (len(mapping[line]))
                             mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                             j = j + 1
                     transClauses.extend(transClausesNew)
         
         #create goal clauses
         dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)
-                
+        for g in dg:
+            for c in g.split():                            
+                p = max(p, abs(int(c)))
+                                
         n = len(transClauses) + len(init)
         for line in conjuncts:
             if "<>" in line:
@@ -216,7 +226,10 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
         
     
         #create picomus input
-        p = (depth+1)*(numProps*2)
+        
+        #precompute p
+        #p =  (depth+1)*(numProps*2)
+        
         n = len(cnfs)       
         input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
             
@@ -242,7 +255,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
         elif "SATISFIABLE" in output:
             print "Satisfiable at depth ", depth
         else:
-            print "ERROR"
+            print "ERROR", output
             
                     
             
