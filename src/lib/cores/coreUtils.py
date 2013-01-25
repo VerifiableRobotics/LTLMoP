@@ -185,7 +185,9 @@ def findGuiltyClausesWrapper(x):
 def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
         transClauses = trans
         #Duplicating transition clauses for depth greater than 1         
-        numOrigClauses = len(trans)   
+        numOrigClauses = len(trans)  
+        #the depth tells you how many time steps of trans to use
+        #depth 0 just checks init with goals
         for i in range(1,depth+1):
                     transClausesNew = []
                     for clause in trans:
@@ -242,7 +244,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
         elif "SATISFIABLE" in output:
             print "Satisfiable at depth ", depth
         else:
-            print "ERROR"
+            print "ERROR", output
             
                     
             
