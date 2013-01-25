@@ -460,6 +460,31 @@ class SpecCompiler(object):
 
         return cmd
 
+    def _autIsNonTrivial(self):
+        """
+        Check for a) empty automaton, or b) trivial initial-state automaton
+         with no transitions
+        (This can indicate unsatisfiable system initial conditions (case a),
+         or an unsat environment (case b).)
+
+        TODO: Do this in the Java code; it's super inefficient to
+        load the whole aut just to check this.
+        """
+
+        proj_copy = deepcopy(self.proj)
+        proj_copy.rfi = self.parser.proj.rfi
+        proj_copy.sensor_handler = None
+        proj_copy.actuator_handler = None
+        proj_copy.h_instance = None
+
+        aut = fsa.Automaton(proj_copy)
+
+        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
+        
+        nonTrivial = any([len(s.transitions) > 0 for s in aut.states])
+
+        return nonTrivial
+
     def _analyze(self):
         cmd = self._getGROneCommand("GROneDebug")
         if cmd is None:
@@ -536,19 +561,8 @@ class SpecCompiler(object):
             if "unsatisfiable" in dline or "inconsistent" in dline :
                 unsat = True
 
-        # check for trivial initial-state automaton with no transitions
         if realizable:           
-            proj_copy = deepcopy(self.proj)
-            proj_copy.rfi = self.parser.proj.rfi
-            proj_copy.sensor_handler = None
-            proj_copy.actuator_handler = None
-            proj_copy.h_instance = None
-    
-            aut = fsa.Automaton(proj_copy)
-    
-            aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
-            
-            nonTrivial = any([len(s.transitions) > 0 for s in aut.states])
+            nonTrivial = _self.autIsNonTrivial()
 
         subp.stdout.close()
         

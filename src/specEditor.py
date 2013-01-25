@@ -1105,6 +1105,11 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("ERROR: Specification was unsynthesizable (unrealizable/unsatisfiable) for instantaneous actions.\n", "RED")
 
+        # Check for trivial aut
+        if realizable or realizableFS:
+            if not compiler._autIsNonTrivial():
+                self.appendLog("\tWARNING: Automaton is trivial.  Further analysis is recommended.", "RED")
+
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
