@@ -563,7 +563,7 @@ class SpecCompiler(object):
                 unsat = True
 
         if realizable:           
-            nonTrivial = _self.autIsNonTrivial()
+            nonTrivial = self._autIsNonTrivial()
 
         subp.stdout.close()
         
