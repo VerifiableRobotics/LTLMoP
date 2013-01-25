@@ -364,7 +364,10 @@ class SpecCompiler(object):
         topoCs=self.spec['Topo'].replace('\n','')
         topoCs = topoCs.replace('\t','')
         
-        conjuncts = [badInit, topoCs]
+        if badInit:
+            conjuncts = [badInit, topoCs]
+        else:
+            conjuncts = [topoCs]
                 
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
