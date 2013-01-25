@@ -495,6 +495,7 @@ class SpecCompiler(object):
         realizable = False    
         unsat = False
         nonTrivial = False
+        
 
         output = ""
         to_highlight = []
@@ -566,10 +567,12 @@ class SpecCompiler(object):
 
         subp.stdout.close()
         
+        
+        
         return (realizable, unsat, nonTrivial, to_highlight, output)
     
     
-    def _coreFinding(self, to_highlight, unsat):
+    def _coreFinding(self, to_highlight, unsat, badInit):
         #find number of states in automaton/counter for unsat/unreal core max unrolling depth ("recurrence diameter")
         proj_copy = deepcopy(self.proj)
         proj_copy.rfi = self.parser.proj.rfi
@@ -589,7 +592,7 @@ class SpecCompiler(object):
         
         
         #get conjuncts to be minimized
-        conjuncts = self.getGuiltyConjuncts(to_highlight)
+        conjuncts = self.getGuiltyConjuncts(to_highlight, badInit)
         
         if unsat:
             guilty = self.findCoresUnsat(conjuncts,numStates)#returns LTL  
@@ -605,10 +608,7 @@ class SpecCompiler(object):
             depth = 1
             output = ""
             
-            mapping, init, trans, goals = conjunctsToCNF(conjuncts, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
-            
-            
-            
+            mapping, init, trans, goals = conjunctsToCNF(conjuncts, self.propList)
             
             
             #allCnfs = map(lambda x: duplicate(x), range(0,maxDepth+1))
@@ -627,18 +627,19 @@ class SpecCompiler(object):
                       
             print "STARTING PICO MAP"
             
-            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 2), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
+            guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             print "ENDING PICO MAP"
             
-            allIndices = set([item for sublist in guiltyIndsList for item in sublist])
+            
+            allGuilty = set([item for sublist in guiltyList for item in sublist])
             
             
             #get contributing conjuncts from CNF indices            
-            guilty = cnfToConjuncts(allIndices, mapping)
+            #guilty = cnfToConjuncts(allIndices, mapping)
             
                         
-            return guilty
+            return allGuilty
     
           
         
@@ -668,14 +669,14 @@ class SpecCompiler(object):
 
         return cmd
     
-    def getGuiltyConjuncts(self, to_highlight):  
+    def getGuiltyConjuncts(self, to_highlight, badInit):  
         #inverse dictionary for goal lookups
         #ivd=dict([(v,k) for (k,v) in self.LTL2LineNo.items()])
         
         topoCs=self.spec['Topo'].replace('\n','')
         topoCs = topoCs.replace('\t','')
         
-        conjuncts = [topoCs]
+        conjuncts = [badInit, topoCs]
                 
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
@@ -694,8 +695,9 @@ class SpecCompiler(object):
                     newCs = map(lambda s: s.replace(old,new), newCs) 
                 """                           
                 #newCs.extend(newCsOld)
-            else:
-                newCs = self.spec[tb_key].split('\n')
+            elif h_item[1] == "trans":
+                #newCs = self.spec[tb_key].split('\n')
+                newCs =  self.spec[tb_key].replace("\t", "\n").split("\n")
                 #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
                 #newCs = [item for sublist in newCs for item in sublist]                
             """for clause in newCs:
@@ -706,8 +708,8 @@ class SpecCompiler(object):
                     isTrans[clause] = 0  
             """
             conjuncts = conjuncts + newCs 
-
             
+    
         return conjuncts
 
     def _synthesize(self, with_safety_aut=False):

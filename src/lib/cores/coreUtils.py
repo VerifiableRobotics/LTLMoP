@@ -6,7 +6,7 @@ from multiprocessing import Pool
 
 
 
-def conjunctsToCNF(conjuncts, propList, outFilename, depth):
+def conjunctsToCNF(conjuncts, propList):
     
     propListNext = map(lambda s: 'next_'+s, propList)
     
@@ -149,8 +149,7 @@ def cnfToConjuncts(cnfIndices, mapping):
         i = i + 1
         if not set(mapping[k]).isdisjoint(cnfIndices):
             conjuncts.append(k)     
-            #print k + str(set(mapping[k]).intersection(cnfIndices))
-            #print k
+            #print k , (set(mapping[k]).intersection(cnfIndices))
     return conjuncts
 
 
@@ -180,11 +179,11 @@ def lineToCnf(line):
         else:
             return None
         
-def findGuiltyClauseIndsWrapper(x):        
-        return findGuiltyClauseInds(*x)
+def findGuiltyClausesWrapper(x):        
+        return findGuiltyClauses(*x)
         
-def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
-        transClauses = []
+def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
+        transClauses = trans
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)   
         for i in range(1,depth+1):
@@ -204,6 +203,7 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
                             j = j + 1
                     transClauses.extend(transClausesNew)
         
+        #create goal clauses
         dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)
                 
         n = len(transClauses) + len(init)
@@ -211,10 +211,12 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
             if "<>" in line:
                 mapping[line] = range(n+1,n+len(goals)+1)
                 
+        #combine the clauses
         cnfs = init + transClauses + dg            
         
     
-        p = (depth)*(numProps*2)
+        #create picomus input
+        p = (depth+1)*(numProps*2)
         n = len(cnfs)       
         input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
             
@@ -237,12 +239,10 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
             """
         if "UNSATISFIABLE" in output:
             print "Unsatisfiable core found at depth ", depth
-        elif "error" in output:
-            print "ERROR"
-            print output
-        else:
+        elif "SATISFIABLE" in output:
             print "Satisfiable at depth ", depth
-            
+        else:
+            print "ERROR"
             
                     
             
@@ -254,7 +254,7 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
             outputFile.close()
             """
             
-            #get indices of contributing clauses
+    
         
         """cnfIndices = []
         for line in output.split('\n'):
@@ -264,8 +264,13 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
                         cnfIndices.append(index)
             """
         #pythonified the above
+        #get indices of contributing clauses
         cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output.split('\n'))))
-        return cnfIndices
+        
+        #get corresponding LTL conjuncts
+        guilty = cnfToConjuncts(cnfIndices, mapping)
+            
+        return guilty
         
         
         
