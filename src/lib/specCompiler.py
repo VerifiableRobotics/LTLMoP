@@ -383,7 +383,7 @@ class SpecCompiler(object):
                     newCs = map(lambda s: s.replace(old,new), newCs) 
                 """                           
                 #newCs.extend(newCsOld)
-            elif h_item[1] == "trans":
+            elif h_item[1] == "trans" or not badInit:
                 #newCs = self.spec[tb_key].split('\n')
                 newCs =  self.spec[tb_key].replace("\t", "\n").split("\n")
                 #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
