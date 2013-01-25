@@ -588,23 +588,24 @@ class SpecCompiler(object):
 #        numStates = 2**len(regList + robotPropList)
         
         
+        #get conjuncts to be minimized
+        conjuncts = self.getGuiltyConjuncts(to_highlight)
+        
         if unsat:
-            guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL  
+            guilty = self.findCoresUnsat(conjuncts,numStates)#returns LTL  
         else:
-            guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL   
+            guilty = self.findCoresUnsat(conjuncts,numStates)#returns LTL   
         return guilty
         
         
         
     
-    def findCoresUnsat(self,to_highlight,maxDepth):
-        #get conjuncts to be minimized
-        conjuncts, isTrans = self.getGuiltyConjuncts(to_highlight)
+    def findCoresUnsat(self,conjuncts,maxDepth):
         if conjuncts:
             depth = 1
             output = ""
             
-            mapping, init, trans, goals = conjunctsToCNF(conjuncts, isTrans, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
+            mapping, init, trans, goals = conjunctsToCNF(conjuncts, self.propList,self.proj.getFilenamePrefix()+".cnf",maxDepth)
             
             
             
@@ -626,7 +627,7 @@ class SpecCompiler(object):
                       
             print "STARTING PICO MAP"
             
-            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 2), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts), itertools.repeat(isTrans)), chunksize = 1)
+            guiltyIndsList = pool.map(findGuiltyClauseIndsWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 2), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             print "ENDING PICO MAP"
             
@@ -644,9 +645,9 @@ class SpecCompiler(object):
                 
     
         
-    def findCoresUnreal(self,to_highlight,maxDepth):
+    def findCoresUnreal(self,conjuncts,maxDepth):
         #get conjuncts to be minimized
-        return self.findCoresUnsat(to_highlight, maxDepth)
+        return self.findCoresUnsat(conjuncts, maxDepth)
         
         
     def _getPicosatCommand(self):
@@ -670,10 +671,9 @@ class SpecCompiler(object):
     def getGuiltyConjuncts(self, to_highlight):  
         #inverse dictionary for goal lookups
         #ivd=dict([(v,k) for (k,v) in self.LTL2LineNo.items()])
-        isTrans = {}
+        
         topoCs=self.spec['Topo'].replace('\n','')
         topoCs = topoCs.replace('\t','')
-        isTrans[topoCs] = True
         
         conjuncts = [topoCs]
                 
@@ -698,16 +698,17 @@ class SpecCompiler(object):
                 newCs = self.spec[tb_key].split('\n')
                 #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
                 #newCs = [item for sublist in newCs for item in sublist]                
-            for clause in newCs:
+            """for clause in newCs:
                 #need to mark trans lines because they do not always contain [] because of line breaks
                 if h_item[1] == "trans":
                     isTrans[clause] = 1                    
                 else:
                     isTrans[clause] = 0  
+            """
             conjuncts = conjuncts + newCs 
 
             
-        return conjuncts, isTrans
+        return conjuncts
 
     def _synthesize(self, with_safety_aut=False):
         cmd = self._getGROneCommand("GROneMain")
