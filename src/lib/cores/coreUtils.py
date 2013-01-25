@@ -6,7 +6,7 @@ from multiprocessing import Pool
 
 
 
-def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
+def conjunctsToCNF(conjuncts, propList, outFilename, depth):
     
     propListNext = map(lambda s: 'next_'+s, propList)
     
@@ -41,7 +41,8 @@ def conjunctsToCNF(conjuncts, isTrans, propList, outFilename, depth):
                 #add trailing 0   
             if "<>" in lineOld:
                 goalClauses.append(clause.strip()+" 0\n")
-            elif isTrans[lineOld]:
+            elif "[]" in lineOld:
+                #isTrans[lineOld]:
                 transClauses.append(clause.strip()+" 0\n")
                 cnfClauses.append(clause.strip()+" 0\n")                                
             else:
@@ -182,7 +183,7 @@ def lineToCnf(line):
 def findGuiltyClauseIndsWrapper(x):        
         return findGuiltyClauseInds(*x)
         
-def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conjuncts, isTrans): 
+def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
         transClauses = []
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)   
@@ -197,7 +198,7 @@ def findGuiltyClauseInds(cmd, depth, numProps, init, trans, goals, mapping, conj
                         transClausesNew.append(newClause)
                     j = 0    
                     for line in conjuncts:
-                        if isTrans[line]:                       
+                        if "[]" in line and "<>" not in line:                      
                             numVarsInTrans = (len(mapping[line]))/i
                             mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                             j = j + 1
