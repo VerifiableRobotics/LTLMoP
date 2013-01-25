@@ -1173,9 +1173,9 @@ class SpecEditorFrame(wx.Frame):
             if h_item[1] == "goals":
                 self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
         
-        if not realizable:
-            guilty = compiler._coreFinding(to_highlight, unsat)
-            self.highlightCores(guilty)
+        guilty = compiler._coreFinding(to_highlight, unsat)
+        
+        self.highlightCores(guilty)
                 
                 
         
@@ -1184,12 +1184,12 @@ class SpecEditorFrame(wx.Frame):
     
     def highlightCores(self, guilty):               
            if guilty is not None:
-            for g in guilty:
-                for k,v in self.LTL2LineNo.iteritems():
+            for k,v in self.LTL2LineNo.iteritems():
                     newCs = k.split('\n')
                     if not set(guilty).isdisjoint(newCs):
                         #for now, just highlight with the colour originally used for initial conditions
                         self.highlight(v, 'init')
+                        
     
     def highlight(self, l, type):
         if type == "init":
