@@ -1113,7 +1113,7 @@ class SpecEditorFrame(wx.Frame):
         # Check for trivial aut
         if realizable or realizableFS:
             if not compiler._autIsNonTrivial():
-                self.appendLog("\tWARNING: Automaton is trivial.  Further analysis is recommended.", "RED")
+                self.appendLog("\tWARNING: Automaton is trivial.  Further analysis is recommended.\n", "RED")
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1402,8 +1402,6 @@ class SpecEditorFrame(wx.Frame):
         
 
     def highlightCores(self, guilty, compiler):
-        print guilty
-        
         if self.proj.compile_options["parser"] == "structured":
             if guilty is not None:
                 for k,v in compiler.LTL2SpecLineNumber.iteritems():
@@ -1412,8 +1410,14 @@ class SpecEditorFrame(wx.Frame):
                         #for now, just highlight with the colour originally used for initial conditions
                         self.highlight(v, 'init')
         else:
-            #guilty_clean = [compiler.reversemapping[s.lstrip().rstrip("\n\t &")] for s in guilty if "[]<>" not in s]
-            guilty_clean = [compiler.reversemapping[s.lstrip().rstrip("\n\t &")] for s in guilty]
+            guilty_clean = []
+            for ltl_frag in guilty:
+                canonical_ltl_frag = ltl_frag.lstrip().rstrip("\n\t &")
+                try:
+                    guilty_clean.append(compiler.reversemapping[canonical_ltl_frag])
+                except KeyError:
+                    print "WARNING: LTL fragment {!r} not found in spec->LTL mapping".format(canonical_ltl_frag)
+                    
             print guilty_clean
             # Add SLURP to path for import
             p = os.path.dirname(os.path.abspath(__file__))
