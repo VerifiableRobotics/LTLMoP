@@ -1,3 +1,4 @@
+import edu.wis.jtlv.env.module.ModuleBDDField;
 import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDVarSet;
 import net.sf.javabdd.BDD.BDDIterator;
@@ -136,10 +137,16 @@ public class GROneMain {
 		//Check that every initial system state is winning for every initial environment state
 		all_init = g.getSysPlayer().initial().and(g.getEnvPlayer().initial());
 		counter_exmple = g.envWinningStates().and(all_init);
+        BDDVarSet all_vars = sys.moduleUnprimeVars().union(env.moduleUnprimeVars());
 		if (!counter_exmple.isZero()) {
 			System.out.println("Specification is unsynthesizable even assuming instantaneous actions...");
-			System.out.println("The env player can win from states:");
-			System.out.println("\t" + counter_exmple);
+			System.out.println("The env player can win from " + (int)counter_exmple.satCount(all_vars) + " of " + (int)all_init.satCount(all_vars) +" initial state(s).");
+            String counter_state = counter_exmple.satOne().toString();
+            counter_state = counter_state.replaceAll("and", "&");
+            counter_state = counter_state.replaceAll("[()]", "");
+            counter_state = counter_state.replaceAll("main\\.([\\w.]+)=0", "!$1");
+            counter_state = counter_state.replaceAll("main\\.([\\w.]+)=1", "$1");
+			System.out.println("\tFor example: \t" + counter_state);
 
 
 

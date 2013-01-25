@@ -909,7 +909,12 @@ class SpecEditorFrame(wx.Frame):
 
         print "\n"
 
-        self.appendLog("\t"+output.replace("\n", "\n\t"))
+        badInit = ''
+        for line in output.split('\n'):
+            if "For example" in line:
+                badInit = line.split('\t')[-1].strip()
+                
+        self.appendLog("\t"+output.replace("\n", "\n\t"))        
 
         if self.proj.compile_options['fastslow']:
             if realizableFS:
@@ -927,7 +932,7 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-        return compiler
+        return compiler, badInit
 
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_log.BeginTextColour(color)
@@ -1144,7 +1149,7 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         #TODO: check to see if we need to recompile
-        compiler = self.onMenuCompile(event, with_safety_aut=False)
+        compiler, badInit = self.onMenuCompile(event, with_safety_aut=False)
         # Redirect all output to the log
         redir = RedirectText(self,self.text_ctrl_log)
 
@@ -1173,7 +1178,7 @@ class SpecEditorFrame(wx.Frame):
             if h_item[1] == "goals":
                 self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
         
-        guilty = compiler._coreFinding(to_highlight, unsat)
+        guilty = compiler._coreFinding(to_highlight, unsat, badInit)
         
         self.highlightCores(guilty)
                 
@@ -1187,7 +1192,7 @@ class SpecEditorFrame(wx.Frame):
                for k,v in self.LTL2LineNo.iteritems():
                     #newCs = k.split('\n')
                     newCs = k.replace("\t", "\n").split("\n")
-                    if not set(guilty).isdisjoint(newCs):
+                    if not set(guilty).isdisjoint(newCs):                        
                         #for now, just highlight with the colour originally used for initial conditions
                         self.highlight(v, 'init')
                         
