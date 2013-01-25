@@ -1392,11 +1392,15 @@ class SpecEditorFrame(wx.Frame):
 
         self.analysisDialog.Show()
 
-        self.appendLog("Analysis complete.\n", "BLUE")
+        self.appendLog("Initial analysis complete.\n\n", "BLUE")
+
+        self.appendLog("Please wait; refining analysis...\n", "BLUE")
         
         guilty = compiler._coreFinding(to_highlight, unsat, badInit)
         
         self.highlightCores(guilty, compiler)
+
+        self.appendLog("Final analysis complete.\n", "BLUE")
                 
                 
         
