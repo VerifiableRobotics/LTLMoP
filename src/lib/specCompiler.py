@@ -278,18 +278,19 @@ class SpecCompiler(object):
 #        numStates = 2**len(regList + robotPropList)
         
         
+        #get conjuncts to be minimized
+        conjuncts = self.getGuiltyConjuncts(to_highlight)
+        
         if unsat:
-            guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL  
+            guilty = self.findCoresUnsat(conjuncts,numStates)#returns LTL  
         else:
-            guilty = self.findCoresUnsat(to_highlight,numStates)#returns LTL   
+            guilty = self.findCoresUnsat(conjuncts,numStates)#returns LTL   
         return guilty
         
         
         
     
-    def findCoresUnsat(self,to_highlight,maxDepth):
-        #get conjuncts to be minimized
-        conjuncts = self.getGuiltyConjuncts(to_highlight)
+    def findCoresUnsat(self,conjuncts,maxDepth):
         if conjuncts:
             depth = 1
             output = ""
@@ -334,9 +335,9 @@ class SpecCompiler(object):
                 
     
         
-    def findCoresUnreal(self,to_highlight,maxDepth):
+    def findCoresUnreal(self,conjuncts,maxDepth):
         #get conjuncts to be minimized
-        return self.findCoresUnsat(to_highlight, maxDepth)
+        return self.findCoresUnsat(conjuncts, maxDepth)
         
         
     def _getPicosatCommand(self):
