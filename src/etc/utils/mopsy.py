@@ -104,7 +104,7 @@ class MopsyFrame(wx.Frame):
         self.label_movingto = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Moving to XXX ...")
         self.label_8 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Actuator states:")
         self.label_9 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Internal propositions:")
-        self.label_violation = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "")
+        self.label_violation = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "", style=wx.ST_NO_AUTORESIZE)
         self.button_next = wx.Button(self.window_1_pane_2, wx.ID_ANY, "Execute Move >>")
 
         self.__set_properties()
@@ -359,6 +359,7 @@ class MopsyFrame(wx.Frame):
             self.label_violation.SetLabel("Invalid move.")
         else:
             self.label_violation.SetLabel("Invalid move because it violates: " + " and ".join([repr(s) for s in result]))
+            self.label_violation.Wrap(self.label_violation.GetSize()[0])
 
     def calculateCore(self):
         # Don't let simultaneous calculations occur if events are triggered too fast
@@ -510,7 +511,7 @@ class MopsyFrame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: MopsyFrame.__set_properties
         self.SetTitle("Counter-Strategy Visualizer")
-        self.SetSize((1024, 636))
+        self.SetSize((1024, 666))
         self.mopsy_frame_statusbar.SetStatusWidths([-1])
         # statusbar fields
         mopsy_frame_statusbar_fields = ["Loading..."]
@@ -520,7 +521,7 @@ class MopsyFrame(wx.Frame):
         self.label_5.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.label_6.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.label_violation.SetForegroundColour(wx.Colour(255, 0, 0))
-        self.label_violation.SetFont(wx.Font(10, wx.DEFAULT, wx.ITALIC, wx.NORMAL, 0, ""))
+        self.label_violation.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.button_next.SetDefault()
         # end wxGlade
 
@@ -554,10 +555,10 @@ class MopsyFrame(wx.Frame):
         sizer_4.Add(self.label_9, 0, 0, 0)
         sizer_4.Add(sizer_prop, 1, wx.EXPAND, 0)
         sizer_4.Add((20, 20), 0, 0, 0)
-        sizer_5.Add(self.label_violation, 1, wx.EXPAND | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_5.Add(self.button_next, 0, 0, 0)
+        sizer_5.Add(self.label_violation, 1, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL, 0)
+        sizer_5.Add(self.button_next, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         sizer_5.Add((20, 20), 0, 0, 0)
-        sizer_4.Add(sizer_5, 1, wx.EXPAND, 0)
+        sizer_4.Add(sizer_5, 2, wx.EXPAND, 0)
         sizer_3.Add(sizer_4, 1, wx.EXPAND, 0)
         sizer_3.Add((10, 20), 0, 0, 0)
         self.window_1_pane_2.SetSizer(sizer_3)
