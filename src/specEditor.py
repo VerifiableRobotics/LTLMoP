@@ -1394,13 +1394,16 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Initial analysis complete.\n\n", "BLUE")
 
-        self.appendLog("Please wait; refining analysis...\n", "BLUE")
+		if not realizable or not nonTrivial:
+            self.appendLog("Please wait; refining analysis...\n", "BLUE")
         
-        guilty = compiler._coreFinding(to_highlight, unsat, badInit)
+            guilty = compiler._coreFinding(to_highlight, unsat, badInit)
         
-        self.highlightCores(guilty, compiler)
+            self.highlightCores(guilty, compiler)
 
-        self.appendLog("Final analysis complete.\n", "BLUE")
+            self.appendLog("Final analysis complete.\n", "BLUE")
+        else:
+            self.appendLog("No further analysis needed.\n", "BLUE")
                 
                 
         

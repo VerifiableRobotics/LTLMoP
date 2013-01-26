@@ -608,7 +608,7 @@ class SpecCompiler(object):
             depth = 1
             output = ""
             
-            mapping, init, trans, goals = conjunctsToCNF(conjuncts, self.propList)
+            mapping, init, self.trans, goals = conjunctsToCNF(conjuncts, self.propList)
             
             
             #allCnfs = map(lambda x: duplicate(x), range(0,maxDepth+1))
@@ -627,7 +627,7 @@ class SpecCompiler(object):
                       
             print "STARTING PICO MAP"
             
-            guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)), chunksize = 1)
+            guiltyList = map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)))
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             print "ENDING PICO MAP"
             

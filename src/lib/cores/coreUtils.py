@@ -1,7 +1,9 @@
 
 import math, re, sys, random, os, subprocess, time
+from copy import copy
 from logic import to_cnf
 from multiprocessing import Pool
+import threading
 
 
 
@@ -178,69 +180,86 @@ def lineToCnf(line):
             return cnf
         else:
             return None
+    
+def subprocessReadThread(fd, out):
+            for line in fd:                                                                              
+               out.append(line) 
+                
         
 def findGuiltyClausesWrapper(x):        
         return findGuiltyClauses(*x)
+
+
         
 def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
-        transClauses = trans
+        #precompute p and n
+        #p =  (depth+1)*(numProps*2)
+        p = (depth+2)*(numProps)        
+        #n = len(cnfs)  
+        n = (depth)*(len(trans)) + len(init) + len(goals)
+        output = []
+                #find minimal unsatisfiable core by calling picomus
+        if cmd is None:
+            return (False, False, [], "")   
+        
+          
+                
+        #start a reader thread        
+        subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
+        readThread =  threading.Thread(target = subprocessReadThread, args=(subp.stdout,output))
+        readThread.daemon = True
+        readThread.start()
+        
+        
+        #send header
+        input = "p cnf "+str(p)+" "+str(n)+"\n"
+        subp.stdin.write(input)                                      
+        subp.stdin.writelines(init)               
+           
+
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)  
         #the depth tells you how many time steps of trans to use
         #depth 0 just checks init with goals
-        p = 0
-        for i in range(0,depth+1):
-                    transClausesNew = []
+        #p = 0
+        for i in range(1,depth+1):
                     for clause in trans:
                         newClause = ""
                         for c in clause.split():
                             intC = int(c)
                             newClause= newClause + str(cmp(intC,0)*(abs(intC)+numProps*i)) +" "
-                            p = max(p, (abs(intC)+numProps*i))
+                            #p = max(p, (abs(intC)+numProps*i))
                         newClause=newClause+"\n"
-                        transClausesNew.append(newClause)
+                        subp.stdin.write(newClause)
                     j = 0    
                     for line in conjuncts:
                         if "[]" in line and "<>" not in line:                      
-                            if i > 0:
-                                numVarsInTrans = (len(mapping[line]))/i
-                            else:
-                                numVarsInTrans = (len(mapping[line]))
+                            numVarsInTrans = (len(mapping[line]))/(i+1)
                             mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                             j = j + 1
-                    transClauses.extend(transClausesNew)
-        
+                    #transClauses.extend(transClausesNew)                                   
+                    #send this batch of transClauses
+                    
         #create goal clauses
-        dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)
-        for g in dg:
-            for c in g.split():                            
-                p = max(p, abs(int(c)))
+        dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)        
+        #send goalClauses
+        subp.stdin.writelines(dg)
+        #send EOF
+        subp.stdin.close()
+        
                                 
-        n = len(transClauses) + len(init)
+        nMinusG = n - len(goals)
         for line in conjuncts:
             if "<>" in line:
-                mapping[line] = range(n+1,n+len(goals)+1)
+                mapping[line] = range(nMinusG+1,nMinusG+len(goals)+1)
                 
-        #combine the clauses
-        cnfs = init + transClauses + dg            
+        
+        readThread.join()
         
     
-        #create picomus input
-        
-        #precompute p
-        #p =  (depth+1)*(numProps*2)
-        
-        n = len(cnfs)       
-        input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
-            
+
         
                 
-        #find minimal unsatisfiable core by calling picomus
-        if cmd is None:
-            return (False, False, [], "")        
- 
-        subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
-        output = subp.communicate(input)[0]                                         
                                                                                       
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -250,9 +269,9 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                     break
             depth = depth +1
             """
-        if "UNSATISFIABLE" in output:
+        if any(["UNSATISFIABLE" in s for s in output]):
             print "Unsatisfiable core found at depth ", depth
-        elif "SATISFIABLE" in output:
+        elif any(["SATISFIABLE" in s for s in output]):
             print "Satisfiable at depth ", depth
         else:
             print "ERROR", output
@@ -278,7 +297,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
             """
         #pythonified the above
         #get indices of contributing clauses
-        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output.split('\n'))))
+        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output)))
         
         #get corresponding LTL conjuncts
         guilty = cnfToConjuncts(cnfIndices, mapping)
