@@ -21,6 +21,7 @@ sys.path.append(os.path.join(p,"src","lib"))
 
 import fsa, project
 import mapRenderer
+from specCompiler import SpecCompiler
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -119,8 +120,9 @@ class MopsyFrame(wx.Frame):
         self.mapBitmap = None
 
         # Load in the project and map
-        self.proj = project.Project()
-        self.proj.loadProject(sys.argv[1])
+        self.mopsy_frame_statusbar.SetStatusText("Loading project...", 0)
+        self.compiler = SpecCompiler(sys.argv[1])
+        self.proj = copy.deepcopy(self.compiler.proj)
         self.proj.rfi = self.proj.loadRegionFile(decomposed=True)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
         self.panel_1.Bind(wx.EVT_PAINT, self.onPaint)
@@ -130,13 +132,18 @@ class MopsyFrame(wx.Frame):
 
         self.proj.determineEnabledPropositions()
 
+        # Parse specification so we can give feedback
+        self.mopsy_frame_statusbar.SetStatusText("Parsing specification...", 0)
+        self.compiler._decompose()
+        self.spec, tracebackTree, response = self.compiler._writeLTLFile()
+
         # Load in counter-strategy automaton
         self.envDummySensorHandler = EnvDummySensorHandler(self)
         self.envDummyActuatorHandler = EnvDummyActuatorHandler(self)
         self.dummyMotionHandler = DummyMotionHandler()
         self.proj.sensor_handler, self.proj.actuator_handler, self.proj.h_instance = [None]*3
 
-        print "Loading environment counter-strategy..."
+        self.mopsy_frame_statusbar.SetStatusText("Loading environment counter-strategy...", 0)
         self.num_bits = int(numpy.ceil(numpy.log2(len(self.proj.rfi.regions))))  # Number of bits necessary to encode all regions
         region_props = ["bit" + str(n) for n in xrange(self.num_bits)]
 
@@ -219,6 +226,10 @@ class MopsyFrame(wx.Frame):
                 r_num += int(2**(self.num_bits-bit-1))
 
         return r_num
+    
+    def regionToBitEncoding(self, region_index):
+        bs = "{0:0>{1}}".format(bin(region_index)[2:], self.num_bits)
+        return {"bit{}".format(i):int(v) for i,v in enumerate(bs)}
 
     def applySafetyConstraints(self):
         # If there is no next state, this implies that the system has no possible move (including staying in place)
@@ -262,6 +273,9 @@ class MopsyFrame(wx.Frame):
 
         self.onResize() # Force map redraw
 
+        # if not OK:
+        self.showCore()
+
 
     def appendToHistory(self):
         self.history_grid.AppendRows(1)
@@ -287,12 +301,53 @@ class MopsyFrame(wx.Frame):
         self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+2), 0)
 
 
+    def stateToLTL(self, state, use_next=False):
+        def decorate_prop(prop, polarity):
+            if int(polarity) == 0:
+                prop = "!"+prop
+            if use_next:
+                prop = "next({})".format(prop)
+            return prop
+            
+        sys_state = " & ".join([decorate_prop("s."+p, v) for p,v in state.inputs.iteritems()])
+        env_state = " & ".join([decorate_prop("e."+p, v) for p,v in state.outputs.iteritems()])
+        return env_state + " & " + sys_state
+
+    def showCore(self):
+        """
+        Display the part of the spec that explains why you can't
+        set your next outputs to the state currently selected.
+        """
+        ltl_current = self.stateToLTL(self.env_aut.current_state)
+        next_state = copy.deepcopy(self.env_aut.current_state.transitions[0])
+        next_state.inputs.update(self.actuatorStates)
+        next_state.inputs.update(self.regionToBitEncoding(self.dest_region))
+        ltl_next = self.stateToLTL(next_state, use_next=True)
+        ltl_all = [ltl_current, ltl_next, self.spec['Topo'].replace('\n','').replace('\t','')] + self.spec['SysTrans'].split('\n')
+        ltl_all = [s.strip() for s in ltl_all] # make canonical (i.e. terminate in &, no whitespace on either side)
+        guilty_ltl = self.compiler.findCoresUnsat(ltl_all, 1)
+        print "Guilty LTL: ", guilty_ltl
+
+        guilty_spec = []
+        if self.proj.compile_options["parser"] == "structured":
+            if guilty_ltl is not None:
+                for ltl_frag, line_num in self.compiler.LTL2SpecLineNumber.iteritems():
+                    ltl_frags_canonical = [s.strip() for s in ltl_frag.replace("\t","").split('\n')]
+                    if not set(guilty_ltl).isdisjoint(ltl_frags_canonical):
+                        guilty_spec.append(self.compiler.proj.specText.split("\n")[line_num-1])
+
+        if self.spec['Topo'].replace('\n','').replace('\t','').strip() in guilty_ltl:
+            guilty_spec.append("(topological constraints)")
+    
+        print "Guilty Spec: ", guilty_spec
+
     def onMapClick(self, event):
         x = event.GetX()/self.mapScale
         y = event.GetY()/self.mapScale
         for i, region in enumerate(self.proj.rfi.regions):
-            if region.objectContainsPoint(x, y) and region.name not in self.regionsToHide:
+            if region.objectContainsPoint(x, y):
                 self.dest_region = i
+
                 if self.dest_region == self.current_region:
                     self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.proj.rfi.regions.index(region)))
                 else:
