@@ -3,6 +3,7 @@ import math, re, sys, random, os, subprocess, time
 from copy import copy
 from logic import to_cnf
 from multiprocessing import Pool
+import threading
 
 
 
@@ -179,11 +180,44 @@ def lineToCnf(line):
             return cnf
         else:
             return None
+    
+def subprocessReadThread(fd, output):
+            while True:
+                line = fd.readline()
+                if line == '':
+                    break
+                output.append(line)  
+                
         
 def findGuiltyClausesWrapper(x):        
         return findGuiltyClauses(*x)
+
+
         
 def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
+        #precompute p and n
+        #p =  (depth+1)*(numProps*2)
+        p = (depth+2)*(numProps)        
+        #n = len(cnfs)  
+        n = (depth)*(len(trans)) + len(init) + len(goals)
+        output = ""
+                #find minimal unsatisfiable core by calling picomus
+        if cmd is None:
+            return (False, False, [], "")   
+        
+          
+                
+        #start a reader thread        
+        subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
+        readThread =  threading.Thread(target = subprocessReadThread, args=(subp.stdout,output))
+        readThread.daemon = True
+        readThread.start()
+        
+        
+        #send header
+        input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(init)               
+        subp.stdin.write(input)                                         
+
         transClauses = []
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)  
@@ -206,42 +240,32 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                             numVarsInTrans = (len(mapping[line]))/(i+1)
                             mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                             j = j + 1
-                    transClauses.extend(transClausesNew)
-                    print "A",len(transClauses)
+                    #transClauses.extend(transClausesNew)                                   
+                    #send this batch of transClauses
+                    subp.stdin.write("".join(transClausesNew))
         #create goal clauses
-        dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)
-        #for g in dg:
-            #for c in g.split():                            
-                #p = max(p, abs(int(c)))
-                
+        dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)        
+        #send goalClauses
+        subp.stdin.write("".join(dg))
+        #send EOF
+        subp.stdin.close()
+        
                                 
-        n = len(transClauses) + len(init)
+        nMinusG = n - len(goals)
         for line in conjuncts:
             if "<>" in line:
-                mapping[line] = range(n+1,n+len(goals)+1)
+                mapping[line] = range(nMinusG+1,nMinusG+len(goals)+1)
                 
-        #combine the clauses
-        cnfs = init + transClauses + dg            
+        
+        while readThread.isAlive():
+            time.sleep(0.1)
+        print output
+                    
         
     
-        #create picomus input
-        
-        #precompute p and n
-        #p =  (depth+1)*(numProps*2)
-        p = (depth+2)*(numProps)        
-        #n = len(cnfs)  
-        n = (depth)*(len(trans)) + len(init) + len(goals)
-        
-        input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
-            
+
         
                 
-        #find minimal unsatisfiable core by calling picomus
-        if cmd is None:
-            return (False, False, [], "")        
- 
-        subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
-        output = subp.communicate(input)[0]                                         
                                                                                       
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
