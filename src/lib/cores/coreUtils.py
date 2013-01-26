@@ -184,13 +184,13 @@ def findGuiltyClausesWrapper(x):
         return findGuiltyClauses(*x)
         
 def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
-        transClauses = copy(trans)
+        transClauses = []
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)  
         #the depth tells you how many time steps of trans to use
         #depth 0 just checks init with goals
         #p = 0
-        for i in range(0,depth+1):
+        for i in range(1,depth+1):
                     transClausesNew = []
                     for clause in trans:
                         newClause = ""
@@ -207,7 +207,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                             mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                             j = j + 1
                     transClauses.extend(transClausesNew)
-        
+                    print "A",len(transClauses)
         #create goal clauses
         dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)
         #for g in dg:
@@ -226,11 +226,12 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
     
         #create picomus input
         
-        #precompute p
+        #precompute p and n
         #p =  (depth+1)*(numProps*2)
-        p = (depth+2)*(numProps)
+        p = (depth+2)*(numProps)        
+        #n = len(cnfs)  
+        n = (depth)*(len(trans)) + len(init) + len(goals)
         
-        n = len(cnfs)       
         input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
             
         
