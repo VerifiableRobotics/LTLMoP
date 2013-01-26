@@ -1171,16 +1171,18 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "RED")
                 
-        #highlight guilty sentences
-        #special treatment for goals: we already know which one to highlight                
-        for h_item in to_highlight:
-            tb_key = h_item[0].title() + h_item[1].title()
-            if h_item[1] == "goals":
-                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
-        
-        guilty = compiler._coreFinding(to_highlight, unsat, badInit)
-        
-        self.highlightCores(guilty)
+                #only do cores if unrealizable or trivial 
+                           
+                #highlight guilty sentences
+                #special treatment for goals: we already know which one to highlight                
+                for h_item in to_highlight:
+                    tb_key = h_item[0].title() + h_item[1].title()
+                    if h_item[1] == "goals":
+                        self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
+            
+                    guilty = compiler._coreFinding(to_highlight, unsat, badInit)
+            
+                    self.highlightCores(guilty)
                 
                 
         
