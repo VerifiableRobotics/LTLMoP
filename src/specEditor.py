@@ -1171,7 +1171,8 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("Synthesized automaton is trivial.\n", "RED")
                 
-                #only do cores if unrealizable or trivial 
+        if not realizable or not nonTrivial:
+        #only do cores if unrealizable or trivial 
                            
                 #highlight guilty sentences
                 #special treatment for goals: we already know which one to highlight                
