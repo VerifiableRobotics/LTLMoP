@@ -398,7 +398,13 @@ class SpecCompiler(object):
                 else:
                     isTrans[clause] = 0  
             """
-            conjuncts = conjuncts + newCs 
+            conjuncts.extend(newCs)
+        
+        #filter out props that are actually used
+        self.propList = [p for p in self.propList if [c for c in conjuncts if p in c]]
+        print self.propList 
+            
+            
             
     
         return conjuncts
