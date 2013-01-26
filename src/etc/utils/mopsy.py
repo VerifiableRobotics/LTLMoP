@@ -4,7 +4,7 @@
 
 import wx
 import wx.grid
-import wx.lib.buttons
+import wx.lib.buttons, wx.lib.delayedresult
 import sys, os, re, copy
 import numpy
 import threading
@@ -296,8 +296,8 @@ class MopsyFrame(wx.Frame):
 
         region_constrained_goable_states = [s for s in goable_states if (self.regionFromEnvState(s) == self.dest_region)]
         if region_constrained_goable_states == []:
-            #print "Safety violation!"
-            self.label_violation.SetLabel("Current move invalid under system constraints")
+            self.label_violation.SetLabel("Invalid move...")
+            self.showCore()
             self.button_next.Enable(False)
         else:
             self.label_violation.SetLabel("")
@@ -306,10 +306,6 @@ class MopsyFrame(wx.Frame):
         self.regionsToHide = list(set([r.name for r in self.proj.rfi.regions])-set(goable))
 
         self.onResize() # Force map redraw
-
-        # if not OK:
-        self.showCore()
-
 
     def appendToHistory(self):
         self.history_grid.AppendRows(1)
@@ -352,10 +348,26 @@ class MopsyFrame(wx.Frame):
         Display the part of the spec that explains why you can't
         set your next outputs to the state currently selected.
         """
+
+        wx.lib.delayedresult.startWorker(self.displayCoreMessage, self.calculateCore, daemon=True)
+
+    def displayCoreMessage(self, result):
+        result = result.get()
+        if result is None:
+            # We've fallen behind
+            # TODO: Abort previous core calcs so we don't display stale data
+            self.label_violation.SetLabel("Invalid move.")
+        else:
+            self.label_violation.SetLabel("Invalid move because it violates: " + " and ".join([repr(s) for s in result]))
+
+    def calculateCore(self):
         # Don't let simultaneous calculations occur if events are triggered too fast
         if not self.coreCalculationLock.acquire(False):
             print "WARNING: Skipping core calculation because already busy with one."
             return
+
+        # TODO: actually cache trans CNF
+        # TODO: support SLURP parser
 
         ltl_current = self.stateToLTL(self.env_aut.current_state)
         next_state = copy.deepcopy(self.env_aut.current_state.transitions[0])
@@ -381,6 +393,8 @@ class MopsyFrame(wx.Frame):
         print "Guilty Spec: ", guilty_spec
 
         self.coreCalculationLock.release()
+
+        return guilty_spec
 
     def onMapClick(self, event):
         x = event.GetX()/self.mapScale
