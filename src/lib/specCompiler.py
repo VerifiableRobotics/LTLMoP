@@ -1,6 +1,6 @@
 import os, sys
 import re
-import time, copy
+import time
 import math
 import subprocess
 import numpy
@@ -10,6 +10,7 @@ import glob
 from multiprocessing import Pool
 
 sys.path.append("lib")
+sys.path.append(os.path.join("lib","cores"))
 
 import project
 import regions
@@ -131,7 +132,7 @@ class SpecCompiler(object):
 
         #regionList = [r.name for r in self.parser.proj.rfi.regions]
         regionList = [r.name for r in self.proj.rfi.regions]
-        sensorList = copy.deepcopy(self.proj.enabled_sensors)
+        sensorList = deepcopy(self.proj.enabled_sensors)
         robotPropList = self.proj.enabled_actuators + self.proj.all_customs
         
         text = self.proj.specText
