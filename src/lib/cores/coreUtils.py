@@ -1,6 +1,6 @@
 
 import math, re, sys, random, os, subprocess, time
-from copy import copy
+from copy import copy, deepcopy
 from logic import to_cnf
 from multiprocessing import Pool
 import threading
@@ -192,6 +192,7 @@ def findGuiltyClausesWrapper(x):
 
         
 def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
+        mapping = deepcopy(mapping)
         #precompute p and n
         #p =  (depth+1)*(numProps*2)
         p = (depth+2)*(numProps)        
