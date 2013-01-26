@@ -181,12 +181,9 @@ def lineToCnf(line):
         else:
             return None
     
-def subprocessReadThread(fd, output):
-            while True:
-                line = fd.readline()
-                if line == '':
-                    break
-                output.append(line)  
+def subprocessReadThread(fd, out):
+            for line in fd:                                                                              
+               out.append(line) 
                 
         
 def findGuiltyClausesWrapper(x):        
@@ -200,7 +197,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
         p = (depth+2)*(numProps)        
         #n = len(cnfs)  
         n = (depth)*(len(trans)) + len(init) + len(goals)
-        output = ""
+        output = []
                 #find minimal unsatisfiable core by calling picomus
         if cmd is None:
             return (False, False, [], "")   
@@ -215,17 +212,17 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
         
         
         #send header
-        input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(init)               
-        subp.stdin.write(input)                                         
+        input = "p cnf "+str(p)+" "+str(n)+"\n"
+        subp.stdin.write(input)                                      
+        subp.stdin.writelines(init)               
+           
 
-        transClauses = []
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)  
         #the depth tells you how many time steps of trans to use
         #depth 0 just checks init with goals
         #p = 0
         for i in range(1,depth+1):
-                    transClausesNew = []
                     for clause in trans:
                         newClause = ""
                         for c in clause.split():
@@ -233,7 +230,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                             newClause= newClause + str(cmp(intC,0)*(abs(intC)+numProps*i)) +" "
                             #p = max(p, (abs(intC)+numProps*i))
                         newClause=newClause+"\n"
-                        transClausesNew.append(newClause)
+                        subp.stdin.write(newClause)
                     j = 0    
                     for line in conjuncts:
                         if "[]" in line and "<>" not in line:                      
@@ -242,11 +239,11 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                             j = j + 1
                     #transClauses.extend(transClausesNew)                                   
                     #send this batch of transClauses
-                    subp.stdin.write("".join(transClausesNew))
+                    
         #create goal clauses
         dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)        
         #send goalClauses
-        subp.stdin.write("".join(dg))
+        subp.stdin.writelines(dg)
         #send EOF
         subp.stdin.close()
         
@@ -257,10 +254,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                 mapping[line] = range(nMinusG+1,nMinusG+len(goals)+1)
                 
         
-        while readThread.isAlive():
-            time.sleep(0.1)
-        print output
-                    
+        readThread.join()
         
     
 
@@ -275,9 +269,9 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                     break
             depth = depth +1
             """
-        if "UNSATISFIABLE" in output:
+        if any(["UNSATISFIABLE" in s for s in output]):
             print "Unsatisfiable core found at depth ", depth
-        elif "SATISFIABLE" in output:
+        elif any(["SATISFIABLE" in s for s in output]):
             print "Satisfiable at depth ", depth
         else:
             print "ERROR", output
@@ -303,7 +297,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
             """
         #pythonified the above
         #get indices of contributing clauses
-        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output.split('\n'))))
+        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output)))
         
         #get corresponding LTL conjuncts
         guilty = cnfToConjuncts(cnfIndices, mapping)
