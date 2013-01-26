@@ -1,5 +1,6 @@
 
 import math, re, sys, random, os, subprocess, time
+from copy import copy
 from logic import to_cnf
 from multiprocessing import Pool
 
@@ -183,12 +184,12 @@ def findGuiltyClausesWrapper(x):
         return findGuiltyClauses(*x)
         
 def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
-        transClauses = trans
+        transClauses = copy(trans)
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)  
         #the depth tells you how many time steps of trans to use
         #depth 0 just checks init with goals
-        p = 0
+        #p = 0
         for i in range(0,depth+1):
                     transClausesNew = []
                     for clause in trans:
@@ -196,25 +197,23 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                         for c in clause.split():
                             intC = int(c)
                             newClause= newClause + str(cmp(intC,0)*(abs(intC)+numProps*i)) +" "
-                            p = max(p, (abs(intC)+numProps*i))
+                            #p = max(p, (abs(intC)+numProps*i))
                         newClause=newClause+"\n"
                         transClausesNew.append(newClause)
                     j = 0    
                     for line in conjuncts:
                         if "[]" in line and "<>" not in line:                      
-                            if i > 0:
-                                numVarsInTrans = (len(mapping[line]))/i
-                            else:
-                                numVarsInTrans = (len(mapping[line]))
+                            numVarsInTrans = (len(mapping[line]))/(i+1)
                             mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                             j = j + 1
                     transClauses.extend(transClausesNew)
         
         #create goal clauses
         dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)
-        for g in dg:
-            for c in g.split():                            
-                p = max(p, abs(int(c)))
+        #for g in dg:
+            #for c in g.split():                            
+                #p = max(p, abs(int(c)))
+                
                                 
         n = len(transClauses) + len(init)
         for line in conjuncts:
@@ -229,6 +228,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
         
         #precompute p
         #p =  (depth+1)*(numProps*2)
+        p = (depth+2)*(numProps)
         
         n = len(cnfs)       
         input = "p cnf "+str(p)+" "+str(n)+"\n" + "".join(cnfs)               
