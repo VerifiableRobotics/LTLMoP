@@ -7,6 +7,7 @@ import wx.grid
 import wx.lib.buttons
 import sys, os, re, copy
 import numpy
+import threading
 
 # Climb the tree to find out where we are
 p = os.path.abspath(__file__)
@@ -90,19 +91,21 @@ class MopsyFrame(wx.Frame):
         # begin wxGlade: MopsyFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER)
-        self.window_1_pane_2 = wx.Panel(self.window_1, -1)
-        self.window_1_pane_1 = wx.Panel(self.window_1, -1)
         self.mopsy_frame_statusbar = self.CreateStatusBar(1, 0)
-        self.history_grid = wx.grid.Grid(self.window_1_pane_1, -1, size=(1, 1))
-        self.panel_1 = wx.Panel(self.window_1_pane_2, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
-        self.label_5 = wx.StaticText(self.window_1_pane_2, -1, "Current environment state:")
-        self.label_6 = wx.StaticText(self.window_1_pane_2, -1, "Please choose your response:")
-        self.label_movingto = wx.StaticText(self.window_1_pane_2, -1, "Moving to XXX ...")
-        self.label_8 = wx.StaticText(self.window_1_pane_2, -1, "Actuator states:")
-        self.label_9 = wx.StaticText(self.window_1_pane_2, -1, "Internal propositions:")
-        self.label_violation = wx.StaticText(self.window_1_pane_2, -1, "")
-        self.button_next = wx.Button(self.window_1_pane_2, -1, "Execute Move >>")
+        self.window_1 = wx.SplitterWindow(self, wx.ID_ANY, style=wx.SP_3D | wx.SP_BORDER)
+        self.window_1_pane_1 = wx.Panel(self.window_1, wx.ID_ANY)
+        self.history_grid = wx.grid.Grid(self.window_1_pane_1, wx.ID_ANY, size=(1, 1))
+        self.window_1_pane_2 = wx.Panel(self.window_1, wx.ID_ANY)
+        self.panel_1 = wx.Panel(self.window_1_pane_2, wx.ID_ANY, style=wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL)
+        self.label_1 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Your goal:")
+        self.label_goal = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Wait patiently for Mopsy to load")
+        self.label_5 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Current environment state:")
+        self.label_6 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Please choose your response:")
+        self.label_movingto = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Moving to XXX ...")
+        self.label_8 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Actuator states:")
+        self.label_9 = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "Internal propositions:")
+        self.label_violation = wx.StaticText(self.window_1_pane_2, wx.ID_ANY, "")
+        self.button_next = wx.Button(self.window_1_pane_2, wx.ID_ANY, "Execute Move >>")
 
         self.__set_properties()
         self.__do_layout()
@@ -110,6 +113,7 @@ class MopsyFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onButtonNext, self.button_next)
         # end wxGlade
 
+        self.coreCalculationLock = threading.Lock()
         self.dest_region = None
         self.current_region = None
         self.regionsToHide = []
@@ -215,7 +219,37 @@ class MopsyFrame(wx.Frame):
             self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
 
         self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.current_region))
+
+        self.showCurrentGoal()
         self.applySafetyConstraints()
+
+    def showCurrentGoal(self):
+        rank_str = self.env_aut.current_state.transitions[0].rank
+        m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
+        if m is None:
+            print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
+            return
+        jx = int(m.group(1))-1 # minus 1 to account for auto-added []<>true
+
+        if jx < 0:
+            print "WARNING: negative jx"
+            return
+
+        goal_ltl = self.spec['SysGoals'].split('\n')[jx].strip()
+        
+        spec_line_num = None
+        for ltl_frag, line_num in self.compiler.LTL2SpecLineNumber.iteritems():
+            if ltl_frag.strip("\n\t &") == goal_ltl:
+                spec_line_num = line_num
+                break
+
+        if spec_line_num is None:
+            print "ERROR: Couldn't find goal {!r} in LTL->spec mapping".format(ltl_frag)
+            return
+
+        goal_spec = self.compiler.proj.specText.split("\n")[spec_line_num-1]
+        #print jx, goal_ltl, spec_line_num, goal_spec
+        self.label_goal.SetLabel(goal_spec.strip())
 
     def regionFromEnvState(self, state):
         # adaptation of fsa.py's regionFromState, to work with env_aut
@@ -318,6 +352,11 @@ class MopsyFrame(wx.Frame):
         Display the part of the spec that explains why you can't
         set your next outputs to the state currently selected.
         """
+        # Don't let simultaneous calculations occur if events are triggered too fast
+        if not self.coreCalculationLock.acquire(False):
+            print "WARNING: Skipping core calculation because already busy with one."
+            return
+
         ltl_current = self.stateToLTL(self.env_aut.current_state)
         next_state = copy.deepcopy(self.env_aut.current_state.transitions[0])
         next_state.inputs.update(self.actuatorStates)
@@ -340,6 +379,8 @@ class MopsyFrame(wx.Frame):
             guilty_spec.append("(topological constraints)")
     
         print "Guilty Spec: ", guilty_spec
+
+        self.coreCalculationLock.release()
 
     def onMapClick(self, event):
         x = event.GetX()/self.mapScale
@@ -461,6 +502,7 @@ class MopsyFrame(wx.Frame):
         mopsy_frame_statusbar_fields = ["Loading..."]
         for i in range(len(mopsy_frame_statusbar_fields)):
             self.mopsy_frame_statusbar.SetStatusText(mopsy_frame_statusbar_fields[i], i)
+        self.label_1.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.label_5.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.label_6.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.label_violation.SetForegroundColour(wx.Colour(255, 0, 0))
@@ -484,6 +526,8 @@ class MopsyFrame(wx.Frame):
         sizer_3.Add(self.panel_1, 1, wx.EXPAND, 0)
         sizer_3.Add((10, 20), 0, 0, 0)
         sizer_4.Add((20, 10), 0, 0, 0)
+        sizer_4.Add(self.label_1, 0, 0, 0)
+        sizer_4.Add(self.label_goal, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.EXPAND, 5)
         sizer_4.Add(self.label_5, 0, 0, 0)
         sizer_4.Add(sizer_env, 1, wx.EXPAND, 0)
         sizer_4.Add((20, 10), 0, 0, 0)
@@ -496,7 +540,7 @@ class MopsyFrame(wx.Frame):
         sizer_4.Add(self.label_9, 0, 0, 0)
         sizer_4.Add(sizer_prop, 1, wx.EXPAND, 0)
         sizer_4.Add((20, 20), 0, 0, 0)
-        sizer_5.Add(self.label_violation, 1, wx.EXPAND|wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL, 0)
+        sizer_5.Add(self.label_violation, 1, wx.EXPAND | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL, 0)
         sizer_5.Add(self.button_next, 0, 0, 0)
         sizer_5.Add((20, 20), 0, 0, 0)
         sizer_4.Add(sizer_5, 1, wx.EXPAND, 0)
@@ -523,6 +567,7 @@ class MopsyFrame(wx.Frame):
         # All transitionable states have the same env move, so just use the first
         self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
         self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.current_region))
+        self.showCurrentGoal()
         self.applySafetyConstraints()
 
         event.Skip()
