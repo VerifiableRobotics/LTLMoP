@@ -44,12 +44,8 @@ kitchen = p8
 
 Spec: # Specification in structured English
 # Example of unsatisfiability, and state-wise goal-local "optimal" planning.
-# Note: The robot can carry up to 2 meals at a time (this is somehow implicit...?)
 
-Start in the lounge.
-Carry meals from the kitchen to r5.
-
-#The meals are in the kitchen.
-#Carry meals to all patient rooms.
-#Don't go to all public rooms.
+Start in the closet.
+Carry meals from the kitchen to all patient rooms.
+#Don't go to any public rooms.
 
