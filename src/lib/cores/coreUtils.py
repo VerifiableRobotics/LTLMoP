@@ -25,6 +25,8 @@ def conjunctsToCNF(conjuncts, propList):
     pool = Pool()
     #print "STARTING CNF MAP"
     allCnfs = pool.map(lineToCnf, conjuncts, chunksize = 1)   
+    
+    pool.terminate()
     #print "ENDING CNF MAP"
         
     for cnf, lineOld in zip(allCnfs,conjuncts):

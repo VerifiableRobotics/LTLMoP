@@ -322,6 +322,7 @@ class SpecCompiler(object):
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
+            pool.terminate()
             
             allGuilty = set([item for sublist in guiltyList for item in sublist])
             

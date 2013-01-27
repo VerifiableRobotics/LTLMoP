@@ -1230,7 +1230,7 @@ public class GROneGame {
 	
 	//method for adding stated to the aut and state stack, based on whether we want a deterministic or nondet automaton
  	private boolean addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
-    	   boolean noDeadlock = true;
+    	   boolean noDeadlock = false; //mark state as deadlocked until proven otherwise
     	   for (BDDIterator inputIter = input.iterator(env
                     .modulePrimeVars()); inputIter.hasNext();) {
 						
@@ -1249,6 +1249,7 @@ public class GROneGame {
 
                 int idx = -1;
                
+                
                 if (all_sys_succs.equals(Env.FALSE())) {
 					RawCState gsucc = new RawCState(aut.size(), Env.unprime(inputOne), new_j, new_i, inputOne);
 					idx = aut.indexOf(gsucc); // the equals doesn't consider
@@ -1257,8 +1258,7 @@ public class GROneGame {
                         aut.add(gsucc);
                         idx = aut.indexOf(gsucc);
                     }
-                    new_state.add_succ(aut.elementAt(idx));
-                    noDeadlock = false;
+                    new_state.add_succ(aut.elementAt(idx));                   
 					
                 	continue;                	
                 }               	
@@ -1278,9 +1278,11 @@ public class GROneGame {
                         .hasNext();) {
                     BDD sys_succ = iter_succ.next().and(Env.unprime(inputOne));
 					
-					//Make sure this is a safe successor state
+                    //Make sure this is a safe successor state
 					if (!sys_succ.and(sys.trans()).isZero()) {
-						
+						//the state is not deadlocked
+						noDeadlock = true;
+	           		    
 						RawCState gsucc = new RawCState(aut.size(), sys_succ, new_j, new_i, inputOne);
 						idx = aut.indexOf(gsucc); // the equals doesn't consider
 												  // the id number.
