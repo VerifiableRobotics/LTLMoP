@@ -502,8 +502,12 @@ class SpecCompiler(object):
         to_highlight = []
         for dline in subp.stdout:
             output += dline
+
             if "Specification is realizable" in dline:   
                 realizable = True            
+                nonTrivial = self._autIsNonTrivial()
+                if nonTrivial:
+                    break
             
             ### Highlight sentences corresponding to identified errors ###
 
@@ -562,9 +566,6 @@ class SpecCompiler(object):
                     
             if "unsatisfiable" in dline or "inconsistent" in dline :
                 unsat = True
-
-        if realizable:           
-            nonTrivial = self._autIsNonTrivial()
 
         subp.stdout.close()
         
