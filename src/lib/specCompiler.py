@@ -658,7 +658,7 @@ class SpecCompiler(object):
     def _getPicosatCommand(self):
         # look for picosat
 
-        paths = glob.glob(os.path.join(self.proj.ltlmop_root,"lib","cores","picosat-*"))
+        paths = [p for p in glob.glob(os.path.join(self.proj.ltlmop_root,"lib","cores","picosat-*")) if os.path.isdir(p)]
         if len(paths) == 0:
             print "Where is your sat solver? We use Picosat."
             # TODO: automatically compile for the user
