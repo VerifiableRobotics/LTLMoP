@@ -298,13 +298,11 @@ class SpecCompiler(object):
         cmd = self._getPicosatCommand() 
         numProps = len(self.propList)
         if conjuncts:
+            #first try without topo and init, see if it is satisfiable
             mapping, init, self.trans, goals = conjunctsToCNF([badInit], conjuncts, self.propList)
                 
                
             pool = Pool()
-                
-                
-            
                           
                 #print "STARTING PICO MAP"
                 
@@ -319,10 +317,23 @@ class SpecCompiler(object):
             if any(allGuilty):
                 return allGuilty
             
+            #then try just topo and init and see if it is unsatisfiable. If so, return core.
+            mapping, init, self.trans, goals = conjunctsToCNF([topo, badInit], [], self.propList)
+           
+                
+            guilty = findGuiltyClauses(cmd,maxDepth,numProps,init,self.trans,goals,mapping,[topo, badInit])
+                    #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+                #print "ENDING PICO MAP"
+                
+                
+                
+            if guilty:
+                return guilty
             
+            #if the problem is in conjunction with the topo but not just topo, keep increasing the depth until something more than just topo is returned
+                        
             justTopo = True
             depth = 1
-            
             
             while justTopo:
                 mapping, init, self.trans, goals = conjunctsToCNF([topo,badInit], conjuncts, self.propList)
@@ -333,7 +344,6 @@ class SpecCompiler(object):
                 
                 
                 guiltyMinusGoal = [g for g in guilty if '<>' not in g]
-                print set([topo, badInit]).issuperset(set(guiltyMinusGoal))
                 if not set([topo, badInit]).issuperset(set(guiltyMinusGoal)):
                     justTopo = False
                 else:

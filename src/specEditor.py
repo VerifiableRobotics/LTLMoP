@@ -1181,9 +1181,9 @@ class SpecEditorFrame(wx.Frame):
                     if h_item[1] == "goals":
                         self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
             
-                    guilty = compiler._coreFinding(to_highlight, unsat, badInit)
+                guilty = compiler._coreFinding(to_highlight, unsat, badInit)
             
-                    self.highlightCores(guilty)
+                self.highlightCores(guilty)
                 
                 
         
