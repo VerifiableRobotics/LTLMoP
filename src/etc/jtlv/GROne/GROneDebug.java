@@ -123,14 +123,19 @@ public class GROneDebug {
 					System.err.println("Error: " + e.getMessage());
 		  }
 
-		//rho3 tells us whether an environment liveness was falsified in the system's winning strategy			
+		 BDD counter_example = g.envWinningStates().and(all_init);
+		 
+		 boolean falsifyEnv = false;
+		  
+		 if (counter_example.isZero()) {
+			 //falsifyEnv tells us whether an environment liveness was falsified in the system's winning strategy		
 		    PrintStream orig_out = System.out;	
 		 	PrintStream ignore = new PrintStream(new NullOutputStream());
 		 	System.setOut(ignore);
-			boolean rho3 = g.printWinningStrategy(all_init);
+			falsifyEnv = g.printWinningStrategy(all_init);
 			System.setOut(orig_out); // restore STDOUT
+		 }
 
-		  BDD counter_example = g.envWinningStates().and(all_init);
 		  
 		  try { 
 			  if (explainSys == 0 && !counter_example.isZero()) {
@@ -166,7 +171,7 @@ public class GROneDebug {
 		  
 		// check for unsatisfiability or unrealizability of the justice/liveness (vs. safety) conditions
 		try{
-			    debugInfo += justiceChecks(env,sys,explainSys,explainEnv, rho3);
+			    debugInfo += justiceChecks(env,sys,explainSys,explainEnv, falsifyEnv);
 		}catch (Exception e){//Catch exception if any
 			      System.err.println("Error: " + e.getMessage());
 		}
@@ -182,7 +187,7 @@ public class GROneDebug {
 	    // You may or may not have to override other methods
 	}
 	
-	public static String justiceChecks(SMVModule env, SMVModule sys, int explainSys, int explainEnv, boolean rho3) throws GameException  {
+	public static String justiceChecks(SMVModule env, SMVModule sys, int explainSys, int explainEnv, boolean falsifyEnv) throws GameException  {
 		
 		BDD all_init = sys.initial().and( env.initial());
 		BDD counter_exmple;
@@ -218,7 +223,7 @@ public class GROneDebug {
 				 
 				
 				 
-				 if (explainEnv ==0 && counter_exmple.isZero() & rho3) {
+				 if (explainEnv ==0 && counter_exmple.isZero() & falsifyEnv) {
 					 if (g.calculate_strategy(3, all_init.and(g.sysWinningStates()), false)) { 
 						 //checking for multi-step unsatisfiability between env transitions and goals
 						 //since the first argument is 3, we allow all three kinds of system transitions

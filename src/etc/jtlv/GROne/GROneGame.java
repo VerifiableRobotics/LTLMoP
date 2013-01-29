@@ -572,7 +572,7 @@ public class GROneGame {
 
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
         
-        boolean rho3 = false;
+        boolean falsifyEnv = true;
 
         
 		while (ini_iterator.hasNext()) {
@@ -703,6 +703,7 @@ public class GROneGame {
                                 BDD opt = next_op.and(y_mem[next_p_j][look_r]);
                                 if (!opt.isZero()) {
                                     candidate = opt;
+                                    falsifyEnv = false;
                                     //System.out.println("1");
                                     jcand = next_p_j;
                                 }
@@ -738,7 +739,6 @@ public class GROneGame {
                                 BDD opt = next_op.and(x_mem[p_j][p_i][p_cy]);
                                 if (!opt.isZero()) {
                                     candidate = opt;
-                                    rho3 = true;
                                     //System.out.println("3");
                                 }
                             }
@@ -842,7 +842,7 @@ public class GROneGame {
 			System.out.print(res);
 			// return null; // res;
 			System.out.print("\n\n");
-			return rho3;
+			return falsifyEnv;
 		} else {
 			if (strategy_kind == 3) return result; else return false;
 		}

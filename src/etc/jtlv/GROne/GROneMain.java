@@ -189,12 +189,12 @@ public class GROneMain {
 		System.out.println("-----------------------------------------");
 		PrintStream orig_out = System.out;
 		System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
-		boolean rho3 = g.printWinningStrategy(all_init);
+		boolean falsifyEnv = g.printWinningStrategy(all_init);
 		System.setOut(orig_out); // restore STDOUT
 		System.out.print("-----------------------------------------\n");
 		long t2 = (System.currentTimeMillis() - time);
 		System.out.println("Strategy time: " + t2);	
-		if (rho3) {
+		if (falsifyEnv) {
 			System.out.println("Environment liveness falsified"); 
 		}
 		System.out.println("===== Done ==============================");
