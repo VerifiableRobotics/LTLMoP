@@ -493,8 +493,8 @@ public class GROneGame {
 	 * The second argument changes the priority of searching for different types of moves in the game
 	 * </p>
 	 */
-	public void printWinningStrategy(BDD ini) {
-		calculate_strategy(3, ini);
+	public boolean printWinningStrategy(BDD ini) {
+		return calculate_strategy(3, ini);
 		// return calculate_strategy(3);
 		// return calculate_strategy(7);
 		// return calculate_strategy(11);
@@ -571,6 +571,10 @@ public class GROneGame {
         
 
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
+        
+        boolean rho3 = false;
+
+        
 		while (ini_iterator.hasNext()) {
             BDD this_ini = (BDD) ini_iterator.next();
 
@@ -594,7 +598,9 @@ public class GROneGame {
             st_stack.push(this_ini);
             j_stack.push(new Integer(0)); // TODO: is there a better default j?
             //this_ini.printSet();
-
+            
+            //keep track of whether the winning strategy ever falsifies the environment
+            
             // iterating over the stacks.
             while (!st_stack.isEmpty()) {
     			// making a new entry.
@@ -732,6 +738,7 @@ public class GROneGame {
                                 BDD opt = next_op.and(x_mem[p_j][p_i][p_cy]);
                                 if (!opt.isZero()) {
                                     candidate = opt;
+                                    rho3 = true;
                                     //System.out.println("3");
                                 }
                             }
@@ -835,13 +842,16 @@ public class GROneGame {
 			System.out.print(res);
 			// return null; // res;
 			System.out.print("\n\n");
+			return rho3;
+		} else {
+			if (strategy_kind == 3) return result; else return false;
 		}
-		if (strategy_kind == 3) return result; else return false;
+		
 	}
 	
 	//Default deterministic version for backwards compatibility
-	public void calculate_strategy(int kind, BDD ini) {
-		calculate_strategy(kind, ini, true);
+	public boolean calculate_strategy(int kind, BDD ini) {
+		return calculate_strategy(kind, ini, true);
 	}
 	
 	
