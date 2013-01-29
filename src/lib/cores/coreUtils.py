@@ -39,9 +39,9 @@ def conjunctsToCNF(conjuncts, propList):
             clause = re.sub('~', '-', clause)    
             #replace prop names with var numbers
             for k in propsNext.keys():
-                clause = re.sub(k,str(propsNext[k]), clause)
+                clause = re.sub("\\b"+k+"\\b",str(propsNext[k]), clause)
             for k in props.keys():
-                    clause = re.sub(k,str(props[k]), clause)   
+                    clause = re.sub("\\b"+k+"\\b",str(props[k]), clause)   
                 #add trailing 0   
             if "<>" in lineOld:
                 goalClauses.append(clause.strip()+" 0\n")
