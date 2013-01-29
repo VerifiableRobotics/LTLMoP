@@ -361,7 +361,7 @@ class SpecCompiler(object):
         
     def findCoresUnreal(self,topo,badInit,conjuncts,maxDepth):
         #get conjuncts to be minimized
-        return self.findCoresUnsat(conjuncts, maxDepth)
+        return self.findCoresUnsat(topo,badInit,conjuncts,maxDepth)
         
         
     def _getPicosatCommand(self):
