@@ -1410,6 +1410,7 @@ class SpecEditorFrame(wx.Frame):
 
     def highlightCores(self, guilty, compiler):
         if self.proj.compile_options["parser"] == "structured":
+            print guilty
             if guilty is not None:
                 for k,v in compiler.LTL2SpecLineNumber.iteritems():
                     newCs = k.replace("\t","\n").split('\n')
