@@ -234,7 +234,7 @@ class Automaton:
 
                 # And then put it in the right place!
 
-                if var not in sensors and not re.match('^sbit\d+$',var):
+                if var not in sensors:
                     # If it's not a sensor proposition, then it's an output proposition
                     outputs[var]=val
                 else:

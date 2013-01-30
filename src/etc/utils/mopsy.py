@@ -139,7 +139,15 @@ class MopsyFrame(wx.Frame):
         # Parse specification so we can give feedback
         self.mopsy_frame_statusbar.SetStatusText("Parsing specification...", 0)
         self.compiler._decompose()
-        self.spec, tracebackTree, response = self.compiler._writeLTLFile()
+        self.spec, self.tracebackTree, response = self.compiler._writeLTLFile()
+
+        if self.proj.compile_options["parser"] == "slurp":
+            # Add SLURP to path for import
+            p = os.path.dirname(os.path.abspath(__file__))
+            sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
+            global chunks_from_gentree, line_to_chunks
+            from ltlbroom.specgeneration import chunks_from_gentree, line_to_chunks
+            self.tracebackChunks = chunks_from_gentree(self.tracebackTree)
 
         # Load in counter-strategy automaton
         self.envDummySensorHandler = EnvDummySensorHandler(self)
@@ -237,17 +245,27 @@ class MopsyFrame(wx.Frame):
 
         goal_ltl = self.spec['SysGoals'].split('\n')[jx].strip()
         
-        spec_line_num = None
-        for ltl_frag, line_num in self.compiler.LTL2SpecLineNumber.iteritems():
-            if ltl_frag.strip("\n\t &") == goal_ltl:
-                spec_line_num = line_num
-                break
+        if self.proj.compile_options["parser"] == "structured":
+            spec_line_num = None
+            for ltl_frag, line_num in self.compiler.LTL2SpecLineNumber.iteritems():
+                if ltl_frag.strip("\n\t &") == goal_ltl:
+                    spec_line_num = line_num
+                    break
 
-        if spec_line_num is None:
-            print "ERROR: Couldn't find goal {!r} in LTL->spec mapping".format(ltl_frag)
-            return
+            if spec_line_num is None:
+                print "ERROR: Couldn't find goal {!r} in LTL->spec mapping".format(ltl_frag)
+                return
 
-        goal_spec = self.compiler.proj.specText.split("\n")[spec_line_num-1]
+            goal_spec = self.compiler.proj.specText.split("\n")[spec_line_num-1]
+        elif self.proj.compile_options["parser"] == "slurp":
+            canonical_goal_ltl = goal_ltl.lstrip().rstrip("\n\t &")
+            goal_ltl_clean = self.compiler.reversemapping[canonical_goal_ltl]
+            chunks = line_to_chunks(goal_ltl_clean, self.tracebackChunks)
+            goal_spec = '{} (Because you said "{}")'.format(chunks[0].explanation, chunks[0].input)
+        else:
+            print "Unsupported parser type:", self.proj.compile_options["parser"]
+            # TODO: make all parsers have the same interface
+
         #print jx, goal_ltl, spec_line_num, goal_spec
         self.label_goal.SetLabel(goal_spec.strip())
 
@@ -388,6 +406,20 @@ class MopsyFrame(wx.Frame):
                     ltl_frags_canonical = [s.strip() for s in ltl_frag.replace("\t","").split('\n')]
                     if not set(guilty_ltl).isdisjoint(ltl_frags_canonical):
                         guilty_spec.append(self.compiler.proj.specText.split("\n")[line_num-1])
+        elif self.proj.compile_options["parser"] == "slurp":
+            for ltl_frag in guilty_ltl:
+                canonical_ltl_frag = ltl_frag.lstrip().rstrip("\n\t &")
+                try:
+                    guilty_clean = self.compiler.reversemapping[canonical_ltl_frag]
+                except KeyError:
+                    print "WARNING: LTL fragment {!r} not found in canon_ltl->LTL mapping".format(canonical_ltl_frag)
+                    continue
+
+                chunks = line_to_chunks(guilty_clean, self.tracebackChunks)
+                if chunks:
+                    guilty_spec.append('{} (Because you said "{}")'.format(chunks[0].explanation.replace("'",""), chunks[0].input))
+                else:
+                    print "WARNING: Canonical LTL fragment {!r} not found in spec->LTL mapping".format(guilty_clean)
 
         if self.spec['Topo'].replace('\n','').replace('\t','').strip() in guilty_ltl:
             guilty_spec.append("(topological constraints)")
