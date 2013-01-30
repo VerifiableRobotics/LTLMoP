@@ -1181,9 +1181,17 @@ class SpecEditorFrame(wx.Frame):
                     if h_item[1] == "goals":
                         self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)
             
-                guilty = compiler._coreFinding(to_highlight, unsat, badInit)
+                if unsat:
+                    guilty = compiler._coreFinding(to_highlight, unsat, badInit)
+                    self.highlightCores(guilty)
+                else:
+                    #just highlight all sentences in the guilty components
+                    for h_item in [h for h in to_highlight if h[1] != "goals"]:
+                            tb_key = h_item[0].title() + h_item[1].title()
+                            for l in self.traceback[tb_key]:
+                                self.highlight(l, h_item[1])
             
-                self.highlightCores(guilty)
+                
                 
                 
         
