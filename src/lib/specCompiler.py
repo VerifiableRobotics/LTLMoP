@@ -286,9 +286,9 @@ class SpecCompiler(object):
         topo, conjuncts = self.getGuiltyConjuncts(to_highlight, badInit)
         
         if unsat:
-            guilty = self.findCoresUnsat(topo,badInit,conjuncts,numStates,numRegions)#returns LTL  
+            guilty = self.findCoresUnsat(topo,badInit,conjuncts,min(numRegions,numStates),numRegions)#returns LTL  
         else:
-            guilty = self.findCoresUnreal(topo,badInit,conjuncts,numStates,numRegions)#returns LTL   
+            guilty = self.findCoresUnreal(topo,badInit,conjuncts,min(numRegions,numStates),numRegions)#returns LTL   
         return guilty
         
         
@@ -364,7 +364,7 @@ class SpecCompiler(object):
         
     def findCoresUnreal(self,topo,badInit,conjuncts,maxDepth,numRegions):
         #get conjuncts to be minimized
-        return self.findCoresUnsat(topo,badInit,conjuncts,maxDepth,numRegions)
+        return []#self.findCoresUnsat(topo,badInit,conjuncts,maxDepth,numRegions)
         
         
     def _getPicosatCommand(self):
