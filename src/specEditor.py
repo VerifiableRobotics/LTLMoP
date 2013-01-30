@@ -40,6 +40,7 @@ class AnalysisResultsDialog(wx.Dialog):
         wx.Dialog.__init__(self, *args, **kwds)
         self.label_3 = wx.StaticText(self, wx.ID_ANY, "Analysis Output:")
         self.text_ctrl_summary = wx.richtext.RichTextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.button_refine = wx.Button(self, wx.ID_ANY, "Refine analysis")
         self.label_10 = wx.StaticText(self, wx.ID_ANY, "SLURP Traceback:")
         self.tree_ctrl_traceback = wx.TreeCtrl(self, wx.ID_ANY, style=wx.TR_HAS_BUTTONS | wx.TR_NO_LINES | wx.TR_FULL_ROW_HIGHLIGHT | wx.TR_HIDE_ROOT | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
         self.button_1 = wx.Button(self, wx.ID_CLOSE, "")
@@ -47,6 +48,7 @@ class AnalysisResultsDialog(wx.Dialog):
         self.__set_properties()
         self.__do_layout()
 
+        self.Bind(wx.EVT_BUTTON, self.onClickRefineAnalysis, self.button_refine)
         self.Bind(wx.EVT_BUTTON, self.onButtonClose, self.button_1)
         # end wxGlade
 
@@ -67,6 +69,7 @@ class AnalysisResultsDialog(wx.Dialog):
         sizer_16 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_11.Add(self.label_3, 0, wx.ALL, 5)
         sizer_11.Add(self.text_ctrl_summary, 1, wx.ALL | wx.EXPAND, 5)
+        sizer_11.Add(self.button_refine, 0, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_11.Add(self.label_10, 0, wx.ALL, 5)
         sizer_11.Add(self.tree_ctrl_traceback, 3, wx.ALL | wx.EXPAND, 5)
         sizer_16.Add((20, 20), 1, wx.EXPAND, 0)
@@ -145,6 +148,10 @@ class AnalysisResultsDialog(wx.Dialog):
                 
     def onButtonClose(self, event): # wxGlade: AnalysisResultsDialog.<event_handler>
         self.Hide()
+        event.Skip()
+
+    def onClickRefineAnalysis(self, event):  # wxGlade: AnalysisResultsDialog.<event_handler>
+        self.parent.refineAnalysis()
         event.Skip()
 
 # end of class AnalysisResultsDialog
@@ -1335,7 +1342,7 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         #TODO: check to see if we need to recompile
-        compiler, badInit = self.onMenuCompile(event, with_safety_aut=False)
+        self.compiler, self.badInit = self.onMenuCompile(event, with_safety_aut=False)
 
         # instantiate if necessary
         if self.analysisDialog is None:
@@ -1357,7 +1364,7 @@ class SpecEditorFrame(wx.Frame):
         redir = RedirectText(self, self.text_ctrl_log)
         sys.stdout = redir
         sys.stderr = redir
-        (realizable, unsat, nonTrivial, to_highlight, output) = compiler._analyze()
+        (realizable, self.unsat, nonTrivial, self.to_highlight, output) = self.compiler._analyze()
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
@@ -1380,12 +1387,12 @@ class SpecEditorFrame(wx.Frame):
         #highlight guilty sentences
         #special treatment for goals: we already know which one to highlight                
         if self.proj.compile_options["parser"] == "structured":
-            for h_item in to_highlight:
+            for h_item in self.to_highlight:
                 tb_key = h_item[0].title() + h_item[1].title()
                 if h_item[1] == "goals":
                     self.text_ctrl_spec.MarkerAdd(self.tracebackTree[tb_key][h_item[2]]-1, MARKER_LIVE)
         elif self.proj.compile_options["parser"] == "slurp":
-            for frag in to_highlight:
+            for frag in self.to_highlight:
                 self.analysisDialog.markFragments(*frag)
         else:
             print "Fragment marking not yet supported for this parser type"
@@ -1395,18 +1402,28 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Initial analysis complete.\n\n", "BLUE")
 
         if not realizable or not nonTrivial:
-            self.appendLog("Please wait; refining analysis...\n", "BLUE")
-        
-            guilty = compiler._coreFinding(to_highlight, unsat, badInit)
-        
-            self.highlightCores(guilty, compiler)
-
-            self.appendLog("Final analysis complete.\n", "BLUE")
+            self.appendLog("Further analysis is possible.\n", "BLUE")
+            self.analysisDialog.button_refine.Enable(True)
+            self.analysisDialog.button_refine.SetLabel("Refine analysis...")
+            self.analysisDialog.Layout()
         else:
             self.appendLog("No further analysis needed.\n", "BLUE")
+            self.analysisDialog.button_refine.Enable(False)
+            self.analysisDialog.button_refine.SetLabel("No further analysis available.")
+            self.analysisDialog.Layout()
                 
-                
-        
+    def refineAnalysis(self): 
+        self.appendLog("Please wait; refining analysis...\n", "BLUE")
+    
+        guilty = self.compiler._coreFinding(self.to_highlight, self.unsat, self.badInit)
+    
+        self.highlightCores(guilty, self.compiler)
+
+        self.appendLog("Final analysis complete.\n", "BLUE")
+
+        self.analysisDialog.button_refine.Enable(False)
+        self.analysisDialog.button_refine.SetLabel("No further analysis available.")
+        self.analysisDialog.Layout()
 
     def highlightCores(self, guilty, compiler):
         if self.proj.compile_options["parser"] == "structured":
