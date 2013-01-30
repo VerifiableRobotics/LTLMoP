@@ -620,7 +620,7 @@ class SpecCompiler(object):
         aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
         numStates = len(aut.states)
         
-#        regionList = [r.name for r in self.parser.proj.rfi.regions]
+        numRegions = len(self.parser.proj.rfi.regions)
 #        robotPropList = self.proj.enabled_actuators + self.proj.all_customs
 #        regList = map(lambda i: "bit"+str(i), range(0,int(numpy.ceil(numpy.log2(len(regionList))))))
         
@@ -631,15 +631,16 @@ class SpecCompiler(object):
         topo, conjuncts = self.getGuiltyConjuncts(to_highlight, badInit)
         
         if unsat:
-            guilty = self.findCoresUnsat(topo,badInit,conjuncts,numStates)#returns LTL  
+            guilty = self.findCoresUnsat(topo,badInit,conjuncts,min(numRegions,numStates),numRegions)#returns LTL  
         else:
-            guilty = self.findCoresUnreal(topo,badInit,conjuncts,numStates)#returns LTL   
+            guilty = self.findCoresUnreal(topo,badInit,conjuncts,min(numRegions,numStates),numRegions)#returns LTL   
         return guilty
         
         
         
     
-    def findCoresUnsat(self,topo, badInit, conjuncts,maxDepth):
+    def findCoresUnsat(self,topo, badInit, conjuncts,maxDepth,numRegions):
+        depth = numRegions
         cmd = self._getPicosatCommand() 
         numProps = len(self.propList)
         if conjuncts:
@@ -651,7 +652,7 @@ class SpecCompiler(object):
                           
                 #print "STARTING PICO MAP"
                 
-            guiltyList = map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)))
+            guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)))
                 #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
                 #print "ENDING PICO MAP"
                 
@@ -659,9 +660,11 @@ class SpecCompiler(object):
                 
             allGuilty = set([item for sublist in guiltyList for item in sublist])
                 
-            if any(allGuilty):
+            if all(guiltyList):
                 print "unsat core found without topo and init"
                 return allGuilty
+            else:
+                depth += len([g for g in allGuilty if g])
             
             #then try just topo and init and see if it is unsatisfiable. If so, return core.
             mapping, init, self.trans, goals = conjunctsToCNF([topo, badInit], [], self.propList)
@@ -707,9 +710,9 @@ class SpecCompiler(object):
                 
     
         
-    def findCoresUnreal(self,topo,badInit,conjuncts,maxDepth):
+    def findCoresUnreal(self,topo,badInit,conjuncts,maxDepth,numRegions):
         #get conjuncts to be minimized
-        return self.findCoresUnsat(topo,badInit,conjuncts,maxDepth)
+        return []#self.findCoresUnsat(topo,badInit,conjuncts,maxDepth,numRegions)
         
         
     def _getPicosatCommand(self):

@@ -1043,140 +1043,96 @@ public class GROneGame {
 				
 				
 				BDD input = Env.FALSE();
-				BDD oldInput = Env.FALSE(); //keeps track of change in input for !det case		
-				BDD primed_cur_succ_all = Env.FALSE();
+				BDD primed_cur_succ = Env.FALSE();
 					
 				if (det) {
-					primed_cur_succ_all = Env.prime(env.succ(p_st));
+					primed_cur_succ = Env.prime(env.succ(p_st));
 				} 
 				else {
-					primed_cur_succ_all = Env.TRUE();
+					primed_cur_succ = Env.TRUE();
 				}
-				for (BDDIterator envIter = primed_cur_succ_all.iterator(env.modulePrimeVars()); envIter.hasNext();) {
-					//oldInput = input;
-					input = Env.FALSE();
-					BDD primed_cur_succ = ((BDD) envIter.next());
-					
+				
+				input = Env.FALSE();
+				
+				while (input.isZero()) {
 					
 					//\rho_1 transitions in K\"onighofer et al
 					if (p_az == 0) {
-					//special caze when we are in Z_0. Either we force a safety violation, or we go to the relevant y2_mem[a][j], 
-					//and continue to violate the system liveness j						
-						//FIRST, WE CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
-						input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
-						//input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az])))) )));
-						//input = input.or(p_st.and((sys.yieldStates(env,Env.FALSE()))));//CONSIDERS ALL ENV. MOVES
+						//CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
+						input = (p_st.and(primed_cur_succ.and(sys.yieldStates(env,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
 						
-//						//OTHERWISE (subsumed by \rho_4):
-//						if (input.equals(oldInput)) { 
-//							//this includes staying in the same Z iterate -- disallow for unsat transitions
-//							
-//							if (p_c == 0) {
-//								//prevent the appropriate sys. goal while satisfying the env. goal
-//								input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c]).and(env.justiceAt(rank_i)).and(sys.justiceAt(p_j).not())))))));
-//								rank_i = (rank_i + 1)%envJustNum;									
-//								
-//							} else 
-//								input = input.or(p_st.and((primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1]).and(sys.justiceAt(p_j).not())))))));		
-//							
-//						}
-
 						
 					} else {							
-						input = input.or(p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az-1])))) )));
-						//System.out.println(p_st.and((primed_cur_succ.and((sys.yieldStates(env,sys.justiceAt(p_j).not().or(z2_mem[p_az-1])))))));	
-
+						input = (p_st.and((primed_cur_succ.and((sys.yieldStates(env,(z2_mem[p_az-1])))) )));
+						
 					}
 					
 					if (!input.isZero()) {	
 						//System.out.println("RHO 1");
-						//if (p_az!=0) {	
-							oldInput = oldInput.or(input);
 							new_i = rank_i;
 							new_j = -1;
-						//} else  {
-							//new_i = rank_i;
-							//new_j = p_j;
-						//}
-							
-						if (det) break;
+						
+							if (!enable_234) {
+								if (!input.equals(p_st.and(primed_cur_succ)) && !det) {
+									return false;
+								} 
+								continue;
+							}
+							break;
 					}					                
 					
-					
-					
-					
-				
-				
-					
-					//if we are only looking for transition unsatisfiability, we only allow transitions 
-					//into a lower iterate of Z, i.e. \rho_1
-					if (!enable_234) {
-						if (!input.equals(p_st.and(primed_cur_succ)) && !det) {
-							return false;
-						} 
-						continue;
-					}
-					
-					input = Env.FALSE();
 					
 					//\rho_2 transitions		                
 					if (rank_j == -1) {
 						//same thing as above -- Z_0 is special
-						if (p_az == 0) input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,Env.FALSE())).not()));
-						else input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,z2_mem[p_az-1])).not()));
-						//if (p_az == 0) input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))));
-						//else input = input.or(p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))));
+						if (p_az == 0) input = (p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,Env.FALSE())).not()));
+						else input = (p_st.and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))).and((sys.yieldStates(env,z2_mem[p_az-1])).not()));
 						if (!input.isZero()) {
-							oldInput = oldInput.or(input);
 							//System.out.println("RHO 2");									
 							new_i = rank_i;
 							new_j = p_j;
-							if (det) break;
+							break;
 						}	
 					}
 					
-					input = Env.FALSE();
 					
 					//\rho_3 transitions						
 					if (rank_j != -1 && rank_i != -1 && !(p_st.and(env.justiceAt(rank_i))).isZero()) {
 						if (p_az == 0) 
-							input = input.or((p_st.and(env.justiceAt(rank_i)).and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az]))))))
+							input = ((p_st.and(env.justiceAt(rank_i)).and(primed_cur_succ.and(sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az]))))))
 									.and((sys.yieldStates(env,(Env.FALSE()))).not())));		        				
 						else 
-							input = input.or((p_st.and(env.justiceAt(rank_i)).and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))))
+							input = ((p_st.and(env.justiceAt(rank_i)).and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and((y2_mem[p_j][p_az])))))))
 									.and((sys.yieldStates(env,z2_mem[p_az-1])).not())));
 					}
 					if (!input.isZero() && det) {	
-						oldInput = oldInput.or(input);
-						//System.out.println("RHO 3");	
 						new_i = (rank_i + 1) % env.justiceNum();
 						new_j = p_j;		                							
 						break;						
 					}
 					
-					input = Env.FALSE();
 					
 					//\rho_4 transitions: note that you have to lead the transition back to the unfulfiled j in Z_(p_az)
 					if (rank_i != -1 && rank_j != -1) {
 						if (p_az == 0) {
 							if (p_c == 0) {
-								input = input.or(((p_st.and((primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c]))))))))
+								input = (((p_st.and((primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c]))))))))
 												//this next clause is probably superfluous because of \rho_1
 												.and((sys.yieldStates(env,Env.FALSE())).not())));
 													
 							} else {
-								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
+								input = (((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
 												.and((sys.yieldStates(env,Env.FALSE())).not())));
 							}
 						} else {
 							if (p_c == 0) {
-								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c])))))))
+								input = (((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(env.justiceAt(rank_i)).and(x2_mem[p_j][rank_i][p_az][p_c])))))))
 												.and((sys.yieldStates(env,z2_mem[p_az-1])).not())));
 								
 																				
 							
 							} else {
-								input = input.or(((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
+								input = (((p_st.and(primed_cur_succ.and((sys.yieldStates(env,(Env.unprime(primed_cur_succ).and(x2_mem[p_j][rank_i][p_az][p_c-1])))))))
 												.and((sys.yieldStates(env,z2_mem[p_az-1])).not())));
 													
 							}
@@ -1184,24 +1140,24 @@ public class GROneGame {
 							
 						if (!input.isZero()) {
 							//System.out.println("RHO 4");	
-							oldInput = oldInput.or(input);							
 							new_i = rank_i;
 							new_j = p_j;
-							if (det) break;	
 						}
 					}
-					if (oldInput.isZero() && !det) return false; 	
+				
+					
+					if (input.isZero() && !det) return false; 	
 				}
 				
 				
-				assert (!(oldInput.isZero() && det)) : p_st + "No successor was found";
-				noDeadlock = noDeadlock & addState(new_state, oldInput, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
+				assert (!(input.isZero() && det)) : p_st + "No successor was found";
+				noDeadlock = noDeadlock & addState(new_state, input, new_i, new_j, aut, st_stack, i_stack, j_stack, det);
 				result = result & noDeadlock;
 				
 				
-                //when detecting system unsatisfiability, all env actions in primed_cur_succ_all (which is actualy Env.TRUE() in the nondet case) should be valid
+                //when detecting system unsatisfiability, all env actions in primed_cur_succ (which is actualy Env.TRUE() in the nondet case) should be valid
 				//result = result & (input.equals(p_st.and(env.trans())));
-				result = result & (oldInput.equals(p_st.and(primed_cur_succ_all)));
+				result = result & (input.equals(p_st.and(primed_cur_succ)));
                 if (!result && !det) break;
 				//result is true if for every state, all environment actions take us into a lower iterate of Z
 				//this means the environment can do anything to prevent the system from achieving some goal.
