@@ -370,14 +370,15 @@ class MopsyFrame(wx.Frame):
         # TODO: actually cache trans CNF
         # TODO: support SLURP parser
 
-        ltl_current = self.stateToLTL(self.env_aut.current_state)
+        ltl_current = self.stateToLTL(self.env_aut.current_state).strip()
         next_state = copy.deepcopy(self.env_aut.current_state.transitions[0])
         next_state.inputs.update(self.actuatorStates)
         next_state.inputs.update(self.regionToBitEncoding(self.dest_region))
-        ltl_next = self.stateToLTL(next_state, use_next=True)
-        ltl_all = [ltl_current, ltl_next, self.spec['Topo'].replace('\n','').replace('\t','')] + self.spec['SysTrans'].split('\n')
-        ltl_all = [s.strip() for s in ltl_all] # make canonical (i.e. terminate in &, no whitespace on either side)
-        guilty_ltl = self.compiler.findCoresUnsat(ltl_all, 1)
+        ltl_next = self.stateToLTL(next_state, use_next=True).strip()
+        ltl_topo = self.spec['Topo'].replace('\n','').replace('\t','').strip()
+        ltl_trans = [s.strip() for s in self.spec['SysTrans'].split('\n')]
+        # note: strip()s make canonical (i.e. terminate in &, no whitespace on either side)
+        guilty_ltl = self.compiler.findCoresUnsat(ltl_topo, ltl_current, [ltl_next] + ltl_trans, 1)
         print "Guilty LTL: ", guilty_ltl
 
         guilty_spec = []
