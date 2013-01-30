@@ -8,7 +8,9 @@ import threading
 
 
 
-def conjunctsToCNF(conjuncts, propList):
+def conjunctsToCNF(topoInit, conjunctsMinusTopo, propList):
+    
+    conjuncts = topoInit + conjunctsMinusTopo         
     
     propListNext = map(lambda s: 'next_'+s, propList)
     
@@ -20,7 +22,8 @@ def conjunctsToCNF(conjuncts, propList):
     transClauses = []
     goalClauses = []
     n = 0
-    p = len(props)+len(propsNext)       
+    p = len(props)+len(propsNext)  
+    
     
     pool = Pool()
     print "STARTING CNF MAP"
@@ -276,6 +279,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
             print "Unsatisfiable core found at depth ", depth
         elif any(["SATISFIABLE" in s for s in output]):
             print "Satisfiable at depth ", depth
+            return []
         else:
             print "ERROR", output
             

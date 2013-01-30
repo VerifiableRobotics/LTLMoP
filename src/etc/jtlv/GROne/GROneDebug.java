@@ -1,4 +1,5 @@
 import net.sf.javabdd.BDD;
+import java.io.*;
 import net.sf.javabdd.BDDVarSet;
 import net.sf.javabdd.BDD.BDDIterator;
 import edu.wis.jtlv.env.Env;
@@ -20,7 +21,8 @@ import edu.wis.jtlv.lib.mc.tl.LTLModelCheckAlg;
 // Spec consists of environment and system modules (env, sys)
 
 public class GROneDebug {
-
+	
+	
 	/**
 	 * @param args
 	 * @throws Exception
@@ -55,13 +57,16 @@ public class GROneDebug {
 		SMVModule sys = (SMVModule) Env.getModule("main.s");
 		Spec[] sys_conjuncts = GROneParser.parseConjuncts(spcs[1]);
 		GROneParser.addReactiveBehavior(sys, sys_conjuncts);
-		//GROneParser.addPureReactiveBehavior(sys, sys_conjuncts);
+		//GROneParser.addPureReactiveBehavior(sys, sys_conjuncts);		
 		
-		//Prints the results of analyzing the specification
+		
+		//Prints the results of analyzing the specification. 
 		System.out.println(analyze(env, sys));		
 	}
 	
 	public static String analyze(SMVModule env, SMVModule sys) {
+
+		  
 		int explainSys=0, explainEnv = 0; //keep track of explanations to avoid redundancy
 		
 		BDD sys_init = sys.initial();
@@ -117,8 +122,21 @@ public class GROneDebug {
 		  }	catch (Exception e){//Catch exception if any
 					System.err.println("Error: " + e.getMessage());
 		  }
+
+		 BDD counter_example = g.envWinningStates().and(all_init);
 		 
-		  BDD counter_example = g.envWinningStates().and(all_init);
+		 boolean falsifyEnv = false;
+		  
+		 if (counter_example.isZero()) {
+			 //falsifyEnv tells us whether an environment liveness was falsified in the system's winning strategy		
+		    PrintStream orig_out = System.out;	
+		 	PrintStream ignore = new PrintStream(new NullOutputStream());
+		 	System.setOut(ignore);
+			falsifyEnv = g.printWinningStrategy(all_init);
+			System.setOut(orig_out); // restore STDOUT
+		 }
+
+		  
 		  try { 
 			  if (explainSys == 0 && !counter_example.isZero()) {
 				//checking for multi-step unsatisfiability between sys transitions/safety and initial condition					 
@@ -127,7 +145,7 @@ public class GROneDebug {
 					 debugInfo += "System initial condition inconsistent with transition relation." + "\n";
 					 explainSys = 1;
 				 }
-			  } else if (explainEnv == 0 && counter_example.isZero()) {		  
+			  } else if (explainEnv == 0 && counter_example.isZero()) {		 
 				//checking for multi-step unsatisfiability between env transitions/safety and initial condition
 				//since the first argument is 1, we only allow system transitions of type \rho_1
 				//so we are looking for sequences of moves that take us to deadlock only
@@ -153,7 +171,7 @@ public class GROneDebug {
 		  
 		// check for unsatisfiability or unrealizability of the justice/liveness (vs. safety) conditions
 		try{
-			    debugInfo += justiceChecks(env,sys,explainSys,explainEnv);
+			    debugInfo += justiceChecks(env,sys,explainSys,explainEnv, falsifyEnv);
 		}catch (Exception e){//Catch exception if any
 			      System.err.println("Error: " + e.getMessage());
 		}
@@ -169,7 +187,7 @@ public class GROneDebug {
 	    // You may or may not have to override other methods
 	}
 	
-	public static String justiceChecks(SMVModule env, SMVModule sys, int explainSys, int explainEnv) throws GameException  {
+	public static String justiceChecks(SMVModule env, SMVModule sys, int explainSys, int explainEnv, boolean falsifyEnv) throws GameException  {
 		
 		BDD all_init = sys.initial().and( env.initial());
 		BDD counter_exmple;
@@ -187,7 +205,6 @@ public class GROneDebug {
 		if (!(explainEnv == 1 || env.justiceNum()==1 && env.justiceAt(0).equals(Env.TRUE()))) {
 			
 			boolean flagRealPrev = false;
-		
 			
 			for (int i = env.justiceNum(); i >=1; i--){		
 				//checking for unrealizable environment justice 				
@@ -199,10 +216,14 @@ public class GROneDebug {
 					debugInfo += "Environment highlighted goal(s) inconsistent with transition relation: " + (i-1) + "\n";
 					 explainEnv = 1;
 				}
+				
 				 prev = counter_exmple;
 				 g = new GROneGame(env,sys, sys.justiceNum(), i);
 				 counter_exmple = g.envWinningStates().and(all_init);
-				 if (explainEnv ==0 && counter_exmple.isZero()) {
+				 
+				
+				 
+				 if (explainEnv ==0 && counter_exmple.isZero() & falsifyEnv) {
 					 if (g.calculate_strategy(3, all_init.and(g.sysWinningStates()), false)) { 
 						 //checking for multi-step unsatisfiability between env transitions and goals
 						 //since the first argument is 3, we allow all three kinds of system transitions
@@ -211,14 +232,14 @@ public class GROneDebug {
 						 explainEnv = 1;
 						 i = 0;
 					 //} else if (counter_exmple.isZero() && !env.justiceAt(i-1).equals(Env.TRUE())) {// && (!prev.isZero())) {
-					 } else if (i < env.justiceNum() & !flagRealPrev) {
+					 } else if (i <= env.justiceNum() & !flagRealPrev) {
 						 //if we get here, the env is unrealizable because of the current goal
 						 debugInfo += "Environment highlighted goal(s) unrealizable: " + (i-1) + "\n";	
 						 explainEnv = 1;
-						 i = 0;
+						 i = 0;					
 					 }
-					 else flagRealPrev = true;	//flags that the previous set of livenesses was also realizable				 
-				 } else if (explainEnv ==0 && !counter_exmple.isZero() & flagRealPrev) {
+					 flagRealPrev = true;	//flags that the previous set of livenesses was also realizable				 
+				 } else if ((explainEnv ==0 && !counter_exmple.isZero() & flagRealPrev)) {					 
 					 //if we get here, the env is unrealizable because of the previous goal (this is important mainly for the case where the last goal is unrealiable)
 					 debugInfo += "Environment highlighted goal(s) unrealizable: " + (i) + "\n";	
 					 explainEnv = 1;

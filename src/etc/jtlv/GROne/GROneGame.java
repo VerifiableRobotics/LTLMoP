@@ -493,8 +493,8 @@ public class GROneGame {
 	 * The second argument changes the priority of searching for different types of moves in the game
 	 * </p>
 	 */
-	public void printWinningStrategy(BDD ini) {
-		calculate_strategy(3, ini);
+	public boolean printWinningStrategy(BDD ini) {
+		return calculate_strategy(3, ini);
 		// return calculate_strategy(3);
 		// return calculate_strategy(7);
 		// return calculate_strategy(11);
@@ -571,6 +571,10 @@ public class GROneGame {
         
 
         BDDIterator ini_iterator = ini.iterator(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()));
+        
+        boolean falsifyEnv = true;
+
+        
 		while (ini_iterator.hasNext()) {
             BDD this_ini = (BDD) ini_iterator.next();
 
@@ -594,7 +598,9 @@ public class GROneGame {
             st_stack.push(this_ini);
             j_stack.push(new Integer(0)); // TODO: is there a better default j?
             //this_ini.printSet();
-
+            
+            //keep track of whether the winning strategy ever falsifies the environment
+            
             // iterating over the stacks.
             while (!st_stack.isEmpty()) {
     			// making a new entry.
@@ -697,6 +703,7 @@ public class GROneGame {
                                 BDD opt = next_op.and(y_mem[next_p_j][look_r]);
                                 if (!opt.isZero()) {
                                     candidate = opt;
+                                    falsifyEnv = false;
                                     //System.out.println("1");
                                     jcand = next_p_j;
                                 }
@@ -835,13 +842,16 @@ public class GROneGame {
 			System.out.print(res);
 			// return null; // res;
 			System.out.print("\n\n");
+			return falsifyEnv;
+		} else {
+			if (strategy_kind == 3) return result; else return false;
 		}
-		if (strategy_kind == 3) return result; else return false;
+		
 	}
 	
 	//Default deterministic version for backwards compatibility
-	public void calculate_strategy(int kind, BDD ini) {
-		calculate_strategy(kind, ini, true);
+	public boolean calculate_strategy(int kind, BDD ini) {
+		return calculate_strategy(kind, ini, true);
 	}
 	
 	
@@ -1230,7 +1240,7 @@ public class GROneGame {
 	
 	//method for adding stated to the aut and state stack, based on whether we want a deterministic or nondet automaton
  	private boolean addState(RawCState new_state, BDD input, int new_i, int new_j, Stack<RawCState> aut, Stack<BDD> st_stack, Stack<Integer> i_stack, Stack<Integer> j_stack, boolean det) {
-    	   boolean noDeadlock = true;
+    	   boolean noDeadlock = false; //mark state as deadlocked until proven otherwise
     	   for (BDDIterator inputIter = input.iterator(env
                     .modulePrimeVars()); inputIter.hasNext();) {
 						
@@ -1249,6 +1259,7 @@ public class GROneGame {
 
                 int idx = -1;
                
+                
                 if (all_sys_succs.equals(Env.FALSE())) {
 					RawCState gsucc = new RawCState(aut.size(), Env.unprime(inputOne), new_j, new_i, inputOne);
 					idx = aut.indexOf(gsucc); // the equals doesn't consider
@@ -1257,8 +1268,7 @@ public class GROneGame {
                         aut.add(gsucc);
                         idx = aut.indexOf(gsucc);
                     }
-                    new_state.add_succ(aut.elementAt(idx));
-                    noDeadlock = false;
+                    new_state.add_succ(aut.elementAt(idx));                   
 					
                 	continue;                	
                 }               	
@@ -1278,9 +1288,11 @@ public class GROneGame {
                         .hasNext();) {
                     BDD sys_succ = iter_succ.next().and(Env.unprime(inputOne));
 					
-					//Make sure this is a safe successor state
+                    //Make sure this is a safe successor state
 					if (!sys_succ.and(sys.trans()).isZero()) {
-						
+						//the state is not deadlocked
+						noDeadlock = true;
+	           		    
 						RawCState gsucc = new RawCState(aut.size(), sys_succ, new_j, new_i, inputOne);
 						idx = aut.indexOf(gsucc); // the equals doesn't consider
 												  // the id number.
