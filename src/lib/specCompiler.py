@@ -626,6 +626,7 @@ class SpecCompiler(object):
             allGuilty = set([item for sublist in guiltyList for item in sublist])
                 
             if any(allGuilty):
+                print "unsat core found without topo and init"
                 return allGuilty
             
             #then try just topo and init and see if it is unsatisfiable. If so, return core.
@@ -639,6 +640,7 @@ class SpecCompiler(object):
                 
                 
             if guilty:
+                print "unsat core found with just topo and init"
                 return guilty
             
             #if the problem is in conjunction with the topo but not just topo, keep increasing the depth until something more than just topo is returned
@@ -663,6 +665,7 @@ class SpecCompiler(object):
                 #guilty = cnfToConjuncts(allIndices, mapping)
             
                         
+            print "unsat core found with all parts"
             return guilty
     
           
