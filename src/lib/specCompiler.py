@@ -16,7 +16,7 @@ import project
 import regions
 import parseLP
 from createJTLVinput import createLTLfile, createSMVfile, createTopologyFragment
-from parseEnglishToLTL import bitEncoding, replaceRegionName
+from parseEnglishToLTL import bitEncoding, replaceRegionName, createStayFormula
 import fsa
 from copy import deepcopy
 from coreUtils import *
@@ -162,18 +162,18 @@ class SpecCompiler(object):
             # Filter out regions it shouldn't know about
             filtered_regions = [region.name for region in self.proj.rfi.regions 
                                 if not (region.isObstacle or region.name.lower() == "boundary")]
-            LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, responses, traceback = \
+            LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, results, responses, traceback = \
                 _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList, region_tags)
 
             oldspec_env = LTLspec_env
             oldspec_sys = LTLspec_sys
  
-            for ln, response in enumerate(responses):
-                if not response:
+            for ln, result in enumerate(results):
+                if not result:
                     print "WARNING: Could not parse the sentence in line {0}".format(ln)
 
             # Abort compilation if there were any errors
-            if not all(responses):
+            if not all(results):
                 return None, None, responses
         
             # Add in the sensors so they go into the SMV and spec files
@@ -295,6 +295,43 @@ class SpecCompiler(object):
         else:
             adjData = self.proj.rfi.transitions
 
+        # Substitute any macros that the parsers passed us
+        LTLspec_env = self.substituteMacros(LTLspec_env)
+        LTLspec_sys = self.substituteMacros(LTLspec_sys)
+
+        # Store some data needed for later analysis
+        self.spec = self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys)
+        self.spec['Topo'] = createTopologyFragment(adjData)
+
+        createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
+        
+        if self.proj.compile_options["parser"] == "slurp":
+            self.reversemapping = {self.postprocessLTL(line,sensorList,robotPropList).strip():line.strip() for line in oldspec_env + oldspec_sys}
+            self.reversemapping[self.spec['Topo'].replace("\n","").replace("\t","").lstrip().rstrip("\n\t &")] = "TOPOLOGY"
+
+        #for k,v in self.reversemapping.iteritems():
+        #    print "{!r}:{!r}".format(k,v)        
+
+        return self.spec, traceback, response
+
+    def substituteMacros(self, text):
+        """
+        Replace any macros passed to us by the parser.  In general, this is only necessary in cases
+        where bitX propositions are needed, since the parser is not supposed to know about them.
+        """
+        numRegions = len(self.parser.proj.rfi.regions)
+        numBits = int(math.ceil(math.log(numRegions, 2)))
+
+        # creating the region bit encoding
+        bitEncode = bitEncoding(numRegions, numBits)
+        currBitEnc = bitEncode['current']
+        nextBitEnc = bitEncode['next']
+
+        if self.proj.compile_options["decompose"]:
+            adjData = self.parser.proj.rfi.transitions
+        else:
+            adjData = self.proj.rfi.transitions
+
         ##############################################################################
         ######### BEGIN HACK: generate env topology info for follow scenario #########
         ##############################################################################
@@ -333,7 +370,7 @@ class SpecCompiler(object):
         initreg_formula = initreg_formula + '\t\t\t) \n'
         initreg_formula = initreg_formula.replace("s.bit", "e.sbit")
 
-        if "FOLLOW_SENSOR_CONSTRAINTS" in LTLspec_env:
+        if "FOLLOW_SENSOR_CONSTRAINTS" in text:
             sensorBits = ["sbit{0}".format(n) for n in range(0,numBits)]
             for p in sensorBits:
                 if p not in self.proj.enabled_sensors:
@@ -341,26 +378,23 @@ class SpecCompiler(object):
                 if p not in self.proj.all_sensors:   
                     self.proj.all_sensors.append(p)
 
-        LTLspec_env = LTLspec_env.replace("FOLLOW_SENSOR_CONSTRAINTS", env_topology + initreg_formula)
+            text = text.replace("FOLLOW_SENSOR_CONSTRAINTS", env_topology + initreg_formula)
 
         ##############################################################################
         #################################### END HACK ################################
         ##############################################################################
 
-        # Store some data needed for later analysis
-        self.spec = self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys)
-        self.spec['Topo'] = createTopologyFragment(adjData)
+        # Stay-there macros.  This can be done using just region names, but is much more concise
+        # using bit encodings (and thus much faster to encode as CNF)
 
-        createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
-        
-        if self.proj.compile_options["parser"] == "slurp":
-            self.reversemapping = {self.postprocessLTL(line,sensorList,robotPropList).strip():line.strip() for line in oldspec_env + oldspec_sys}
-            self.reversemapping[self.spec['Topo'].replace("\n","").replace("\t","").lstrip().rstrip("\n\t &")] = "TOPOLOGY"
+        if "STAY_THERE" in text:
+            text = text.replace("STAY_THERE", createStayFormula(numBits))
 
-        #for k,v in self.reversemapping.iteritems():
-        #    print "{!r}:{!r}".format(k,v)        
+        if "TARGET_IS_STATIONARY" in text:
+            text = text.replace("TARGET_IS_STATIONARY", createStayFormula(numBits).replace("s.","e.s"))
 
-        return self.spec, traceback, response
+        return text
+
     
     def postprocessLTL(self, text, sensorList, robotPropList):
         # TODO: make everything use this
