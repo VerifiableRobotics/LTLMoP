@@ -275,6 +275,16 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
                     break
             depth = depth +1
             """
+        if any(["WARNING: core extraction disabled" in s for s in output]):
+            # never again
+            print "************************************************"
+            print "*** ERROR: picomus needs to be compiled with ***"
+            print "*** trace support, or things will misbehave. ***"
+            print "***                                          ***"
+            print "*** Recompile with ./configure --trace       ***"
+            print "************************************************"
+            return []
+
         if any(["UNSATISFIABLE" in s for s in output]):
             print "Unsatisfiable core found at depth ", depth
         elif any(["SATISFIABLE" in s for s in output]):
