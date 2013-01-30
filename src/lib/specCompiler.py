@@ -643,67 +643,67 @@ class SpecCompiler(object):
         depth = numRegions
         cmd = self._getPicosatCommand() 
         numProps = len(self.propList)
-        if conjuncts:
-            #first try without topo and init, see if it is satisfiable
-            mapping, init, self.trans, goals = conjunctsToCNF([badInit], conjuncts, self.propList)
-                
-               
-            pool = Pool()
-                          
-                #print "STARTING PICO MAP"
-                
-            guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(1,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)))
-                #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-                #print "ENDING PICO MAP"
-                
-            pool.terminate()
-                
-            allGuilty = set([item for sublist in guiltyList for item in sublist])
-                
-            if all(guiltyList):
-                print "unsat core found without topo and init"
-                return allGuilty
-            else:
-                depth += len([g for g in allGuilty if g])
+        if not conjuncts and badInit == "":
+            return []
+        #first try without topo and init, see if it is satisfiable
+        mapping, init, self.trans, goals = conjunctsToCNF([badInit], conjuncts, self.propList)
             
-            #then try just topo and init and see if it is unsatisfiable. If so, return core.
-            mapping, init, self.trans, goals = conjunctsToCNF([topo, badInit], [], self.propList)
            
-                
-            guilty = findGuiltyClauses(cmd,maxDepth,numProps,init,self.trans,goals,mapping,[topo, badInit])
-                    #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-                #print "ENDING PICO MAP"
-                
-                
-                
-            if guilty:
-                print "unsat core found with just topo and init"
-                return guilty
+        pool = Pool()
+                      
+            #print "STARTING PICO MAP"
             
-            #if the problem is in conjunction with the topo but not just topo, keep increasing the depth until something more than just topo is returned
-                        
-            justTopo = True
-            depth = 1
+        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)))
+            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+            #print "ENDING PICO MAP"
             
-            while justTopo:
-                mapping, init, self.trans, goals = conjunctsToCNF([topo,badInit], conjuncts, self.propList)
+        pool.terminate()
             
-                guilty = findGuiltyClauses(cmd,depth,numProps,init,self.trans,goals,mapping,[topo, badInit]+conjuncts)
+        allGuilty = set([item for sublist in guiltyList for item in sublist])
+            
+        if all(guiltyList):
+            print "unsat core found without topo and init"
+            return allGuilty
+        else:
+            depth += len([g for g in allGuilty if g])
+        
+        #then try just topo and init and see if it is unsatisfiable. If so, return core.
+        mapping, init, self.trans, goals = conjunctsToCNF([topo, badInit], [], self.propList)
+       
+            
+        guilty = findGuiltyClauses(cmd,maxDepth,numProps,init,self.trans,goals,mapping,[topo, badInit])
                 #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-                #print "ENDING PICO MAP"
-                
-                
-                guiltyMinusGoal = [g for g in guilty if '<>' not in g]
-                if not set([topo, badInit]).issuperset(set(guiltyMinusGoal)):
-                    justTopo = False
-                else:
-                    depth+=1
-                #get contributing conjuncts from CNF indices            
-                #guilty = cnfToConjuncts(allIndices, mapping)
+            #print "ENDING PICO MAP"
             
-                        
-            print "unsat core found with all parts"
+            
+            
+        if guilty:
+            print "unsat core found with just topo and init"
             return guilty
+        
+        #if the problem is in conjunction with the topo but not just topo, keep increasing the depth until something more than just topo is returned
+                    
+        justTopo = True
+        depth = 0
+        
+        while justTopo:
+            mapping, init, self.trans, goals = conjunctsToCNF([topo,badInit], conjuncts, self.propList)
+        
+            guilty = findGuiltyClauses(cmd,depth,numProps,init,self.trans,goals,mapping,[topo, badInit]+conjuncts)
+            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+            #print "ENDING PICO MAP"
+            
+            
+            guiltyMinusGoal = [g for g in guilty if '<>' not in g]
+            if not set([topo, badInit]).issuperset(set(guiltyMinusGoal)):
+                justTopo = False
+            else:
+                depth+=1
+            #get contributing conjuncts from CNF indices            
+            #guilty = cnfToConjuncts(allIndices, mapping)
+        
+        print "unsat core found with all parts"                    
+        return guilty
     
           
         
@@ -740,7 +740,7 @@ class SpecCompiler(object):
         topo=self.spec['Topo'].replace('\n','')
         topo = topo.replace('\t','')
         
-        if badInit:
+        if badInit != "":
             conjuncts = [badInit]
         else:
             conjuncts = []

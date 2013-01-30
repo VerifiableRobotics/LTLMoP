@@ -1097,7 +1097,7 @@ class SpecEditorFrame(wx.Frame):
 
         print "\n"
 
-        badInit = None
+        badInit = ""
         for line in output.split('\n'):
             if "For example" in line:
                 badInit = line.split('\t')[-1].strip()
