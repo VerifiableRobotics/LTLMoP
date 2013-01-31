@@ -4,7 +4,6 @@
 *.cfg
 *.ltl
 *.smv
-*.cfg
 *.world
 *_decomposed.regions
 *~
@@ -19,3 +18,7 @@ sysBugs.txt
 *.rat
 *.class
 .DS_Store
+*.cnf
+*.sat
+src/lib/cores/picosat*
+.settings
