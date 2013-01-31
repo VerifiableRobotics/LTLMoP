@@ -301,14 +301,14 @@ class SpecCompiler(object):
         if not conjuncts and badInit == "":
             return []
         #first try without topo and init, see if it is satisfiable
-        mapping, init, self.trans, goals = conjunctsToCNF([badInit], conjuncts, self.propList)
+        mapping, cnfMapping, init, self.trans, goals = conjunctsToCNF([badInit], conjuncts, self.propList)
             
            
         pool = Pool()
                       
             #print "STARTING PICO MAP"
             
-        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(conjuncts)))
+        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(cnfMapping), itertools.repeat(conjuncts)))
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
@@ -322,10 +322,10 @@ class SpecCompiler(object):
             depth += len([g for g in allGuilty if g])
         
         #then try just topo and init and see if it is unsatisfiable. If so, return core.
-        mapping, init, self.trans, goals = conjunctsToCNF([topo, badInit], [], self.propList)
+        mapping,  cnfMapping, init, self.trans, goals = conjunctsToCNF([topo, badInit], [], self.propList)
        
                     
-        guilty = findGuiltyClauses(cmd,maxDepth,numProps,init,self.trans,goals,mapping,[topo, badInit])
+        guilty = findGuiltyClauses(cmd,maxDepth,numProps,init,self.trans,goals,mapping,cnfMapping,[topo, badInit])
         
                 #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
@@ -336,13 +336,13 @@ class SpecCompiler(object):
             return guilty
         
         #if the problem is in conjunction with the topo but not just topo, keep increasing the depth until something more than just topo is returned
-        mapping, init, self.trans, goals = conjunctsToCNF([topo,badInit], conjuncts, self.propList)
+        mapping,  cnfMapping, init, self.trans, goals = conjunctsToCNF([topo,badInit], conjuncts, self.propList)
         
         pool = Pool()
                       
             #print "STARTING PICO MAP"
             
-        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat([topo, badInit]+conjuncts)))
+        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping),  itertools.repeat(cnfMapping), itertools.repeat([topo, badInit]+conjuncts)))
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
@@ -357,7 +357,7 @@ class SpecCompiler(object):
         
         while justTopo:
             
-            guilty = findGuiltyClauses(cmd,depth,numProps,init,self.trans,goals,mapping,[topo, badInit]+conjuncts)
+            guilty = findGuiltyClauses(cmd,depth,numProps,init,self.trans,goals,mapping,cnfMapping,[topo, badInit]+conjuncts)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
