@@ -31,9 +31,11 @@ def conjunctsToCNF(topoInit, conjunctsMinusTopo, propList):
     #allCnfs = map(lineToCnf, conjuncts)   
     print "ENDING CNF MAP"
     pool.terminate()
-        
+    
+    cnfMapping = {line:cnf.split("&") for cnf, line in zip(allCnfs,conjuncts) if cnf}  
+      
     for cnf, lineOld in zip(allCnfs,conjuncts):
-      if cnf is not None: 
+      if cnf: 
         allClauses = cnf.split("&");
         #associate original conjuncts with CNF clauses
         for clause in allClauses:    
@@ -140,7 +142,7 @@ def conjunctsToCNF(topoInit, conjunctsMinusTopo, propList):
             mapping[line] = range(n+1,n+len(goalClauses)+1)   
             """
                         
-    return mapping, cnfClauses, transClauses, goalClauses
+    return mapping, cnfMapping, cnfClauses, transClauses, goalClauses
     
     #for i in range(0,depth):
     #        for k in propsNext.keys():
@@ -149,7 +151,7 @@ def conjunctsToCNF(topoInit, conjunctsMinusTopo, propList):
     #                print str(props[k]+len(props)*(i)) + " " + k
 
 
-def cnfToConjuncts(cnfIndices, mapping):
+def cnfToConjuncts(cnfIndices, mapping, cnfMapping):
     conjuncts = []
     i = 0
     for k in mapping.keys():
@@ -157,7 +159,12 @@ def cnfToConjuncts(cnfIndices, mapping):
         if not set(mapping[k]).isdisjoint(cnfIndices):
             conjuncts.append(k)     
             #print k , (set(mapping[k]).intersection(cnfIndices))
-    return conjuncts
+    return cleanConjuncts(conjuncts, cnfMapping)
+
+def cleanConjuncts(conjuncts, cnfMapping):
+        cleaned = [k for k in conjuncts if not set([c for x in conjuncts for c in cnfMapping[x] if x!=k]).issuperset(cnfMapping[k])]
+        return cleaned
+        
 
 
 def lineToCnf(line):
@@ -196,7 +203,7 @@ def findGuiltyClausesWrapper(x):
 
 
         
-def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjuncts): 
+def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping,  cnfMapping, conjuncts): 
         mapping = deepcopy(mapping)
         #precompute p and n
         #p =  (depth+1)*(numProps*2)
@@ -317,7 +324,7 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping, conjunc
         cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output)))
         
         #get corresponding LTL conjuncts
-        guilty = cnfToConjuncts(cnfIndices, mapping)
+        guilty = cnfToConjuncts(cnfIndices, mapping, cnfMapping)
             
         return guilty
         
