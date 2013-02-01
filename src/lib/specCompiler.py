@@ -405,6 +405,8 @@ class SpecCompiler(object):
         if self.proj.compile_options["use_region_bit_encoding"]:
             text = replaceRegionName(text, bitEncode, regionList)
 
+        text = self.substituteMacros(text)
+
         return text
     
     def splitSpecIntoComponents(self, env, sys):
