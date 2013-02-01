@@ -168,9 +168,30 @@ class MopsyFrame(wx.Frame):
         # to create a sort of dual of the usual automaton
         self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.enabled_actuators + self.proj.all_customs + region_props, self.proj.enabled_sensors, [])
 
-        # Force initial state to state #0 in counter-strategy
         self.env_aut.current_region = None
-        self.env_aut.current_state = self.env_aut.states[0]
+
+        # Find first state in counterstrategy that seeks to falsify the given liveness
+        if len(sys.argv) > 2:
+            desired_jx = int(sys.argv[2])
+            
+            for s in self.env_aut.states:
+                rank_str = s.transitions[0].rank
+                m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
+                if m is None:
+                    print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
+                    return
+                jx = int(m.group(1))
+
+                if jx == desired_jx:
+                    self.env_aut.current_state = s
+                    break
+
+            if self.env_aut.current_state is None:
+                print "ERROR: could not find state in counterstrategy to falsify sys goal #{}".format(desired_jx)
+                return
+        else:
+            self.env_aut.current_state = self.env_aut.states[0]
+
         # Internal aut housekeeping (ripped from chooseInitialState; hacky)
         self.env_aut.last_next_states = []
         self.env_aut.next_state = None
@@ -626,7 +647,7 @@ class MopsyFrame(wx.Frame):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print "Usage: %s [spec_file]" % sys.argv[0]
+        print "Usage: %s [spec_file] ([desired_jx])" % sys.argv[0]
         sys.exit(-1)
 
     app = wx.PySimpleApp(0)

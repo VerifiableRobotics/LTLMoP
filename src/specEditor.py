@@ -509,6 +509,7 @@ class SpecEditorFrame(wx.Frame):
         self.mapDialog = None
         self.analysisDialog = None
         self.tracebackTree = None
+        self.to_highlight = None
         self.response = None
         self.proj = project.Project()
         self.decomposedRFI = None
@@ -1464,7 +1465,25 @@ class SpecEditorFrame(wx.Frame):
         # Opens the counterstrategy visualization interfacs ("Mopsy")
 
         # TODO: check for failed compilation before allowing this
-        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec"])
+        if self.to_highlight is None:
+            wx.MessageBox("Please run analysis before trying to run Mopsy.", "Analysis required",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+        desired_jx = None
+        for frag in self.to_highlight:
+            if frag[0] == 'sys' and frag[1] == 'goals':
+                desired_jx = frag[2]
+                break
+
+        if desired_jx is None: 
+            wx.MessageBox("No goal was found to be involved in unrealizability.\nThere is no need to run Mopsy.", "Mopsy irrelevant",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+        print "Calling mopsy with desired_jx={}...".format(desired_jx)
+
+        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec", str(desired_jx)])
 
     def onPropAdd(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
