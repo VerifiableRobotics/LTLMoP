@@ -50,5 +50,5 @@ Spec: # Specification in structured English
 # An example of unrealizability, and powerful language constructs.
 
 Follow me.
-If you hear an alarm, don't go into the kitchen.
+Don't go into the kitchen.
 
