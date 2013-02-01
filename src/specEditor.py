@@ -1442,7 +1442,13 @@ class SpecEditorFrame(wx.Frame):
                 try:
                     guilty_clean.append(compiler.reversemapping[canonical_ltl_frag])
                 except KeyError:
-                    print "WARNING: LTL fragment {!r} not found in spec->LTL mapping".format(canonical_ltl_frag)
+                    if "[]" not in canonical_ltl_frag:
+                        # Special case: we were given an initial condition that wasn't explicitly created by the user
+                        # This means it came from the GROne code, so let's just highlight all initial conditions
+                        # TODO: we ought to be able to narrow this down more
+                        guilty_clean.extend([v for k,v in compiler.reversemapping.iteritems() if "[]" not in v])
+                    else:
+                        print "WARNING: LTL fragment {!r} not found in spec->LTL mapping".format(canonical_ltl_frag)
                     
             print guilty_clean
             # Add SLURP to path for import
