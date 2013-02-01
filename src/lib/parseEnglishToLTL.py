@@ -9,6 +9,7 @@
 import re
 import copy
 import numpy
+import math
 
 #nextify = lambda x: " next(%s) " % x
 
@@ -111,7 +112,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
 
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
-    StayFormula = createStayFormula(numBits)
+    StayFormula = createStayFormula(regionList)
 
     lineInd = 0
     
@@ -1177,19 +1178,21 @@ def replaceRegionName(formula,bitEncode,regionList):
 
     return LTLsubformula
 
-def createStayFormula(numBits):
-    ''' This function replaces the region names with the appropriate bit encoding.
-    '''
-    tempFormula = '( (next(s.bit0) <-> s.bit0) '
-    
-    for bitNum in range(1,numBits):
+def createStayFormula(regionNames, use_bits=True):
+    if use_bits:
+        numBits = int(math.ceil(math.log(len(regionNames),2)))
+        tempFormula = '( (next(s.bit0) <-> s.bit0) '
+        
+        for bitNum in range(1,numBits):
 
-        # Encoding the string
-        tempFormula = tempFormula + '& (next(s.bit'+ str(bitNum) +') <-> s.bit'+ str(bitNum) +') ' 
-    
-    StayFormula = tempFormula + ')'
+            # Encoding the string
+            tempFormula = tempFormula + '& (next(s.bit'+ str(bitNum) +') <-> s.bit'+ str(bitNum) +') ' 
+        
+        StayFormula = tempFormula + ')'
 
-    return StayFormula
+        return StayFormula
+    else:
+        return "({})".format(" & ".join(["(s.{0} <-> next(s.{0}))".format(rn) for rn in regionNames]))
 
 
 def bitEncoding(numRegions,numBits):

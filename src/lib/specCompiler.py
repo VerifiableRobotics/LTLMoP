@@ -15,7 +15,7 @@ sys.path.append(os.path.join("lib","cores"))
 import project
 import regions
 import parseLP
-from createJTLVinput import createLTLfile, createSMVfile, createTopologyFragment
+from createJTLVinput import createLTLfile, createSMVfile, createTopologyFragment, createInitialRegionFragment
 from parseEnglishToLTL import bitEncoding, replaceRegionName, createStayFormula
 import fsa
 from copy import deepcopy
@@ -124,7 +124,15 @@ class SpecCompiler(object):
         sensorList = self.proj.enabled_sensors
         robotPropList = self.proj.enabled_actuators + self.proj.all_customs + self.proj.internal_props
 
-        createSMVfile(self.proj.getFilenamePrefix(), numRegions, sensorList, robotPropList)
+        # Add in regions as robot outputs
+        if self.proj.compile_options["use_region_bit_encoding"]:
+            robotPropList.extend(["bit"+str(i) for i in range(0,int(numpy.ceil(numpy.log2(numRegions))))])
+        else:
+            robotPropList.extend([r.name for r in self.parser.proj.rfi.regions])
+
+        self.propList = sensorList + robotPropList
+        
+        createSMVfile(self.proj.getFilenamePrefix(), sensorList, robotPropList)
 
     def _writeLTLFile(self):
 
@@ -254,12 +262,6 @@ class SpecCompiler(object):
             print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
             return None, None, None
 
-
-        regNum = len(regionList)                                                         
-        regList = map(lambda i: "bit"+str(i), range(0,int(numpy.ceil(numpy.log2(regNum)))))
-        self.propList = sensorList + robotPropList + regList + self.proj.internal_props
-
-
         # Prepend "e." or "s." to propositions for JTLV
         for i, sensor in enumerate(sensorList):
             text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
@@ -271,39 +273,61 @@ class SpecCompiler(object):
 
         regionList = [x.name for x in self.parser.proj.rfi.regions]
 
-        # Define the number of bits needed to encode the regions
-        numBits = int(math.ceil(math.log(len(regionList),2)))
+        if self.proj.compile_options["use_region_bit_encoding"]:
+            # Define the number of bits needed to encode the regions
+            numBits = int(math.ceil(math.log(len(regionList),2)))
 
-        # creating the region bit encoding
-        bitEncode = bitEncoding(len(regionList),numBits)
-        currBitEnc = bitEncode['current']
-        nextBitEnc = bitEncode['next']
+            # creating the region bit encoding
+            bitEncode = bitEncoding(len(regionList),numBits)
+            currBitEnc = bitEncode['current']
+            nextBitEnc = bitEncode['next']
 
-        # switch to bit encodings for regions
-        LTLspec_env = replaceRegionName(LTLspec_env, bitEncode, regionList)
-        LTLspec_sys = replaceRegionName(LTLspec_sys, bitEncode, regionList)
-    
-        if self.LTL2SpecLineNumber is not None:
-            for k in self.LTL2SpecLineNumber.keys():
-                new_k = replaceRegionName(k, bitEncode, regionList)
-                if new_k != k:
-                    self.LTL2SpecLineNumber[new_k] = self.LTL2SpecLineNumber[k]
-                    del self.LTL2SpecLineNumber[k]
+            # switch to bit encodings for regions
+            LTLspec_env = replaceRegionName(LTLspec_env, bitEncode, regionList)
+            LTLspec_sys = replaceRegionName(LTLspec_sys, bitEncode, regionList)
+        
+            if self.LTL2SpecLineNumber is not None:
+                for k in self.LTL2SpecLineNumber.keys():
+                    new_k = replaceRegionName(k, bitEncode, regionList)
+                    if new_k != k:
+                        self.LTL2SpecLineNumber[new_k] = self.LTL2SpecLineNumber[k]
+                        del self.LTL2SpecLineNumber[k]
 
         if self.proj.compile_options["decompose"]:
             adjData = self.parser.proj.rfi.transitions
         else:
             adjData = self.proj.rfi.transitions
 
+        # Store some data needed for later analysis
+        self.spec = {}
+        self.spec['Topo'] = createTopologyFragment(adjData, self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+
         # Substitute any macros that the parsers passed us
         LTLspec_env = self.substituteMacros(LTLspec_env)
         LTLspec_sys = self.substituteMacros(LTLspec_sys)
 
-        # Store some data needed for later analysis
-        self.spec = self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys)
-        self.spec['Topo'] = createTopologyFragment(adjData)
+        # Add in a fragment to make sure that we start in a valid region
+        LTLspec_sys += "\n&\n" + createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+        
+        # If we are not using bit-encoding, we need to
+        # explicitly encode a mutex for regions
+        if not self.proj.compile_options["use_region_bit_encoding"]:
+            # DNF version (extremely slow for core-finding)
+            #mutex = "\n\t&\n\t []({})".format(" | ".join(["({})".format(" & ".join(["s."+r2.name if r is r2 else "!s."+r2.name for r2 in self.parser.proj.rfi.regions])) for r in self.parser.proj.rfi.regions]))
 
-        createLTLfile(self.proj.getFilenamePrefix(), sensorList, robotPropList, adjData, LTLspec_env, LTLspec_sys)
+            # Almost-CNF version
+            exclusions = []
+            for i, r1 in enumerate(self.parser.proj.rfi.regions):
+                for r2 in self.parser.proj.rfi.regions[i+1:]:
+                    exclusions.append("!(s.{} & s.{})".format(r1.name, r2.name))
+            mutex = "\n&\n\t []({})".format(" & ".join(exclusions))
+            LTLspec_sys += mutex
+
+        self.spec.update(self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys))
+
+        LTLspec_sys += "\n&\n" + self.spec['Topo']
+
+        createLTLfile(self.proj.getFilenamePrefix(), LTLspec_env, LTLspec_sys)
         
         if self.proj.compile_options["parser"] == "slurp":
             self.reversemapping = {self.postprocessLTL(line,sensorList,robotPropList).strip():line.strip() for line in oldspec_env + oldspec_sys}
@@ -319,79 +343,32 @@ class SpecCompiler(object):
         Replace any macros passed to us by the parser.  In general, this is only necessary in cases
         where bitX propositions are needed, since the parser is not supposed to know about them.
         """
-        numRegions = len(self.parser.proj.rfi.regions)
-        numBits = int(math.ceil(math.log(numRegions, 2)))
 
-        # creating the region bit encoding
-        bitEncode = bitEncoding(numRegions, numBits)
-        currBitEnc = bitEncode['current']
-        nextBitEnc = bitEncode['next']
-
-        if self.proj.compile_options["decompose"]:
-            adjData = self.parser.proj.rfi.transitions
-        else:
-            adjData = self.proj.rfi.transitions
-
-        ##############################################################################
-        ######### BEGIN HACK: generate env topology info for follow scenario #########
-        ##############################################################################
-
-        # taken from createJTLVInput
-
-        env_topology = []
-        # The topological relation (adjacency)
-        for Origin in range(len(adjData)):
-            # from region i we can stay in region i
-            env_topology.append('\t\t\t []( (')
-            env_topology.append(currBitEnc[Origin])
-            env_topology.append(') -> ( (')
-            env_topology.append(nextBitEnc[Origin])
-            env_topology.append(')')
-            
-            for dest in range(len(adjData)):
-                if adjData[Origin][dest]:
-                    # not empty, hence there is a transition
-                    env_topology.append('\n\t\t\t\t\t\t\t\t\t| (')
-                    env_topology.append(nextBitEnc[dest])
-                    env_topology.append(') ')
-
-            # closing this region
-            env_topology.append(' ) ) & \n ')
-
-        env_topology = ''.join(env_topology).replace("s.bit", "e.sbit")
-        
-        # Setting the system initial formula to allow only valid
-        #  region encoding. This may be redundent if an initial region is
-        #  specified, but it is here to ensure the system cannot start from
-        #  an invalid encoding
-        initreg_formula = '\t\t\t( ' + currBitEnc[0] + ' \n'
-        for regionInd in range(1,len(currBitEnc)):
-            initreg_formula = initreg_formula + '\t\t\t\t | ' + currBitEnc[regionInd] + '\n'
-        initreg_formula = initreg_formula + '\t\t\t) \n'
-        initreg_formula = initreg_formula.replace("s.bit", "e.sbit")
-
+        # This creates a mirrored copy of topological constraints for the target we are following
         if "FOLLOW_SENSOR_CONSTRAINTS" in text:
-            sensorBits = ["sbit{0}".format(n) for n in range(0,numBits)]
-            for p in sensorBits:
-                if p not in self.proj.enabled_sensors:
-                    self.proj.enabled_sensors.append(p)
-                if p not in self.proj.all_sensors:   
-                    self.proj.all_sensors.append(p)
+            if not self.proj.compile_options["use_region_bit_encoding"]:
+                print "WARNING: currently, bit encoding must be enabled for follow sensor"
+            else:
+                env_topology = self.spec['Topo'].replace("s.bit", "e.sbit")
+                initreg_formula = createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=True).replace("s.bit", "e.sbit")
 
-            text = text.replace("FOLLOW_SENSOR_CONSTRAINTS", env_topology + initreg_formula)
+                sensorBits = ["sbit{}".format(i) for i in range(0,int(numpy.ceil(numpy.log2(len(self.parser.proj.rfi.regions)))))]
+                for p in sensorBits:
+                    if p not in self.proj.enabled_sensors:
+                        self.proj.enabled_sensors.append(p)
+                    if p not in self.proj.all_sensors:   
+                        self.proj.all_sensors.append(p)
 
-        ##############################################################################
-        #################################### END HACK ################################
-        ##############################################################################
+                text = text.replace("FOLLOW_SENSOR_CONSTRAINTS", env_topology + "\n&\n" + initreg_formula)
 
         # Stay-there macros.  This can be done using just region names, but is much more concise
         # using bit encodings (and thus much faster to encode as CNF)
 
         if "STAY_THERE" in text:
-            text = text.replace("STAY_THERE", createStayFormula(numBits))
+            text = text.replace("STAY_THERE", createStayFormula([r.name for r in self.parser.proj.rfi.regions], use_bits=self.proj.compile_options["use_region_bit_encoding"]))
 
         if "TARGET_IS_STATIONARY" in text:
-            text = text.replace("TARGET_IS_STATIONARY", createStayFormula(numBits).replace("s.","e.s"))
+            text = text.replace("TARGET_IS_STATIONARY", createStayFormula([r.name for r in self.parser.proj.rfi.regions], use_bits=self.proj.compile_options["use_region_bit_encoding"]).replace("s.","e.s"))
 
         return text
 
@@ -425,7 +402,8 @@ class SpecCompiler(object):
         nextBitEnc = bitEncode['next']
 
         # switch to bit encodings for regions
-        text = replaceRegionName(text, bitEncode, regionList)
+        if self.proj.compile_options["use_region_bit_encoding"]:
+            text = replaceRegionName(text, bitEncode, regionList)
 
         return text
     

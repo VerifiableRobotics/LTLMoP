@@ -11,7 +11,7 @@ import math
 import parseEnglishToLTL
 import textwrap
 
-def createSMVfile(fileName, numRegions, sensorList, robotPropList):
+def createSMVfile(fileName, sensorList, robotPropList):
     ''' This function writes the skeleton SMV file.
     It takes as input a filename, the number of regions, the list of the
     sensor propositions and the list of robot propositions (without the regions).
@@ -47,13 +47,6 @@ def createSMVfile(fileName, numRegions, sensorList, robotPropList):
         VAR
     """));
 
-    # Define the number of bits needed to encode the regions
-    numBits = int(math.ceil(math.log(numRegions,2)))
-    for bitNum in range(numBits):
-        smvFile.write('\t\tbit')
-        smvFile.write(str(bitNum))
-        smvFile.write(' : boolean;\n')
-
     # Define robot propositions
     for robotProp in robotPropList:
         smvFile.write('\t\t')
@@ -64,36 +57,61 @@ def createSMVfile(fileName, numRegions, sensorList, robotPropList):
     smvFile.close()
     
 
-def createTopologyFragment(adjData):
-    numBits = int(math.ceil(math.log(len(adjData),2)))
-    # TODO: only calc bitencoding once
-    bitEncode = parseEnglishToLTL.bitEncoding(len(adjData), numBits)
-    currBitEnc = bitEncode['current']
-    nextBitEnc = bitEncode['next']
+def createTopologyFragment(adjData, regions, use_bits=True):
+    if use_bits:
+        numBits = int(math.ceil(math.log(len(adjData),2)))
+        # TODO: only calc bitencoding once
+        bitEncode = parseEnglishToLTL.bitEncoding(len(adjData), numBits)
+        currBitEnc = bitEncode['current']
+        nextBitEnc = bitEncode['next']
 
     # The topological relation (adjacency)
-    adjFormula = ""
+    adjFormulas = []
+
     for Origin in range(len(adjData)):
         # from region i we can stay in region i
-        adjFormula = adjFormula + '\t\t\t []( ('
-        adjFormula = adjFormula + currBitEnc[Origin]
+        adjFormula = '\t\t\t []( ('
+        adjFormula = adjFormula + (currBitEnc[Origin] if use_bits else "s."+regions[Origin].name)
         adjFormula = adjFormula + ') -> ( ('
-        adjFormula = adjFormula + nextBitEnc[Origin]
+        adjFormula = adjFormula + (nextBitEnc[Origin] if use_bits else "next(s."+regions[Origin].name+")")
         adjFormula = adjFormula + ')'
         
         for dest in range(len(adjData)):
             if adjData[Origin][dest]:
                 # not empty, hence there is a transition
                 adjFormula = adjFormula + '\n\t\t\t\t\t\t\t\t\t| ('
-                adjFormula = adjFormula + nextBitEnc[dest]
+                adjFormula = adjFormula + (nextBitEnc[dest] if use_bits else "next(s."+regions[dest].name+")")
                 adjFormula = adjFormula + ') '
 
         # closing this region
-        adjFormula = adjFormula + ' ) ) & \n '
+        adjFormula = adjFormula + ' ) ) '
 
-    return adjFormula
+        adjFormulas.append(adjFormula)
 
-def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_sys):
+    return " & \n".join(adjFormulas)
+
+def createInitialRegionFragment(regions, use_bits=True):
+    # Setting the system initial formula to allow only valid
+    #  region (encoding). This may be redundant if an initial region is
+    #  specified, but it is here to ensure the system cannot start from
+    #  an invalid, or empty region (encoding).
+    if use_bits:
+        numBits = int(math.ceil(math.log(len(regions),2)))
+        # TODO: only calc bitencoding once
+        bitEncode = parseEnglishToLTL.bitEncoding(len(regions), numBits)
+        currBitEnc = bitEncode['current']
+        nextBitEnc = bitEncode['next']
+
+        initreg_formula = '\t\t\t( ' + currBitEnc[0] + ' \n'
+        for regionInd in range(1,len(currBitEnc)):
+            initreg_formula = initreg_formula + '\t\t\t\t | ' + currBitEnc[regionInd] + '\n'
+        initreg_formula = initreg_formula + '\t\t\t) \n'
+    else:
+        initreg_formula = "\n\t({})".format(" | ".join(["({})".format(" & ".join(["s."+r2.name if r is r2 else "!s."+r2.name for r2 in regions])) for r in regions]))
+        
+    return initreg_formula
+
+def createLTLfile(fileName, spec_env, spec_sys):
     ''' This function writes the LTL file. It encodes the specification and 
     topological relation. 
     It takes as input a filename, the list of the
@@ -105,11 +123,6 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
     fileName = fileName + '.ltl'
     ltlFile = open(fileName, 'w')
 
-    numBits = int(math.ceil(math.log(len(adjData),2)))
-    bitEncode = parseEnglishToLTL.bitEncoding(len(adjData), numBits)
-    currBitEnc = bitEncode['current']
-    nextBitEnc = bitEncode['next']
-    
     # Write the header and begining of the formula
     ltlFile.write(textwrap.dedent("""
     -- LTL specification file
@@ -132,20 +145,8 @@ def createLTLfile(fileName, sensorList, robotPropList, adjData, spec_env, spec_s
     ltlFile.write('\t(\n')
 
     # TODO: only do this if necessary
-    ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) & \n')
+    ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) \n')
 
-    ltlFile.write(createTopologyFragment(adjData))
-
-    # Setting the system initial formula to allow only valid
-    #  region encoding. This may be redundent if an initial region is
-    #  specified, but it is here to ensure the system cannot start from
-    #  an invalid encoding
-    initreg_formula = '\t\t\t( ' + currBitEnc[0] + ' \n'
-    for regionInd in range(1,len(currBitEnc)):
-        initreg_formula = initreg_formula + '\t\t\t\t | ' + currBitEnc[regionInd] + '\n'
-    initreg_formula = initreg_formula + '\t\t\t) \n'
-
-    ltlFile.write(initreg_formula)
 
     # Write the desired robot behavior
     if spec_sys.strip() != "":

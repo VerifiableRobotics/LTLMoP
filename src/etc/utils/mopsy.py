@@ -140,6 +140,7 @@ class MopsyFrame(wx.Frame):
         self.mopsy_frame_statusbar.SetStatusText("Parsing specification...", 0)
         self.compiler._decompose()
         self.spec, self.tracebackTree, response = self.compiler._writeLTLFile()
+        self.compiler._writeSMVFile() # to update propList
 
         if self.proj.compile_options["parser"] == "slurp":
             # Add SLURP to path for import
