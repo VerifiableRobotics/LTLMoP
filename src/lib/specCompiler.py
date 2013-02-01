@@ -262,15 +262,6 @@ class SpecCompiler(object):
             print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
             return None, None, None
 
-        # Prepend "e." or "s." to propositions for JTLV
-        for i, sensor in enumerate(sensorList):
-            text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
-            sensorList[i] = "e." + sensorList[i]
-
-        for i, prop in enumerate(robotPropList):
-            text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
-            robotPropList[i] = "s." + robotPropList[i]
-
         regionList = [x.name for x in self.parser.proj.rfi.regions]
 
         if self.proj.compile_options["use_region_bit_encoding"]:
@@ -381,15 +372,6 @@ class SpecCompiler(object):
                 if not (r.isObstacle or r.name.lower() == "boundary"):
                     text = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
                     text = re.sub('\\be\.' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
-
-        # Prepend "e." or "s." to propositions for JTLV
-        for i, sensor in enumerate(sensorList):
-            text = re.sub("\\b"+sensor+"\\b", "e." + sensor, text)
-            sensorList[i] = "e." + sensorList[i]
-
-        for i, prop in enumerate(robotPropList):
-            text = re.sub("\\b"+prop+"\\b", "s." + prop, text)
-            robotPropList[i] = "s." + robotPropList[i]
 
         regionList = [x.name for x in self.parser.proj.rfi.regions]
 
