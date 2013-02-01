@@ -298,7 +298,8 @@ class SpecCompiler(object):
         LTLspec_sys = self.substituteMacros(LTLspec_sys)
 
         # Add in a fragment to make sure that we start in a valid region
-        LTLspec_sys += "\n&\n" + createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+        self.spec['InitRegionSanityCheck'] = createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+        LTLspec_sys += "\n&\n" + self.spec['InitRegionSanityCheck']
         
         # If we are not using bit-encoding, we need to
         # explicitly encode a mutex for regions
