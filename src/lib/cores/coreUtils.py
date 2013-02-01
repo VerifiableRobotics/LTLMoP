@@ -206,13 +206,15 @@ def findGuiltyClausesWrapper(x):
 
 
         
-def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping,  cnfMapping, conjuncts): 
+def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping,  cnfMapping, conjuncts, ignoreDepth): 
         mapping = deepcopy(mapping)
         #precompute p and n
         #p =  (depth+1)*(numProps*2)
         p = (depth+2)*(numProps)        
         #n = len(cnfs)  
         n = (depth)*(len(trans)) + len(init) + len(goals)
+        ignoreBound = len(init) + ignoreDepth*len(trans)
+        
         output = []
                 #find minimal unsatisfiable core by calling picomus
         if cmd is None:
@@ -238,6 +240,8 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping,  cnfMap
         #the depth tells you how many time steps of trans to use
         #depth 0 just checks init with goals
         #p = 0
+        
+        
         for i in range(1,depth+1):
                     for clause in trans:
                         newClause = ""
@@ -327,9 +331,10 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping,  cnfMap
         cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output)))
         
         #get corresponding LTL conjuncts
-        guilty = cnfToConjuncts(cnfIndices, mapping, cnfMapping)
+        guilty = cnfToConjuncts([idx for idx in cnfIndices if idx > ignoreBound], mapping, cnfMapping)
             
-        return guilty, cnfIndices
-        
+        return guilty
+    
+            
         
         
