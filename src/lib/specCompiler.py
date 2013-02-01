@@ -609,7 +609,7 @@ class SpecCompiler(object):
         topo, conjuncts = self.getGuiltyConjuncts(to_highlight, badInit)
         
         if unsat:
-            guilty = self.findCoresUnsat(topo,badInit,conjuncts,numStates,numRegions)#returns LTL  
+            guilty = self.findCoresUnsat(topo,badInit,conjuncts,15,15)#returns LTL  
         else:
             guilty = self.findCoresUnreal(topo,badInit,conjuncts,numStates,numRegions)#returns LTL   
         return guilty
