@@ -7,15 +7,17 @@
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
 drop, 1
 pickup, 1
+camera, 0
 
 CompileOptions:
 convexify: True
 parser: slurp
 fastslow: False
 decompose: True
+use_region_bit_encoding: False
 
 CurrentConfigName:
-basicsim
+basicsim_meals
 
 Customs: # List of custom propositions
 
@@ -34,18 +36,16 @@ r6 = p1
 r1 = p6
 closet = p12
 r3 = p4
-hall_W = p13, p14
+hall_w = p13, p14
 lounge = p7
 r2 = p5
-hall_N = p15, p16
+hall_n = p15, p16
 others = 
-hall_C = p11
+hall_c = p11
 kitchen = p8
 
 Spec: # Specification in structured English
-# Example of unsatisfiability, and state-wise goal-local "optimal" planning.
-
-Start in the closet.
+# Unsat livelock
 Carry meals from the kitchen to all patient rooms.
-#Don't go to any public rooms.
+Don't go into any public rooms.
 

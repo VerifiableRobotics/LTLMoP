@@ -5,6 +5,9 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+drop, 0
+pickup, 0
+camera, 1
 
 CompileOptions:
 convexify: False
@@ -14,7 +17,7 @@ decompose: True
 use_region_bit_encoding: True
 
 CurrentConfigName:
-basicsim_follow
+basicsim_camera
 
 Customs: # List of custom propositions
 
@@ -22,11 +25,6 @@ RegionFile: # Relative path of region description file
 slurp_hospital.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-alarm, 1
-sbit0, 1
-sbit1, 1
-sbit2, 1
-sbit3, 1
 
 
 ======== SPECIFICATION ========
@@ -47,8 +45,10 @@ hall_c = p11
 kitchen = p8
 
 Spec: # Specification in structured English
-# An example of unrealizability, and powerful language constructs.
+# Unsat deadlock
+Don't activate your camera in any restricted area.
+Avoid the lounge.
 
-Follow me.
-If you hear an alarm, don't go into the kitchen.
+Start in hall_c.
+Always activate your camera.
 
