@@ -261,7 +261,7 @@ public class GROneMain {
                 out_writer.write(".nvars " + newOrdering.length + "\n");
                 out_writer.write(".nsuppvars " + newOrdering.length + "\n"); // TODO: what does this do?
                 //out_writer.write(".nsuppvars " + countNonzeroEntries(flat_strat.varProfile()) + "\n"); // TODO: what does this do?
-                out_writer.write(".ids" + joinIntsWithSpaces(oldOrdering) + "\n"); // TODO: what if it was already re-ordered?
+                out_writer.write(".ids " + joinIntsWithSpaces(oldOrdering) + "\n"); // TODO: what if it was already re-ordered?
                 out_writer.write(".permids ");
                 for (i=0 ; i<oldOrdering.length; i++) {
                     out_writer.write(f.var2Level(i) + " ");
@@ -379,7 +379,7 @@ public class GROneMain {
 	}
 
     static class LinewiseBufferedWriter extends BufferedWriter {
-        /** This class is an attempt to deal with the fact that BuDDy requires sequential
+        /** This class is an attempt to deal with the fact that dddmp requires sequential
          *  numbering of nodes, starting with 1, while the JTLV export function
          *  prints node names that are effectively arbitrary.  To avoid memory problems,
          *  we rewrite the BDD output line-by-line as we go. 
