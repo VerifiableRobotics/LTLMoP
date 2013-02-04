@@ -543,8 +543,7 @@ class SpecCompiler(object):
         to_highlight = []
         for dline in subp.stdout:
             output += dline
-
-            if "Specification is realizable" in dline:   
+            if "Specification is synthesizable!" in dline:   
                 realizable = True            
                 nonTrivial = self._autIsNonTrivial()
                 if nonTrivial:
@@ -852,9 +851,9 @@ class SpecCompiler(object):
         def onLog(text):
             """ Intercept log callbacks to check for realizability status. """
 
-            if "Specification is realizable" in text:
+            if "Specification is synthesizable!" in text:
                 self.realizable = True
-            if "Specification is realizable with slow and fast actions" in text:
+            if "Specification is synthesizable under fast/slow!" in text:
                 self.realizableFS = True
 
             # You'll pass this on, won't you
