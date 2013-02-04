@@ -297,10 +297,6 @@ class SpecCompiler(object):
         LTLspec_env = self.substituteMacros(LTLspec_env)
         LTLspec_sys = self.substituteMacros(LTLspec_sys)
 
-        # Add in a fragment to make sure that we start in a valid region
-        self.spec['InitRegionSanityCheck'] = createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
-        LTLspec_sys += "\n&\n" + self.spec['InitRegionSanityCheck']
-        
         # If we are not using bit-encoding, we need to
         # explicitly encode a mutex for regions
         if not self.proj.compile_options["use_region_bit_encoding"]:
@@ -316,6 +312,10 @@ class SpecCompiler(object):
             LTLspec_sys += mutex
 
         self.spec.update(self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys))
+
+        # Add in a fragment to make sure that we start in a valid region
+        self.spec['InitRegionSanityCheck'] = createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+        LTLspec_sys += "\n&\n" + self.spec['InitRegionSanityCheck']
 
         LTLspec_sys += "\n&\n" + self.spec['Topo']
 
@@ -630,18 +630,18 @@ class SpecCompiler(object):
             print "unsat core found without topo and init"
             return allGuilty
         else:
-            depth += len([g for g in allGuilty if g])
+            ignoreDepth = len([g for g in allGuilty if g])
+            depth += ignoreDepth
             
         #then try just topo and init and see if it is unsatisfiable. If so, return core.
         mapping,  cnfMapping, init, self.trans, goals = conjunctsToCNF([topo, badInit], [], self.propList)
        
                     
-        guilty = findGuiltyClauses(cmd,maxDepth,numProps,init,self.trans,goals,mapping,cnfMapping,[topo, badInit],ignoreDepth)
+        guilty = findGuiltyClauses(cmd,maxDepth,numProps,init,self.trans,goals,mapping,cnfMapping,[topo, badInit],0)
         
                 #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
-        ignoreDepth = depth
             
             
         if guilty:
@@ -655,7 +655,7 @@ class SpecCompiler(object):
                       
             #print "STARTING PICO MAP"
             
-        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping),  itertools.repeat(cnfMapping), itertools.repeat([topo, badInit]+conjuncts), itertools.repeat(ignoreDepth)))
+        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(maxDepth,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping),  itertools.repeat(cnfMapping), itertools.repeat([topo, badInit]+conjuncts), itertools.repeat(ignoreDepth)))
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
@@ -664,6 +664,10 @@ class SpecCompiler(object):
         guilty = [item for sublist in guiltyList for item in sublist]        
         
         guiltyMinusGoal = [g for g in guilty if '<>' not in g]
+
+        # don't use ignoreDepth for deadlock
+        if len(goals) == 0:
+           ignoreDepth = 0 
                         
         justTopo = set([topo, badInit]).issuperset(guiltyMinusGoal)
         depth = maxDepth + 1

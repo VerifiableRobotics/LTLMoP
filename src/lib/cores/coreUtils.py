@@ -213,7 +213,10 @@ def findGuiltyClauses(cmd, depth, numProps, init, trans, goals, mapping,  cnfMap
         p = (depth+2)*(numProps)        
         #n = len(cnfs)  
         n = (depth)*(len(trans)) + len(init) + len(goals)
-        ignoreBound = len(init) + ignoreDepth*len(trans)
+        if ignoreDepth == 0:
+            ignoreBound = 0
+        else:
+            ignoreBound = len(init) + ignoreDepth*len(trans)
         
         output = []
                 #find minimal unsatisfiable core by calling picomus
