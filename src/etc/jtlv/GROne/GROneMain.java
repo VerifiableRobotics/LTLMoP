@@ -255,9 +255,10 @@ public class GROneMain {
                 out_writer.write("# For information about the DDDMP format, please see:\n");
                 out_writer.write("#    http://www.cs.uleth.ca/~rice/cudd_docs/dddmp/dddmpAllFile.html#dddmpDump.c\n");
                 out_writer.write(".ver DDDMP-2.0\n");
-                out_writer.write(".mode A\n");
+                out_writer.write(".add\n"); // We are using a 0-1 ADD because dddmp requires BDDs to be in Canonical Complementary Form
+                out_writer.write(".mode A\n"); // TODO: use binary for storage efficiency?
                 out_writer.write(".varinfo 4\n"); // not totally sure what this means, but is DDDMP_VARDEFAULT
-                out_writer.write(".nnodes " + (flat_strat.nodeCount() + 1) + "\n"); // +1 for leaf node
+                out_writer.write(".nnodes " + (flat_strat.nodeCount() + 2) + "\n"); // +2 for leaf nodes
                 out_writer.write(".nvars " + newOrdering.length + "\n");
                 out_writer.write(".nsuppvars " + newOrdering.length + "\n"); // TODO: what does this do?
                 //out_writer.write(".nsuppvars " + countNonzeroEntries(flat_strat.varProfile()) + "\n"); // TODO: what does this do?
@@ -268,19 +269,13 @@ public class GROneMain {
                 }
                 out_writer.write("\n");
                 out_writer.write(".nroots 1\n");
-                out_writer.write(".rootids " + (flat_strat.nodeCount() + 1) + "\n");
+                out_writer.write(".rootids " + (flat_strat.nodeCount() + 2) + "\n");
 
                 // Dump the BDD itself
                 out_writer.write(".nodes\n");
                 f.save((BufferedWriter)out_writer, flat_strat);
                 out_writer.write(".end\n");
 
-                // TODO: is there a way to determine this analytically at the beginning?
-                if (out_writer.rootNeedsNegating()) {
-                    out_writer.write("# root needs negating\n");
-                } else {
-                    out_writer.write("# root does not need negating\n");
-                }
                 out_writer.flush();
                 out_writer.close();
             } else {
@@ -384,7 +379,6 @@ public class GROneMain {
          *  prints node names that are effectively arbitrary.  To avoid memory problems,
          *  we rewrite the BDD output line-by-line as we go. 
          *
-         *  As of now, we are also converting to canonical complementary form (see below)
          */
 
         private String line_buffer;
@@ -406,11 +400,6 @@ public class GROneMain {
             }
         }
 
-        public boolean rootNeedsNegating() {
-            // only call after processing all lines
-            return lastNodeWasNegated;
-        }
-
         private void processLine(String s) {
             // Don't do any special processing for comments or commands 
             if (s.startsWith(".") || s.startsWith("#")) {
@@ -419,9 +408,11 @@ public class GROneMain {
             }
 
             // Make Node 1 be the True node
+            // Make Node 2 be the False node
             if (num_lines_processed == 2) {
                 writeString("1 1 0 0\n");
-                nodeNameMapping.put(0, -1);
+                writeString("2 0 0 0\n");
+                nodeNameMapping.put(0, 2);
                 nodeNameMapping.put(1, 1);
             }
 
@@ -431,23 +422,11 @@ public class GROneMain {
                 Integer[] nodeData = {sc.nextInt(), sc.nextInt(), sc.nextInt(), sc.nextInt()};
 
                 // remap all the node IDs, because dddmp requires sequential numbering
+                nodeNameMapping.put(nodeData[0], num_lines_processed + 1);
                 nodeData[2] = nodeNameMapping.get(nodeData[2]);
                 nodeData[3] = nodeNameMapping.get(nodeData[3]);
                 
-                // convert to canonical complementary form (complementary edges on E-edge only)
-                // TODO: minimize the result (otherwise may result in redundant states)
-                // or use a 0-1 ADD and then Cudd_addBddPattern 
-                if (nodeData[2] < 0) {
-                    nodeData[2] = -nodeData[2];
-                    nodeData[3] = -nodeData[3];
-                    nodeNameMapping.put(nodeData[0], -num_lines_processed);
-                    lastNodeWasNegated = true;
-                } else {
-                    nodeNameMapping.put(nodeData[0], num_lines_processed);
-                    lastNodeWasNegated = false;
-                }
-
-                nodeData[0] = num_lines_processed;
+                nodeData[0] = num_lines_processed + 1;
                 writeString(nodeData[0] + " " + nodeData[1] + " " +
                             nodeData[2] + " " + nodeData[3] + "\n");
             }
