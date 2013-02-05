@@ -508,7 +508,7 @@ class SpecEditorFrame(wx.Frame):
         # TODO: Advise the user that the decomposed map may be inaccurate if
         #  mtime(spec)>mtime(aut) or spectext is dirty
 
-        mapRenderer.drawMap(self.panel_locmap, self.decomposedRFI, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList)
+        mapRenderer.drawMap(self.panel_locmap, self.decomposedRFI, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList, showBits=True)
 
     def onPropositionDblClick(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
