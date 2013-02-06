@@ -310,10 +310,7 @@ class motionControlHandler:
             #    dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- vstack((V[1,E[0,self.E_current_column]],V[2,E[0,self.E_current_column]]))
         
         Vel = zeros([2,1])
-        if self.system == 1:
-            Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5/25                # correct for self.multiplexer in honolomic drive
-        else:
-            Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
+        Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
         return Vel
         
     def getNode(self,p, V, E, last=False):

@@ -59,7 +59,7 @@ class motionControlHandler:
         """
         Space_Dimension(int): dimension of the space operating in. Enter 2 for 2D and 3 for 3D. Only quadrotor in ROS is supported for 3D now.(default=2)
         planner(string): Planner to be used. Enter RRT,KPIECE1 or PRM, RRTConnect. (default='PRM')
-        robot_type (int): Which robot is used for execution. Nao is 1, ROS is 2, ODE is 3, Pioneer is 4(default=3)
+        robot_type (int): Which robot is used for execution. BasicSim is 1, ODE is 2, ROS is 3, Nao is 4, Pioneer is 5(default=1)
         Geometric_Control(string): Specify if you want to planner to sample in geometric or control space. G for geometric and C for control. (default='G')
         plotting (bool): Check the box to enable plotting (default=True)
         """
@@ -168,18 +168,20 @@ class motionControlHandler:
             self.all += regionPoly
         
         # Specify the size of the robot 
-        # 1: Nao ; 2: ROS; 3: 0DE; 4: Pioneer
+        # 1: basicSim; 2: ODE; 3: ROS  4: Nao; 5: Pioneer
         #  self.radius: radius of the robot (m)
-        if  self.system == 1:
-            self.radius = 0.15*1.2
+        if self.system  == 1:
+            self.radius = 5
         elif self.system == 2:
+            self.radius = 5
+        elif self.system == 3:
             self.ROSInitHandler = shared_data['ROS_INIT_HANDLER']
             self.radius = self.ROSInitHandler.robotPhysicalWidth   
             if self.ROSInitHandler.modelName == 'quadrotor':
                 self.height = 0.40*1.2 #(m) height of the robot
-        elif self.system == 3:
-            self.radius = 5
-        elif self.system == 4:
+        elif  self.system == 4:
+            self.radius = 0.15*1.2       
+        elif self.system == 5:
             self.radius = 0.15
 
         if self.plotting == True: 
@@ -371,6 +373,7 @@ class motionControlHandler:
                     self.currentState = self.currentState + 1
                     dis_cur  = vstack(((OMPLpath.getSolutionPath().getState(self.currentState)).getX(),(OMPLpath.getSolutionPath().getState(self.currentState)).getY()))- pose[0:2]
             Vel = zeros([2,1])
+            # set different speed for basicSim
             Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER
         return Vel
     
