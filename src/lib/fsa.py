@@ -56,6 +56,7 @@ class Automaton:
         self.proj = proj
 
         self.states = []    # A collection of state objects belonging to the automaton
+        self.stateNameToState = {}
 
         self.regions = proj.rfi.regions # a list of region objects
         self.regionMapping = proj.regionMapping # mapping between original regions and decomposed regions
@@ -84,12 +85,12 @@ class Automaton:
         """
         Find the state with the given name
         """
-        for i in range(len(self.states)):
-            if(self.states[i].name == name):
-                return self.states[i]
 
-        print "ERROR: Can't find state with name %s!" % (name)
-        return None
+        try:
+            return self.stateNameToState[name]
+        except KeyError:
+            print "ERROR: Can't find state with name %s!" % (name)
+            return None
 
     def dumpStates(self, range=None):
         """
@@ -166,6 +167,7 @@ class Automaton:
         """
         # Clear any existing states
         self.states = []
+        self.stateNameToState = {}
         self.initialize()
 
         # These will be used later by updateOutputs() and findTransitionableState()
@@ -229,6 +231,7 @@ class Automaton:
             newstate = FSA_State(number, inputs, outputs, transitions)
             newstate.rank=rank
             self.states.append(newstate)
+            self.stateNameToState[number] = newstate
 
 
         ########################
@@ -247,7 +250,7 @@ class Automaton:
             ends = match.group('ends').split(', ')
 
             # Change the references to state names into references to the corresponding state objects
-            ends = map(lambda name: self.stateWithName(name), ends)
+            ends = [self.stateWithName(n) for n in ends]
 
             # Stick these transitions onto the appropriate state
             self.stateWithName(start).transitions = ends
