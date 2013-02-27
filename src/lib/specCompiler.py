@@ -4,7 +4,6 @@ import time
 import math
 import subprocess
 import numpy
-import itertools
 import glob
 
 from multiprocessing import Pool
@@ -591,115 +590,32 @@ class SpecCompiler(object):
         
         
         #get conjuncts to be minimized
-        topo, conjuncts = self.getGuiltyConjuncts(to_highlight, badInit)
+        topo, conjuncts = self.ltlConjunctsFromBadLines(to_highlight, badInit)
         
         if unsat:
-            guilty = self.findCoresUnsat(topo,badInit,conjuncts,15,15)#returns LTL  
+            guilty = self.unsatCores(topo,badInit,conjuncts,15,15)#returns LTL  
         else:
-            guilty = self.findCoresUnreal(topo,badInit,conjuncts,numStates,numRegions)#returns LTL   
+            guilty = self.unrealCores(topo,badInit,conjuncts,numStates,numRegions)#returns LTL   
         return guilty
         
         
         
     
-    def findCoresUnsat(self,topo, badInit, conjuncts,maxDepth,numRegions):
-        depth = numRegions
-        ignoreDepth = 0
-    
+    def unsatCores(self, topo, badInit, conjuncts,maxDepth,numRegions):
+        
         cmd = self._getPicosatCommand() 
-        numProps = len(self.propList)
         if not conjuncts and badInit == "":
             return []
-        #first try without topo and init, see if it is satisfiable
-        mapping, cnfMapping, init, self.trans, goals = conjunctsToCNF([badInit], conjuncts, self.propList)
-            
-           
-        pool = Pool()
-                      
-            #print "STARTING PICO MAP"
-            
-        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(cnfMapping), itertools.repeat(conjuncts),itertools.repeat(ignoreDepth)))
-            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
-            
-        pool.terminate()
-            
-        allGuilty = set([item for sublist in guiltyList for item in sublist])
-            
-        if all(guiltyList):
-            print "unsat core found without topo and init"
-            return allGuilty
         else:
-            ignoreDepth = len([g for g in allGuilty if g])
-            depth += ignoreDepth
-            
-        #then try just topo and init and see if it is unsatisfiable. If so, return core.
-        mapping,  cnfMapping, init, self.trans, goals = conjunctsToCNF([topo, badInit], [], self.propList)
-       
-                    
-        guilty = findGuiltyClauses(cmd,maxDepth,numProps,init,self.trans,goals,mapping,cnfMapping,[topo, badInit],0)
-        
-                #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
-            
-            
-            
-        if guilty:
-            print "unsat core found with just topo and init"
-            return guilty
-        
-        #if the problem is in conjunction with the topo but not just topo, keep increasing the depth until something more than just topo is returned
-        mapping,  cnfMapping, init, self.trans, goals = conjunctsToCNF([topo,badInit], conjuncts, self.propList)
-        
-        pool = Pool()
-                      
-            #print "STARTING PICO MAP"
-            
-        guiltyList = pool.map(findGuiltyClausesWrapper, itertools.izip(itertools.repeat(cmd),range(maxDepth,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(self.trans), itertools.repeat(goals), itertools.repeat(mapping),  itertools.repeat(cnfMapping), itertools.repeat([topo, badInit]+conjuncts), itertools.repeat(ignoreDepth)))
-            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
-            
-        pool.terminate()
-        
-        guilty = [item for sublist in guiltyList for item in sublist]        
-        
-        guiltyMinusGoal = [g for g in guilty if '<>' not in g]
-
-        # don't use ignoreDepth for deadlock
-        if len(goals) == 0:
-           ignoreDepth = 0 
-                        
-        justTopo = set([topo, badInit]).issuperset(guiltyMinusGoal)
-        depth = maxDepth + 1
-        
-        while justTopo:
-            
-            guilty = findGuiltyClauses(cmd,depth,numProps,init,self.trans,goals,mapping,cnfMapping,[topo, badInit]+conjuncts, ignoreDepth)
-            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
-            
-            
-            guiltyMinusGoal = [g for g in guilty if '<>' not in g]
-            if not set([topo, badInit]).issuperset(set(guiltyMinusGoal)):
-                justTopo = False
-            else:
-                depth+=1
-            #get contributing conjuncts from CNF indices            
-            #guilty = cnfToConjuncts(allIndices, mapping)
-        
-        print "unsat core found with all parts" 
+            self.trans, guilty = unsatCoreCases(cmd, self.propList, topo, badInit, conjuncts,maxDepth,numRegions)
                     
         return guilty
-    
-          
-        
                 
     
         
-    def findCoresUnreal(self,topo,badInit,conjuncts,maxDepth,numRegions):
+    def unrealCores(self,topo,badInit,conjuncts,maxDepth,numRegions):
         #get conjuncts to be minimized
-        return []#self.findCoresUnsat(topo,badInit,conjuncts,maxDepth,numRegions)
-        
+        return []
         
     def _getPicosatCommand(self):
         # look for picosat
@@ -719,10 +635,12 @@ class SpecCompiler(object):
 
         return cmd
     
-    def getGuiltyConjuncts(self, to_highlight, badInit):  
-        #inverse dictionary for goal lookups
-        #ivd=dict([(v,k) for (k,v) in self.LTL2LineNo.items()])
-        
+    def ltlConjunctsFromBadLines(self, to_highlight, badInit):
+        #given the lines to be highlighted by the initial analysis and bad 
+        #initial conditions from JTLV, returns a list of LTL formulas that,
+        #when conjuncted, cause unsatisfiability
+        #topology conjuncts are separated out
+                
         topo=self.spec['Topo'].replace('\n','')
         topo = topo.replace('\t','')
         
@@ -742,33 +660,17 @@ class SpecCompiler(object):
                 goals = ["[]<>(TRUE)"] + self.spec[tb_key].split('\n')
                 newCs = [goals[h_item[2]]]
                 newCsOld = newCs
-                """for p in self.propList:
-                    old = ''+str(p)
-                    new = 'next('+str(p)+')'
-                    newCs = map(lambda s: s.replace(old,new), newCs) 
-                """                           
-                #newCs.extend(newCsOld)
+                
             elif h_item[1] == "trans" or not badInit:
-                #newCs = self.spec[tb_key].split('\n')
                 newCs =  self.spec[tb_key].replace("\t", "\n").split("\n")
-                #newCs = [k.split('\n') for k,v in self.LTL2LineNo.iteritems() if v in self.traceback[tb_key]]
-                #newCs = [item for sublist in newCs for item in sublist]                
-            """for clause in newCs:
-                #need to mark trans lines because they do not always contain [] because of line breaks
-                if h_item[1] == "trans":
-                    isTrans[clause] = 1                    
-                else:
-                    isTrans[clause] = 0  
-            """
+                
             conjuncts.extend(newCs)
         
         #filter out props that are actually used
         self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or p in topo]
             
-            
-            
-    
         return topo, conjuncts
+    
 
     def _synthesize(self, with_safety_aut=False):
         cmd = self._getGROneCommand("GROneMain")
