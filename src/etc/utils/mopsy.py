@@ -418,7 +418,7 @@ class MopsyFrame(wx.Frame):
         ltl_topo = self.spec['Topo'].replace('\n','').replace('\t','').strip()
         ltl_trans = [s.strip() for s in self.spec['SysTrans'].split('\n')]
         # note: strip()s make canonical (i.e. terminate in &, no whitespace on either side)
-        guilty_ltl = self.compiler.findCoresUnsat(ltl_topo, ltl_current, [ltl_next] + ltl_trans, 1, 1)
+        guilty_ltl = self.compiler.unsatCores(ltl_topo, ltl_current, [ltl_next] + ltl_trans, 1, 1)
         print "Guilty LTL: ", guilty_ltl
 
         guilty_spec = []
