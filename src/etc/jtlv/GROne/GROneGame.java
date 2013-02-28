@@ -1025,7 +1025,7 @@ public class GROneGame {
 						}
 					}
 				}
-				System.out.println("p_az "+p_az);
+				//System.out.println("p_az "+p_az);
 				assert p_az >= 0 : p_st+"Couldn't find p_az";
 			   
 				/* Find Y index of current state */
@@ -1036,7 +1036,7 @@ public class GROneGame {
 						break;
 					}
 				}
-				System.out.println("p_j "+p_j);
+				//System.out.println("p_j "+p_j);
 				
 				assert p_j >= 0 : "Couldn't find p_j";
 
