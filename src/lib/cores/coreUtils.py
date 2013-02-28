@@ -10,9 +10,19 @@ import itertools
 
 
 
-def conjunctsToCNF(topoInit, conjunctsMinusTopo, propList):
-    
-    conjuncts = topoInit + conjunctsMinusTopo         
+def conjunctsToCNF(conjuncts, propList):
+    #takes a list of LTL formulas and a list of propositions used in them,
+    #and converts them into DIMACS CNF format replacing each proposition
+    #with its index in the list. 
+    #returns:
+    #         mapping: a mapping from LTL formulas to CNF clause numbers
+    #         cnfMapping: a mapping from LTL formulas to CNFs 
+    #         cnfClauses: CNFS corresponding to initial and transition formulas
+    #                     (represents one-step unrolling)
+    #         transClauses: CNFS corresponding to transition formulas
+    #                     (useful for further unrolling later)
+    #         goalClauses: CNFS corresponding to goal formulas
+    #                     (useful for checking goals at each time step)
     
     propListNext = map(lambda s: 'next_'+s, propList)
     
@@ -23,7 +33,7 @@ def conjunctsToCNF(topoInit, conjunctsMinusTopo, propList):
     cnfClauses = []
     transClauses = []
     goalClauses = []
-    n = 0
+    n = 0 #counts number of clauses generated for mapping LTL to line numbers
     p = len(props)+len(propsNext)  
     
     
@@ -34,12 +44,12 @@ def conjunctsToCNF(topoInit, conjunctsMinusTopo, propList):
     print "ENDING CNF MAP"
     pool.terminate()
     
+    #associate original LTL conjuncts with CNF clauses
     cnfMapping = {line:cnf.split("&") for cnf, line in zip(allCnfs,conjuncts) if cnf}  
       
-    for cnf, lineOld in zip(allCnfs,conjuncts):
+    for cnf, lineOld in zip(allCnfs,conjuncts):     
       if cnf: 
         allClauses = cnf.split("&");
-        #associate original conjuncts with CNF clauses
         for clause in allClauses:    
             clause = re.sub('[()]', '', clause)   
             clause = re.sub('[|]', '', clause)           
@@ -49,28 +59,28 @@ def conjunctsToCNF(topoInit, conjunctsMinusTopo, propList):
                 clause = re.sub("\\b"+k+"\\b",str(propsNext[k]), clause)
             for k in props.keys():
                     clause = re.sub("\\b"+k+"\\b",str(props[k]), clause)   
-                #add trailing 0   
+            #add trailing 0   
             if "<>" in lineOld:
                 goalClauses.append(clause.strip()+" 0\n")
             elif "[]" in lineOld:
-                #isTrans[lineOld]:
                 transClauses.append(clause.strip()+" 0\n")
                 cnfClauses.append(clause.strip()+" 0\n")                                
             else:
                 cnfClauses.append(clause.strip()+" 0\n")         
             
         if not "<>" in lineOld:
+            #for non-goal (i.e. trans and init) formulas, extend mapping with line nos.
+            #the guilty goal is always put last, so we don't need the clause nos.
             mapping[lineOld].extend(range(n+1,n+1+len(allClauses)))    
             n = n + len(allClauses)
                         
     return mapping, cnfMapping, cnfClauses, transClauses, goalClauses
     
 
-def cnfToConjuncts(cnfIndices, mapping, cnfMapping):
+def cnfToConjuncts(cnfIndices, mapping):
+    #takes a list of cnf line numbers and returns the corresponding LTL
     conjuncts = []
-    i = 0
     for k in mapping.keys():
-        i = i + 1
         if not set(mapping[k]).isdisjoint(cnfIndices):
             conjuncts.append(k)     
             #print k , (set(mapping[k]).intersection(cnfIndices))
@@ -78,8 +88,10 @@ def cnfToConjuncts(cnfIndices, mapping, cnfMapping):
 
 
 def lineToCnf(line):
-            
+        #converts a single LTL formula into CNF form            
         lineOld = line
+        
+        
         line = re.sub('[\t\n]*','',line)            
         line = re.sub('s\.','',line)
         line = re.sub('e\.','',line)   
@@ -90,6 +102,7 @@ def lineToCnf(line):
         line = line.strip()
         #trailing &
         line = re.sub('&\s*$','',line)  
+        
         if line!='':
             
             line = re.sub('!', '~', line)
@@ -114,11 +127,16 @@ def findGuiltyLTLConjunctsWrapper(x):
 
         
 def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  cnfMapping, conjuncts, ignoreDepth): 
+        #returns the ltl conjuncts returned as an unsat core when unrolling trans depth times from init and 
+        #checking goal at final time step
+        #note that init contains one-step unrolling of trans already
+        
         mapping = deepcopy(mapping)
         #precompute p and n
-        #p =  (depth+1)*(numProps*2)
-        p = (depth+2)*(numProps)        
-        #n = len(cnfs)  
+        p = (depth+2)*(numProps)
+        #the +2 is because init contains one trans already 
+        #(so effectively there are depth+1 time steps and one final "next" time step)        
+        
         n = (depth)*(len(trans)) + len(init) + len(goals)
         if ignoreDepth == 0:
             ignoreBound = 0
@@ -126,11 +144,10 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
             ignoreBound = len(init) + ignoreDepth*len(trans)
         
         output = []
-                #find minimal unsatisfiable core by calling picomus
+        
+        #find minimal unsatisfiable core by calling picomus
         if cmd is None:
             return (False, False, [], "")   
-        
-          
                 
         #start a reader thread        
         subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)                                            
@@ -149,7 +166,6 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         numOrigClauses = len(trans)  
         #the depth tells you how many time steps of trans to use
         #depth 0 just checks init with goals
-        #p = 0
         
         
         for i in range(1,depth+1):
@@ -157,18 +173,18 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
                         newClause = ""
                         for c in clause.split():
                             intC = int(c)
-                            newClause= newClause + str(cmp(intC,0)*(abs(intC)+numProps*i)) +" "
-                            #p = max(p, (abs(intC)+numProps*i))
-                        newClause=newClause+"\n"
+                            newClause= newClause + str(cmp(intC,0)*(abs(intC)+numProps*i)) +" "                            
+                        newClause=newClause+"\n"                                                         
+                        #send this clause
                         subp.stdin.write(newClause)
+                        
                     j = 0    
                     for line in conjuncts:
                         if "[]" in line and "<>" not in line:                      
                             numVarsInTrans = (len(mapping[line]))/(i+1)
                             mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
                             j = j + 1
-                    #transClauses.extend(transClausesNew)                                   
-                    #send this batch of transClauses
+                    #transClauses.extend(transClausesNew)  
                     
         #create goal clauses
         dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)        
@@ -178,6 +194,7 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         subp.stdin.close()
         
                                 
+        #update mapping with newly added clause line numbers
         nMinusG = n - len(goals)
         for line in conjuncts:
             if "<>" in line:
@@ -194,11 +211,6 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-        """#this is the BMC part: keep adding cnf clauses from the transitions until the spec becomes unsatisfiable
-            if "UNSATISFIABLE" in output or depth >= maxDepth:
-                    break
-            depth = depth +1
-            """
         if any(["WARNING: core extraction disabled" in s for s in output]):
             # never again
             print "************************************************"
@@ -241,18 +253,29 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output)))
         
         #get corresponding LTL conjuncts
-        guilty = cnfToConjuncts([idx for idx in cnfIndices if idx > ignoreBound], mapping, cnfMapping)
+        guilty = cnfToConjuncts([idx for idx in cnfIndices if idx > ignoreBound], mapping)
             
         return guilty
     
     
-def unsatCoreCases(cmd, propList, topo, badInit, conjuncts,maxDepth,numRegions):
+def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions):
+     #returns the minimal unsatisfiable core (LTL formulas) given
+     #        cmd: picosat command
+     #        propList: list of proposition names used
+     #        topo: LTL formula describing topology
+     #        badInit: formula describing bad initial states
+     #        conjuncts: remaining LTL formulas highlighted by preliminary analysis
+     #        maxDepth: determines how many time steps we unroll 
+     #        numRegions: used to determine minimum depth to prevent false alarms (every depth between numRegions+1 and maxDepth is checked)
+       
         numProps = len(propList)
+        #initial depth is set to the number of regions. This ensures that we unroll at least as 
+        #far as needed to physically get to the goal
         depth = numRegions
         
         #first try without topo and init, see if it is satisfiable
         ignoreDepth = 0    
-        mapping, cnfMapping, init, trans, goals = conjunctsToCNF([badInit], conjuncts, propList)
+        mapping, cnfMapping, init, trans, goals = conjunctsToCNF([badInit]+conjuncts, propList)
            
         pool = Pool()
                       
@@ -274,7 +297,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts,maxDepth,numRegions):
             depth += ignoreDepth
             
         #then try just topo and init and see if it is unsatisfiable. If so, return core.
-        mapping,  cnfMapping, init, trans, goals = conjunctsToCNF([topo, badInit], [], propList)
+        mapping,  cnfMapping, init, trans, goals = conjunctsToCNF([topo, badInit], propList)
        
                     
         guilty = findGuiltyLTLConjuncts(cmd,maxDepth,numProps,init,trans,goals,mapping,cnfMapping,[topo, badInit],0)
@@ -287,7 +310,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts,maxDepth,numRegions):
             return trans, guilty
         
         #if the problem is in conjunction with the topo but not just topo, keep increasing the depth until something more than just topo is returned
-        mapping,  cnfMapping, init, trans, goals = conjunctsToCNF([topo,badInit], conjuncts, propList)
+        mapping,  cnfMapping, init, trans, goals = conjunctsToCNF([topo,badInit] + conjuncts, propList)
         
         pool = Pool()
                       

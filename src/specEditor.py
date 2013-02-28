@@ -1430,6 +1430,7 @@ class SpecEditorFrame(wx.Frame):
         if self.proj.compile_options["parser"] == "structured":
             print guilty
             if guilty is not None:
+                #look up the line number corresponding to each guilty LTL formula
                 for k,v in compiler.LTL2SpecLineNumber.iteritems():
                     newCs = k.replace("\t","\n").split('\n')
                     if not set(guilty).isdisjoint(newCs):

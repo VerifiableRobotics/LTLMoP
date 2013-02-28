@@ -571,6 +571,10 @@ class SpecCompiler(object):
     
     
     def _coreFinding(self, to_highlight, unsat, badInit):
+        #returns list of formulas that cause unsatisfiability/unrealizability (based on unsat flag).
+        #takes as input sentences marked for highlighting, and formula describing bad initial states 
+        #from JTLV.
+        
         #find number of states in automaton/counter for unsat/unreal core max unrolling depth ("recurrence diameter")
         proj_copy = deepcopy(self.proj)
         proj_copy.rfi = self.parser.proj.rfi
@@ -580,17 +584,22 @@ class SpecCompiler(object):
     
         aut = fsa.Automaton(proj_copy)
         aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
+        
         numStates = len(aut.states)
-        
         numRegions = len(self.parser.proj.rfi.regions)
-#        robotPropList = self.proj.enabled_actuators + self.proj.all_customs
-#        regList = map(lambda i: "bit"+str(i), range(0,int(numpy.ceil(numpy.log2(len(regionList))))))
-        
-#        numStates = 2**len(regList + robotPropList)
         
         
         #get conjuncts to be minimized
-        topo, conjuncts = self.ltlConjunctsFromBadLines(to_highlight, badInit)
+        
+        #topology
+        topo =self.spec['Topo'].replace('\n','')
+        topo = topo.replace('\t','')
+        
+        #have to use all initial conditions if no single bad initial state given
+        useInitFlag = badInit is None
+        
+        #other highlighted LTL formulas
+        conjuncts = self.ltlConjunctsFromBadLines(to_highlight, useInitFlag)
         
         if unsat:
             guilty = self.unsatCores(topo,badInit,conjuncts,15,15)#returns LTL  
@@ -602,11 +611,16 @@ class SpecCompiler(object):
         
     
     def unsatCores(self, topo, badInit, conjuncts,maxDepth,numRegions):
+        #returns list of guilty LTL formulas
+        #takes LTL formulas for topo, badInit and conjuncts separately because they are used in various combinations later
+        #numStates and numRegions are used to determine unroll depth later
         
         cmd = self._getPicosatCommand() 
         if not conjuncts and badInit == "":
-            return []
+            #this means that the topology is unsatisfiable by itself (not common since we auto-generate)
+            return topo
         else:
+            #try the different cases of unsatisfiability (need to pass in command and proplist to coreUtils function)
             self.trans, guilty = unsatCoreCases(cmd, self.propList, topo, badInit, conjuncts,maxDepth,numRegions)
                     
         return guilty
@@ -614,7 +628,6 @@ class SpecCompiler(object):
     
         
     def unrealCores(self,topo,badInit,conjuncts,maxDepth,numRegions):
-        #get conjuncts to be minimized
         return []
         
     def _getPicosatCommand(self):
@@ -635,19 +648,16 @@ class SpecCompiler(object):
 
         return cmd
     
-    def ltlConjunctsFromBadLines(self, to_highlight, badInit):
-        #given the lines to be highlighted by the initial analysis and bad 
-        #initial conditions from JTLV, returns a list of LTL formulas that,
-        #when conjuncted, cause unsatisfiability
-        #topology conjuncts are separated out
-                
-        topo=self.spec['Topo'].replace('\n','')
-        topo = topo.replace('\t','')
+   
         
-        if badInit != "":
-            conjuncts = [badInit]
-        else:
-            conjuncts = []
+                
+    
+    def ltlConjunctsFromBadLines(self, to_highlight, useInitFlag):
+        #given the lines to be highlighted by the initial analysis, returns 
+        #a list of LTL formulas that, when conjuncted, cause unsatisfiability
+        #topology conjuncts are separated out
+               
+        conjuncts = []
                 
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
@@ -661,7 +671,7 @@ class SpecCompiler(object):
                 newCs = [goals[h_item[2]]]
                 newCsOld = newCs
                 
-            elif h_item[1] == "trans" or not badInit:
+            elif h_item[1] == "trans" or h_item[1] == "init" and useInitFlag:
                 newCs =  self.spec[tb_key].replace("\t", "\n").split("\n")
                 
             conjuncts.extend(newCs)
@@ -669,7 +679,7 @@ class SpecCompiler(object):
         #filter out props that are actually used
         self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or p in topo]
             
-        return topo, conjuncts
+        return conjuncts
     
 
     def _synthesize(self, with_safety_aut=False):
