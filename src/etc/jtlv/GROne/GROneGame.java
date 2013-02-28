@@ -1016,23 +1016,27 @@ public class GROneGame {
 				/* Find Z index of current state */
 				// find minimal cy and an i
 				int p_az = -1;
-				for (int i = 0; i < z2_mem.length; i++) {
-					if (!p_st.and(z2_mem[i]).isZero()) {
-						p_az = i;
-						break;
+				if (!p_st.and(z2_mem[0]).isZero()) p_az = 0;
+				else {
+					for (int i = 1; i < z2_mem.length; i++) {
+						if (!p_st.and(z2_mem[i]).and(controlStatesX(env,sys,(z2_mem[i-1]))).isZero()) {
+							p_az = i;
+							break;
+						}
 					}
 				}
+				System.out.println("p_az "+p_az);
 				assert p_az >= 0 : p_st+"Couldn't find p_az";
 			   
 				/* Find Y index of current state */
 				int p_j = -1;
 				for (int j = 0; j < sysJustNum; j++) {
-					 if (!p_st.and((y2_mem[j][p_az])).isZero()) {
+					 if (!p_st.and(controlStatesX(env,sys,(y2_mem[j][p_az]))).isZero()) {
 						p_j = j;
 						break;
 					}
 				}
-				//System.out.println("p_j "+p_j);
+				System.out.println("p_j "+p_j);
 				
 				assert p_j >= 0 : "Couldn't find p_j";
 
@@ -1040,11 +1044,12 @@ public class GROneGame {
 				/* Find X index of current state */
 				int p_c = -1;
 				for (int c = 0; c < x2_mem[p_j][rank_i][p_az].length; c++) {
-					if (!p_st.and((x2_mem[p_j][rank_i][p_az][c])).isZero()) {
+					if (!p_st.and(controlStatesX(env,sys,(x2_mem[p_j][rank_i][p_az][c]))).isZero()) {
 						p_c = c;
 						break;
 					}
 				}
+				//System.out.println("p_c "+p_c);
 				assert p_c >= 0 : "Couldn't find p_c";
 				
 				
@@ -1112,6 +1117,7 @@ public class GROneGame {
 									.and((controlStatesX(env,sys,z2_mem[p_az-1])).not())));
 					}
 					if (!input.isZero() && det) {	
+						//System.out.println("RHO 3");	
 						new_i = (rank_i + 1) % env.justiceNum();
 						new_j = p_j;		                							
 						break;						
