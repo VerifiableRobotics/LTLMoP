@@ -175,16 +175,17 @@ class MopsyFrame(wx.Frame):
             desired_jx = int(sys.argv[2])
             
             for s in self.env_aut.states:
-                rank_str = s.transitions[0].rank
-                m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
-                if m is None:
-                    print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
-                    return
-                jx = int(m.group(1))
+                if s.transitions:
+                    rank_str = s.transitions[0].rank
+                    m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
+                    if m is None:
+                        print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
+                        return
+                    jx = int(m.group(1))
 
-                if jx == desired_jx:
-                    self.env_aut.current_state = s
-                    break
+                    if jx == desired_jx:
+                        self.env_aut.current_state = s
+                        break
 
             if self.env_aut.current_state is None:
                 print "ERROR: could not find state in counterstrategy to falsify sys goal #{}".format(desired_jx)

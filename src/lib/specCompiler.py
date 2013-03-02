@@ -569,6 +569,7 @@ class SpecCompiler(object):
         
         return (realizable, unsat, nonTrivial, to_highlight, output)
     
+       
     
     def _coreFinding(self, to_highlight, unsat, badInit):
         #returns list of formulas that cause unsatisfiability/unrealizability (based on unsat flag).
@@ -581,15 +582,61 @@ class SpecCompiler(object):
         proj_copy.sensor_handler = None
         proj_copy.actuator_handler = None
         proj_copy.h_instance = None
+        
+        num_bits = int(numpy.ceil(numpy.log2(len(self.parser.proj.rfi.regions))))  # Number of bits necessary to encode all regions
+        region_props = ["bit" + str(n) for n in xrange(num_bits)]
     
         aut = fsa.Automaton(proj_copy)
-        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
+        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_actuators + self.proj.all_customs + region_props, self.proj.enabled_sensors, [])
+       
+        
+        #find deadlocked states in the automaton (states with no out-transitions)
+        deadStates = [s for s in aut.states if not s.transitions]
+        #find states that can be forced by the environment into the deadlocked set
+        forceDeadStates = [(s, e) for s in aut.states for e in deadStates if e in s.transitions]
+        #LTL representation of these states and the deadlock-causing environment move in the next time step       
+        forceDeadlockLTL = map(lambda (s,e): " & ".join([stateToLTL(s), stateToLTL(e, True)]), forceDeadStates)
+        
+        
+        #find livelocked goal and corresponding one-step propositional formula (by stripping LTL operators)     
+        desiredGoal = [h_item[2] for h_item in to_highlight if h_item[1] == "goals"]
+        if desiredGoal:
+            desiredGoal = desiredGoal[0]
+            desiredGoalLTL = stripLTLLine(self.ltlConjunctsFromBadLines([h_item for h_item in to_highlight if h_item[1] == "goals"], False)[0],True)
+        
+        
+            
+        def preventsDesiredGoal(s):
+                rank_str = s.transitions[0].rank
+                m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
+                if m is None:
+                    print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
+                    return
+                jx = int(m.group(1))         
+                return (jx == desiredGoal)
+                    
+        
+        #find livelocked states in the automaton (states with desired sys rank)           
+        livelockedStates = filter(preventsDesiredGoal, [s for s in aut.states if s.transitions])
+        #LTL representation of these states and the livelocked goal  
+        forceLivelockLTL = map(lambda s: " & ".join([stateToLTL(s), desiredGoalLTL]), livelockedStates)
         
         numStates = len(aut.states)
         numRegions = len(self.parser.proj.rfi.regions)
         
-        
-        #get conjuncts to be minimized
+        if forceDeadlockLTL:
+            deadlockFlag = True
+            badStatesLTL = forceDeadlockLTL
+        else:
+            #this means livelock
+            deadlockFlag = False            
+            badStatesLTL = forceLivelockLTL
+            
+        #################################
+        #                               #
+        # get conjuncts to be minimized #
+        #                               #
+        #################################
         
         #topology
         topo =self.spec['Topo'].replace('\n','')
@@ -601,21 +648,25 @@ class SpecCompiler(object):
         #other highlighted LTL formulas
         conjuncts = self.ltlConjunctsFromBadLines(to_highlight, useInitFlag)
         
+        #filter out props that are actually used
+        self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or [c for c in badStatesLTL if p in c and not unsat] or p in topo]
+                    
+        cmd = self._getPicosatCommand() 
+            
         if unsat:
-            guilty = self.unsatCores(topo,badInit,conjuncts,15,15)#returns LTL  
+            guilty = self.unsatCores(cmd, topo,badInit,conjuncts,15,15)#returns LTL  
         else:
-            guilty = self.unrealCores(topo,badInit,conjuncts,numStates,numRegions)#returns LTL   
+            guilty = self.unrealCores(cmd, topo, badStatesLTL, conjuncts,deadlockFlag)#returns LTL   
         return guilty
         
         
         
     
-    def unsatCores(self, topo, badInit, conjuncts,maxDepth,numRegions):
+    def unsatCores(self, cmd, topo, badInit, conjuncts,maxDepth,numRegions):
         #returns list of guilty LTL formulas
         #takes LTL formulas for topo, badInit and conjuncts separately because they are used in various combinations later
         #numStates and numRegions are used to determine unroll depth later
         
-        cmd = self._getPicosatCommand() 
         if not conjuncts and badInit == "":
             #this means that the topology is unsatisfiable by itself (not common since we auto-generate)
             return topo
@@ -627,8 +678,22 @@ class SpecCompiler(object):
                 
     
         
-    def unrealCores(self,topo,badInit,conjuncts,maxDepth,numRegions):
-        return []
+    def unrealCores(self, cmd, topo, badStatesLTL, conjuncts, deadlockFlag):
+        #returns list of guilty LTL formulas FOR THE UNREALIZABLE CASE
+        #takes LTL formulas representing the topology and other highlighted conjuncts as in the unsat case.
+        #also takes a list of deadlocked/livelocked states (as LTL/propositional formulas)        
+        #returns LTL formulas that appear in the guilty set for *all* deadlocked (*any* livelocked) states,
+        #i.e. formulas that cause deadlock/livelock in these states
+        
+        #try the different cases of unsatisfiability (need to pass in command and proplist to coreUtils function)
+        if deadlockFlag:
+            results = map(lambda d: unsatCoreCases(cmd, self.propList, topo, d, conjuncts, 1, 1), badStatesLTL)        
+            guilty = reduce(set.intersection,map(set,[g for t, g in results]))
+        else:
+            results = map(lambda d: unsatCoreCases(cmd, self.propList, topo, d, conjuncts, 0, 0), badStatesLTL)        
+            guilty = reduce(set.union,map(set,[g for t, g in results]))        
+        return guilty
+    
         
     def _getPicosatCommand(self):
         # look for picosat
@@ -676,9 +741,6 @@ class SpecCompiler(object):
                 
             conjuncts.extend(newCs)
         
-        #filter out props that are actually used
-        self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or p in topo]
-            
         return conjuncts
     
 

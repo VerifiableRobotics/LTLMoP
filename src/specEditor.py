@@ -1402,7 +1402,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Initial analysis complete.\n\n", "BLUE")
 
-        if (not realizable or not nonTrivial) and self.unsat:
+        if (not realizable or not nonTrivial):# and self.unsat:
             self.appendLog("Further analysis is possible.\n", "BLUE")
             self.analysisDialog.button_refine.Enable(True)
             self.analysisDialog.button_refine.SetLabel("Refine analysis...")

@@ -88,34 +88,39 @@ def cnfToConjuncts(cnfIndices, mapping):
 
 
 def lineToCnf(line):
-        #converts a single LTL formula into CNF form            
-        lineOld = line
-        
-        
-        line = re.sub('[\t\n]*','',line)            
-        line = re.sub('s\.','',line)
-        line = re.sub('e\.','',line)   
-        line = re.sub(r'(next\(\s*!)', r'(!next_', line)         
-        line = re.sub(r'(next\()', r'(next_', line)         
-        line = re.sub('\<\>','',line)  
-        line = re.sub('\[\]','',line)  
-        line = line.strip()
-        #trailing &
-        line = re.sub('&\s*$','',line)  
-        
+        #converts a single LTL formula into CNF form 
+        line = stripLTLLine(line)
         if line!='':
-            
+            line = re.sub('s\.','',line)
+            line = re.sub('e\.','',line)   
+            line = re.sub(r'(next\(\s*!)', r'(!next_', line)         
+            line = re.sub(r'(next\()', r'(next_', line)
             line = re.sub('!', '~', line)
             #line = re.sub('&\s*\n', '', line)
             line = re.sub('[\s]+', ' ', line)        
             line = re.sub('\<-\>', '<=>', line)
             line = re.sub('->', '>>', line)
             line = line.strip() 
-            cnf = str(to_cnf(line))
+            cnf = str(to_cnf(line))            
             return cnf
         else:
-            return None
+            return None        
+        
+        
     
+def stripLTLLine(line, useNext=False):
+        #strip white text and LTL operators           
+        line = re.sub('[\t\n]*','',line)    
+        line = re.sub('\<\>','',line)  
+        line = re.sub('\[\]','',line)  
+        line = line.strip()
+        #trailing &
+        line = re.sub('&\s*$','',line)   
+        if useNext:
+            line = re.sub('s\.','next_s.',line)
+            line = re.sub('e\.','next_e.',line)                     
+        return line
+        
 def subprocessReadThread(fd, out):
             for line in fd:                                                                              
                out.append(line) 
@@ -158,7 +163,7 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         
         #send header
         input = "p cnf "+str(p)+" "+str(n)+"\n"
-        subp.stdin.write(input)                                      
+        subp.stdin.write(input)                     
         subp.stdin.writelines(init)               
            
 
@@ -333,7 +338,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         justTopo = set([topo, badInit]).issuperset(guiltyMinusGoal)
         depth = maxDepth + 1
         
-        while justTopo:
+        while justTopo and depth < maxDepth:
             
             guilty = findGuiltyLTLConjuncts(cmd,depth,numProps,init,trans,goals,mapping,cnfMapping,[topo, badInit]+conjuncts, ignoreDepth)
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
@@ -351,6 +356,20 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         print "unsat core found with all parts" 
         
         return trans, guilty
+    
+def stateToLTL(state, use_next=False):
+        def decorate_prop(prop, polarity):
+            if int(polarity) == 0:
+                prop = "!"+prop
+            if use_next:
+                prop = "next({})".format(prop)
+            return prop
+            
+       
+        sys_state = " & ".join([decorate_prop("s."+p, v) for p,v in state.inputs.iteritems()])
+        env_state = " & ".join([decorate_prop("e."+p, v) for p,v in state.outputs.iteritems()])
+                
+        return env_state + " & " + sys_state
             
         
         
