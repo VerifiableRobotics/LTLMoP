@@ -1016,13 +1016,10 @@ public class GROneGame {
 				/* Find Z index of current state */
 				// find minimal cy and an i
 				int p_az = -1;
-				if (!p_st.and(z2_mem[0]).isZero()) p_az = 0;
-				else {
-					for (int i = 1; i < z2_mem.length; i++) {
-						if (!p_st.and(z2_mem[i]).and(controlStatesX(env,sys,(z2_mem[i-1]))).isZero()) {
-							p_az = i;
-							break;
-						}
+				for (int i = 0; i < z2_mem.length; i++) {
+					if (!p_st.and(z2_mem[i]).isZero()) {
+						p_az = i;
+						break;
 					}
 				}
 				//System.out.println("p_az "+p_az);
@@ -1068,6 +1065,7 @@ public class GROneGame {
 				while (input.isZero()) {
 					
 					//\rho_1 transitions in K\"onighofer et al
+					
 					if (p_az == 0) {
 						//CHECK IF WE CAN FORCE A SAFETY VIOLATION IN ONE STEP
 						input = (p_st.and(primed_cur_succ.and(controlStatesX(env,sys,Env.FALSE())))); //CONSIDERS CURRENT ENV. MOVE ONLY 
@@ -1079,7 +1077,7 @@ public class GROneGame {
 					}
 					
 					if (!input.isZero()) {	
-						//System.out.println("RHO 1");
+							//System.out.println("RHO 1");
 							new_i = rank_i;
 							new_j = -1;
 						
