@@ -5,6 +5,7 @@ import math
 import subprocess
 import numpy
 import glob
+import StringIO
 
 from multiprocessing import Pool
 
@@ -595,14 +596,17 @@ class SpecCompiler(object):
         #find states that can be forced by the environment into the deadlocked set
         forceDeadStates = [(s, e) for s in aut.states for e in deadStates if e in s.transitions]
         #LTL representation of these states and the deadlock-causing environment move in the next time step       
-        forceDeadlockLTL = map(lambda (s,e): " & ".join([stateToLTL(s), stateToLTL(e, True)]), forceDeadStates)
+        forceDeadlockLTL = map(lambda (s,e): " & ".join([stateToLTL(s), stateToLTL(e, 1, 1, True)]), forceDeadStates)
         
         
         #find livelocked goal and corresponding one-step propositional formula (by stripping LTL operators)     
         desiredGoal = [h_item[2] for h_item in to_highlight if h_item[1] == "goals"]
+        
+        
         if desiredGoal:
             desiredGoal = desiredGoal[0]
-            desiredGoalLTL = stripLTLLine(self.ltlConjunctsFromBadLines([h_item for h_item in to_highlight if h_item[1] == "goals"], False)[0],True)
+            #Don't actually need LTL        
+            #desiredGoalLTL = stripLTLLine(self.ltlConjunctsFromBadLines([h_item for h_item in to_highlight if h_item[1] == "goals"], False)[0],True)
         
         
             
@@ -618,8 +622,13 @@ class SpecCompiler(object):
         
         #find livelocked states in the automaton (states with desired sys rank)           
         livelockedStates = filter(preventsDesiredGoal, [s for s in aut.states if s.transitions])
+        #find states that can be forced by the environment into the livelocked set
+        forceLivelockedStates = [(fro, to) for fro in aut.states for to in livelockedStates if to in s.transitions]
+        
         #LTL representation of these states and the livelocked goal  
-        forceLivelockLTL = map(lambda s: " & ".join([stateToLTL(s), desiredGoalLTL]), livelockedStates)
+        #forceLivelockLTL = map(lambda s: " & ".join([stateToLTL(s), desiredGoalLTL]), livelockedStates) ###Don't actually need to add goal -- will be added in 'conjuncts'
+        forceLivelockLTL = map(lambda (s1,s2): " & ".join([stateToLTL(s1, 1, 1), stateToLTL(s2, 1, 0, True)]), forceLivelockedStates)
+        #forceLivelockLTL = map(stateToLTL, livelockedStates)
         
         numStates = len(aut.states)
         numRegions = len(self.parser.proj.rfi.regions)
@@ -656,7 +665,7 @@ class SpecCompiler(object):
         if unsat:
             guilty = self.unsatCores(cmd, topo,badInit,conjuncts,15,15)#returns LTL  
         else:
-            guilty = self.unrealCores(cmd, topo, badStatesLTL, conjuncts,deadlockFlag)#returns LTL   
+            guilty = self.unrealCores(cmd, topo, badStatesLTL, conjuncts, deadlockFlag)#returns LTL   
         return guilty
         
         
@@ -682,17 +691,35 @@ class SpecCompiler(object):
         #returns list of guilty LTL formulas FOR THE UNREALIZABLE CASE
         #takes LTL formulas representing the topology and other highlighted conjuncts as in the unsat case.
         #also takes a list of deadlocked/livelocked states (as LTL/propositional formulas)        
-        #returns LTL formulas that appear in the guilty set for *all* deadlocked (*any* livelocked) states,
+        #returns LTL formulas that appear in the guilty set for *any* deadlocked or livelocked state,
         #i.e. formulas that cause deadlock/livelock in these states
         
         #try the different cases of unsatisfiability (need to pass in command and proplist to coreUtils function)
         if deadlockFlag:
-            results = map(lambda d: unsatCoreCases(cmd, self.propList, topo, d, conjuncts, 1, 1), badStatesLTL)        
-            guilty = reduce(set.intersection,map(set,[g for t, g in results]))
+            initDepth = 1
+            maxDepth = 1            
         else:
-            results = map(lambda d: unsatCoreCases(cmd, self.propList, topo, d, conjuncts, 0, 0), badStatesLTL)        
-            guilty = reduce(set.union,map(set,[g for t, g in results]))        
+            initDepth = 1
+            maxDepth = 1                             
+        
+#        TODO: see if there is a way to call pool.map with processes that also use pools
+#
+#        sys.stdout = StringIO.StringIO()
+#        
+#        pool = Pool()
+#        guiltyList = pool.map(unsatCoreCasesWrapper, itertools.izip(itertools.repeat(cmd), itertools.repeat(self.propList), itertools.repeat(topo), badStatesLTL, itertools.repeat(conjuncts), itertools.repeat(initDepth), itertools.repeat(maxDepth)))            
+#        pool.terminate()
+#        
+#        sys.stdout = sys.__stdout__
+
+        guiltyList = map(lambda d: unsatCoreCases(cmd, self.propList, topo, d, conjuncts, initDepth, maxDepth), badStatesLTL)
+        
+        guilty = reduce(set.union,map(set,[g for t, g in guiltyList]))
+                 
         return guilty
+    
+    
+        
     
         
     def _getPicosatCommand(self):

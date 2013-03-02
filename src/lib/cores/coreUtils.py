@@ -262,6 +262,9 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
             
         return guilty
     
+ 
+def unsatCoreCasesWrapper(x): 
+    return unsatCoreCases(*x) 
     
 def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions):
      #returns the minimal unsatisfiable core (LTL formulas) given
@@ -286,7 +289,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
                       
             #print "STARTING PICO MAP"
             
-        guiltyList = map(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(cnfMapping), itertools.repeat(conjuncts),itertools.repeat(ignoreDepth)))
+        guiltyList = pool.map(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(cnfMapping), itertools.repeat(conjuncts),itertools.repeat(ignoreDepth)))
             #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             #print "ENDING PICO MAP"
             
@@ -357,7 +360,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         
         return trans, guilty
     
-def stateToLTL(state, use_next=False):
+def stateToLTL(state, useEnv=1, useSys=1, use_next=False):
         def decorate_prop(prop, polarity):
             if int(polarity) == 0:
                 prop = "!"+prop
@@ -369,7 +372,15 @@ def stateToLTL(state, use_next=False):
         sys_state = " & ".join([decorate_prop("s."+p, v) for p,v in state.inputs.iteritems()])
         env_state = " & ".join([decorate_prop("e."+p, v) for p,v in state.outputs.iteritems()])
                 
-        return env_state + " & " + sys_state
+        if useEnv:
+            if useSys:
+                return env_state + " & " + sys_state
+            else:
+                return env_state
+        elif useSys:
+            return sys_state
+        else:
+            return ""
             
         
         
