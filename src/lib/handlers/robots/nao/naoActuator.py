@@ -115,9 +115,10 @@ class naoActuatorHandler:
             if self.behaviorProxy is None:
                 self.behaviorProxy = self.naoInitHandler.createProxy('ALBehaviorManager')
 
-            #self.behaviorProxy.preloadBehavior(startBehaviorName)
-            #if endBehaviorName != "":
-            #    self.behaviorProxy.preloadBehavior(endBehaviorName)
+            # Preload behaviors to make sure they execute quickly
+            self.behaviorProxy.preloadBehavior(startBehaviorName)
+            if endBehaviorName != "":
+                self.behaviorProxy.preloadBehavior(endBehaviorName)
 
             if repeat: 
                 self.asyncBehaviorFlags[startBehaviorName+","+endBehaviorName] = False
