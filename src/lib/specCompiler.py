@@ -247,7 +247,7 @@ class SpecCompiler(object):
 
             regionList = ["s."+x.name for x in self.parser.proj.rfi.regions]
 
-            spec, traceback, failed, self.LTL2SpecLineNumber = parseEnglishToLTL.writeSpec(text, sensorList, regionList, robotPropList)
+            spec, traceback, failed, self.LTL2SpecLineNumber, self.proj.internal_props = parseEnglishToLTL.writeSpec(text, sensorList, regionList, robotPropList)
 
             # Abort compilation if there were any errors
             if failed:
