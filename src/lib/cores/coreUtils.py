@@ -94,7 +94,7 @@ def lineToCnf(line):
             line = re.sub('s\.','',line)
             line = re.sub('e\.','',line)   
             line = re.sub(r'(next\(\s*!)', r'(!next_', line)         
-            line = re.sub(r'(next\()', r'(next_', line)
+            line = re.sub(r'(next\(\s*)', r'(next_', line)
             line = re.sub('!', '~', line)
             #line = re.sub('&\s*\n', '', line)
             line = re.sub('[\s]+', ' ', line)        
