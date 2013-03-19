@@ -266,7 +266,7 @@ class MopsyFrame(wx.Frame):
             print "WARNING: negative jx"
             return
 
-        goal_ltl = self.spec['SysGoals'].split('\n')[jx].strip()
+        goal_ltl = self.spec['SysGoals'].split('\n')[jx].strip("\n\t &")
         
         if self.proj.compile_options["parser"] == "structured":
             spec_line_num = None
@@ -276,7 +276,7 @@ class MopsyFrame(wx.Frame):
                     break
 
             if spec_line_num is None:
-                print "ERROR: Couldn't find goal {!r} in LTL->spec mapping".format(ltl_frag)
+                print "ERROR: Couldn't find goal {!r} in LTL->spec mapping".format(goal_ltl)
                 return
 
             goal_spec = self.compiler.proj.specText.split("\n")[spec_line_num-1]
