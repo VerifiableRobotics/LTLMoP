@@ -133,8 +133,21 @@ public class GROneGame {
 				cy = 0;
 				y = Env.FALSE();
 				for (iterY = new FixPoint<BDD>(); iterY.advance(y);) {
-					BDD start = sys.justiceAt(j).and(env.yieldStates(sys, z))
-							.or(env.yieldStates(sys, y));
+                    BDD y2 = sys.justiceAt(j).and(env.yieldStates(sys, z)).or(y);
+                    for (FixPoint<BDD> iterY2 = new FixPoint<BDD>(); iterY2.advance(y2);) {
+                        y_mem[j][cy] = y2.id();
+                        for (int i = 0; i < envJustNum; i++) {
+                            x_mem[j][i][cy] = y2.id();
+                        }
+                        cy++;
+                        if (cy % 50 == 0) {
+                            x_mem = extend_size(x_mem, cy);
+                            y_mem = extend_size(y_mem, cy);
+                        }
+                        y2 = y2.or(env.yieldStates(sys, y2));
+                    }
+                    BDD start = y2.id(); 
+
 					y = Env.FALSE();
 					for (int i = 0; i < envJustNum; i++) {
 						BDD negp = env.justiceAt(i).not();
