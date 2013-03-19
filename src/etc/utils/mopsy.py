@@ -166,7 +166,7 @@ class MopsyFrame(wx.Frame):
         self.env_aut.motion_handler = self.dummyMotionHandler
         # We are being a little tricky here by just reversing the sensor and actuator propositions
         # to create a sort of dual of the usual automaton
-        self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.enabled_actuators + self.proj.all_customs + region_props, self.proj.enabled_sensors, [])
+        self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.enabled_actuators + self.proj.all_customs + self.compiler.proj.internal_props + region_props, self.proj.enabled_sensors, [])
 
         self.env_aut.current_region = None
 
@@ -219,7 +219,7 @@ class MopsyFrame(wx.Frame):
         self.cust_buttons = [] # This will later hold our buttons
 
         actprops = dict((k,v) for k,v in self.actuatorStates.iteritems() if k in self.proj.enabled_actuators)
-        custprops = dict((k,v) for k,v in self.actuatorStates.iteritems() if k in self.proj.all_customs)
+        custprops = dict((k,v) for k,v in self.actuatorStates.iteritems() if k in self.proj.all_customs + self.compiler.proj.internal_props)
 
         self.populateToggleButtons(self.sizer_env, self.env_buttons, self.sensorStates)
         self.populateToggleButtons(self.sizer_act, self.act_buttons, actprops)
@@ -233,7 +233,7 @@ class MopsyFrame(wx.Frame):
         self.history_grid.SetDefaultCellFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.history_grid.SetLabelFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
 
-        colheaders = self.proj.enabled_sensors + ["Region"] + self.proj.enabled_actuators + self.proj.all_customs
+        colheaders = self.proj.enabled_sensors + ["Region"] + self.proj.enabled_actuators + self.proj.all_customs + self.compiler.proj.internal_props
         self.history_grid.CreateGrid(0,len(colheaders))
         for i,n in enumerate(colheaders):
             self.history_grid.SetColLabelValue(i, " " + n + " ")
@@ -353,7 +353,8 @@ class MopsyFrame(wx.Frame):
         newvals = [self.sensorStates[s] for s in self.proj.enabled_sensors] + \
                   [self.env_aut.getAnnotatedRegionName(self.current_region)] + \
                   [self.actuatorStates[s] for s in self.proj.enabled_actuators] + \
-                  [self.actuatorStates[s] for s in self.proj.all_customs]
+                  [self.actuatorStates[s] for s in self.proj.all_customs] + \
+                  [self.actuatorStates[s] for s in self.compiler.proj.internal_props]
         lastrow = self.history_grid.GetNumberRows()-1
 
         for i,v in enumerate(newvals):
