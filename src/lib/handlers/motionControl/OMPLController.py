@@ -131,7 +131,10 @@ class motionControlHandler:
             print "MAXHEIGHT:" +str(self.original_regions.getMaximumHeight())
         
         # Information about the maximum height in z direction
-        self.maxHeight = self.original_regions.getMaximumHeight()
+        if self.Space_Dimension == 2:
+            self.maxHeight = 0.5
+        else:
+            self.maxHeight = self.original_regions.getMaximumHeight()
            
         self.map = {'polygon':{},'original_name':{},'height':{}}
         for region in self.proj.rfi.regions:
@@ -321,7 +324,9 @@ class motionControlHandler:
         
         # check if robot is inside the current region
         departed = not self.currentRegionPoly.overlaps(RobotPoly)
-        arrived  = self.nextRegionPoly.covers(RobotPoly)
+        pose = self.pose_handler.getPose()
+        arrived  = self.nextRegionPoly.isInside(pose[0],pose[1])
+        #arrived  = self.nextRegionPoly.covers(RobotPoly)
 
         if departed and (not arrived) and (time.time()-self.last_warning) > 0.5:
             # Figure out what region we think we stumbled into
@@ -435,9 +440,14 @@ class motionControlHandler:
         """
         Set the limits for the plot on x, y and z axis
         """
-        self.ax.set_xlim3d(self.BoundaryMaxMin[0], self.BoundaryMaxMin[1])
-        self.ax.set_ylim3d(self.BoundaryMaxMin[2], self.BoundaryMaxMin[3])
+        if not self.system == 1:
+            self.ax.set_xlim3d(self.BoundaryMaxMin[0], self.BoundaryMaxMin[1])
+            self.ax.set_ylim3d(self.BoundaryMaxMin[2], self.BoundaryMaxMin[3])
+        else:
+            self.ax.set_xlim3d(self.BoundaryMaxMin[0], self.BoundaryMaxMin[1])
+            self.ax.set_ylim3d(self.BoundaryMaxMin[3], self.BoundaryMaxMin[2])
         self.ax.set_zlim3d(-0.05,self.maxHeight)
+        
 
     def plotPoly(self,c,string,w = 1):
         """
@@ -581,8 +591,12 @@ class motionControlHandler:
         start().setX(pose[0]) 
         start().setY(pose[1])
         if self.Space_Dimension == 2:
+            while pose[2] > pi or pose[2] < -pi:
+                if pose[2]> pi:
+                    pose[2] = pose[2] - pi
+                else:
+                    pose[2] = pose[2] + pi
             start().setYaw(pose[2]) #
-            #start().setYaw(0) #pose[2]
         else:
             start().setZ(pose[3])
             start().rotation().setIdentity()
