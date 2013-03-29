@@ -591,8 +591,10 @@ class HandlerParser:
 
         try:
             __import__(handlerFile)
-        except ImportError:
-            if not self.silent: print "WARNING: Failed to import handler %s" % handlerFile
+        except Exception as e:
+            if not self.silent: 
+                print e
+                print "WARNING: Failed to import handler %s" % handlerFile
             return None
 
         handlerModule = sys.modules[handlerFile]
