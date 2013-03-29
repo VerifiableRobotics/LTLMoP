@@ -2,7 +2,7 @@ DriveHandler: # Robot default drive handler with default argument values
 holonomicDrive()
 
 InitHandler: # Robot default init handler with default argument values
-nullInit()
+gumboInit()
 
 LocomotionCommandHandler: # Robot default locomotion command handler with default argument values
 nullLocomotionCommand()

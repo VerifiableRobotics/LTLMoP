@@ -31,9 +31,9 @@ fear, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 classroom = classroom
 office = office
-lab = lab
-lounge = lounge
 library = library
+lounge = lounge
+lab = lab
 hall = hall
 kitchen = kitchen
 
