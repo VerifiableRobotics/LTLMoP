@@ -157,9 +157,9 @@ class RegionFileInterface(object):
             * values = Lists of faces connecting the two regions
     """
 
-    def __init__(self, background="None", regions=[], transitions=None):
+    def __init__(self, background="None", regions=None, transitions=None):
         self.background = background
-        self.regions = regions
+        self.regions = [] if regions is None else regions
         self.transitions = transitions
         self.filename = None
 
@@ -472,7 +472,7 @@ class Region(object):
     """
 
     def __init__(self, type=reg_POLY, position=Point(0, 0), size=Size(0, 0),
-                 color=None, points=[], name=''):
+                 color=None, points=None, name=''):
 
         if color is None:
             # Give a random color
@@ -484,7 +484,7 @@ class Region(object):
         self.position          = position
         self.size              = size
         self.color             = color
-        self.pointArray        = points
+        self.pointArray        = [] if points is None else points
         self.alignmentPoints   = [False] * len([x for x in self.getPoints()])
         self.isObstacle = False
         self.holeList = []
