@@ -1279,10 +1279,10 @@ class SpecEditorFrame(wx.Frame):
         aut = fsa.Automaton(proj_copy)
 
         aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
-        #aut.writeDot(self.proj.getFilenamePrefix()+".dot")
+        aut.writeDot(self.proj.getFilenamePrefix()+".dot")
         
         
-    #def _exportSMVFile(self):              
+    def _exportSMVFile(self):              
         aut.writeSMV(self.proj.getFilenamePrefix()+"MC.smv")
         
         
