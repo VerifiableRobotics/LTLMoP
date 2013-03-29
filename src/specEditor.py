@@ -1027,7 +1027,7 @@ class SpecEditorFrame(wx.Frame):
             return
 
         # Check that there's a boundary region
-        if self.proj.rfi.indexOfRegionWithName("boundary") < 0:
+        if self.proj.compile_options["decompose"] and self.proj.rfi.indexOfRegionWithName("boundary") < 0:
             wx.MessageBox("Please define a boundary region before compiling.\n(Just add a region named 'boundary' in RegionEditor.)", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -1054,8 +1054,9 @@ class SpecEditorFrame(wx.Frame):
         self.decomposedRFI = compiler.parser.proj.rfi
 
         # Update workspace decomposition listbox
-        self.list_box_locphrases.Set(self.proj.regionMapping.keys())
-        self.list_box_locphrases.Select(0)
+        if self.proj.regionMapping is not None:
+            self.list_box_locphrases.Set(self.proj.regionMapping.keys())
+            self.list_box_locphrases.Select(0)
 
         self.appendLog("Creating LTL...\n", "BLUE")
 
