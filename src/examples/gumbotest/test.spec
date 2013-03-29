@@ -11,7 +11,7 @@ CompileOptions:
 convexify: False
 parser: structured
 fastslow: False
-decompose: True
+decompose: False
 use_region_bit_encoding: True
 
 CurrentConfigName:
