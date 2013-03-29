@@ -109,7 +109,11 @@ class SpecCompiler(object):
                     
         # save the regions into new region file
         filename = self.proj.getFilenamePrefix() + '_decomposed.regions'
-        self.parser.proj.rfi.recalcAdjacency()
+
+        # FIXME: properly support obstacles in non-decomposed maps?
+        if self.proj.compile_options["decompose"]:
+            self.parser.proj.rfi.recalcAdjacency()
+
         self.parser.proj.rfi.writeFile(filename)
 
 
