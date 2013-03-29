@@ -340,7 +340,8 @@ class Automaton:
                 FILE.write('\ts'+ state.name +' -> s'+ nextState.name +'[style=\"bold\", arrowsize = 1.5, fontsize = 20, label=\"')
                 # Check the next state to figure out which inputs have to be on
                 envRegion = self.envRegionFromState(nextState)
-                FILE.write( self.getAnnotatedRegionName(envRegion) + '\\n')
+                if envRegion is not None:
+                    FILE.write( self.getAnnotatedRegionName(envRegion) + '\\n')
                 for key in nextState.inputs.keys():
                     if re.match('^sbit\d+$',key): continue
                     if nextState.inputs[key] == '1':
