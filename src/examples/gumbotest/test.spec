@@ -15,7 +15,7 @@ decompose: False
 use_region_bit_encoding: True
 
 CurrentConfigName:
-sim
+ros
 
 Customs: # List of custom propositions
 
@@ -29,14 +29,13 @@ fear, 1
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-classroom = p7
-office = p1
-library = p3
-lounge = p2
-lab = p4
-others = 
-hall = p6
-kitchen = p5
+classroom = classroom
+office = office
+lab = lab
+lounge = lounge
+library = library
+hall = hall
+kitchen = kitchen
 
 Spec: # Specification in structured English
 group cool_places is office, library, lounge
