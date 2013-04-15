@@ -20,7 +20,7 @@ Type: # Robot type
 atrv_jr
 
 SensorHandler: # Robot default sensor handler with default argument values
-nullSensor()
+gumboSensor()
 
 ActuatorHandler: # Robot default actuator handler with default argument values
 nullActuator()

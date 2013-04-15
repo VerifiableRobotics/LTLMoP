@@ -23,7 +23,7 @@ RegionFile: # Relative path of region description file
 4thfloor.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-fear, 1
+badguy, 1
 
 
 ======== SPECIFICATION ========
@@ -38,9 +38,9 @@ hall = hall
 kitchen = kitchen
 
 Spec: # Specification in structured English
-group cool_places is office, library, lounge
-do panic if and only if you are sensing fear
-if you are not sensing fear then visit all cool_places
+group cool_places is classroom
+do panic if and only if you are sensing badguy
+if you are not sensing badguy then visit all cool_places
 
-if you are sensing start of fear or end of fear then stay there
+if you are sensing start of badguy or end of badguy then stay there
 
