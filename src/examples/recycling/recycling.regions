@@ -1,0 +1,144 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+
+Obstacles: # Names of regions to treat as obstacles
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "boundary", 
+        "color": [
+            255, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                411.0, 
+                138.0
+            ], 
+            [
+                622.0, 
+                138.0
+            ], 
+            [
+                622.0, 
+                0.0
+            ], 
+            [
+                411.0, 
+                0.0
+            ], 
+            [
+                208.0, 
+                3.0
+            ], 
+            [
+                0.0, 
+                3.0
+            ], 
+            [
+                0.0, 
+                141.0
+            ], 
+            [
+                208.0, 
+                141.0
+            ]
+        ], 
+        "position": [
+            108.0, 
+            157.0
+        ], 
+        "type": "poly", 
+        "size": [
+            622.0, 
+            141.0
+        ]
+    }, 
+    {
+        "name": "bedroom", 
+        "color": [
+            255, 
+            0, 
+            255
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0.0, 
+                3.0
+            ], 
+            [
+                203.0, 
+                0.0
+            ], 
+            [
+                203.0, 
+                138.0
+            ], 
+            [
+                0.0, 
+                141.0
+            ]
+        ], 
+        "position": [
+            316.0, 
+            157.0
+        ], 
+        "type": "poly", 
+        "size": [
+            203.0, 
+            141.0
+        ]
+    }, 
+    {
+        "name": "office", 
+        "color": [
+            255, 
+            0, 
+            0
+        ], 
+        "position": [
+            519.0, 
+            157.0
+        ], 
+        "type": "rect", 
+        "size": [
+            211.0, 
+            138.0
+        ]
+    }, 
+    {
+        "name": "hall", 
+        "color": [
+            255, 
+            128, 
+            0
+        ], 
+        "position": [
+            108.0, 
+            160.0
+        ], 
+        "type": "rect", 
+        "size": [
+            208.0, 
+            138.0
+        ]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+boundary	bedroom	519.0	157.0	316.0	160.0	316.0	298.0	519.0	295.0
+boundary	office	730.0	157.0	519.0	157.0	730.0	295.0	730.0	157.0	730.0	295.0	519.0	295.0
+boundary	hall	108.0	298.0	108.0	160.0	108.0	160.0	316.0	160.0	108.0	298.0	316.0	298.0
+bedroom	office	519.0	157.0	519.0	295.0
+bedroom	hall	316.0	298.0	316.0	160.0
+
