@@ -8,6 +8,7 @@ import wx.lib.buttons, wx.lib.delayedresult
 import sys, os, re, copy
 import numpy
 import threading
+import textwrap
 
 # Climb the tree to find out where we are
 p = os.path.abspath(__file__)
@@ -475,7 +476,8 @@ class MopsyFrame(wx.Frame):
     def populateToggleButtons(self, target_sizer, button_container, items):
         for item_name, item_val in items.iteritems():
             # Create the new button and add it to the sizer
-            button_container.append(wx.lib.buttons.GenToggleButton(self.window_1_pane_2, -1, item_name))
+            name = textwrap.fill(item_name, 100)
+            button_container.append(wx.lib.buttons.GenToggleButton(self.window_1_pane_2, -1, name))
             target_sizer.Add(button_container[-1], 1, wx.EXPAND, 0)
 
             # Set the initial value as appropriate
@@ -502,7 +504,7 @@ class MopsyFrame(wx.Frame):
 
         #print btn.GetLabelText() + "=" + str(btn.GetValue())
 
-        self.actuatorStates[btn.GetLabelText()] = int(btn.GetValue())
+        self.actuatorStates[btn.GetLabelText().replace("\n","")] = int(btn.GetValue())
 
         # TODO: Button background colour doesn't show up very well
         if btn.GetValue():
