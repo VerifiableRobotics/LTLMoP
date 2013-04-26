@@ -44,9 +44,18 @@ class naoActuatorHandler:
         else:
             if actuatorVal == True:
                self.ledProxy.setIntensity('FaceLeds',1)
+               self.ledProxy.setIntensity('EarLeds',1)
+               self.ledProxy.setIntensity('BrainLeds',1)
+               self.ledProxy.setIntensity('ChestLeds',1)
+               self.ledProxy.setIntensity('FeetLeds',1)
+
             else:
                self.ledProxy.setIntensity('FaceLeds',0)
-
+               self.ledProxy.setIntensity('EarLeds',0)
+               self.ledProxy.setIntensity('BrainLeds',0)
+               self.ledProxy.setIntensity('ChestLeds',0)
+               self.ledProxy.setIntensity('FeetLeds',0g)
+               
     def _countingThread(self, start, skip, period):
         number = start
         while 1:
