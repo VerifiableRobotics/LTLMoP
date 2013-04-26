@@ -147,7 +147,7 @@ class SpecCompiler(object):
             performConversion(self.proj.getFilenamePrefix() + ".smv", self.proj.getFilenamePrefix() + ".ltl")
             sys.stdout = sys.__stdout__
 
-        cmd = [slugs_path, self.proj.getFilenamePrefix() + ".slugsin"]
+        cmd = [slugs_path, "--sysInitRoboticsSemantics", self.proj.getFilenamePrefix() + ".slugsin", self.proj.getFilenamePrefix() + ".aut"]
 
         return cmd
 
