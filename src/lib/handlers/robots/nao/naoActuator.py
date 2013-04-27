@@ -32,29 +32,43 @@ class naoActuatorHandler:
     ### Available actuator functions: ###
     #####################################
 
-    def faceLEDs(self, actuatorVal, initial=False):
+    def LEDs(self, FaceLED, EarLED, BrainLED, ChestLED, FeetLED, actuatorVal, initial=False):
         """
         Use Nao's face LED to indicate state of proposition.
+        FaceLED (bool): if the eye leds are used. (default=False)
+        EarLED (bool): if the ear leds are used. (default=False)
+        BrainLED (bool): if the head leds are used. (default=False)
+        ChestLED (bool): if the chest led is used. (default=False)
+        FeetLED (bool): if the feet leds are used. (default=False)
         """
-
 
         if initial:
             if self.ledProxy is None:
                 self.ledProxy = self.naoInitHandler.createProxy('ALLeds')
         else:
             if actuatorVal == True:
-               self.ledProxy.setIntensity('FaceLeds',1)
-               self.ledProxy.setIntensity('EarLeds',1)
-               self.ledProxy.setIntensity('BrainLeds',1)
-               self.ledProxy.setIntensity('ChestLeds',1)
-               self.ledProxy.setIntensity('FeetLeds',1)
+                if FaceLED == True:
+                    self.ledProxy.setIntensity('FaceLeds',1)
+                if EarLED == True:
+                    self.ledProxy.setIntensity('EarLeds',1)
+                if BrainLED == True:
+                    self.ledProxy.setIntensity('BrainLeds',1)
+                if ChestLED == True:
+                    self.ledProxy.setIntensity('ChestLeds',1)
+                if FeetLED == True:
+                    self.ledProxy.setIntensity('FeetLeds',1)
 
             else:
-               self.ledProxy.setIntensity('FaceLeds',0)
-               self.ledProxy.setIntensity('EarLeds',0)
-               self.ledProxy.setIntensity('BrainLeds',0)
-               self.ledProxy.setIntensity('ChestLeds',0)
-               self.ledProxy.setIntensity('FeetLeds',0g)
+                if FaceLED == True:
+                    self.ledProxy.setIntensity('FaceLeds',0)
+                if EarLED == True:
+                    self.ledProxy.setIntensity('EarLeds',0)
+                if BrainLED == True:
+                    self.ledProxy.setIntensity('BrainLeds',0)
+                if ChestLED == True:
+                    self.ledProxy.setIntensity('ChestLeds',0)
+                if FeetLED == True:
+                    self.ledProxy.setIntensity('FeetLeds',0)
                
     def _countingThread(self, start, skip, period):
         number = start
