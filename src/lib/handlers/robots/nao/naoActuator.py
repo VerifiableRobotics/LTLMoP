@@ -9,6 +9,9 @@ import time
 import threading
 import numpy as np
 import NaoArmPathPlanner
+
+import sys
+
 class naoActuatorHandler:
     def __init__(self, proj, shared_data):
         """
@@ -32,6 +35,14 @@ class naoActuatorHandler:
         self.asyncBehaviorThreads = {}
         self.armPlanner = NaoArmPathPlanner.PathPlanner(safetyRadius = 0, \
                     stepRange = [10,30], stepInt = 5, attrPow = 2, closeEnough = 10)
+     
+    """              
+    def _stop(self):
+        if not self.trackerProxy == None and  self.motionProxy == None:
+            self.startActiveTracking(False, False)
+        sys.exit(0)
+    """   
+    
     #####################################
     ### Available actuator functions: ###
     #####################################
@@ -234,45 +245,50 @@ class naoActuatorHandler:
                     
                 else:
                     path = None
-                    while path == None:
-                        self.startActiveTracking(True, False)   
-                        self.sensor_handler['MAE'].seeRedBall(5, False)
-                        #redBallData = self.sensor_handler['MAE']._getRedBallPose()
-                        previous_redBallData = self.sensorData["redBallData"]
-                        redBallConsistencyCount = 0    
-                        redBallConsistencyRadiusThres = 5 # radius allowed for the movement of the ball  
-                         
-                        while redBallConsistencyCount < 5:#len(redBallData['pos']) == 0:
-                            
+                    try:
+                        while path == None:
+                            self.startActiveTracking(True, False)   
                             self.sensor_handler['MAE'].seeRedBall(5, False)
                             #redBallData = self.sensor_handler['MAE']._getRedBallPose()
-                            redBallData = self.sensorData["redBallData"]
-                            print redBallData
-                            if len(redBallData['pos']) == 0:
-                                pass
-                            else:
-                                if abs(previous_redBallData['pos'][0] - redBallData['pos'][0]) <= redBallConsistencyRadiusThres:
-                                    if abs(previous_redBallData['pos'][1] - redBallData['pos'][1]) <= redBallConsistencyRadiusThres:
-                                        if abs(previous_redBallData['pos'][2] - redBallData['pos'][2]) <= redBallConsistencyRadiusThres:
-                                            redBallConsistencyCount += 1
-                                        else:
-                                            redBallConsistencyCount = 0
-                                    else:
-                                        redBallConsistencyCount = 0 
+                            previous_redBallData = self.sensorData["redBallData"]
+                            redBallConsistencyCount = 0    
+                            redBallConsistencyRadiusThres = 5 # radius allowed for the movement of the ball  
+                             
+                            while redBallConsistencyCount < 5:#len(redBallData['pos']) == 0:
+                                
+                                self.sensor_handler['MAE'].seeRedBall(5, False)
+                                #redBallData = self.sensor_handler['MAE']._getRedBallPose()
+                                redBallData = self.sensorData["redBallData"]
+                                print redBallData
+                                if len(redBallData['pos']) == 0:
+                                    pass
                                 else:
-                                    redBallConsistencyCount = 0
-                                    
-                                previous_redBallData = redBallData
-                            time.sleep(.5)
-                    
+                                    if abs(previous_redBallData['pos'][0] - redBallData['pos'][0]) <= redBallConsistencyRadiusThres:
+                                        if abs(previous_redBallData['pos'][1] - redBallData['pos'][1]) <= redBallConsistencyRadiusThres:
+                                            if abs(previous_redBallData['pos'][2] - redBallData['pos'][2]) <= redBallConsistencyRadiusThres:
+                                                redBallConsistencyCount += 1
+                                            else:
+                                                redBallConsistencyCount = 0
+                                        else:
+                                            redBallConsistencyCount = 0 
+                                    else:
+                                        redBallConsistencyCount = 0
+                                        
+                                    previous_redBallData = redBallData
+                                time.sleep(.5)
                         
-                        ballObject = NaoArmPathPlanner.Shape3D(redBallData["pos"], radius, \
-                                                                "sphere")
-                        bodyAngles = self.motionProxy.getAngles("Body", True)
-                        bodyAngles = [np.degrees(x) for x in bodyAngles]
-                        path = self.armPlanner.grabBallMotion(bodyAngles, ballObject)
-
+                            
+                            ballObject = NaoArmPathPlanner.Shape3D(redBallData["pos"], radius, \
+                                                                    "sphere")
+                            bodyAngles = self.motionProxy.getAngles("Body", True)
+                            bodyAngles = [np.degrees(x) for x in bodyAngles]
+                            path = self.armPlanner.grabBallMotion(bodyAngles, ballObject)
+                            
+                    except (KeyboardInterrupt, SystemExit):
+                        self.startActiveTracking(False, False)
+                        print "killing GrabRedBall while loop (again)"
                 
+                print path
                 self.motionProxy.setStiffnesses("Body", 1)
                 # Add the hand open values
                 pathTo = [(pos + [90]) for pos in path]
