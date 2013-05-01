@@ -209,23 +209,58 @@ class HandlerSubsystem:
     def __init__(self,proj):
 
         self.proj = proj
-        self.silent = False
+        # Set up loggers for printing error messages
+
+        class ColorLogFormatter(logging.Formatter):
+            def __init__(self, *args, **kwds):
+                super(ColorLogFormatter, self).__init__(*args, **kwds)
+                self.formatter = logging.Formatter(" --> [%(levelname)s] (%(pathname)s, line %(lineno)s): %(message)s")
+
+            def colorize(self, level, string):
+                if sys.platform in ['win32', 'cygwin']:
+                    # Message with color is not yet supported in Windows
+                    return string
+                else:
+                    colors = {'ERROR': 91, 'WARNING': 93, 'INFO': 94, 'DEBUG': 97}
+                    return "\033[{0}m{1}\033[0m".format(colors[level], string)
+
+            def format(self, record):
+                precolor = self.formatter.format(record)
+                return self.colorize(record.levelname, precolor)
+                
+        logger = logging.getLogger()
+        h = logging.StreamHandler()
+        f = ColorLogFormatter()
+        h.setFormatter(f)
+        logger.addHandler(h)
+
+        if loggerLevel == 'error':
+            logger.setLevel(logging.ERROR)
+        elif loggerLevel == 'warning':
+            logger.setLevel(logging.WARNING)
+        elif loggerLevel == 'info':
+            logger.setLevel(logging.INFO)
+        elif loggerLevel == 'debug':
+            logger.setLevel(logging.DEBUG)
+
         self.handler_dic = None
         self.robots = None
         self.configs = None
 
+        # Create Handler parser
         self.handler_path = os.path.join(self.proj.ltlmop_root,'lib','handlers')
         self.handler_parser = HandlerParser(self.handler_path)
 
+        # Create Handler parser
+        self.robot_parser = RobotFileParser(self.handler_path)
 
-        self.robot_parser = RobotFileParser(self.handler_path,self.handler_dic)
-
+        # Create Handler parser
         self.config_path = os.path.join(self.proj.project_root,'configs')
-        self.config_parser = ConfigFileParser(self.config_path,self.handler_path,self.proj,self.handler_dic)
+        self.config_parser = ConfigFileParser(self.config_path,self.handler_path,self.proj)
 
+        # For debug
         #print self.configs[0].robots[0].handlers['init:nao'].methods[0].para[1].value
         #print self.robots[0].name
-
         #print "Done!"
 
     def loadAllHandlers(self):
@@ -233,17 +268,14 @@ class HandlerSubsystem:
         self.handler_dic = self.handler_parser.handler_dic
 
     def loadAllRobots(self):
+        self.robot_parser.handler_dic = self.handler_dic
         self.robot_parser.loadAllRobots()
         self.robots = self.robot_parser.robots
 
     def loadAllConfigFiles(self):
+        self.config_parser.handler_dic = self.handler_dic
         self.config_parser.loadAllConfigFiles()
         self.configs = self.config_parser.configs
-
-
-    def setSilent(self,silent):
-        self.silent = silent
-        self.config_parser.setSilent(silent)
 
     def getRobotByType(self, t):
         for r in self.robots:
@@ -267,7 +299,7 @@ class HandlerSubsystem:
                 if h.name == hname:
                     return h
 
-        if not self.silent: print "WARNING: Could not find handler of type '%s' with name '%s'" % (htype, hname)
+        print "WARNING: Could not find handler of type '%s' with name '%s'" % (htype, hname)
         return None
 
     def string2Method(self,method_string):
