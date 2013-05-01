@@ -15,8 +15,14 @@ import inspect,types
 from numpy import *
 from copy import deepcopy
 import project
+import logging
+import ast
+import json
 
 
+###################################################
+# Define individual objects for handler subsystem #
+###################################################
 class ParameterObject:
     """
     A parameter object
@@ -32,51 +38,56 @@ class ParameterObject:
         self.min = None     # the min value allowed for the parameter
         self.value = None   # the value user set for the parameter
 
-    def setValue(self,value,deli = ','):
+    def setValue(self,value):
         """
         This function makes sure all parameter are set according to the desired type
-
-        The deli flag defines the deliminator used for list
         """
 
-        if self.type.lower() == 'float':
-            # A float type. Allows simple algebra and pi
-            # TODO: supports more math
-            value = value.replace("pi","3.1415")
-            value = re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
+        if self.type.lower() in ['float','double']:
             try:
-                self.value = float(eval(value))
-            except SyntaxError:
-                pass
-        elif self.type.lower() == 'int' or self.type.lower() == 'integer':
-            # A float type. Allows simple algebra
-            re.sub(r"[^\d\.\+-/\*]", "", value) # delete anything other than numbers or math operators
+                self.value = float(value)
+            except ValueError:
+                logging.error("Invalid float value: {0}".format(value))
+        elif self.type.lower() in ['int','integer']:
             try:
-                self.value = int(eval(value))
-            except SyntaxError:
-                pass
+                self.value = int(value)
+            except ValueError:
+                logging.error("Invalid int value: {0}".format(value))
         elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
-            if value.lower() in ['1','true','t']:
-                self.value = True
-            elif value.lower() in ['0','false','f']:
-                self.value = False
+            self.value = value
         elif self.type.lower() == 'region':
-            self.value = str(value).strip('\"\'')
-        elif self.type.lower() == 'str' or self.type.lower() == 'string':
-            self.value = str(value).strip('\"\'')
-        elif self.type.lower() == 'listofint' or self.type.lower() == 'listofinteger':
-            self.value = [int(eval(x)) for x in value.strip('\'\"[]').split(deli)]
-        elif self.type.lower() == 'listoffloat':
-            self.value = [float(eval(x)) for x in value.strip('\'\"[]').split(deli)]
-        elif self.type.lower() == 'listofbool' or self.type.lower() == 'listofboolean':
-            self.value = [bool(x) for x in value.strip('\'\"[]').split(deli)]
-        elif self.type.lower() == 'listofstr' or self.type.lower() == 'listofstring':
-            self.value = [str(x).strip('\"') for x in value.strip('\'\"[]').split(deli)]
+            try:
+                self.value = ast.literal_eval(value)
+            except ValueError:
+                logging.error("Invalid region value: {0}".format(value))
+        elif self.type.lower() in ['str','string']:
+            try:
+                self.value = str(value).strip('\"\'') 
+            except ValueError:
+                logging.error("Invalid string value: {0}".format(value))
+        elif self.type.lower() == 'choice':
+            try:
+                self.value = ast.literal_eval(value)
+            except ValueError:
+                logging.error("Invalid choice value: {0}".format(value))
+        elif self.type.lower() == 'multichoice':
+            try:
+                self.value = ast.literal_eval(value)
+            except ValueError:
+                logging.error("Invalid multichoice value: {0}".format(value))
         else:
-            print 'ERROR: Invalid parameter type %s' % self.type
+            logging.error("Invalid parameter value: {0}".format(value))
 
     def getValue(self):
         return self.value
+
+    def resetValue(self):
+        # Reset the parameter value to its default value.
+        # If the default value is not define, then the value is set to None
+        if self.default == None:
+            self.value = None
+        else:
+            self.setValue(self.default)
 
 
 class MethodObject:
