@@ -92,22 +92,22 @@ class ParameterObject:
 
 class MethodObject:
     """
-    A method object in handler file
+    A method object
+    Each object represents one method of a given handler
     """
     def __init__(self):
         self.name = None        # name of the method
         self.handler = None     # which handler the method belongs to
         self.comment = ''       # comment of the method
         self.para = []          # list of parameter object of this method
-        self.reference = None   # reference of this method in the memory
         self.omitPara = []      # list of parameter names that are omitted
 
     def getParaByName(self, name):
+        # get the parameter object with given name
         for p in self.para:
             if p.name == name:
                 return p
-
-        print "WARNING: Could not find parameter of name '%s' in method '%s'" % (name, self.name)
+        logging.error("Could not find parameter of name '%s' in method '%s'" % (name, self.name))
         return None
 
 class HandlerObject:
