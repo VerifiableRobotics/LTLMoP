@@ -891,8 +891,7 @@ class ConfigObject:
         for r in self.robots:
             if r.name == name:
                 return r
-
-        if not self.silent: print "WARNING: Could not find robot of name '%s' in config '%s'." % (name, self.name)
+        logging.error("Could not find robot of name '%s' in config '%s'." % (name, self.name))
         return None
 
 
