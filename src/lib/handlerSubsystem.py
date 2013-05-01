@@ -124,8 +124,7 @@ class HandlerObject:
         for m in self.methods:
             if m.name == name:
                 return m
-
-        print "WARNING: Could not find method of name '%s' in handler '%s'" % (name, self.name)
+        logging.error("Could not find method of name '%s' in handler '%s'" % (name, self.name))
         return None
 
     def toString(self,forsave = True):
@@ -177,13 +176,19 @@ class HandlerObject:
                 if robotObj.name == robotName:
                     robotFolder = robotObj.type
                     break
-            fileName = '.'.join(['handlers.robots',robotFolder,self.name])
+            if robotName=='share':
+                fileName = '.'.join(['handlers.share',self.name])
+            else:
+                fileName = '.'.join(['handlers.robots',robotFolder,self.name])
         else:
             fileName = '.'.join(['handlers',self.getType(),self.name])
         return fileName
 
     def getType(self):
         return self.type
+    def setType(self,h_type):
+        self.type=h_type
+        return self
 
 class RobotObject:
     """
@@ -493,7 +498,7 @@ class HandlerSubsystem:
                 for paraObj in methodObj.para:
                     for para_pair in para_info:
                         if paraObj.name == para_pair.split('=',1)[0]:
-                            paraObj.setValue(para_pair.split('=',1)[1],';')
+                            paraObj.setValue(para_pair.split('=',1)[1])
                             break
 
                     if paraObj.type.lower() in ['str', 'string', 'region']:
@@ -655,7 +660,7 @@ class HandlerParser:
                                         for pair in numRE.findall(m.group('range')):
                                             if pair[0] == 'default':
                                                 para.default = pair[1]
-                                                para.setValue(pair[1],';')
+                                                para.setValue(pair[1])
                                             elif pair[0] == 'min':
                                                 para.min = pair[1]
                                             elif pair[0] == 'max':
@@ -863,7 +868,7 @@ class RobotFileParser:
 
                                 for paraObj in initMethodObj.para:
                                     if para_name == paraObj.name:
-                                        paraObj.setValue(para_value,';')
+                                        paraObj.setValue(para_value)
                                         break
                         break
 
