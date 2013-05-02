@@ -359,7 +359,7 @@ class handlerConfigDialog(wx.Dialog):
         proj_copy.hsub.config_parser.saveConfigFile(cfg)
 
         print "Running calibration tool..."
-        proc = subprocess.Popen(["python", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
+        proc = subprocess.Popen(["python", "-u", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
 
         # Listen on socket for return value
         host = 'localhost'
