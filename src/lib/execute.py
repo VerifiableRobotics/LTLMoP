@@ -62,7 +62,7 @@ class LTLMoPExecutor(object):
 
         self.show_gui = show_gui
 
-        self.proj = None # this is the project that we are currently using to execute
+        self.proj = project.Project() # this is the project that we are currently using to execute
         self.next_proj = None # this is the temporary project we update as the map and specification change,
                               # but won't actually use until resynthesis is triggered
 
@@ -298,6 +298,7 @@ class LTLMoPExecutor(object):
                 self.runFSA.set()
             elif data_in == "PAUSE":
                 self.runFSA.clear()
+                time.sleep(0.1) # Wait for FSA to stop
                 print "PAUSED."
             elif data_in == "QUIT":
                 self.runFSA.clear()
@@ -441,7 +442,9 @@ class LTLMoPExecutor(object):
             # Idle if we're not running
             if not self.runFSA.isSet():
                 self.proj.h_instance['drive'].setVelocity(0,0)
-                self.runFSA.wait()
+                # wait for either the FSA to unpause or for termination
+                while (not self.runFSA.wait(0.1)) and self.guiListenThread.isAlive():
+                    pass
 
             self.prev_outputs = deepcopy(self.aut.current_outputs)
             self.prev_z = self.aut.current_state.rank
@@ -455,16 +458,16 @@ class LTLMoPExecutor(object):
             # Rate limiting of execution and GUI update
             while (toc - tic) < 0.05:
                 time.sleep(0.005)
-                toc = timer_func()
+                toc = self.timer_func()
 
             # Update GUI
             # If rate limiting is disabled in the future add in rate limiting here for the GUI:
             # if show_gui and (timer_func() - last_gui_update_time > 0.05)
             if show_gui:
                 avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic) # IIR filter
-                UDPSockTo.sendto("Running at approximately %dHz..." % int(math.ceil(avg_freq)),addrTo)
-                pose = proj.h_instance['pose'].getPose(cached=True)[0:2]
-                UDPSockTo.sendto("POSE:%d,%d" % tuple(map(int, proj.coordmap_lab2map(pose))),addrTo)
+                print "Running at approximately %dHz..." % int(math.ceil(avg_freq))
+                pose = self.proj.h_instance['pose'].getPose(cached=True)[0:2]
+                print "POSE:%d,%d" % tuple(map(int, self.proj.coordmap_lab2map(pose)))
 
 
                 last_gui_update_time = self.timer_func()
