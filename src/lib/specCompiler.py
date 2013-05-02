@@ -817,6 +817,5 @@ class SpecCompiler(object):
             return 
 
         #self._checkForEmptyGaits()
-        print "--> Synthesizing..."
         return self._synthesize(with_safety_aut)
 
