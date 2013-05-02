@@ -508,7 +508,7 @@ class HandlerParser:
     A parser loads all handler information
     """
     def __init__(self,path):
-        self.silent = True
+        self.silent = False
         self.handler_path = path    # handler folder path
         self.handler_dic = {}       # dictionary for all handler information {type of handler:list of handlers of that type}
                                     # for sensor,actuator,init and locomotion handler the value is a dictionary {name of the robot: handler object}
