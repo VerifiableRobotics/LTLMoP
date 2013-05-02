@@ -16,6 +16,7 @@ from numpy import *
 from copy import deepcopy
 import project
 import json
+import traceback
 
 
 class ParameterObject:
@@ -593,8 +594,8 @@ class HandlerParser:
             __import__(handlerFile)
         except Exception as e:
             if not self.silent: 
-                print e
                 print "WARNING: Failed to import handler %s" % handlerFile
+                traceback.print_exc()
             return None
 
         handlerModule = sys.modules[handlerFile]
