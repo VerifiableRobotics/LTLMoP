@@ -24,7 +24,18 @@ while t != "src":
         print "I have no idea where I am; this is ridiculous"
         sys.exit(1)
 
+ltlmop_root = p
 sys.path.append(os.path.join(p,"src","lib"))
+
+############## CONFIGURATION SECTION ##################
+class config:
+    base_spec_file = os.path.join(ltlmop_root, "src", "examples", "gumbotest", "test.spec")
+
+
+
+
+
+#######################################################
 
 import project
 import mapRenderer
@@ -35,20 +46,35 @@ class GumboMainFrame(wx.Frame):
         # begin wxGlade: GumboMainFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        self.window_1 = wx.SplitterWindow(self, wx.ID_ANY, style=wx.SP_3D | wx.SP_BORDER)
-        self.map_pane = wx.Panel(self.window_1, wx.ID_ANY)
+        self.window_1 = wx.SplitterWindow(self, wx.ID_ANY, style=wx.SP_3D | wx.SP_BORDER | wx.SP_LIVE_UPDATE)
+        self.map_pane = wx.Panel(self.window_1, wx.ID_ANY, style=wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE)
         self.dialogue_pane = wx.Panel(self.window_1, wx.ID_ANY)
         self.text_ctrl_dialogue = wx.richtext.RichTextCtrl(self.dialogue_pane, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
         self.text_ctrl_input = wx.TextCtrl(self.dialogue_pane, wx.ID_ANY, "")
-        self.button_submit = wx.Button(self.dialogue_pane, wx.ID_ANY, _("Submit"))
+        self.button_submit = wx.Button(self.dialogue_pane, wx.ID_ANY, _("Submit!"))
 
         self.__set_properties()
         self.__do_layout()
 
         self.Bind(wx.EVT_BUTTON, self.onSubmitInput, self.button_submit)
+        self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onResize, self.window_1)
         # end wxGlade
 
+        self.window_1.SetSashGravity(0.5)
+        self.window_1.SetMinimumPaneSize(100)
+
+        self.map_pane.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+        self.mapBitmap = None
+
+        self.map_pane.Bind(wx.EVT_PAINT, self.onPaint)
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBG)
+
         self.dialogueManager = None
+        self.proj = project.Project()
+        self.proj.loadProject(config.base_spec_file)
+        self.Bind(wx.EVT_SIZE, self.onResize, self)
+        self.onResize()
+
 
     def __set_properties(self):
         # begin wxGlade: GumboMainFrame.__set_properties
@@ -108,7 +134,56 @@ class GumboMainFrame(wx.Frame):
         self.text_ctrl_dialogue.Refresh()
         event.Skip()
 
+    def onResize(self, event=None):  # wxGlade: GumboMainFrame.<event_handler>
+        size = self.map_pane.GetSize()
+        self.mapBitmap = wx.EmptyBitmap(size.x, size.y)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=mapRenderer.LABELS_ALL_EXCEPT_OBSTACLES, memory=True)
+
+        self.Refresh()
+        self.Update()
+
+        if event is not None:
+            event.Skip()
+
+    def onEraseBG(self, event):
+        # Avoid unnecessary flicker by intercepting this event
+        pass
+
+    def onPaint(self, event=None):
+        if self.mapBitmap is None:
+            return
+
+        if event is None:
+            dc = wx.ClientDC(self.map_pane)
+        else:
+            pdc = wx.AutoBufferedPaintDC(self.map_pane)
+            try:
+                dc = wx.GCDC(pdc)
+            except:
+                dc = pdc
+
+        dc.BeginDrawing()
+
+        # Draw background
+        dc.DrawBitmap(self.mapBitmap, 0, 0)
+
+        # Draw robot
+#        if self.robotPos is not None:
+#            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
+#            dc.DrawCircle(x, y, 5)
+#        if self.markerPos is not None:
+#            [m,n] = map(lambda m: int(self.mapScale*m), self.markerPos) 
+#            dc.SetBrush(wx.Brush(wx.RED))
+#            dc.DrawCircle(m, n, 5)
+
+
+        dc.EndDrawing()
+        
+        if event is not None:
+            event.Skip()
+
 # end of class GumboMainFrame
+
 class GumboMainApp(wx.App):
     def OnInit(self):
         wx.InitAllImageHandlers()
