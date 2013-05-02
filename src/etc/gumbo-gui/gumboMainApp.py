@@ -13,6 +13,22 @@ import gettext
 # begin wxGlade: extracode
 # end wxGlade
 
+import os, sys
+
+# Climb the tree to find out where we are
+p = os.path.abspath(__file__)
+t = ""
+while t != "src":
+    (p, t) = os.path.split(p)
+    if p == "":
+        print "I have no idea where I am; this is ridiculous"
+        sys.exit(1)
+
+sys.path.append(os.path.join(p,"src","lib"))
+
+import project
+import mapRenderer
+from specCompiler import SpecCompiler
 
 class GumboMainFrame(wx.Frame):
     def __init__(self, *args, **kwds):
