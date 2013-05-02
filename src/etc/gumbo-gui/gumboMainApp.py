@@ -27,7 +27,9 @@ while t != "src":
 ltlmop_root = p
 sys.path.append(os.path.join(p,"src","lib"))
 
+#######################################################
 ############## CONFIGURATION SECTION ##################
+#######################################################
 class config:
     base_spec_file = os.path.join(ltlmop_root, "src", "examples", "gumbotest", "test.spec")
 
@@ -35,6 +37,7 @@ class config:
 
 
 
+#######################################################
 #######################################################
 
 import project
@@ -75,6 +78,8 @@ class GumboMainFrame(wx.Frame):
         self.Bind(wx.EVT_SIZE, self.onResize, self)
         self.onResize()
 
+        self.appendLog("Hello.", "System")
+
 
     def __set_properties(self):
         # begin wxGlade: GumboMainFrame.__set_properties
@@ -100,6 +105,17 @@ class GumboMainFrame(wx.Frame):
         self.Layout()
         # end wxGlade
 
+    def appendLog(self, message, agent=None):
+        if agent is not None:
+            self.text_ctrl_dialogue.BeginBold()
+            self.text_ctrl_dialogue.WriteText(agent + ": ")
+            self.text_ctrl_dialogue.EndBold()
+
+        self.text_ctrl_dialogue.WriteText(message + "\n")
+
+        self.text_ctrl_dialogue.ShowPosition(self.text_ctrl_dialogue.GetLastPosition())
+        self.text_ctrl_dialogue.Refresh()
+
     def onSubmitInput(self, event):  # wxGlade: GumboMainFrame.<event_handler>
         if self.text_ctrl_input.GetValue() == "":
             event.Skip()
@@ -108,30 +124,17 @@ class GumboMainFrame(wx.Frame):
         user_text = self.text_ctrl_input.GetValue()
 
         # echo
-        self.text_ctrl_dialogue.BeginBold()
-        self.text_ctrl_dialogue.WriteText("User: ")
-        self.text_ctrl_dialogue.EndBold()
-        self.text_ctrl_dialogue.WriteText(user_text + "\n")
-
-        self.text_ctrl_dialogue.ShowPosition(self.text_ctrl_dialogue.GetLastPosition())
-        self.text_ctrl_dialogue.Refresh()
+        self.appendLog(user_text, "User")
 
         self.text_ctrl_input.Clear()
 
         # response
         if self.dialogueManager is None:
-            self.text_ctrl_dialogue.BeginBold()
-            self.text_ctrl_dialogue.WriteText("=== Error: Dialogue Manager not initialized ===\n")
-            self.text_ctrl_dialogue.EndBold()
+            self.appendLog("Dialogue manager not initialized", "!!! Error")
         else:
             sys_text = self.dialogueManager.tell(user_text, self.currentGoal)
-            self.text_ctrl_dialogue.BeginBold()
-            self.text_ctrl_dialogue.WriteText("System: ")
-            self.text_ctrl_dialogue.EndBold()
-            self.text_ctrl_dialogue.WriteText(sys_text + "\n")
+            self.appendLog(sys_text, "System")
 
-        self.text_ctrl_dialogue.ShowPosition(self.text_ctrl_dialogue.GetLastPosition())
-        self.text_ctrl_dialogue.Refresh()
         event.Skip()
 
     def onResize(self, event=None):  # wxGlade: GumboMainFrame.<event_handler>
