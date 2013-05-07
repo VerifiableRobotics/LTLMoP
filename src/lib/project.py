@@ -216,7 +216,6 @@ class Project:
         """
 
         self.hsub = handlerSubsystem.HandlerSubsystem(self)
-        self.hsub.setSilent(self.silent)
         self.hsub.loadAllConfigFiles()
 
         if name is None:
