@@ -206,7 +206,7 @@ class HandlerSubsystem:
     """
     Interface dealing with configuration files and hanlders
     """
-    def __init__(self,proj):
+    def __init__(self,proj,loggerLevel='error'):
 
         self.proj = proj
         # Set up loggers for printing error messages
@@ -438,8 +438,12 @@ class HandlerSubsystem:
             for robotName,handlerObj in self.h_obj[handler_type].iteritems():
                 # get handler class object for initiating
                 fileName = handlerObj.fullPath(robotName,configObj)
-                if not self.silent: print "  -> %s" % fileName
-                __import__(fileName)
+                logging.debug(" -> Loading handler:\t%s" % fileName.split('.')[-1])
+                try:
+                    __import__(fileName)
+                except ImportError as import_error:
+                    logging.error(" -> Failed to import handler %s : %s" % (fileName.split('.')[-1],import_error))
+
                 handlerModule = sys.modules[fileName]
                 allClass = inspect.getmembers(handlerModule,inspect.isclass)
                 for classObj in allClass:
@@ -555,10 +559,10 @@ class HandlerParser:
     A parser loads all handler information
     """
     def __init__(self,path):
-        self.silent = True
         self.handler_path = path    # handler folder path
         self.handler_dic = {}       # dictionary for all handler information {type of handler:list of handlers of that type}
                                     # for sensor,actuator,init and locomotion handler the value is a dictionary {name of the robot: handler object}
+        self.handler_all = {}       # dic of handler objects parsed from handler files. {handlerType.handlerFileName:handler object}
         self.handler_types = ['pose','drive','motionControl','share']       # list of types of handlers, must match with the folder name in lib/handler folder
         self.handler_robotSpecific_type = ['init','locomotionCommand','sensor','actuator']   # list of types of robot specific handlers in each robot folder
         self.ignore_parameter = ['self','initial','proj','shared_data','actuatorVal']     # list of name of parameter that should be ignored where parse the handler methods
@@ -575,93 +579,154 @@ class HandlerParser:
         for handler_type in self.handler_types:
             self.handler_dic[handler_type] = []
             if handler_type not in handlerFolders:
-                if not self.silent: print "(Handler Parser) WARNING: Cannot find %s handler folder..." % handler_type
+                # Can't find the folder containing the type of handlers
+                logging.warning("Cannot find %s handler folder in %s" % (handler_type, self.handler_path))
             else:
+
+                # For the robot independent handlers, we only want to parse the init function to get the parameters information
+                # But both simulated sensor and actuator handlers are in the shared folder. All of their function need to be parsed.
                 if handler_type == 'share':
                     self.handler_dic[handler_type] = self.loadHandler(handler_type,False)
                 else:
                     self.handler_dic[handler_type] = self.loadHandler(handler_type,True)
 
-        # now let's load all robot specific hanlders
-        self.handler_dic['sensor'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'sensor' in handlerObj.name.lower()]}
-        self.handler_dic['actuator'] = {'share': [handlerObj for handlerObj in self.handler_dic['share'] if 'actuator' in handlerObj.name.lower()]}
+        # now let's load all robot specific hanlders. Store them using nested dictionary with keys of [handlerType][robotType]
+        # we also want to add the simulated sensor and actuator handler into the sensor and actuator list even they are robot independent handlers
+        self.handler_dic['sensor'] = {'share': [handlerObj.setType('sensor') for handlerObj in self.handler_dic['share'] if 'sensor' in handlerObj.name.lower()]}
+        self.handler_dic['actuator'] = {'share': [handlerObj.setType('actuator') for handlerObj in self.handler_dic['share'] if 'actuator' in handlerObj.name.lower()]}
         self.handler_dic['init'] = {}
         self.handler_dic['locomotionCommand'] = {}
         if 'robots' not in handlerFolders:
-            if not self.silent: print "(Handler Parser) WARNING: Cannot find robot handler folder..."
+            # All robot specific handlers should be stored in the robtos folder
+            logging.warning("Cannot find robot folder in %s" % (self.handler_path))
         else:
             robotFolderList = os.listdir(os.path.join(self.handler_path,'robots'))
             for robotFolder in robotFolderList:
+                # ignore item that is not a folder
                 if '.' not in robotFolder:
+
+                    folderName = '.'.join(['robots',robotFolder])
+
                     fileList = os.listdir(os.path.join(self.handler_path,'robots',robotFolder))
                     for fileName in fileList:
                         for handler_type in self.handler_robotSpecific_type:
+                            # ignore non .py file, or file starts with underscore. match the handler type with the handler file name
                             if fileName.endswith('py') and (not fileName.startswith('_')) and handler_type.lower() in fileName.lower():
+                                # prepare the string for import this handler file
                                 h_file = '.'.join(['handlers','robots',robotFolder,fileName.split('.')[0]])
+
+                                # only load the init function when parsing the init handler and loco handler
                                 if handler_type in ['init','locomotionCommand']:
                                     onlyLoadInit = True
                                 else:
                                     onlyLoadInit = False
+                                # The handler object is stored as a list even there is only one item in the list
                                 self.handler_dic[handler_type][robotFolder] = [self.parseHandlers(h_file,handler_type,onlyLoadInit)]
 
     def loadHandler(self,folder,onlyLoadInit=False):
+        """
+        Load all handler files within the given folder
+        If onlyLoadInit is True, only the info of __init__ method will be loaded
+        If over_write_h_type is given, then over write the handler type with it
 
+        return a list of handler objects
+        """
+        # the list of handler objects that will be returned
         handlerList = []
 
         path = os.path.join(self.handler_path,folder)
         handlerFileList = os.listdir(path)
 
         for h_file in handlerFileList:
+            # ignore the file starts with underscore or not a .py file
             if h_file.endswith('.py') and not h_file.startswith('_'):
                 fileName = '.'.join(['handlers',folder,h_file.split('.')[0]])
-                h_obj = self.parseHandlers(fileName,folder,onlyLoadInit)
+                # change the type of handlers if it is robot dependent 
+                over_write_h_type=None
+                for handler_type in self.handler_robotSpecific_type:
+                    if handler_type.lower() in h_file.lower():
+                        # this is a robot dependent handler or a handler in the share folder
+                        over_write_h_type = handler_type.lower()
+
+                h_obj = self.parseHandlers(fileName,folder,onlyLoadInit,over_write_h_type)
+                # update the dictionary with all handler objects
+                if over_write_h_type:
+                    handler_dic_key = '.'.join([folder,over_write_h_type,h_file.split('.')[0]])
+                else:
+                    handler_dic_key = '.'.join([folder,h_file.split('.')[0]])
+                self.handler_all[handler_dic_key] = h_obj
                 if h_obj is not None:
+                    # only append the handler in the list if it is correctly imported
                     handlerList.append(h_obj)
 
         return handlerList
 
-    def parseHandlers(self,handlerFile,h_type,onlyLoadInit=False):
+    def parseHandlers(self,handlerFile,h_type,onlyLoadInit=False,over_write_h_type=None):
         """
         Load method info (name,arg...) in the given handler file
         If onlyLoadInit is True, only the info of __init__ method will be loaded
+        If over_write_h_type is given, then over write the handler type with it
 
-        returns a handler object
+        returns a handler object or None if fail to load the given handler file
         """
 
+        # First, let's create a handler object 
         handlerObj = HandlerObject()
 
         # Regular expressions to help us out
         argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
-        numRE = re.compile('(?P<key>[^=]+)=(?P<val>[^,]+),?',re.IGNORECASE)
-        # start to load the handler file
-        if not self.silent: print "  -> Loading %s " % handlerFile
-
+        settingRE = re.compile(r"""(?x)
+                                   (?P<key>\w+)
+                                   \s*=\s*
+                                   (?P<val>
+                                       "[^"]*" | # double-quoted string
+                                       \[[^\]]*\] | # array
+                                       [^,\s]*    # other
+                                    )""")
+        # Try to load the handler file
+        logging.debug(" -> Loading handler:\t%s" % handlerFile.split('.')[-1])
         try:
             __import__(handlerFile)
-        except ImportError:
-            if not self.silent: print "WARNING: Failed to import handler %s" % handlerFile
-            return None
+        except ImportError as import_error:
+            logging.error(" -> Failed to import handler %s : %s" % (handlerFile.split('.')[-1],import_error))
+            return handlerObj
 
+        # Find the class object specifies the handler
         handlerModule = sys.modules[handlerFile]
         allClass = inspect.getmembers(handlerModule,inspect.isclass)
         for classObj in allClass:
-            if classObj[1].__module__ == handlerFile and not classObj[0].startswith('_'):
+            # ignore all class objects that are imported or with name starts with underscore
+            # if there are multiple classes without underscore, then prefer the one ends with "handler"
+            # each handler file should only have one main class not starts with underscore
+            # the underscore classes are those used by the main class by not concerned by the user
+            if classObj[1].__module__ == handlerFile and not (classObj[0].startswith('_') or \
+                re.match('\w+handler', classObj[0])):
                 handlerClass = classObj[1]
                 break
 
         # update the handler name and type info
+        # handler name is the name of the file
+        # handler type is the name of the folder where the file is located for robot independent handlers
+        # handler type is robotType.sensor/actuator/init/loco for robot dependent handlers
         handlerObj.name = handlerFile.split('.')[-1]
-        handlerObj.type = h_type
+        if over_write_h_type: 
+            handlerObj.type = over_write_h_type
+        else:
+            handlerObj.type = h_type
 
-        # parse methods in this handler
+        # get all methods in this handler
         handlerMethod = inspect.getmembers(handlerClass,inspect.ismethod)
+        # parse each method into method object
         for methodName,method in handlerMethod:
+            # only parse the method not start with underscore (exclude __inti__)
+            # only parse the __init__ method if required
             if ((not onlyLoadInit and (not str(methodName).startswith('_')) or str(methodName)=='__init__') ):
-                # load all parameters
+                # Create a method object and update it
                 methodObj = MethodObject()
                 methodObj.name = methodName
                 methodObj.handler = handlerObj
                 for para_name in inspect.getargspec(method)[0]:
+                    # create a parameter object if the parameter is not ignorable
                     if para_name not in self.ignore_parameter:
                         paraObj = ParameterObject(para_name)
                         methodObj.para.append(paraObj)
@@ -684,35 +749,38 @@ class HandlerParser:
                         # If the line defines an argument variable
                         if argRE.search(line):
                             m = argRE.search(line)
-                            for para in methodObj.para:
-                                if para.name.lower() == m.group('argName').strip().lower():
-                                    para.type = m.group('type')
-                                    para.des = m.group('description')
-                                    if m.group('range') is not None and numRE.search(m.group('range')):
-                                        for pair in numRE.findall(m.group('range')):
-                                            if pair[0] == 'default':
-                                                para.default = pair[1]
-                                                para.setValue(pair[1])
-                                            elif pair[0] == 'min':
-                                                para.min = pair[1]
-                                            elif pair[0] == 'max':
-                                                para.max = pair[1]
-                                            else:
-                                                print "Unrecognized argument comments \"%s\" for argument \"%s\" of method \"%s\"" %(pair[0],m.group('argName'),methodName)
+                            for paraObj in methodObj.para:
+                                # match the definition of a parameter and a parameter object with their names
+                                if paraObj.name.lower() == m.group('argName').strip().lower():
+                                    # update the parameter object
+                                    paraObj.type = m.group('type')
+                                    paraObj.des = m.group('description')
+                                    if m.group('range') is not None:
+                                        try:
+                                            for k, v in settingRE.findall(m.group('range')):
+                                                if k.lower() not in ['default', 'min', 'max', 'options']:
+                                                    logging.warning(' -> Unrecognized setting name "{}" for parameter "{}" of method "{}"'.format(k.lower(), m.group('argName'), methodName))
+                                                    continue
 
-                        # The line comments the function
+                                                setattr(paraObj, k.lower(), json.loads(v.lower()))
+                                        except ValueError:
+                                            # LOG AN ERROR HERE
+                                            logging.error(' -> Could not parse settings for parameter "{}" of method "{}"'.format(m.group('argName'), methodName))
+
+                                        paraObj.resetValue()
+
+                        # If the line comments the function
                         else:
                             methodObj.comment += line + "\n"
-
                 methodObj.comment = methodObj.comment.strip()
 
-                # if there are parameter that has no description
+                # remove the parameter that has no definition
                 argToRemove = []
-                for para in methodObj.para:
-                    if para.des == None:
-                        argToRemove.append(para)
+                for paraObj in methodObj.para:
+                    if paraObj.des == None:
+                        argToRemove.append(paraObj)
                 map(methodObj.para.remove,argToRemove)
-
+                # add this method into the method list of the handler
                 handlerObj.methods.append(methodObj)
 
         return handlerObj
@@ -777,7 +845,6 @@ class RobotFileParser:
     """
     def __init__(self,path,handler_dic=None):
         self.robots = [] # list of robot objects parsed from robot files
-        self.silent = True
         self.handler_types = ['pose','drive','motionControl','share']       # list of types of handlers, must match with the folder name in lib/handler folder
         self.handler_robotSpecific_type = ['init','locomotionCommand','sensor','actuator']   # list of types of robot specific handlers in each robot folder
         self.ignore_parameter = ['self','initial','proj','shared_data']     # list of name of parameter that should be ignored where parse the handler methods
@@ -785,13 +852,13 @@ class RobotFileParser:
         self.handler_dic = handler_dic  # dictionary stores all handler information for faster reference
         self.handler_path = path        # handler folder path
 
-
-    def setSilent(self, silent):
-        self.silent = silent
-
     def loadAllRobots(self):
+        """
+        Load all robot files in the handlers/robots folder
+        """
         robotFolderList = os.listdir(os.path.join(self.handler_path,'robots'))
         for robotFolder in robotFolderList:
+            # ignore none folder items
             if '.' not in robotFolder:
                 fileList = os.listdir(os.path.join(self.handler_path,'robots',robotFolder))
                 for fileName in fileList:
@@ -801,44 +868,48 @@ class RobotFileParser:
                             self.robots.append(robotObj)
 
     def loadRobotFile(self,fileName):
-
-        # Add extension to the name if there isn't one.
-        if not fileName.endswith('.robot'):
-            fileName = fileName+'.robot'
-
-        if not self.silent: print "Loading robot file %s..." % fileName
+        """
+        Given a robot file, return a dictionary holding its information
+        """
+        logging.debug(" -> Loading robot:\t\t%s" % os.path.basename(fileName).split('.')[0])
         try:
             # try to load the robot file
             robot_data = fileMethods.readFromFile(fileName)
         except IOError:
-            if not self.silent: print "ERROR: Cannot find robot file %s" % fileName
+            logging.ERROR(" -> Cannot load robot: %s" % os.path.basename(fileName).split('.')[0])
             return
 
         return self.loadRobotData(robot_data)
 
     def loadRobotData(self,robot_data):
-
+        """
+        Given a dictionary of robot handler information, returns a robot object holding all the information
+        The dictionary is in the format returned by the readFromFile function
+        If the necessary handler of the robot is not specified or can't be loaded, return None
+        """
+        # create a robot object and update its name and type
         robotObj = RobotObject(r_name=robot_data['RobotName'][0],r_type=robot_data['Type'][0])
 
         try:
-            # NOTE: If we cared about security, this would be a terrible idea
             mat_str = ''.join(robot_data['CalibrationMatrix'])
             if mat_str.strip() == "": raise KeyError()
         except KeyError:
-            if not self.silent: print "WARNING: No calibration data found for robot '%s'" % robotObj.name
+            logging.warning("No calibration data found for robot '%s(%s)'" % (robotObj.name,robotObj.type))
             robotObj.calibrationMatrix = None
         else:
             try:
-                robotObj.calibrationMatrix = eval(mat_str)
+                # Convert the string form array to array. Trying not to use eval for security problem
+                mat_str = mat_str.replace("array(","")
+                mat_str = mat_str.replace(")","")
+                robotObj.calibrationMatrix = array(ast.literal_eval(mat_str))
             except SyntaxError:
-                if not self.silent: print "WARNING: Invalid calibration data found for robot '%s'. Ignoring." % robotObj.name
+                logging.error("Invalid calibration data found for robot '%s(%s)'" % (robotObj.name,robotObj.type))
                 robotObj.calibrationMatrix = None
 
         robotFolder = robotObj.type
 
         # load handler configs
         for key,val in robot_data.iteritems():
-            fullval = "".join(val).strip()
             if key.endswith('Handler'):
                 # find which type of the handler
                 handler_type = None
@@ -853,8 +924,7 @@ class RobotFileParser:
                             handler_type = h_type
                             break
                     if handler_type == None:
-                        print "ERROR: Wrong handler type %s in robot file %s" %(key,robotObj.type
-+'.robot')
+                        logging.error("Wrong handler type %s in robot file %s" %(key,robotObj.type+'.robot'))
                         return
                     else:
                         if self.handler_dic is not None:
@@ -862,7 +932,7 @@ class RobotFileParser:
                             handlerList = self.handler_dic[handler_type][robotFolder]
                         else:
                             handlerParser = HandlerParser(self.handler_path)
-                            fileName = '.'.join(['handlers','robots',robotFolder,fullval.split('(')[0]])
+                            fileName = '.'.join(['handlers','robots',robotFolder,val[0].split('(')[0]])
                             if handler_type in ['init','locomotionCommand']:
                                 onlyLoadInit = True
                             else:
@@ -870,38 +940,39 @@ class RobotFileParser:
                             handlerList = [handlerParser.parseHandlers(fileName,handler_type,onlyLoadInit)]
 
                         # return no robot object if any of the robot specific handler cannot be loaded
+                        # since we know there is only one handler object in the list, we can just use index 0 to call it
                         if handlerList[0] == None:
-                            if not self.silent: print "WARNING: Cannot load all necessary handlers for robot %s" %robotObj.name
+                            logging.error("Cannot load all necessary handlers for robot %s" %robotObj.name)
                             return None
                 else:
+                    # The handler is robot independent
                     if self.handler_dic is not None:
                         # we can just quick load from the handler dictionary
                         handlerList = self.handler_dic[handler_type]
                     else:
                         handlerParser = HandlerParser(self.handler_path)
-                        fileName = '.'.join(['handlers',handler_type,fullval.split('(')[0]])
+                        fileName = '.'.join(['handlers',handler_type,val[0].split('(')[0]])
                         handlerList = [handlerParser.parseHandlers(fileName,handler_type,True)]
 
                 # copy the handler object from the dictionary
                 for handlerObj in handlerList:
-                    if handlerObj is not None and handlerObj.name == fullval.split('(')[0]:
+                    # match the handler object with the name in robot data
+                    if handlerObj is not None and handlerObj.name == val[0].split('(')[0]:
+                        # Each handler type only has one handler object
                         robotObj.handlers[handler_type] = deepcopy(handlerObj)
 
                         # overwrite the parameter values
-                        para_list = [x.strip() for x in fullval.split('(')[1].replace(')','').split(',')]
+                        para_info = val[0].split('(')[1].replace(')','')
 
                         for methodObj in robotObj.handlers[handler_type].methods:
                             if methodObj.name == '__init__':
                                 initMethodObj = methodObj
                                 break
-                        for para in para_list:
-                            if '=' in para:
-                                para_name,para_value = [x.strip() for x in para.split('=')]
-
-                                for paraObj in initMethodObj.para:
-                                    if para_name == paraObj.name:
-                                        paraObj.setValue(para_value)
-                                        break
+                        for para_name, para_value in re.findall(r'(?P<key>\w+)\s*=\s*(?P<val>"[^"]*"|\'[^\']*\'|[^,]+)', para_info):
+                            for paraObj in initMethodObj.para:
+                                if para_name == paraObj.name:
+                                    paraObj.setValue(para_value)
+                                    break
                         break
 
         return robotObj
