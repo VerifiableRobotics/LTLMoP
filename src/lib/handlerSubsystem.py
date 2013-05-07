@@ -281,14 +281,13 @@ class HandlerSubsystem:
         for r in self.robots:
             if r.type == t:
                 return r
-
-        print "WARNING: Could not find robot of type '%s'" % (t)
+        logging.error("Could not find robot of type '%s'" % (t))
         return None
 
     def getHandler(self, htype, hname, rname=None):
         if htype in self.handler_parser.handler_robotSpecific_type:
             if rname is None:
-                if not self.silent: print "WARNING: Handler of type '%s' requires a robot type to be specified for lookup" % (htype)
+                logging.error("Handler of type '%s' requires a robot type to be specified for lookup" % (htype))
                 return None
 
             for h in self.handler_dic[htype][rname]:
@@ -299,7 +298,7 @@ class HandlerSubsystem:
                 if h.name == hname:
                     return h
 
-        print "WARNING: Could not find handler of type '%s' with name '%s'" % (htype, hname)
+        logging.error("Could not find handler of type '%s' with name '%s'" % (htype, hname))
         return None
 
     def string2Method(self,method_string):
@@ -308,7 +307,7 @@ class HandlerSubsystem:
         """
 
         if self.handler_dic is None:
-            print "ERROR: Cannot find handler dictionary, please load all handlers first."
+            logging.error("Cannot find handler dictionary, please load all handlers first.")
             return
 
         method_info,para_info = method_string.split('(')
@@ -339,11 +338,11 @@ class HandlerSubsystem:
                         elif 'actuator' in handlerName.lower():
                             handlerObj = robotObj.handlers['actuator']
                         else:
-                            print "ERROR: Cannot recognize handler %s"  % handlerName
+                            logging.error("Cannot recognize handler {}".format(handlerName)) 
                             return
 
             if handlerObj is None:
-                print "ERROR: Cannot recognize robot %s"  % robotName
+                logging.error("Cannot recognize robot {}".format(robotName)) 
                 return
 
             for method_obj in handlerObj.methods:
@@ -358,7 +357,7 @@ class HandlerSubsystem:
                         paraObj.setValue(para_value)
                         break
         else:
-            print "ERROR: Cannot recognize method %s, please spicify which handler it belongs to." %method_info
+            logging.error("Cannot recognize method {}, please spicify which handler it belongs to.".format(method_info))
             return
 
         return methodObj
@@ -369,13 +368,13 @@ class HandlerSubsystem:
         Return the string representation according to the input method object
         """
         if self.handler_dic is None:
-            print "ERROR: Cannot find handler dictionary, please load all handler first."
+            logging.error("ERROR: Cannot find handler dictionary, please load all handler first.")
             return
         if not isinstance(methodObj,MethodObject):
-            print "ERROR: Input is not a valid method object!"
+            logging.error("ERROR: Input is not a valid method object!")
             return
         if robotName=='':
-            print "ERROR: Needs robot name for method2String"
+            logging.error("ERROR: Needs robot name for method2String")
             return
 
         handlerName = methodObj.handler.name
@@ -418,7 +417,7 @@ class HandlerSubsystem:
                     if robotObj.name == configObj.main_robot:
                         self.h_obj[handler_type][robotObj.name] = handlerObj
                 else:
-                    if not self.silent: print "ERROR: Cannot recognize handler type %s"%handler_type
+                    logging.error("ERROR: Cannot recognize handler type {}".format(handler_type))
 
         # load dummy handlers
         handlerParser = HandlerParser(self.handler_path)
@@ -430,7 +429,7 @@ class HandlerSubsystem:
         # complain if there is any missing handler
         for handler_type, handlerObj in self.h_obj.iteritems():
             if (handlerObj == {}):
-                if not self.silent: print "ERROR: Cannot find handler for %s" % handler_type
+                logging.error("ERROR: Cannot find handler for {}".format(handler_type))
 
 
         # initiate all handlers
@@ -475,7 +474,7 @@ class HandlerSubsystem:
                 method = configObj.prop_mapping[prop]
             else:
                 # Default to dummysensor
-                print "WARNING: No mapping given for sensor prop '%s', so using default simulated handler." % prop
+                logging.warning("WARNING: No mapping given for sensor prop '{}', so using default simulated handler.".format(prop))
                 method = "share.dummySensor.buttonPress(button_name='%s')" % prop
 
             fullExpression = method
@@ -501,7 +500,7 @@ class HandlerSubsystem:
                 method = configObj.prop_mapping[prop]
             else:
                 # Default to dummyactuator
-                print "WARNING: No mapping given for actuator prop '%s', so using default simulated handler." % prop
+                logging.warning("WARNING: No mapping given for actuator prop '{}', so using default simulated handler.".format(prop))
                 method = "share.dummyActuator.setActuator(name='%s')" % prop
 
             fullExpression = method.replace(" and ", " ; ")
