@@ -1004,15 +1004,11 @@ class ConfigFileParser:
     """
 
     def __init__(self,config_path,handler_path,proj,handler_dic=None):
-        self.silent = False
         self.proj = proj
         self.config_path = config_path  # config folder path
         self.handler_path = handler_path    # handler folder path
         self.handler_dic = handler_dic  # handler dictionary stores all handler information
         self.configs = []   # list of config object
-
-    def setSilent(self, silent):
-        self.silent = silent
 
     def loadAllConfigFiles(self):
         # Create configs/ directory for project if it doesn't exist already
@@ -1036,26 +1032,27 @@ class ConfigFileParser:
         if not fileName.endswith('.config'):
             fileName = fileName+'.config'
 
-        if not self.silent: print "Loading config file %s..." % fileName
+        logging.debug(" -> Loading config:\t%s" % os.path.basename(fileName).split('.')[0])
         try:
             # First try path relative to project path
             config_data = fileMethods.readFromFile(fileName)
         except IOError:
-            if not self.silent: print "ERROR: Cannot find config file %s" % fileName
+            logging.ERROR(" -> Cannot load config: %s" % os.path.basename(fileName).split('.')[0])
             return
 
+        # create a config object and update its name
         configObj = ConfigObject()
         try:
             configObj.name = config_data['General Config']['Name'][0]
         except IOError:
-            if not self.silent: print "ERROR: Missing general config information in config file %s" % fileName
+            logging.ERROR("Missing general config information in config %s" % os.path.basename(fileName).split('.')[0])
 
         # parse the string for sensor prop mapping
         for sensorMapping in config_data['General Config']['Sensor_Proposition_Mapping']:
             try:
                 sensorProp,sensorFun = [s.strip() for s in sensorMapping.split('=',1)]
             except IOError:
-                if not self.silent: print "ERROR: Wrong sensor mapping -- %s" % sensorMapping
+                logging.ERROR("Wrong sensor mapping -- %s" % sensorMapping)
 
             configObj.prop_mapping[sensorProp]=sensorFun
 
@@ -1064,7 +1061,7 @@ class ConfigFileParser:
             try:
                 actuatorProp,actuatorFun = [s.strip() for s in actuatorMapping.split('=',1)]
             except IOError:
-                if not self.silent: print "ERROR: Wrong actuator mapping -- %s" % actuatorMapping
+                logging.ERROR("Wrong actuator mapping -- %s" % actuatorMapping)
             configObj.prop_mapping[actuatorProp]=actuatorFun
 
         if 'Initial_Truths' in config_data['General Config']:
@@ -1073,13 +1070,12 @@ class ConfigFileParser:
                 try:
                     configObj.initial_truths.append(propName)
                 except IOError:
-                    if not self.silent: print "ERROR: Wrong initially true propositions -- %s"
-
+                    logging.ERROR("Cannot recognize initially true propositions -- %s" %propName)
 
         try:
             configObj.main_robot = config_data['General Config']['Main_Robot'][0]
         except (IndexError, KeyError):
-            if not self.silent: print "ERROR: Cannot find main robot for this config"
+            logging.ERROR("Cannot find main robot in config file %s" % fileName)
 
         # load robot configs
         robot_data = []
@@ -1088,19 +1084,22 @@ class ConfigFileParser:
                 robot_data.append(configValue)
 
         if robot_data == []:
-            if not self.silent: print "ERROR: Missing Robot data in config file %s" % fileName
+            logging.ERROR("Missing Robot data in config file %s" % fileName)
 
         else:
             # using the parsing function in RobotFileParser to parse the data
-            robot_parser = RobotFileParser(self.handler_path,self.handler_dic)
+            robot_parser = RobotFileParser(self.handler_path)
+            robot_parser.handler_dic = self.handler_dic
             for data in robot_data:
                 try:
                     robotObj = robot_parser.loadRobotData(data)
                     if robotObj is not None:
                         configObj.robots.append(robotObj)
                 except IOError:
-                    if not self.silent: print "ERROR: Cannot parse robot data in %s" % fileName
+                    logging.ERROR("Cannot parse robot data in config file %s" % fileName)
 
+        # Missing main robot doesn't affect importing. TODO:Will this create problem?
+        """
         # if the main robot for this config cannot be loaded, return no config object
         noRobot = True
         if configObj.main_robot == '' and len(configObj.robots)>0:
@@ -1113,6 +1112,8 @@ class ConfigFileParser:
         if noRobot:
             if not self.silent: print "WARNING: Cannot load configuration %s, missing main robot object" %fileName
             return None
+        """
+
         return configObj
 
     def saveAllConfigFiles(self):
