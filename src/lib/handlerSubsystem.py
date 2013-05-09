@@ -274,6 +274,42 @@ class RobotObject:
         
         return "Robot Object -- " + reprString
 
+class ConfigObject:
+    """
+    A config file object!
+    """
+    def __init__(self):
+        self.name = "" # name of the config file
+        self.robots = []    # list of robot object used in this config file
+        self.prop_mapping = {}  # dictionary for storing the propositions mapping
+        self.initial_truths = [] # list of initially true propoisitions
+        self.main_robot = '' # name of robot for moving in this config
+
+    def __repr__(self):
+        """
+        Overwrite string representation function
+        """
+        strRepr = []
+        # Get all attribute names and values
+        for key,val in self.__dict__.iteritems():
+            # Only show if the value is not None or empty
+            if val: strRepr.append("{0}:{1}".format(key,val))
+        
+        # if all attributes have values of None or empty
+        if not strRepr: 
+            reprString = "All attributes have values of None or empty."
+        else:
+            reprString = ", ".join(strRepr)
+        
+        return "Config Object -- " + reprString
+
+    def getRobotByName(self, name):
+        for r in self.robots:
+            if r.name == name:
+                return r
+        logging.error("Could not find robot of name '%s' in config '%s'." % (name, self.name))
+        return None
+
 
 class HandlerSubsystem:
     """
@@ -1050,44 +1086,6 @@ class RobotFileParser:
 
         return robotObj
 
-
-
-class ConfigObject:
-    """
-    A config file object!
-    """
-    def __init__(self):
-        self.name = "" # name of the config file
-        self.robots = []    # list of robot object used in this config file
-        self.prop_mapping = {}  # dictionary for storing the propositions mapping
-        self.initial_truths = [] # list of initially true propoisitions
-        self.region_tags = {} # dictionary mapping tag names to region groups, for quantification
-        self.main_robot = '' # name of robot for moving in this config
-
-    def __repr__(self):
-        """
-        Overwrite string representation function
-        """
-        strRepr = []
-        # Get all attribute names and values
-        for key,val in self.__dict__.iteritems():
-            # Only show if the value is not None or empty
-            if val: strRepr.append("{0}:{1}".format(key,val))
-        
-        # if all attributes have values of None or empty
-        if not strRepr: 
-            reprString = "All attributes have values of None or empty."
-        else:
-            reprString = ", ".join(strRepr)
-        
-        return "Config Object -- " + reprString
-
-    def getRobotByName(self, name):
-        for r in self.robots:
-            if r.name == name:
-                return r
-        logging.error("Could not find robot of name '%s' in config '%s'." % (name, self.name))
-        return None
 
 
 class ConfigFileParser:
