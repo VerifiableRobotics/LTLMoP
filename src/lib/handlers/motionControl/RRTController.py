@@ -7,7 +7,6 @@ RRTController.py - Rapidly-Exploring Random Trees Motion Controller
 Uses Rapidly-exploring Random Tree Algorithm to generate paths given the starting position and the goal point.
 """
 
-#import _RRTControllerHelper
 from numpy import *
 from __is_inside import *
 import math
@@ -21,13 +20,19 @@ import scipy.linalg
 import Polygon, Polygon.IO
 import Polygon.Utils as PolyUtils
 import Polygon.Shapes as PolyShapes
-import matplotlib.pyplot as plt
 from math import sqrt, fabs , pi
 import random
-import matplotlib.animation as animation
 import thread
 import threading
 
+# importing matplotlib to show the path if possible
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as animation
+    import_matplotlib = True
+except:
+    print "matplotlib is not imported. Plotting is disabled"
+    import_matplotlib = False
 
 class motionControlHandler:
     def __init__(self, proj, shared_data,robot_type,max_angle_goal,max_angle_overlap,plotting):
@@ -88,7 +93,7 @@ class motionControlHandler:
         
 
         # Information about whether plotting is enabled.
-        if plotting is True:
+        if plotting is True and import_matplotlib == True:
             self.plotting          = True
         else:
             self.plotting          = False
