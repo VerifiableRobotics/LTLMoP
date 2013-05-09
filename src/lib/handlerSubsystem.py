@@ -21,6 +21,7 @@ import json
 import traceback
 
 
+
 ###################################################
 # Define individual objects for handler subsystem #
 ###################################################
@@ -30,14 +31,32 @@ class ParameterObject:
     Each object represents one parameter of a given method
     """
 
-    def __init__(self,para_name):
+    def __init__(self,para_name=""):
         self.name = para_name   # name of the parameter
         self.type = None    # type of the parameter
-        self.des = None     # description of the parameter
+        self.des = ""       # description of the parameter
         self.default = None # the default values of the parameter
         self.max = None     # the max value allowed for the parameter
         self.min = None     # the min value allowed for the parameter
         self.value = None   # the value user set for the parameter
+    
+    def __repr__(self):
+        """
+        Overwrite string representation function
+        """
+        strRepr = []
+        # Get all attribute names and values
+        for key,val in self.__dict__.iteritems():
+            # Only show if the value is not None or empty
+            if val: strRepr.append("{0}:{1}".format(key,val))
+        
+        # if all attributes have values of None or empty
+        if not strRepr: 
+            reprString = "All attributes have values of None or empty."
+        else:
+            reprString = ", ".join(strRepr)
+        
+        return "Parameter Object -- " + reprString
 
     def setValue(self,value):
         """
@@ -97,11 +116,29 @@ class MethodObject:
     Each object represents one method of a given handler
     """
     def __init__(self):
-        self.name = None        # name of the method
+        self.name = ""        # name of the method
         self.handler = None     # which handler the method belongs to
         self.comment = ''       # comment of the method
         self.para = []          # list of parameter object of this method
         self.omitPara = []      # list of parameter names that are omitted
+
+    def __repr__(self):
+        """
+        Overwrite string representation function
+        """
+        strRepr = []
+        # Get all attribute names and values
+        for key,val in self.__dict__.iteritems():
+            # Only show if the value is not None or empty
+            if val: strRepr.append("{0}:{1}".format(key,val))
+        
+        # if all attributes have values of None or empty
+        if not strRepr: 
+            reprString = "All attributes have values of None or empty."
+        else:
+            reprString = ", ".join(strRepr)
+        
+        return "Method Object -- " + reprString
 
     def getParaByName(self, name):
         # get the parameter object with given name
@@ -116,10 +153,28 @@ class HandlerObject:
     A handler object!
     """
     def __init__(self):
-        self.name = None    # name of the handler
+        self.name = "" # name of the handler
         self.type = None    # type of the handler e.g. motionControl or drive
         self.methods = []   # list of method objects in this handler
         self.robotType = '' # type of the robot using this handler for robot specific handlers
+
+    def __repr__(self):
+        """
+        Overwrite string representation function
+        """
+        strRepr = []
+        # Get all attribute names and values
+        for key,val in self.__dict__.iteritems():
+            # Only show if the value is not None or empty
+            if val: strRepr.append("{0}:{1}".format(key,val))
+        
+        # if all attributes have values of None or empty
+        if not strRepr: 
+            reprString = "All attributes have values of None or empty."
+        else:
+            reprString = ", ".join(strRepr)
+        
+        return "Handler Object -- " + reprString
 
     def getMethodByName(self, name):
         for m in self.methods:
@@ -195,12 +250,29 @@ class RobotObject:
     """
     A Robot object
     """
-    def __init__(self,r_name=None,r_type=None,driveH=None,initH=None,locoH=None,motionH=None,poseH=None,sensorH=None,actuatorH=None):
+    def __init__(self,r_name="" ,r_type=None,driveH=None,initH=None,locoH=None,motionH=None,poseH=None,sensorH=None,actuatorH=None):
         self.name = r_name  # name of the robot
         self.type = r_type  # type of the robot
         self.handlers = {'drive':driveH, 'init':initH, 'locomotionCommand':locoH, 'motionControl':motionH, 'pose':poseH, 'sensor':sensorH,'actuator':actuatorH} # dictionary of handler object for this robot
         self.calibrationMatrix = None # 3x3 matrix for converting coordinates, stored as lab->map
 
+    def __repr__(self):
+        """
+        Overwrite string representation function
+        """
+        strRepr = []
+        # Get all attribute names and values
+        for key,val in self.__dict__.iteritems():
+            # Only show if the value is not None or empty
+            if val: strRepr.append("{0}:{1}".format(key,val))
+        
+        # if all attributes have values of None or empty
+        if not strRepr: 
+            reprString = "All attributes have values of None or empty."
+        else:
+            reprString = ", ".join(strRepr)
+        
+        return "Robot Object -- " + reprString
 
 
 class HandlerSubsystem:
@@ -985,12 +1057,30 @@ class ConfigObject:
     A config file object!
     """
     def __init__(self):
-        self.name = None    # name of the config file
+        self.name = "" # name of the config file
         self.robots = []    # list of robot object used in this config file
         self.prop_mapping = {}  # dictionary for storing the propositions mapping
         self.initial_truths = [] # list of initially true propoisitions
         self.region_tags = {} # dictionary mapping tag names to region groups, for quantification
         self.main_robot = '' # name of robot for moving in this config
+
+    def __repr__(self):
+        """
+        Overwrite string representation function
+        """
+        strRepr = []
+        # Get all attribute names and values
+        for key,val in self.__dict__.iteritems():
+            # Only show if the value is not None or empty
+            if val: strRepr.append("{0}:{1}".format(key,val))
+        
+        # if all attributes have values of None or empty
+        if not strRepr: 
+            reprString = "All attributes have values of None or empty."
+        else:
+            reprString = ", ".join(strRepr)
+        
+        return "Config Object -- " + reprString
 
     def getRobotByName(self, name):
         for r in self.robots:
@@ -1211,28 +1301,38 @@ class ConfigFileParser:
 
 
 if __name__ == '__main__':
-    proj = project.Project()
-    proj.ltlmop_root = '/home/jim/Desktop/ltlmop_git/src'
-    proj.project_root = '/home/jim/Desktop/ltlmop_git/src/examples/newSensorTest'
-    h = HandlerSubsystem(proj)
-    h.loadAllHandlers()
-    h.loadAllRobots()
-    h.loadAllConfigFiles()
+    m = MethodObject()
+    print m
+    m = ParameterObject('Jim')
+    print m
+    m = HandlerObject()
+    print m
+    m = RobotObject()
+    print m
+    m = ConfigObject()
+    print m
+#    proj = project.Project()
+#    proj.ltlmop_root = '/home/jim/Desktop/ltlmop_git/src'
+#    proj.project_root = '/home/jim/Desktop/ltlmop_git/src/examples/newSensorTest'
+#    h = HandlerSubsystem(proj)
+#    h.loadAllHandlers()
+#    h.loadAllRobots()
+#    h.loadAllConfigFiles()
 
 
     #h.handler_parser.printHandler()
     #print h.configs[0].robots[0].handlers['sensor'].methods
 
-    testStringBefore = 'share.dummySensor.buttonPress(button_name="Wave")'
-    testMethod = h.string2Method(testStringBefore)
+#    testStringBefore = 'share.dummySensor.buttonPress(button_name="Wave")'
+#    testMethod = h.string2Method(testStringBefore)
 
-    print
-    testStringAfter = h.method2String(testMethod,'share')
+#    print
+#    testStringAfter = h.method2String(testMethod,'share')
 
-    print testStringBefore == testStringAfter
+#    print testStringBefore == testStringAfter
 
-    testStringBefore = 'MAE.naoSensor.hearWord(word="Fire",threshold=0.9)'
-    testMethod = h.string2Method(testStringBefore)
-    testStringAfter = h.method2String(testMethod,'MAE')
-    print testStringBefore == testStringAfter
+#    testStringBefore = 'MAE.naoSensor.hearWord(word="Fire",threshold=0.9)'
+#    testMethod = h.string2Method(testStringBefore)
+#    testStringAfter = h.method2String(testMethod,'MAE')
+#    print testStringBefore == testStringAfter
 
