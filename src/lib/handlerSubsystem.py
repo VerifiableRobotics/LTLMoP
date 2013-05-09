@@ -33,7 +33,7 @@ class ParameterObject:
 
     def __init__(self,para_name=""):
         self.name = para_name   # name of the parameter
-        self.type = None    # type of the parameter
+        self.type = ""      # type of the parameter
         self.des = ""       # description of the parameter
         self.default = None # the default values of the parameter
         self.max = None     # the max value allowed for the parameter
@@ -48,7 +48,8 @@ class ParameterObject:
         # Get all attribute names and values
         for key,val in self.__dict__.iteritems():
             # Only show if the value is not None or empty
-            if val: strRepr.append("{0}:{1}".format(key,val))
+            if val == None or val == "": 
+                strRepr.append("{0}:{1}".format(key,val))
         
         # if all attributes have values of None or empty
         if not strRepr: 
@@ -63,40 +64,43 @@ class ParameterObject:
         This function makes sure all parameter are set according to the desired type
         """
 
+        # Change None type to empty string to avoid None.lower()
+        if self.type == None: self.type = ""
+
         if self.type.lower() in ['float','double']:
             try:
                 self.value = float(value)
             except ValueError:
-                logging.error("Invalid float value: {0}".format(value))
+                logging.error("Invalid float value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() in ['int','integer']:
             try:
                 self.value = int(value)
             except ValueError:
-                logging.error("Invalid int value: {0}".format(value))
+                logging.error("Invalid int value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
             self.value = value
         elif self.type.lower() == 'region':
             try:
                 self.value = ast.literal_eval(value)
             except ValueError:
-                logging.error("Invalid region value: {0}".format(value))
+                logging.error("Invalid region value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() in ['str','string']:
             try:
                 self.value = str(value).strip('\"\'') 
             except ValueError:
-                logging.error("Invalid string value: {0}".format(value))
+                logging.error("Invalid string value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() == 'choice':
             try:
                 self.value = ast.literal_eval(value)
             except ValueError:
-                logging.error("Invalid choice value: {0}".format(value))
+                logging.error("Invalid choice value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() == 'multichoice':
             try:
                 self.value = ast.literal_eval(value)
             except ValueError:
-                logging.error("Invalid multichoice value: {0}".format(value))
+                logging.error("Invalid multichoice value: {0} for parameter {1}".format(value,self.name))
         else:
-            logging.error("Invalid parameter value: {0}".format(value))
+            logging.error("Cannot set the value of parameter {0}, because its type {1} cannot be recognized.".format(self.name,self.type))
 
     def getValue(self):
         return self.value
