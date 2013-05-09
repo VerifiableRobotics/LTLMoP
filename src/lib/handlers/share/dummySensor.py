@@ -8,6 +8,7 @@ Displays a silly little window for faking sensor values by clicking on buttons.
 """
 
 import threading, subprocess, os, time, socket
+import numpy, math
 import sys
 
 class sensorHandler:
@@ -33,6 +34,50 @@ class sensorHandler:
             print >>sys.__stderr__, "(SENS) Terminating dummysensor GUI listen thread..."
             self._running = False
             self.sensorListenThread.join()
+        
+    def _createSubwindow(self):
+            # Create a subprocess
+            print "(SENS) Starting sensorHandler window and listen thread..."
+            self.p_sensorHandler = subprocess.Popen(["python", "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stdin=subprocess.PIPE)
+        
+            # Create new thread to communicate with subwindow
+            self.sensorListenThread = threading.Thread(target = self._sensorListen)
+            self.sensorListenThread.daemon = True
+            self.sensorListenThread.start()
+
+            # Block until the sensor listener gets the go-ahead from the subwindow
+            while not self.sensorListenInitialized:
+                time.sleep(0.05) # Yield cpu
+
+    def regionBit(self,name,init_region,bit_num,initial=False):
+        """
+        Return the value of bit #bit_num in the bit-vector encoding of the currently selected region
+
+        name (string): Unique identifier for region sensor (default="target")
+        init_region (region): Name of the sensor whose state is interested
+        bit_num (int): The index of the bit to return
+        """
+        if initial:
+            if not self.sensorListenInitialized:
+                self._createSubwindow()
+
+            if name not in self.sensorValue.keys():
+                # create a new map element
+                # choose an initial (decomposed) region inside the desired one
+                self.sensorValue[name] = self.proj.regionMapping[init_region][0]
+                self.p_sensorHandler.stdin.write("loadproj," + self.proj.getFilenamePrefix() + ".spec,\n")
+                self.p_sensorHandler.stdin.write(",".join(["region", name, self.sensorValue[name]]) + "\n")
+            return True
+        else:
+            if name in self.sensorValue:
+                reg_idx = self.proj.rfi.indexOfRegionWithName(self.sensorValue[name])
+                numBits = int(math.ceil(math.log(len(self.proj.rfi.regions),2)))
+                reg_idx_bin = numpy.binary_repr(reg_idx, width=numBits)
+                #print name, bit_num, (reg_idx_bin[bit_num] == '1')
+                return (reg_idx_bin[bit_num] == '1')
+            else:
+                print "(SENS) WARNING: Region sensor %s is unknown!" % button_name
+                return None
 
     def buttonPress(self,button_name,init_value,initial=False):
         """
@@ -45,25 +90,14 @@ class sensorHandler:
         if initial:
 
             if not self.sensorListenInitialized:
-                # Create a subprocess
-                print "(SENS) Starting sensorHandler window and listen thread..."
-                self.p_sensorHandler = subprocess.Popen(["python", "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-
-                # Create new thread to communicate with subwindow
-                self.sensorListenThread = threading.Thread(target = self._sensorListen)
-                self.sensorListenThread.daemon = True
-                self.sensorListenThread.start()
-
-                # Block until the sensor listener gets the go-ahead from the subwindow
-                while not self.sensorListenInitialized:
-                    time.sleep(0.05) # Yield cpu
+                self._createSubwindow()
 
             if button_name not in self.sensorValue.keys():
                 self.sensorValue[button_name] = init_value
                 if init_value:
-                    self.p_sensorHandler.stdin.write(button_name + ",1\n")
+                    self.p_sensorHandler.stdin.write("button," + button_name + ",1\n")
                 else:
-                    self.p_sensorHandler.stdin.write(button_name + ",0\n")
+                    self.p_sensorHandler.stdin.write("button," + button_name + ",0\n")
             return self.sensorValue[button_name]
         else:
             if button_name in self.sensorValue:
@@ -113,5 +147,9 @@ class sensorHandler:
                 continue
 
             # Update our internal cache
-            self.sensorValue[args[0]] = (args[1] == "True")
-
+            if args[1] == "True":
+                self.sensorValue[args[0]] = True
+            elif args[1] == "False":
+                self.sensorValue[args[0]] = False
+            else:
+                self.sensorValue[args[0]] = args[1]

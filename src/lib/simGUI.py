@@ -15,8 +15,9 @@ import math, time, sys, os, re
 import wxversion
 import wx, wx.richtext, wx.grid
 import threading
-import project, mapRenderer
+import project, mapRenderer, regions
 from socket import *
+import copy
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -28,9 +29,14 @@ class SimGUI_Frame(wx.Frame):
         wx.Frame.__init__(self, *args, **kwds)
         self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER|wx.SP_LIVE_UPDATE)
         self.window_1_pane_2 = wx.Panel(self.window_1, -1)
-        self.sizer_2_copy_staticbox = wx.StaticBox(self.window_1_pane_2, -1, "Status Log")
+        self.notebook_1 = wx.Notebook(self.window_1_pane_2, -1, style=0)
+        self.notebook_1_pane_2 = wx.Panel(self.notebook_1, -1)
+        self.notebook_1_pane_1 = wx.Panel(self.notebook_1, -1)
         self.window_1_pane_1 = wx.Panel(self.window_1, -1)
-        self.text_ctrl_sim_log = wx.richtext.RichTextCtrl(self.window_1_pane_2, -1, "", style=wx.TE_MULTILINE)
+        self.text_ctrl_sim_log = wx.richtext.RichTextCtrl(self.notebook_1_pane_1, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
+        self.text_ctrl_slurpout = wx.richtext.RichTextCtrl(self.notebook_1_pane_2, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY)
+        self.text_ctrl_slurpin = wx.TextCtrl(self.notebook_1_pane_2, -1, "", style=wx.TE_PROCESS_ENTER)
+        self.button_SLURPsubmit = wx.Button(self.notebook_1_pane_2, -1, "Submit")
         self.button_sim_startPause = wx.Button(self.window_1_pane_2, -1, "Start")
         self.button_sim_log_clear = wx.Button(self.window_1_pane_2, -1, "Clear Log")
         self.button_sim_log_export = wx.Button(self.window_1_pane_2, -1, "Export Log...")
@@ -43,6 +49,8 @@ class SimGUI_Frame(wx.Frame):
         self.__set_properties()
         self.__do_layout()
 
+        self.Bind(wx.EVT_TEXT_ENTER, self.onSLURPSubmit, self.text_ctrl_slurpin)
+        self.Bind(wx.EVT_BUTTON, self.onSLURPSubmit, self.button_SLURPsubmit)
         self.Bind(wx.EVT_BUTTON, self.onSimStartPause, self.button_sim_startPause)
         self.Bind(wx.EVT_BUTTON, self.onSimClear, self.button_sim_log_clear)
         self.Bind(wx.EVT_BUTTON, self.onSimExport, self.button_sim_log_export)
@@ -53,6 +61,9 @@ class SimGUI_Frame(wx.Frame):
 
         self.window_1_pane_1.Bind(wx.EVT_PAINT, self.onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBG)
+
+        self.proj = project.Project()
+        self.proj.setSilent(True)
 
         # Make status bar at bottom.
 
@@ -90,18 +101,28 @@ class SimGUI_Frame(wx.Frame):
 
         self.markerPos = None
 
+        self.dialogueManager = None
+        self.currentGoal = None
+
         self.Bind( wx.EVT_CLOSE, self.onClose)
 
         # Let everyone know we're ready
         self.UDPSockTo.sendto("Hello!",self.addrTo)
 
-    def setMapImage(self, filename):
-        # Load and display the map
-        self.proj = project.Project()
-        self.proj.setSilent(True)
+    def loadRegionFile(self, filename):
+        self.proj.rfi = regions.RegionFileInterface()
+        self.proj.rfi.readFile(filename)
+
+        self.Bind(wx.EVT_SIZE, self.onResize, self)
+        self.onResize()
+
+    def loadSpecFile(self, filename):
         self.proj.loadProject(filename)
 
         self.Bind(wx.EVT_SIZE, self.onResize, self)
+
+        if self.proj.compile_options["parser"] == "slurp":
+            self.initDialogue()
 
         self.onResize()
 
@@ -155,9 +176,17 @@ class SimGUI_Frame(wx.Frame):
             elif input.startswith("Crossed border"):
                 if self.checkbox_statusLog_border.GetValue():
                     wx.CallAfter(self.appendLog, input + "\n", color="CYAN") 
-            elif input.startswith("BG:"):
-                wx.CallAfter(self.setMapImage, input.split(":",1)[1])
+            elif input.startswith("SPEC:"):
+                wx.CallAfter(self.loadSpecFile, input.split(":",1)[1])
+            elif input.startswith("REGIONS:"):
+                wx.CallAfter(self.loadRegionFile, input.split(":",1)[1])
             else:
+                # Detect our current goal index
+                if input.startswith("Currently pursuing goal"):
+                    m = re.search(r"#(\d+)", input)
+                    if m is not None:
+                        self.currentGoal = int(m.group(1))
+
                 if self.checkbox_statusLog_other.GetValue():
                     if input != "":
                         wx.CallAfter(self.appendLog, input + "\n", color="BLACK") 
@@ -166,6 +195,7 @@ class SimGUI_Frame(wx.Frame):
         # begin wxGlade: SimGUI_Frame.__set_properties
         self.SetTitle("Simulation Status")
         self.SetSize((836, 713))
+        self.button_SLURPsubmit.SetDefault()
         self.checkbox_statusLog_targetRegion.SetValue(1)
         self.checkbox_statusLog_propChange.SetValue(1)
         self.checkbox_statusLog_border.SetValue(1)
@@ -180,22 +210,32 @@ class SimGUI_Frame(wx.Frame):
         sizer_43_copy_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_43_copy_copy = wx.BoxSizer(wx.VERTICAL)
-        sizer_2_copy = wx.StaticBoxSizer(self.sizer_2_copy_staticbox, wx.HORIZONTAL)
-        sizer_5.Add((20, 30), 0, 0, 0)
-        sizer_43_copy_copy.Add((20, 20), 0, 0, 0)
-        sizer_2_copy.Add(self.text_ctrl_sim_log, 1, wx.ALL|wx.EXPAND, 2)
-        sizer_43_copy_copy.Add(sizer_2_copy, 1, wx.EXPAND, 0)
-        sizer_43_copy_copy.Add((20, 20), 0, 0, 0)
+        sizer_6 = wx.BoxSizer(wx.VERTICAL)
+        sizer_7 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_5.Add((5, 30), 0, 0, 0)
+        sizer_43_copy_copy.Add((20, 5), 0, 0, 0)
+        sizer_4.Add(self.text_ctrl_sim_log, 1, wx.ALL|wx.EXPAND, 5)
+        self.notebook_1_pane_1.SetSizer(sizer_4)
+        sizer_6.Add(self.text_ctrl_slurpout, 1, wx.ALL|wx.EXPAND, 5)
+        sizer_7.Add(self.text_ctrl_slurpin, 1, wx.ALL|wx.EXPAND, 5)
+        sizer_7.Add(self.button_SLURPsubmit, 0, wx.ALL, 5)
+        sizer_6.Add(sizer_7, 0, wx.EXPAND, 0)
+        self.notebook_1_pane_2.SetSizer(sizer_6)
+        self.notebook_1.AddPage(self.notebook_1_pane_1, "Status Log")
+        self.notebook_1.AddPage(self.notebook_1_pane_2, "SLURP Dialogue")
+        sizer_43_copy_copy.Add(self.notebook_1, 1, wx.EXPAND, 0)
+        sizer_43_copy_copy.Add((20, 5), 0, 0, 0)
         sizer_5.Add(sizer_43_copy_copy, 6, wx.EXPAND, 0)
         sizer_5.Add((20, 30), 0, 0, 0)
         sizer_43_copy_1.Add((20, 20), 0, 0, 0)
         sizer_43_copy_1.Add(self.button_sim_startPause, 0, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL, 20)
-        sizer_43_copy_1.Add((20, 20), 0, 0, 0)
+        sizer_43_copy_1.Add((20, 10), 0, 0, 0)
         sizer_43_copy_1.Add(self.button_sim_log_clear, 0, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL, 20)
-        sizer_43_copy_1.Add((20, 20), 0, 0, 0)
+        sizer_43_copy_1.Add((20, 10), 0, 0, 0)
         sizer_43_copy_1.Add(self.button_sim_log_export, 0, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL, 20)
-        sizer_43_copy_1.Add((20, 20), 0, 0, 0)
-        sizer_3.Add((20, 40), 0, 0, 0)
+        sizer_43_copy_1.Add((20, 10), 0, 0, 0)
+        sizer_3.Add((20, 20), 0, 0, 0)
         sizer_3.Add(self.label_1, 0, 0, 0)
         sizer_3.Add(self.checkbox_statusLog_targetRegion, 0, wx.TOP|wx.BOTTOM, 5)
         sizer_3.Add(self.checkbox_statusLog_propChange, 0, wx.TOP|wx.BOTTOM, 5)
@@ -351,6 +391,63 @@ class SimGUI_Frame(wx.Frame):
         self.text_ctrl_sim_log.Clear()
         event.Skip()
 
+    def initDialogue(self):
+        # Add SLURP to path for import
+        p = os.path.dirname(os.path.abspath(__file__))
+        sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
+        from ltlbroom.specgeneration import SpecGenerator
+        _SLURP_SPEC_GENERATOR = SpecGenerator()
+    
+        # Filter out regions it shouldn't know about
+        filtered_regions = [region.name for region in self.proj.rfi.regions 
+                            if not (region.isObstacle or region.name.lower() == "boundary")]
+
+        sensorList = copy.deepcopy(self.proj.enabled_sensors)
+        robotPropList = self.proj.enabled_actuators + self.proj.all_customs
+        
+        text = self.proj.specText
+
+        LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, results, responses, traceback = \
+            _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList,
+                                           self.proj.currentConfig.region_tags)
+
+        from ltlbroom.dialog import DialogManager
+        self.dialogueManager = DialogManager(traceback)
+
+    def onSLURPSubmit(self, event): # wxGlade: SimGUI_Frame.<event_handler>
+        if self.text_ctrl_slurpin.GetValue() == "":
+            event.Skip()
+            return
+        
+        user_text = self.text_ctrl_slurpin.GetValue()
+
+        # echo
+        self.text_ctrl_slurpout.BeginBold()
+        self.text_ctrl_slurpout.AppendText("User: ")
+        self.text_ctrl_slurpout.EndBold()
+        self.text_ctrl_slurpout.AppendText(user_text + "\n")
+
+        self.text_ctrl_slurpout.ShowPosition(self.text_ctrl_slurpout.GetLastPosition())
+        self.text_ctrl_slurpout.Refresh()
+
+        self.text_ctrl_slurpin.Clear()
+
+        # response
+        if self.dialogueManager is None:
+            self.text_ctrl_slurpout.BeginBold()
+            self.text_ctrl_slurpout.AppendText("Error: Dialogue Manager not initialized")
+            self.text_ctrl_slurpout.EndBold()
+        else:
+            sys_text = self.dialogueManager.tell(user_text, self.currentGoal)
+            self.text_ctrl_slurpout.BeginBold()
+            self.text_ctrl_slurpout.AppendText("System: ")
+            self.text_ctrl_slurpout.EndBold()
+            self.text_ctrl_slurpout.AppendText(sys_text + "\n")
+
+        self.text_ctrl_slurpout.ShowPosition(self.text_ctrl_slurpout.GetLastPosition())
+        self.text_ctrl_slurpout.Refresh()
+
+        event.Skip()
 
 # end of class SimGUI_Frame
 

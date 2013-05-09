@@ -127,13 +127,157 @@ def drawParamConfigPane(target, method, proj):
     label_info.Wrap(list_sizer.GetSize()[0])
 
 
+
+class regionTagsDialog(wx.Dialog):
+    def __init__(self, parent, *args, **kwds):
+        # begin wxGlade: regionTagsDialog.__init__
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE
+        wx.Dialog.__init__(self, *args, **kwds)
+        self.label_5 = wx.StaticText(self, wx.ID_ANY, "Tags:")
+        self.list_box_tags = wx.ListBox(self, wx.ID_ANY, choices=[], style=wx.LB_SINGLE)
+        self.button_add_tag = wx.Button(self, wx.ID_ADD, "")
+        self.button_remove_tag = wx.Button(self, wx.ID_REMOVE, "")
+        self.label_12 = wx.StaticText(self, wx.ID_ANY, "Regions:")
+        self.list_box_regions = wx.CheckListBox(self, wx.ID_ANY, choices=[])
+        self.static_line_2 = wx.StaticLine(self, wx.ID_ANY)
+        self.button_5 = wx.Button(self, wx.ID_OK, "")
+        self.button_8 = wx.Button(self, wx.ID_CANCEL, "")
+
+        self.__set_properties()
+        self.__do_layout()
+
+        self.Bind(wx.EVT_LISTBOX, self.onClickTag, self.list_box_tags)
+        self.Bind(wx.EVT_BUTTON, self.onClickAddTag, self.button_add_tag)
+        self.Bind(wx.EVT_BUTTON, self.onClickRemoveTag, self.button_remove_tag)
+        # end wxGlade
+
+        self.proj = parent.proj
+
+        self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckRegion, self.list_box_regions)
+
+    def __set_properties(self):
+        # begin wxGlade: regionTagsDialog.__set_properties
+        self.SetTitle("Edit Region Tags...")
+        self.SetSize((577, 419))
+        # end wxGlade
+
+    def __do_layout(self):
+        # begin wxGlade: regionTagsDialog.__do_layout
+        sizer_31 = wx.BoxSizer(wx.VERTICAL)
+        sizer_34 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_32 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_35 = wx.BoxSizer(wx.VERTICAL)
+        sizer_33 = wx.BoxSizer(wx.VERTICAL)
+        sizer_36 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_33.Add(self.label_5, 0, 0, 0)
+        sizer_33.Add(self.list_box_tags, 1, wx.TOP | wx.BOTTOM | wx.EXPAND, 5)
+        sizer_36.Add(self.button_add_tag, 0, 0, 0)
+        sizer_36.Add(self.button_remove_tag, 0, wx.LEFT, 10)
+        sizer_33.Add(sizer_36, 0, wx.EXPAND, 0)
+        sizer_32.Add(sizer_33, 1, wx.RIGHT | wx.EXPAND, 5)
+        sizer_35.Add(self.label_12, 0, 0, 0)
+        sizer_35.Add(self.list_box_regions, 1, wx.TOP | wx.EXPAND, 5)
+        sizer_32.Add(sizer_35, 1, wx.EXPAND, 0)
+        sizer_31.Add(sizer_32, 1, wx.ALL | wx.EXPAND, 5)
+        sizer_31.Add(self.static_line_2, 0, wx.EXPAND, 0)
+        sizer_34.Add((20, 20), 1, wx.EXPAND, 0)
+        sizer_34.Add(self.button_5, 0, wx.RIGHT, 10)
+        sizer_34.Add(self.button_8, 0, 0, 0)
+        sizer_31.Add(sizer_34, 0, wx.ALL | wx.EXPAND, 10)
+        self.SetSizer(sizer_31)
+        self.Layout()
+        # end wxGlade
+
+    def _tags2dialog(self, tags):
+        self.tags = tags
+    
+        # Populate tags and regions
+        self.list_box_tags.Set(self.tags.keys())
+
+        if self.list_box_tags.GetCount() > 0:
+            self.list_box_tags.SetSelection(0)
+            self.button_remove_tag.Enable(True)
+            self.onClickTag(None)
+        else:
+            self.button_remove_tag.Enable(False)
+
+    def onCheckRegion(self, event):
+        tag = self.list_box_tags.GetStringSelection()
+        self.tags[tag] = self.list_box_regions.GetCheckedStrings()
+
+        event.Skip()
+
+    def onClickTag(self, event):  # wxGlade: regionTagsDialog.<event_handler>
+        if event is not None:
+            tag = event.GetString()
+        else:
+            tag = self.list_box_tags.GetStringSelection()
+
+        if tag == '':
+            self.list_box_regions.Set([])
+            return
+
+        self.list_box_regions.Set([r.name for r in self.proj.rfi.regions if r.name.lower() != "boundary" and not r.isObstacle])
+
+        for i, rname in enumerate(self.list_box_regions.GetItems()):
+            self.list_box_regions.Check(i, rname in self.tags[tag])
+
+        if event is not None:
+            event.Skip()
+
+    def onClickAddTag(self, event):  # wxGlade: regionTagsDialog.<event_handler>
+        # Ask the user for a tag name
+        name = wx.GetTextFromUser("Name:", "New Tag")
+
+        if name != "":
+            if name in self.tags:
+                wx.MessageBox("Tag with that name already exists.", "Invalid tag name",
+                            style = wx.OK | wx.ICON_ERROR)
+                return
+
+            # If it's valid, add it, select it and enable it
+            self.list_box_tags.Insert(name, self.list_box_tags.GetCount())
+            self.list_box_tags.Select(self.list_box_tags.GetCount()-1)
+            self.tags[name] = []
+            self.onClickTag(None)
+            self.button_remove_tag.Enable(True)
+
+        event.Skip()
+
+    def onClickRemoveTag(self, event):  # wxGlade: regionTagsDialog.<event_handler>
+        numel = self.list_box_tags.GetCount()
+
+        if numel > 0:
+            pos = self.list_box_tags.GetSelection()
+            tag = self.list_box_tags.GetStringSelection()
+
+            self.list_box_tags.Delete(pos)
+            del self.tags[tag]
+
+            if pos == numel - 1:
+                # If the very last element was deleted, move the selection up one
+                newpos = pos - 1
+            else:
+                newpos = pos
+
+            if newpos != -1:
+                self.list_box_tags.Select(newpos)
+            else:
+                self.button_remove_tag.Enable(False)
+
+            self.onClickTag(None)
+
+        event.Skip()
+
+# end of class regionTagsDialog
+
 class handlerConfigDialog(wx.Dialog):
     def __init__(self, parent, *args, **kwds):
         # begin wxGlade: handlerConfigDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
-        self.panel_configs = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
-        self.button_defaults = wx.Button(self, -1, "Reset to Defaults")
+        self.panel_configs = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL)
+        self.button_defaults = wx.Button(self, wx.ID_ANY, "Reset to Defaults")
         self.button_OK = wx.Button(self, wx.ID_OK, "")
         self.button_1 = wx.Button(self, wx.ID_CANCEL, "")
 
@@ -215,7 +359,7 @@ class handlerConfigDialog(wx.Dialog):
         proj_copy.hsub.config_parser.saveConfigFile(cfg)
 
         print "Running calibration tool..."
-        proc = subprocess.Popen(["python", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
+        proc = subprocess.Popen(["python", "-u", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
 
         # Listen on socket for return value
         host = 'localhost'
@@ -309,29 +453,30 @@ class handlerConfigDialog(wx.Dialog):
 class simSetupDialog(wx.Dialog):
     def __init__(self, *args, **kwds):
         # begin wxGlade: simSetupDialog.__init__
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.THICK_FRAME
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.THICK_FRAME
         wx.Dialog.__init__(self, *args, **kwds)
-        self.sizer_22_staticbox = wx.StaticBox(self, -1, "Initial Conditions")
-        self.sizer_1_staticbox = wx.StaticBox(self, -1, "Execution Environment")
-        self.sizer_27_staticbox = wx.StaticBox(self, -1, "Experiment Settings")
-        self.sizer_28_staticbox = wx.StaticBox(self, -1, "Experiment Configurations:")
-        self.list_box_experiment_name = wx.ListBox(self, -1, choices=[])
+        self.list_box_experiment_name = wx.ListBox(self, wx.ID_ANY, choices=[])
         self.button_cfg_new = wx.Button(self, wx.ID_NEW, "")
-        self.button_cfg_import = wx.Button(self, -1, "Import...")
+        self.button_cfg_import = wx.Button(self, wx.ID_ANY, "Import...")
         self.button_cfg_delete = wx.Button(self, wx.ID_DELETE, "")
-        self.label_9 = wx.StaticText(self, -1, "Experiment Name: ")
-        self.text_ctrl_sim_experiment_name = wx.TextCtrl(self, -1, "")
-        self.label_2 = wx.StaticText(self, -1, "Custom Propositions:")
-        self.list_box_init_customs = wx.CheckListBox(self, -1, choices=["1", "2"])
-        self.label_2_copy = wx.StaticText(self, -1, "Action Propositions:")
-        self.list_box_init_actions = wx.CheckListBox(self, -1, choices=["3", "4"])
-        self.label_1 = wx.StaticText(self, -1, "Robots:")
-        self.list_box_robots = wx.ListBox(self, -1, choices=[])
-        self.button_addrobot = wx.Button(self, -1, "Add robot...")
-        self.button_2 = wx.Button(self, -1, "Configure robot...")
-        self.button_3 = wx.Button(self, -1, "Remove robot")
-        self.button_defaultrobot = wx.Button(self, -1, "Set as Main Robot")
-        self.button_4 = wx.Button(self, -1, "Edit proposition mapping...")
+        self.sizer_28_staticbox = wx.StaticBox(self, wx.ID_ANY, "Experiment Configurations:")
+        self.label_9 = wx.StaticText(self, wx.ID_ANY, "Experiment Name: ")
+        self.text_ctrl_sim_experiment_name = wx.TextCtrl(self, wx.ID_ANY, "")
+        self.label_2 = wx.StaticText(self, wx.ID_ANY, "Custom Propositions:")
+        self.list_box_init_customs = wx.CheckListBox(self, wx.ID_ANY, choices=["1", "2"])
+        self.label_2_copy = wx.StaticText(self, wx.ID_ANY, "Action Propositions:")
+        self.list_box_init_actions = wx.CheckListBox(self, wx.ID_ANY, choices=["3", "4"])
+        self.button_edit_region_tags = wx.Button(self, wx.ID_ANY, "Edit region tags...")
+        self.sizer_22_staticbox = wx.StaticBox(self, wx.ID_ANY, "Initial Conditions")
+        self.label_1 = wx.StaticText(self, wx.ID_ANY, "Robots:")
+        self.list_box_robots = wx.ListBox(self, wx.ID_ANY, choices=[])
+        self.button_addrobot = wx.Button(self, wx.ID_ANY, "Add robot...")
+        self.button_2 = wx.Button(self, wx.ID_ANY, "Configure robot...")
+        self.button_3 = wx.Button(self, wx.ID_ANY, "Remove robot")
+        self.button_defaultrobot = wx.Button(self, wx.ID_ANY, "Set as Main Robot")
+        self.button_4 = wx.Button(self, wx.ID_ANY, "Edit proposition mapping...")
+        self.sizer_1_staticbox = wx.StaticBox(self, wx.ID_ANY, "Execution Environment")
+        self.sizer_27_staticbox = wx.StaticBox(self, wx.ID_ANY, "Experiment Settings")
         self.button_sim_apply = wx.Button(self, wx.ID_APPLY, "")
         self.button_sim_ok = wx.Button(self, wx.ID_OK, "")
         self.button_sim_cancel = wx.Button(self, wx.ID_CANCEL, "")
@@ -344,6 +489,7 @@ class simSetupDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.onConfigImport, self.button_cfg_import)
         self.Bind(wx.EVT_BUTTON, self.onConfigDelete, self.button_cfg_delete)
         self.Bind(wx.EVT_TEXT, self.onSimNameEdit, self.text_ctrl_sim_experiment_name)
+        self.Bind(wx.EVT_BUTTON, self.onClickEditRegionTags, self.button_edit_region_tags)
         self.Bind(wx.EVT_BUTTON, self.onClickAddRobot, self.button_addrobot)
         self.Bind(wx.EVT_BUTTON, self.onClickConfigureRobot, self.button_2)
         self.Bind(wx.EVT_BUTTON, self.onClickRemoveRobot, self.button_3)
@@ -406,7 +552,7 @@ class simSetupDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: simSetupDialog.__set_properties
         self.SetTitle("Configure Execution")
-        self.SetSize((935, 508))
+        self.SetSize((935, 580))
         self.text_ctrl_sim_experiment_name.SetMinSize((300, 27))
         self.list_box_init_customs.SetSelection(0)
         self.list_box_init_actions.SetSelection(0)
@@ -417,17 +563,21 @@ class simSetupDialog(wx.Dialog):
         sizer_6 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_12 = wx.BoxSizer(wx.VERTICAL)
         sizer_13 = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer_27_staticbox.Lower()
         sizer_27 = wx.StaticBoxSizer(self.sizer_27_staticbox, wx.VERTICAL)
+        self.sizer_1_staticbox.Lower()
         sizer_1 = wx.StaticBoxSizer(self.sizer_1_staticbox, wx.HORIZONTAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_4 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
+        self.sizer_22_staticbox.Lower()
         sizer_22 = wx.StaticBoxSizer(self.sizer_22_staticbox, wx.VERTICAL)
         sizer_23 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_17_copy = wx.BoxSizer(wx.VERTICAL)
         sizer_17 = wx.BoxSizer(wx.VERTICAL)
         sizer_30 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_29 = wx.BoxSizer(wx.VERTICAL)
+        self.sizer_28_staticbox.Lower()
         sizer_28 = wx.StaticBoxSizer(self.sizer_28_staticbox, wx.VERTICAL)
         sizer_29_copy = wx.BoxSizer(wx.HORIZONTAL)
         sizer_6.Add((20, 20), 0, 0, 0)
@@ -461,7 +611,8 @@ class simSetupDialog(wx.Dialog):
         sizer_23.Add(sizer_17_copy, 1, wx.EXPAND, 0)
         sizer_23.Add((5, 20), 0, 0, 0)
         sizer_22.Add(sizer_23, 5, wx.EXPAND, 0)
-        sizer_27.Add(sizer_22, 1, wx.ALL|wx.EXPAND, 10)
+        sizer_22.Add(self.button_edit_region_tags, 0, wx.LEFT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_27.Add(sizer_22, 1, wx.ALL | wx.EXPAND, 10)
         sizer_3.Add(self.label_1, 0, 0, 0)
         sizer_3.Add(self.list_box_robots, 1, wx.EXPAND, 0)
         sizer_2.Add(sizer_3, 1, wx.EXPAND, 0)
@@ -474,7 +625,7 @@ class simSetupDialog(wx.Dialog):
         sizer_4.Add(self.button_4, 0, 0, 0)
         sizer_2.Add(sizer_4, 1, wx.EXPAND, 0)
         sizer_1.Add(sizer_2, 1, wx.EXPAND, 0)
-        sizer_27.Add(sizer_1, 0, wx.ALL|wx.EXPAND, 10)
+        sizer_27.Add(sizer_1, 0, wx.ALL | wx.EXPAND, 10)
         sizer_12.Add(sizer_27, 1, wx.EXPAND, 0)
         sizer_13.Add(self.button_sim_apply, 0, 0, 0)
         sizer_13.Add((10, 20), 0, 0, 0)
@@ -717,6 +868,15 @@ class simSetupDialog(wx.Dialog):
         self.doClose(event)
         event.Skip()
 
+    def onClickEditRegionTags(self, event):  # wxGlade: simSetupDialog.<event_handler>
+        dlg = regionTagsDialog(self, None, -1, "")
+        obj = self._getSelectedConfigObject()
+        dlg._tags2dialog(deepcopy(obj.region_tags))
+        if dlg.ShowModal() != wx.ID_CANCEL:
+            obj.region_tags = dlg.tags
+        dlg.Destroy()
+        event.Skip()
+
 # end of class simSetupDialog
 
 
@@ -725,11 +885,11 @@ class addRobotDialog(wx.Dialog):
         # begin wxGlade: addRobotDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
-        self.label_3 = wx.StaticText(self, -1, "Robot type:")
-        self.combo_box_robottype = wx.ComboBox(self, -1, choices=[], style=wx.CB_DROPDOWN)
-        self.label_4 = wx.StaticText(self, -1, "Robot name:")
-        self.text_ctrl_robotname = wx.TextCtrl(self, -1, "")
-        self.static_line_1 = wx.StaticLine(self, -1)
+        self.label_3 = wx.StaticText(self, wx.ID_ANY, "Robot type:")
+        self.combo_box_robottype = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN)
+        self.label_4 = wx.StaticText(self, wx.ID_ANY, "Robot name:")
+        self.text_ctrl_robotname = wx.TextCtrl(self, wx.ID_ANY, "")
+        self.static_line_1 = wx.StaticLine(self, wx.ID_ANY)
         self.button_7 = wx.Button(self, wx.ID_CANCEL, "")
         self.button_6 = wx.Button(self, wx.ID_OK, "")
 
@@ -811,7 +971,7 @@ class addRobotDialog(wx.Dialog):
         sizer_5.Add(sizer_8, 0, wx.EXPAND, 0)
         sizer_5.Add(self.static_line_1, 0, wx.EXPAND, 0)
         sizer_9.AddGrowableCol(1)
-        sizer_5.Add(sizer_9, 1, wx.ALL|wx.EXPAND, 10)
+        sizer_5.Add(sizer_9, 1, wx.ALL | wx.EXPAND, 10)
         sizer_5.Add((20, 5), 0, wx.EXPAND, 0)
         sizer_11.Add((20, 20), 1, wx.EXPAND, 0)
         sizer_11.Add(self.button_7, 0, wx.ALL, 5)
@@ -917,19 +1077,19 @@ class addRobotDialog(wx.Dialog):
 class propMappingDialog(wx.Dialog):
     def __init__(self, parent, *args, **kwds):
         # begin wxGlade: propMappingDialog.__init__
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.THICK_FRAME
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.THICK_FRAME
         wx.Dialog.__init__(self, *args, **kwds)
-        self.label_6 = wx.StaticText(self, -1, "Propositions:")
-        self.list_box_props = wx.ListBox(self, -1, choices=[], style=wx.LB_SINGLE|wx.LB_ALWAYS_SB)
-        self.label_11 = wx.StaticText(self, -1, "Continuous controller mapping:")
-        self.text_ctrl_mapping = wx.richtext.RichTextCtrl(self, -1, "")
-        self.button_9 = wx.Button(self, -1, "        ^\nInsert/Apply")
-        self.label_7 = wx.StaticText(self, -1, "Robots:")
-        self.list_box_robots = wx.ListBox(self, -1, choices=[])
-        self.label_8 = wx.StaticText(self, -1, "Sensors/Actuators:")
-        self.list_box_functions = wx.ListBox(self, -1, choices=[])
-        self.label_10 = wx.StaticText(self, -1, "Parameters:")
-        self.panel_method_cfg = wx.ScrolledWindow(self, -1, style=wx.SUNKEN_BORDER|wx.TAB_TRAVERSAL)
+        self.label_6 = wx.StaticText(self, wx.ID_ANY, "Propositions:")
+        self.list_box_props = wx.ListBox(self, wx.ID_ANY, choices=[], style=wx.LB_SINGLE | wx.LB_ALWAYS_SB)
+        self.label_11 = wx.StaticText(self, wx.ID_ANY, "Continuous controller mapping:")
+        self.text_ctrl_mapping = wx.richtext.RichTextCtrl(self, wx.ID_ANY, "")
+        self.button_9 = wx.Button(self, wx.ID_ANY, "        ^\nInsert/Apply")
+        self.label_7 = wx.StaticText(self, wx.ID_ANY, "Robots:")
+        self.list_box_robots = wx.ListBox(self, wx.ID_ANY, choices=[])
+        self.label_8 = wx.StaticText(self, wx.ID_ANY, "Sensors/Actuators:")
+        self.list_box_functions = wx.ListBox(self, wx.ID_ANY, choices=[])
+        self.label_10 = wx.StaticText(self, wx.ID_ANY, "Parameters:")
+        self.panel_method_cfg = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL)
         self.button_11 = wx.Button(self, wx.ID_OK, "")
         self.button_10 = wx.Button(self, wx.ID_CANCEL, "")
 
@@ -1020,23 +1180,23 @@ class propMappingDialog(wx.Dialog):
         sizer_20 = wx.BoxSizer(wx.VERTICAL)
         sizer_18 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_15 = wx.BoxSizer(wx.VERTICAL)
-        sizer_15.Add(self.label_6, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        sizer_15.Add(self.list_box_props, 1, wx.ALL|wx.EXPAND, 5)
+        sizer_15.Add(self.label_6, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
+        sizer_15.Add(self.list_box_props, 1, wx.ALL | wx.EXPAND, 5)
         sizer_14.Add(sizer_15, 1, wx.EXPAND, 0)
         sizer_16.Add(self.label_11, 0, wx.ALL, 5)
-        sizer_16.Add(self.text_ctrl_mapping, 1, wx.ALL|wx.EXPAND, 5)
+        sizer_16.Add(self.text_ctrl_mapping, 1, wx.ALL | wx.EXPAND, 5)
         sizer_18.Add((20, 20), 1, wx.EXPAND, 0)
         sizer_18.Add(self.button_9, 0, wx.ALL, 5)
         sizer_18.Add((20, 20), 1, wx.EXPAND, 0)
         sizer_16.Add(sizer_18, 0, wx.EXPAND, 0)
         sizer_20.Add(self.label_7, 0, wx.ALL, 5)
-        sizer_20.Add(self.list_box_robots, 1, wx.ALL|wx.EXPAND, 5)
+        sizer_20.Add(self.list_box_robots, 1, wx.ALL | wx.EXPAND, 5)
         sizer_19.Add(sizer_20, 1, wx.EXPAND, 0)
         sizer_21.Add(self.label_8, 0, wx.ALL, 5)
-        sizer_21.Add(self.list_box_functions, 1, wx.ALL|wx.EXPAND, 5)
+        sizer_21.Add(self.list_box_functions, 1, wx.ALL | wx.EXPAND, 5)
         sizer_19.Add(sizer_21, 1, wx.EXPAND, 0)
         sizer_24.Add(self.label_10, 0, wx.ALL, 5)
-        sizer_24.Add(self.panel_method_cfg, 1, wx.ALL|wx.EXPAND, 5)
+        sizer_24.Add(self.panel_method_cfg, 1, wx.ALL | wx.EXPAND, 5)
         sizer_19.Add(sizer_24, 3, wx.EXPAND, 0)
         sizer_16.Add(sizer_19, 5, wx.EXPAND, 0)
         sizer_25.Add((20, 20), 1, wx.EXPAND, 0)

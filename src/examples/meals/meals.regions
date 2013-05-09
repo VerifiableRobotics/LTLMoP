@@ -1,0 +1,112 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+
+Obstacles: # Names of regions to treat as obstacles
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "boundary", 
+        "color": [
+            204, 
+            50, 
+            50
+        ], 
+        "position": [
+            85, 
+            78
+        ], 
+        "type": "rect", 
+        "size": [
+            532, 
+            407
+        ]
+    }, 
+    {
+        "name": "kitchen", 
+        "color": [
+            255, 
+            0, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                0
+            ], 
+            [
+                1, 
+                0
+            ], 
+            [
+                174, 
+                0
+            ], 
+            [
+                175, 
+                0
+            ], 
+            [
+                175, 
+                113
+            ], 
+            [
+                0, 
+                113
+            ]
+        ], 
+        "position": [
+            113, 
+            353
+        ], 
+        "type": "poly", 
+        "size": [
+            175, 
+            113
+        ]
+    }, 
+    {
+        "name": "r2", 
+        "color": [
+            204, 
+            50, 
+            50
+        ], 
+        "position": [
+            382, 
+            98
+        ], 
+        "type": "rect", 
+        "size": [
+            179, 
+            97
+        ]
+    }, 
+    {
+        "name": "r1", 
+        "color": [
+            176, 
+            0, 
+            255
+        ], 
+        "position": [
+            104, 
+            99
+        ], 
+        "type": "rect", 
+        "size": [
+            171, 
+            108
+        ]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+

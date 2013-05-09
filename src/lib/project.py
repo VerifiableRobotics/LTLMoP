@@ -34,6 +34,7 @@ class Project:
         self.all_actuators = []
         self.enabled_actuators = []
         self.all_customs = []
+        self.internal_props = []
         self.currentConfig = None
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
 
@@ -41,7 +42,10 @@ class Project:
 
         # Compilation options (with defaults)
         self.compile_options = {"convexify": True,  # Decompose workspace into convex regions
-                                "fastslow": False}  # Enable "fast-slow" synthesis algorithm
+                                "fastslow": False,  # Enable "fast-slow" synthesis algorithm
+                                "decompose": True,  # Create regions for free space and region overlaps (required for Locative Preposition support)
+                                "use_region_bit_encoding": True, # Use a vector of "bitX" propositions to represent regions, for efficiency
+                                "parser": "slurp"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
 
         # Climb the tree to find out where we are
         p = os.path.abspath(__file__)
@@ -164,7 +168,11 @@ class Project:
                     continue
 
                 k,v = l.split(":", 1)
-                self.compile_options[k.strip().lower()] = (v.strip().lower() in ['true', 't', '1'])
+                if k.strip().lower() == "parser":
+                    self.compile_options[k.strip().lower()] = v.strip().lower()
+                else:
+                    # convert to boolean if not a parser type
+                    self.compile_options[k.strip().lower()] = (v.strip().lower() in ['true', 't', '1'])
 
         return spec_data
 

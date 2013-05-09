@@ -110,6 +110,9 @@ class Automaton:
             print "Transitions: "
             for trans in state.transitions:
                 print trans.name
+                
+                
+                
 
     def updateOutputs(self, state=None):
         """
@@ -153,6 +156,23 @@ class Automaton:
                     region += int(2**(self.num_bits-bit-1))
         except KeyError:
             print "FATAL: Missing expected proposition 'bit%d' in automaton!" % bit
+            region = None
+
+        return region
+
+    def envRegionFromState(self, state):
+        """
+        Given a state object, look at its 'sbitX' outputs to determine the region encoded,
+        and return the NUMBER of this region.
+        """
+        try:
+            region = 0
+            for bit in range(self.num_bits):
+                if (int(state.inputs["sbit" + str(bit)]) == 1):
+                    # bit0 is MSB
+                    region += int(2**(self.num_bits-bit-1))
+        except KeyError:
+            print "FATAL: Missing expected proposition 'sbit%d' in automaton!" % bit
             region = None
 
         return region
@@ -322,7 +342,11 @@ class Automaton:
             for nextState in state.transitions:
                 FILE.write('\ts'+ state.name +' -> s'+ nextState.name +'[style=\"bold\", arrowsize = 1.5, fontsize = 20, label=\"')
                 # Check the next state to figure out which inputs have to be on
+                envRegion = self.envRegionFromState(nextState)
+                if envRegion is not None:
+                    FILE.write( self.getAnnotatedRegionName(envRegion) + '\\n')
                 for key in nextState.inputs.keys():
+                    if re.match('^sbit\d+$',key): continue
                     if nextState.inputs[key] == '1':
                         FILE.write( key + '\\n')
                     else:
@@ -332,6 +356,103 @@ class Automaton:
         FILE.write('} \n')
         FILE.close()
 
+    def writeSMV(self, filename):
+        """
+        Write an SMV file so we can model check the synthesized automaton.
+        """
+
+        FILE = open(filename,"w")
+
+        # Write the header
+        FILE.write('MODULE main\n')
+        FILE.write('\tVAR\n')
+        state1 = self.states[1]
+        for key, val in state1.inputs.iteritems():
+            FILE.write("\t\t"+key+": boolean;\n")
+        for key, val in state1.outputs.iteritems():
+          FILE.write("\t\t"+key+": boolean;\n")
+        FILE.write("\t\t"+"rank : 0..10;\n")
+        FILE.write("\tINIT\n")
+        FILE.close()
+        
+        
+        #Select the initial conditions (i.e. substitutions on the initial conditions
+        #grab all lines that do not have any temporal operators, i.e. the initial conditions.   
+        #cmd = "grep -v '[\[;-]' "+self.proj.getFilenamePrefix()+".ltl | grep -v next | grep -v \($ | sed -e 's/s\.//g' -e 's/e\.//g' >> "+filename
+        #os.system(cmd)
+        input = open(self.proj.getFilenamePrefix()+".ltl")
+        output = open(filename, 'a')
+        for line in input:
+            if (re.search("[\[;-]", line) is None and re.search("next", line) is None and re.search("\($", line) is None):
+                line = re.sub("s\.", "", line)
+                line = re.sub("e\.", "", line)            
+                output.write(line)
+        input.close()
+        output.close()
+        
+        # Write the transitions as a disjunction of conjunctions
+        FILE = open(filename,"a")
+        FILE.write("TRUE\n")
+        FILE.write("\tTRANS\n")
+        for state in self.states:
+            for nextState in state.transitions:
+                #FILE.write('\t'+ "&".join( map( lambda x: str(x[0] + " = " + str(x[1])), state.inputs.items())) + "&".join( map( lambda x: str(x[0] + " = " + str(x[1])), state.outputs.items() ) ) + "|" )
+                # Check the next state to figure out which inputs have to be on                
+                #The extra TRUE and FALSE clauses circumvent the need to account for trailing &s.
+                FILE.write(' ((')
+                for key in state.inputs.keys():
+                    if state.inputs[key] == '1':
+                        FILE.write( key + ' & ')
+                    else:
+                        FILE.write( '!' + key + ' & ')                        
+                for key in state.outputs.keys():
+                    if state.outputs[key] == '1':
+                        FILE.write( key + ' & ')
+                    else:
+                        FILE.write( '!' + key + ' & ') 
+                FILE.write( "rank = " + state.rank + ' ) & ')
+                for key in nextState.inputs.keys():
+                    if nextState.inputs[key] == '1':
+                        FILE.write("next("+ key + ') & ')
+                    else:
+                        FILE.write( "! next("+ key + ') & ')                        
+                for key in nextState.outputs.keys():
+                    if nextState.outputs[key] == '1':
+                        FILE.write("next("+ key + ') & ')
+                    else:
+                        FILE.write( "! next("+ key + ') & ') 
+                FILE.write( "next(rank) = " + nextState.rank + ' & ')
+                FILE.write(' TRUE) | ')
+        FILE.write('FALSE')
+        FILE.write('\n')
+        FILE.write("\tLTLSPEC\n")
+        FILE.close()
+        
+        #replace next, <> and [] with X, F and G, and gets rid of the e. and s. prefixes. It also puts an implication between the two parts of the spec.
+        #cmd = "cat " + self.proj.getFilenamePrefix()+".ltl | sed -e 's/\[\]/G /g' -e 's/^<^>/F /g'  -e 's/next/X /g' -e 's/s\.//g' -e 's/e\.//g' -e '0,/;/s/;/-^>/' -e '/LTLSPEC/ d' -e '/--/d' >> " + filename
+        #os.system(cmd)
+        input = open(self.proj.getFilenamePrefix()+".ltl")
+        output = open(filename, 'a')
+        impFlag = False
+        for line in input:
+            if (re.search("LTLSPEC", line) is None and re.search("--", line) is None):
+                line = re.sub("\[\]", "G ", line)
+                line = re.sub("<>", "F ", line)
+                line = re.sub("next", "X ", line)
+                line = re.sub("s\.", "", line)
+                line = re.sub("e\.", "", line)
+                if not impFlag and not re.search(";", line) is None:
+                    line = re.sub(";", "->", line)
+                    impFlag = True
+                output.write(line)
+        input.close()
+        output.close()
+        
+
+        
+
+        # Write the transitions with the input labels (only inputs that are true)
+    
     def findTransitionableStates(self, initial=False):
         """
         Returns a list of states that we could conceivably transition to, given
@@ -409,7 +530,9 @@ class Automaton:
 
         self.current_region = init_region
 
-        for output in (self.actuators + self.custom_props):
+        for output in self.states[0].outputs.keys():
+            # Skip any "bitX" region encodings
+            if re.match('^bit\d+$', output): continue
             self.current_outputs[output] = (output in init_outputs)
 
         candidates = self.findTransitionableStates(initial=True)
@@ -465,6 +588,8 @@ class Automaton:
 
             self.next_state = random.choice(next_states)
             self.next_region = self.regionFromState(self.next_state)
+
+            print "Currently pursuing goal #{}".format(self.next_state.rank)
 
             # See what we, as the system, need to do to get to this new state
             self.transition_contains_motion = self.next_region is not None and (self.next_region != self.current_region)
