@@ -26,7 +26,7 @@ from numpy import *
 from handlers.motionControl.__is_inside import is_inside
 from socket import *
 import specCompiler
-import itertools, glob
+import itertools
 
 
 ####################
@@ -63,8 +63,6 @@ class LTLMoPExecutor(object):
         self.show_gui = show_gui
 
         self.proj = project.Project() # this is the project that we are currently using to execute
-        self.next_proj = None # this is the temporary project we update as the map and specification change,
-                              # but won't actually use until resynthesis is triggered
 
         # Choose a timer func with maximum accuracy for given platform
         if sys.platform in ['win32', 'cygwin']:
@@ -77,14 +75,9 @@ class LTLMoPExecutor(object):
 
     def loadSpecFile(self, filename):
         if filename is not None:
-            # Load configuration files
-
-            new_proj = project.Project()
-            new_proj.loadProject(filename)
-
             # Update with this new project
-            self.proj = new_proj
-            self.next_proj = new_proj
+            self.proj = project.Project()
+            self.proj.loadProject(filename)
 
         if self.show_gui:
             # Tell GUI to load the spec file
@@ -103,32 +96,24 @@ class LTLMoPExecutor(object):
         if rfi is None:
             rfi = self.proj.rfi
 
-        pose = self.proj.h_instance['pose'].getPose()
+        pose = self.proj.coordmap_lab2map(self.proj.h_instance['pose'].getPose())
 
-        region = None
-
-        for i, r in enumerate(rfi.regions):
-            if r.name.lower() == "boundary":
-                continue
-
-            pointArray = [self.proj.coordmap_map2lab(x) for x in r.getPoints()]
-            vertices = mat(pointArray).T
-
-
-            if r.objectContainsPoint(*self.proj.coordmap_lab2map(pose)):
-                region = i
-                break
-
+        region = next((i for i, r in enumerate(rfi.regions) if r.name.lower() != "boundary" and \
+                        r.objectContainsPoint(*pose)), None)
+ 
         if region is None:
             print "Pose of ", pose, "not inside any region!"
 
         return region
 
-    def doResynthesis(self):
+    def doResynthesis(self, proj):
+        """Resynthesize with a given Project, and then restart execution using the resulting automaton.
+           Returns True on success, False on failure"""
+
         print "Starting resynthesis..."
         
         c = specCompiler.SpecCompiler()
-        c.proj = self.next_proj
+        c.proj = proj
 
         # make sure rfi is non-decomposed here
         # NOTE: only matters if this is a proj that has been initialized
@@ -151,7 +136,7 @@ class LTLMoPExecutor(object):
 
         print "New automaton has been created."
 
-        self.proj = self.next_proj
+        self.proj = proj
 
         print "Reinitializing execution..."
 
@@ -160,53 +145,22 @@ class LTLMoPExecutor(object):
 
         return True
 
-    def rewriteSpec(self, group_name, operator, operand, n=itertools.count(1)):
+    def rewriteSpec(self, proj, n=itertools.count(1)):
         # reload from file instead of deepcopy because hsub stuff can include uncopyable thread locks, etc
         new_proj = project.Project()
         new_proj.setSilent(True)
-        new_proj.loadProject(self.next_proj.getFilenamePrefix() + ".spec")
+        new_proj.loadProject(proj.getFilenamePrefix() + ".spec")
 
         # copy hsub references manually
         new_proj.hsub = self.proj.hsub
         new_proj.hsub.proj = new_proj # oh my god, guys
         new_proj.h_instance = self.proj.h_instance
         
-        # HACK: update object refs in sensor handler
-        new_proj.h_instance["sensor"][self.proj.currentConfig.main_robot].proj = new_proj
-        new_proj.h_instance["sensor"][self.proj.currentConfig.main_robot].mapThread.proj = new_proj
-
         new_proj.sensor_handler = self.proj.sensor_handler
         new_proj.actuator_handler = self.proj.actuator_handler
 
-        base_name = self.next_proj.getFilenamePrefix().rsplit('.',1)[0] # without the modifier
+        base_name = proj.getFilenamePrefix().rsplit('.',1)[0] # without the modifier
         newSpecName = "%s.step%d.spec" % (base_name, n.next())
-
-        # Find the most recent region file
-        newest_regions = max([self.proj.rfiold.filename] + glob.glob("%s.update*.regions" % base_name), key=lambda f: os.stat(f).st_mtime)
-
-        print "Using newest region file: " + newest_regions
-        new_proj.rfi.readFile(newest_regions)
-
-        # Update region grouping with changed regions
-        RegionGroupingRE = re.compile('^group\s+%s\s+(is|are)\s+(?P<regions>.+)\n' % group_name, re.IGNORECASE|re.MULTILINE)
-        def gen_replacement_text(group_name, operand, m):
-            regions = set(re.split(r"\s*,\s*", m.group('regions')))
-
-            regions -= set(["empty"])
-
-            if operator == "add":
-                regions = regions | operand
-            else:
-                regions = regions - operand
-
-            if not regions:
-                regions = ['empty']
-            
-            return "group %s is %s\n" % (group_name, ", ".join(regions))
-
-        new_proj.specText = RegionGroupingRE.sub(functools.partial(gen_replacement_text, group_name, operand), new_proj.specText)
-
-        # TODO: Order goals properly!!!!!!!!!!!!!!!!
 
         # Constrain initial condition to current state
         # FIXME: We probably ought to constrain to the decomposed region, not the larger one
@@ -228,45 +182,8 @@ class LTLMoPExecutor(object):
 
         print "Wrote new spec file: %s" % newSpecName
 
-        self.next_proj = new_proj
+        return new_proj
         
-    def checkForInternalFlags(self):
-        for k in sorted(self.aut.current_outputs.keys()): # sort ensures group updates happen before resynthesis when triggered in same state
-            # Only trigger on rising edges
-            if not (int(self.prev_outputs[k]) == 0 and int(self.aut.current_outputs[k]) == 1):
-                continue
-
-            m = re.match("_(?P<action>add_to|remove_from)_(?P<groupName>\w+)", k)
-            if m is not None:
-                # Decide referent by currently-true sensor values (we assume these are mutually exclusive)
-                # HACK/FIXME: don't hardcode sensor prop names
-                if int(self.aut.next_state.inputs['region_added']) == 1:
-                    referent = self.proj.h_instance['sensor'][self.proj.currentConfig.main_robot].addedRegions
-                #elif int(self.aut.next_state.inputs['region_removed']) == 1:
-                #    referent = self.proj.h_instance['sensor'][self.proj.currentConfig.main_robot].removedRegions
-                else:
-                    # assume we are talking about the current region
-                    #referent = set([self.proj.rfiold.regions[self._getCurrentRegionFromPose(rfi=self.proj.rfiold)].name])
-                    referent = None
-                    for rname, rlist in self.proj.regionMapping.iteritems():
-                        if self.proj.rfi.regions[self.aut.current_region].name in rlist:
-                            referent = set([rname])
-                            break
-
-                    if referent is None:  # This shouldn't happen
-                        print "ERROR: Couldn't find region to add/remove"
-                
-                if m.group('action') == "add_to":
-                    print "Added region(s) %s to group %s." % (", ".join(referent), m.group('groupName'))
-                    self.rewriteSpec(m.group('groupName'), 'add', referent)
-                elif m.group('action') == "remove_from":
-                    print "Removed region(s) %s from group %s." % (", ".join(referent), m.group('groupName'))
-                    self.rewriteSpec(m.group('groupName'), 'remove', referent)
-            elif k == "resynthesize":
-                # TODO: maybe requires a stay-there for non-F/S?
-                # TODO: maybe this should be a shared actuator handler function instead of a hardcoded keyword?
-                self.doResynthesis()
-
     def _guiListen(self):
         """
         Processes messages from the GUI window, and reacts accordingly
@@ -295,37 +212,47 @@ class LTLMoPExecutor(object):
 
             # Do what the GUI tells us, lest we anger it
             if data_in == "START":
-                self.runFSA.set()
+                self.resume()
             elif data_in == "PAUSE":
-                self.runFSA.clear()
-                time.sleep(0.1) # Wait for FSA to stop
-                print "PAUSED."
+                self.pause()
             elif data_in == "QUIT":
-                self.runFSA.clear()
-                print >>sys.__stderr__, "QUITTING."
-                all_handler_types = ['init','pose','locomotionCommand','drive','motionControl','sensor','actuator']
-                for htype in all_handler_types:
-                    print >>sys.__stderr__, "terminating {} handler...".format(htype)
-                    if htype in self.proj.h_instance:
-                        if isinstance(self.proj.h_instance[htype], dict):
-                            handlers = [v for k,v in self.proj.h_instance[htype].iteritems()]
-                        else:
-                            handlers = [self.proj.h_instance[htype]]
-                    
-                        for h in handlers:
-                           
-                            if hasattr(h, "_stop"):
-                                print >>sys.__stderr__, "> calling _stop() on {}".format(h.__class__.__name__) 
-                                h._stop()
-                            else:
-                                print >>sys.__stderr__, "> {} does not have _stop() function".format(h.__class__.__name__) 
-                    else:
-                        print >>sys.__stderr__, "not found in h_instance"
+                self.shutdown()
                 print >>sys.__stderr__, "ending gui listen thread..."
                 return                
 
             else:
                 print "WARNING: Unknown command received from GUI: " + data_in
+
+    def shutdown(self):
+        self.runFSA.clear()
+        print >>sys.__stderr__, "QUITTING."
+
+        all_handler_types = ['init', 'pose', 'locomotionCommand', 'drive', 'motionControl', 'sensor', 'actuator']
+
+        for htype in all_handler_types:
+            print >>sys.__stderr__, "terminating {} handler...".format(htype)
+            if htype in self.proj.h_instance:
+                if isinstance(self.proj.h_instance[htype], dict):
+                    handlers = [v for k,v in self.proj.h_instance[htype].iteritems()]
+                else:
+                    handlers = [self.proj.h_instance[htype]]
+            
+                for h in handlers:
+                    if hasattr(h, "_stop"):
+                        print >>sys.__stderr__, "> calling _stop() on {}".format(h.__class__.__name__) 
+                        h._stop()
+                    else:
+                        print >>sys.__stderr__, "> {} does not have _stop() function".format(h.__class__.__name__) 
+            else:
+                print >>sys.__stderr__, "not found in h_instance"
+
+    def pause(self):
+        self.runFSA.clear()
+        time.sleep(0.1) # Wait for FSA to stop
+        print "PAUSED."
+
+    def resume(self):
+        self.runFSA.set()
 
     def startGUI(self):
         """
@@ -453,7 +380,7 @@ class LTLMoPExecutor(object):
             self.aut.runIteration()
             toc = self.timer_func()
 
-            self.checkForInternalFlags()
+            #self.checkForInternalFlags()
 
             # Rate limiting of execution and GUI update
             while (toc - tic) < 0.05:
