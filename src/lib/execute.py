@@ -321,6 +321,7 @@ class LTLMoPExecutor(object):
         if firstRun:
             ### Wait for the initial start command
             if show_gui:
+                print "Ready.  Press [Start] to begin..."
                 self.runFSA.wait()
             else:
                 raw_input('Press enter to begin...')
