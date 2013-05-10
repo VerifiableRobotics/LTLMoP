@@ -385,6 +385,7 @@ class SpecEditorFrame(wx.Frame):
         self.label_locphrases = wx.StaticText(self.notebook_1_pane_3, wx.ID_ANY, "Active locative phrases:")
         self.list_box_locphrases = wx.ListBox(self.notebook_1_pane_3, wx.ID_ANY, choices=[], style=wx.LB_ALWAYS_SB)
         self.checkbox_regionlabel = wx.CheckBox(self.notebook_1_pane_3, wx.ID_ANY, "Show region names")
+        self.checkbox_regionlabelbits = wx.CheckBox(self.notebook_1_pane_3, wx.ID_ANY, "Include bit-vector representations")
         self.panel_locmap = wx.Panel(self.notebook_1_pane_3, wx.ID_ANY, style=wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE)
 
         self.__set_properties()
@@ -427,7 +428,8 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onPropAdd, self.button_custom_add)
         self.Bind(wx.EVT_BUTTON, self.onPropRemove, self.button_custom_remove)
         self.Bind(wx.EVT_LISTBOX, self.onLocPhraseSelect, self.list_box_locphrases)
-        self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelToggle, self.checkbox_regionlabel)
+        self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelStyleChange, self.checkbox_regionlabel)
+        self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelStyleChange, self.checkbox_regionlabelbits)
         # end wxGlade
 
         # Listen for checkbox toggles
@@ -580,7 +582,7 @@ class SpecEditorFrame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
-        self.SetSize((900, 700))
+        self.SetSize((929, 782))
         self.button_map.Enable(False)
         self.list_box_sensors.SetMinSize((123, 75))
         self.button_sensor_remove.Enable(False)
@@ -643,6 +645,7 @@ class SpecEditorFrame(wx.Frame):
         sizer_15.Add(self.list_box_locphrases, 1, wx.EXPAND, 0)
         sizer_15.Add((20, 20), 0, 0, 0)
         sizer_15.Add(self.checkbox_regionlabel, 0, wx.EXPAND, 0)
+        sizer_15.Add(self.checkbox_regionlabelbits, 0, wx.LEFT | wx.EXPAND, 20)
         sizer_15.Add((20, 20), 0, 0, 0)
         sizer_14.Add(sizer_15, 1, wx.EXPAND, 0)
         sizer_14.Add((5, 20), 0, 0, 0)
@@ -653,7 +656,7 @@ class SpecEditorFrame(wx.Frame):
         self.notebook_1.AddPage(self.notebook_1_pane_3, "Workspace Decomposition")
         sizer_2.Add(self.notebook_1, 1, wx.EXPAND, 0)
         self.window_1_pane_2.SetSizer(sizer_2)
-        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 453)
+        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 479)
         sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
@@ -677,7 +680,7 @@ class SpecEditorFrame(wx.Frame):
         # TODO: Advise the user that the decomposed map may be inaccurate if
         #  mtime(spec)>mtime(aut) or spectext is dirty
 
-        mapRenderer.drawMap(self.panel_locmap, self.decomposedRFI, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList, showBits=True)
+        mapRenderer.drawMap(self.panel_locmap, self.decomposedRFI, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList, showBits=self.checkbox_regionlabelbits.GetValue())
 
     def onPropositionDblClick(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -1334,10 +1337,6 @@ class SpecEditorFrame(wx.Frame):
                       style = wx.OK | wx.ICON_INFORMATION)
         #event.Skip()
 
-    def onRegionLabelToggle(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        self.panel_locmap.Refresh()
-        event.Skip()
-
     def onLocPhraseSelect(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.panel_locmap.Refresh()
         event.Skip()
@@ -1615,6 +1614,15 @@ class SpecEditorFrame(wx.Frame):
         elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_LTL):
             self.proj.compile_options["parser"] = "ltl"
         self.dirty = True
+
+    def onRegionLabelStyleChange(self, event):  # wxGlade: SpecEditorFrame.<event_handler>
+        if self.checkbox_regionlabel.GetValue():
+            self.checkbox_regionlabelbits.Enable(True)
+        else:
+            self.checkbox_regionlabelbits.Enable(False)
+
+        self.panel_locmap.Refresh()
+        event.Skip()
 
 # end of class SpecEditorFrame
 
