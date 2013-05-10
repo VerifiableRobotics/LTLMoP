@@ -667,6 +667,8 @@ class SpecEditorFrame(wx.Frame):
         # NOTE: May not work on older versions of wxWidgets
         self.window_1.SetSashGravity(1.0)
 
+        self.window_1.SetMinimumPaneSize(100)
+
     def drawLocMap(self, event):
         """ Respond to a request to redraw the contents of the decomposed map
         """
