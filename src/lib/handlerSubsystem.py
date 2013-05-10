@@ -325,11 +325,11 @@ class HandlerSubsystem:
     """
     Interface dealing with configuration files and hanlders
     """
-    def __init__(self,proj,loggerLevel='error'):
+    def __init__(self,executor,loggerLevel='error'):
+        self.executor = executor
+        self.proj = self.executor.proj
 
-        self.proj = proj
         # Set up loggers for printing error messages
-
         class ColorLogFormatter(logging.Formatter):
             def __init__(self, *args, **kwds):
                 super(ColorLogFormatter, self).__init__(*args, **kwds)
@@ -362,25 +362,20 @@ class HandlerSubsystem:
         elif loggerLevel == 'debug':
             logger.setLevel(logging.DEBUG)
 
-        self.handler_dic = None
-        self.robots = None
-        self.configs = None
+        self.handler_dic = {}       # dictionary for all handler information {type of handler:list of handlers of that type}
+        self.robots = []            # list of robot objects
+        self.configs = []           # list of config objects
 
         # Create Handler parser
         self.handler_path = os.path.join(self.proj.ltlmop_root,'lib','handlers')
         self.handler_parser = HandlerParser(self.handler_path)
 
-        # Create Handler parser
+        # Create robot parser
         self.robot_parser = RobotFileParser(self.handler_path)
 
-        # Create Handler parser
+        # Create config parser
         self.config_path = os.path.join(self.proj.project_root,'configs')
         self.config_parser = ConfigFileParser(self.config_path,self.handler_path,self.proj)
-
-        # For debug
-        #print self.configs[0].robots[0].handlers['init:nao'].methods[0].para[1].value
-        #print self.robots[0].name
-        #print "Done!"
 
     def loadAllHandlers(self):
         self.handler_parser.loadAllHandlers()
@@ -397,11 +392,14 @@ class HandlerSubsystem:
         self.configs = self.config_parser.configs
 
     def getRobotByType(self, t):
+        """
+        Assume only one robot is loaded per type
+        """
         for r in self.robots:
             if r.type == t:
                 return r
-        logging.error("Could not find robot of type '%s'" % (t))
-        return None
+        logging.error("Could not find robot of type '{0}'".format(t))
+        return RobotObject()
 
     def getHandler(self, htype, hname, rname=None):
         if htype in self.handler_parser.handler_robotSpecific_type:
@@ -425,7 +423,7 @@ class HandlerSubsystem:
         Return the method object according to the input string
         """
 
-        if self.handler_dic is None:
+        if not self.handler_dic:
             logging.error("Cannot find handler dictionary, please load all handlers first.")
             return
 
@@ -486,7 +484,7 @@ class HandlerSubsystem:
         """
         Return the string representation according to the input method object
         """
-        if self.handler_dic is None:
+        if not self.handler_dic:
             logging.error("ERROR: Cannot find handler dictionary, please load all handler first.")
             return
         if not isinstance(methodObj,MethodObject):
@@ -1046,7 +1044,7 @@ class RobotFileParser:
                         logging.error("Wrong handler type %s in robot file %s" %(key,robotObj.type+'.robot'))
                         return
                     else:
-                        if self.handler_dic is not None:
+                        if self.handler_dic:
                             # we can just quick load from the handler dictionary
                             handlerList = self.handler_dic[handler_type][robotFolder]
                         else:
@@ -1065,7 +1063,7 @@ class RobotFileParser:
                             return None
                 else:
                     # The handler is robot independent
-                    if self.handler_dic is not None:
+                    if self.handler_dic:
                         # we can just quick load from the handler dictionary
                         handlerList = self.handler_dic[handler_type]
                     else:
