@@ -123,6 +123,8 @@ class SimGUI_Frame(wx.Frame):
 
         if self.proj.compile_options["parser"] == "slurp":
             self.initDialogue()
+        else:
+            self.notebook_1.DeletePage(1)
 
         self.onResize()
 
