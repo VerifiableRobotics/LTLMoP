@@ -41,7 +41,7 @@ class AnalysisResultsDialog(wx.Dialog):
         self.label_3 = wx.StaticText(self, wx.ID_ANY, "Analysis Output:")
         self.text_ctrl_summary = wx.richtext.RichTextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
         self.button_refine = wx.Button(self, wx.ID_ANY, "Refine analysis")
-        self.label_10 = wx.StaticText(self, wx.ID_ANY, "SLURP Traceback:")
+        self.label_traceback = wx.StaticText(self, wx.ID_ANY, "SLURP Traceback:")
         self.tree_ctrl_traceback = wx.TreeCtrl(self, wx.ID_ANY, style=wx.TR_HAS_BUTTONS | wx.TR_NO_LINES | wx.TR_FULL_ROW_HIGHLIGHT | wx.TR_HIDE_ROOT | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
         self.button_1 = wx.Button(self, wx.ID_CLOSE, "")
 
@@ -61,6 +61,8 @@ class AnalysisResultsDialog(wx.Dialog):
         # begin wxGlade: AnalysisResultsDialog.__set_properties
         self.SetTitle("Analysis Results")
         self.SetSize((562, 602))
+        self.label_traceback.Hide()
+        self.tree_ctrl_traceback.Hide()
         # end wxGlade
 
     def __do_layout(self):
@@ -70,7 +72,7 @@ class AnalysisResultsDialog(wx.Dialog):
         sizer_11.Add(self.label_3, 0, wx.ALL, 5)
         sizer_11.Add(self.text_ctrl_summary, 1, wx.ALL | wx.EXPAND, 5)
         sizer_11.Add(self.button_refine, 0, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_11.Add(self.label_10, 0, wx.ALL, 5)
+        sizer_11.Add(self.label_traceback, 0, wx.ALL, 5)
         sizer_11.Add(self.tree_ctrl_traceback, 3, wx.ALL | wx.EXPAND, 5)
         sizer_16.Add((20, 20), 1, wx.EXPAND, 0)
         sizer_16.Add(self.button_1, 0, wx.ALL | wx.EXPAND, 5)
@@ -1357,10 +1359,16 @@ class SpecEditorFrame(wx.Frame):
         # Populate tree based on traceback data
 
         if self.proj.compile_options["parser"] == "slurp":
+            self.analysisDialog.label_traceback.Show()
+            self.analysisDialog.tree_ctrl_traceback.Show()
             if self.tracebackTree is not None:
                 self.analysisDialog.populateTree(self.tracebackTree) 
 
             self.analysisDialog.tree_ctrl_traceback.ExpandAll()
+        else:
+            self.analysisDialog.label_traceback.Hide()
+            self.analysisDialog.tree_ctrl_traceback.Hide()
+        
         self.appendLog("Running analysis...\n","BLUE")
 
         # Redirect all output to the log
