@@ -293,7 +293,7 @@ class ConfigObject:
         self.robots = []    # list of robot object used in this config file
         self.prop_mapping = {}  # dictionary for storing the propositions mapping
         self.initial_truths = [] # list of initially true propoisitions
-        self.main_robot = '' # name of robot for moving in this config
+        self.main_robot = "" # name of robot for moving in this config
 
     def __repr__(self):
         """
@@ -317,8 +317,8 @@ class ConfigObject:
         for r in self.robots:
             if r.name == name:
                 return r
-        logging.error("Could not find robot of name '%s' in config '%s'." % (name, self.name))
-        return None
+        logging.error("Could not find robot of name '{0}' in config '{1}'.".format(name, self.name))
+        return RobotObject()
 
 
 class HandlerSubsystem:
