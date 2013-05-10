@@ -295,6 +295,7 @@ class ConfigObject:
         self.prop_mapping = {}  # dictionary for storing the propositions mapping
         self.initial_truths = [] # list of initially true propoisitions
         self.main_robot = "" # name of robot for moving in this config
+        self.region_tags = {} # dictionary mapping tag names to region groups, for quantification
 
     def __repr__(self):
         """
