@@ -159,6 +159,7 @@ class HandlerObject:
     def __init__(self):
         self.name = "" # name of the handler
         self.type = "" # type of the handler e.g. motionControl or drive
+        self.shared = ""    # whether the handler is in the shared folder ("y") or not ("n")
         self.methods = []   # list of method objects in this handler
         self.robotType = "" # type of the robot using this handler for robot specific handlers
 
@@ -325,9 +326,8 @@ class HandlerSubsystem:
     """
     Interface dealing with configuration files and hanlders
     """
-    def __init__(self,executor,loggerLevel='error'):
-        self.executor = executor
-        self.proj = self.executor.proj
+    def __init__(self,proj,loggerLevel='warning'):
+        self.proj = proj
 
         # Set up loggers for printing error messages
         class ColorLogFormatter(logging.Formatter):
@@ -678,7 +678,7 @@ class HandlerParser:
         self.handler_path = path    # handler folder path
         self.handler_dic = {}       # dictionary for all handler information {type of handler:list of handlers of that type}
                                     # for sensor,actuator,init and locomotion handler the value is a dictionary {name of the robot: handler object}
-        self.handler_all = {}       # dic of handler objects parsed from handler files. {handlerType.handlerFileName:handler object}
+        self.handler_all = []       # list of handler objects parsed from handler files.
         self.handler_types = ['pose','drive','motionControl','share']       # list of types of handlers, must match with the folder name in lib/handler folder
         self.handler_robotSpecific_type = ['init','locomotionCommand','sensor','actuator']   # list of types of robot specific handlers in each robot folder
         self.ignore_parameter = ['self','initial','proj','shared_data','actuatorVal']     # list of name of parameter that should be ignored where parse the handler methods
@@ -690,18 +690,16 @@ class HandlerParser:
         """
 
         handlerFolders = os.listdir(self.handler_path)
-
         # load all robot-independent handlers first
         for handler_type in self.handler_types:
             self.handler_dic[handler_type] = []
             if handler_type not in handlerFolders:
                 # Can't find the folder containing the type of handlers
-                logging.warning("Cannot find %s handler folder in %s" % (handler_type, self.handler_path))
+                logging.warning("Cannot find {0} handler folder in {1}".format(handler_type, self.handler_path))
             else:
-
                 # For the robot independent handlers, we only want to parse the init function to get the parameters information
-                # But both simulated sensor and actuator handlers are in the shared folder. All of their function need to be parsed.
                 if handler_type == 'share':
+                    # But both simulated sensor and actuator handlers are in the shared folder. All of their function need to be parsed.
                     self.handler_dic[handler_type] = self.loadHandler(handler_type,False)
                 else:
                     self.handler_dic[handler_type] = self.loadHandler(handler_type,True)
@@ -770,7 +768,7 @@ class HandlerParser:
                     handler_dic_key = '.'.join([folder,over_write_h_type,h_file.split('.')[0]])
                 else:
                     handler_dic_key = '.'.join([folder,h_file.split('.')[0]])
-                self.handler_all[handler_dic_key] = h_obj
+                #self.handler_all[handler_dic_key] = h_obj
                 if h_obj is not None:
                     # only append the handler in the list if it is correctly imported
                     handlerList.append(h_obj)
@@ -804,7 +802,7 @@ class HandlerParser:
         try:
             __import__(handlerFile)
         except Exception as e:
-            logging.error(" -> Failed to import handler %s : %s" % (handlerFile.split('.')[-1],e))
+            logging.warning(" -> Failed to import handler {0} : {1}".format(handlerFile.split('.')[-1],e))
             logging.debug(traceback.format_exc())
             return handlerObj
 
@@ -882,7 +880,7 @@ class HandlerParser:
                                                 setattr(paraObj, k.lower(), json.loads(v.lower()))
                                         except ValueError:
                                             # LOG AN ERROR HERE
-                                            logging.error(' -> Could not parse settings for parameter "{}" of method "{}"'.format(m.group('argName'), methodName))
+                                            logging.warning(' -> Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'), methodName))
 
                                         paraObj.resetValue()
 
