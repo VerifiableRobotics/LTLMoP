@@ -48,7 +48,7 @@ class ParameterObject:
         # Get all attribute names and values
         for key,val in self.__dict__.iteritems():
             # Only show if the value is not None or empty
-            if val == None or val == "": 
+            if not(val == None or val == ""): 
                 strRepr.append("{0}:{1}".format(key,val))
         
         # if all attributes have values of None or empty
@@ -122,7 +122,7 @@ class MethodObject:
     def __init__(self):
         self.name = ""        # name of the method
         self.handler = None     # which handler the method belongs to
-        self.comment = ''       # comment of the method
+        self.comment = ""       # comment of the method
         self.para = []          # list of parameter object of this method
         self.omitPara = []      # list of parameter names that are omitted
 
@@ -150,7 +150,7 @@ class MethodObject:
             if p.name == name:
                 return p
         logging.error("Could not find parameter of name '%s' in method '%s'" % (name, self.name))
-        return None
+        return ParameterObject()
 
 class HandlerObject:
     """
