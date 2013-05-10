@@ -55,9 +55,9 @@ class ParameterObject:
         if not strRepr: 
             reprString = "All attributes have values of None or empty."
         else:
-            reprString = ", ".join(strRepr)
+            reprString = "\n".join(strRepr)
         
-        return "Parameter Object -- " + reprString
+        return "Parameter Object -- \n" + reprString + "\n"
 
     def setValue(self,value):
         """
@@ -140,9 +140,9 @@ class MethodObject:
         if not strRepr: 
             reprString = "All attributes have values of None or empty."
         else:
-            reprString = ", ".join(strRepr)
+            reprString = "\n".join(strRepr)
         
-        return "Method Object -- " + reprString
+        return "Method Object -- \n" + reprString + "\n"
 
     def getParaByName(self, name):
         # get the parameter object with given name
@@ -176,9 +176,9 @@ class HandlerObject:
         if not strRepr: 
             reprString = "All attributes have values of None or empty."
         else:
-            reprString = ", ".join(strRepr)
+            reprString = "\n".join(strRepr)
         
-        return "Handler Object -- " + reprString
+        return "Handler Object -- \n" + reprString + "\n"
 
     def getMethodByName(self, name):
         for m in self.methods:
@@ -254,7 +254,7 @@ class RobotObject:
     """
     A Robot object
     """
-    def __init__(self,r_name="" ,r_type=None,driveH=None,initH=None,locoH=None,motionH=None,poseH=None,sensorH=None,actuatorH=None):
+    def __init__(self,r_name="" ,r_type="",driveH=None,initH=None,locoH=None,motionH=None,poseH=None,sensorH=None,actuatorH=None):
         self.name = r_name  # name of the robot
         self.type = r_type  # type of the robot
         self.handlers = {'drive':driveH, 'init':initH, 'locomotionCommand':locoH, 'motionControl':motionH, 'pose':poseH, 'sensor':sensorH,'actuator':actuatorH} # dictionary of handler object for this robot
@@ -268,15 +268,21 @@ class RobotObject:
         # Get all attribute names and values
         for key,val in self.__dict__.iteritems():
             # Only show if the value is not None or empty
-            if val: strRepr.append("{0}:{1}".format(key,val))
+            if key == "handlers":
+                for h_type,h_obj in self.handlers.iteritems():
+                    if h_obj:
+                        strRepr.append("{0}:{1}".format(key,val)) 
+                        break
+
+            elif val: strRepr.append("{0}:{1}".format(key,val))
         
         # if all attributes have values of None or empty
         if not strRepr: 
             reprString = "All attributes have values of None or empty."
         else:
-            reprString = ", ".join(strRepr)
+            reprString = "\n".join(strRepr)
         
-        return "Robot Object -- " + reprString
+        return "Robot Object -- \n" + reprString + "\n"
 
 class ConfigObject:
     """
@@ -303,9 +309,9 @@ class ConfigObject:
         if not strRepr: 
             reprString = "All attributes have values of None or empty."
         else:
-            reprString = ", ".join(strRepr)
+            reprString = "\n".join(strRepr)
         
-        return "Config Object -- " + reprString
+        return "Config Object -- \n" + reprString + "\n"
 
     def getRobotByName(self, name):
         for r in self.robots:
