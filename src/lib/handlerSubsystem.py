@@ -149,7 +149,7 @@ class MethodObject:
         for p in self.para:
             if p.name == name:
                 return p
-        logging.error("Could not find parameter of name '%s' in method '%s'" % (name, self.name))
+        logging.error("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
         return ParameterObject()
 
 class HandlerObject:
@@ -158,13 +158,13 @@ class HandlerObject:
     """
     def __init__(self):
         self.name = "" # name of the handler
-        self.type = None    # type of the handler e.g. motionControl or drive
+        self.type = "" # type of the handler e.g. motionControl or drive
         self.methods = []   # list of method objects in this handler
-        self.robotType = '' # type of the robot using this handler for robot specific handlers
+        self.robotType = "" # type of the robot using this handler for robot specific handlers
 
     def __repr__(self):
         """
-        Overwrite string representation function
+        Overwrite string presentation function
         """
         strRepr = []
         # Get all attribute names and values
@@ -184,8 +184,8 @@ class HandlerObject:
         for m in self.methods:
             if m.name == name:
                 return m
-        logging.error("Could not find method of name '%s' in handler '%s'" % (name, self.name))
-        return None
+        logging.error("Could not find method of name '{0}' in handler '{1}'".format(name, self.name))
+        return MethodObject()
 
     def toString(self,forsave = True):
         """
