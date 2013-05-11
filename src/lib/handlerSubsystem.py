@@ -296,6 +296,8 @@ class ConfigObject:
         self.initial_truths = [] # list of initially true propoisitions
         self.main_robot = "" # name of robot for moving in this config
         self.region_tags = {} # dictionary mapping tag names to region groups, for quantification
+        self.fileName = ""  # full path filename of the config
+        self.complete = None # if the config is completely loaded, None means not loaded
 
     def __repr__(self):
         """
@@ -322,6 +324,82 @@ class ConfigObject:
         logging.error("Could not find robot of name '{0}' in config '{1}'.".format(name, self.name))
         return RobotObject()
 
+    def saveConfig(self):
+        """
+        Save the config object. 
+        Return True for successfully saved, False for not
+        """
+        # Check if the config object is a complete one, if not then return not successful
+        if not self.complete: return False
+
+        # the file name is default to be the config name with underscore
+        fileName = self.name.replace(' ','_')
+
+        # Add extension to the name
+        fileName = fileName+'.config'
+
+        # Add the path to the file name
+        os.path.join(os.path.dirname(self.fileName),fileName)
+
+        data = {'General Config':{'Name':self.name}}
+
+        # proposition mapping
+        sensorMappingList = []
+        actuatorMappingList = []
+        for prop, fun in self.prop_mapping.iteritems():
+            if 'sensor' in fun.lower():
+                sensorMapping = prop + ' = ' + fun
+                sensorMappingList.append(sensorMapping)
+            elif 'actuator' in fun.lower():
+                actuatorMapping = prop + ' = ' + fun
+                actuatorMappingList.append(actuatorMapping)
+            else:
+                logging.warning("Cannot recognize prop mapping: {}".format(prop+" = "+fun))
+
+        data['General Config']['Sensor_Proposition_Mapping'] = sensorMappingList
+        data['General Config']['Actuator_Proposition_Mapping'] = actuatorMappingList
+        data['General Config']['Main_Robot'] = self.main_robot
+        data['General Config']['Initial_Truths'] = self.initial_truths
+        data['General Config']['Region_Tags'] = json.dumps(self.region_tags)
+
+        for i,robot in enumerate(self.robots):
+            header = 'Robot'+str(i+1)+' Config'
+            data[header]={}
+            data[header]['RobotName'] = robot.name
+            data[header]['Type'] = robot.type
+
+            data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
+            # TODO: change to string function
+            data[header]['InitHandler'] = robot.handlers['init'].toString()
+            data[header]['PoseHandler'] = robot.handlers['pose'].toString()
+            data[header]['MotionControlHandler'] = robot.handlers['motionControl'].toString()
+            data[header]['DriveHandler'] = robot.handlers['drive'].toString()
+            data[header]['LocomotionCommandHandler'] = robot.handlers['locomotionCommand'].toString()
+            data[header]['SensorHandler'] = robot.handlers['sensor'].toString()
+            data[header]['ActuatorHandler'] = robot.handlers['actuator'].toString()
+
+
+        comments = {"FILE_HEADER": "This is a configuration definition file in folder \"%s\".\n" % os.path.dirname(self.fileName)+
+                    "Format details are described at the beginning of each section below.\n",
+                    "PoseHandler": "Input value for robot pose handler, refer to file inside the handlers/pose folder",
+                    "DriveHandler": "Input value for robot drive handler, refer to file inside the handlers/drive folder",
+                    "MotionControlHandler": "Input value for robot motion control handler, refer to file inside the handlers/motionControl folder",
+                    "LocomotionCommandHandler": "Input value for robot locomotion command handler, refer to file inside the handlers/robots/Type folder",
+                    "InitHandler": "Input value for robot init handler, refer to the init file inside the handlers/robots/Type folder",
+                    "SensorHandler": "Sensor handler file in robots/Type folder",
+                    "ActuatorHandler": "Actuator handler file in robots/Type folder",
+                    "RobotName": "Robot Name",
+                    "Type": "Robot type",
+                    "CalibrationMatrix": "3x3 matrix for converting coordinates, stored as lab->map",
+                    "Actuator_Proposition_Mapping": 'Mapping between actuator propositions and actuator handler functions',
+                    "Sensor_Proposition_Mapping": "Mapping between sensor propositions and sensor handler functions",
+                    "Name": 'Configuration name',
+                    "Main_Robot":'The name of the robot used for moving in this config',
+                    "Initial_Truths": "Initially true propositions",
+                    "Region_Tags": "Mapping from tag names to region groups, for quantification"}
+
+        fileMethods.writeToFile(fileName, data, comments)
+        return True
 
 class HandlerSubsystem:
     """
@@ -1105,11 +1183,11 @@ class ConfigFileParser:
         self.config_path = config_path  # config folder path
         self.handler_path = handler_path    # handler folder path
         self.handler_dic = handler_dic  # handler dictionary stores all handler information
-        self.configs = []   # list of config object
+        self.configs = []   # list of complete config object
+        self.configs_incomplete = []    # list of incompletely loaded configs
 
     def loadAllConfigFiles(self):
         # Create configs/ directory for project if it doesn't exist already
-#        config_dir = os.path.join(self.proj.project_root, "configs")
         if not os.path.exists(self.config_path):
             os.mkdir(self.config_path)
 
@@ -1117,8 +1195,12 @@ class ConfigFileParser:
         for fileName in fileList:
             if fileName.endswith('.config'):
                 configObj = self.loadConfigFile(os.path.join(self.config_path,fileName))
-                if configObj is not None:
-                    self.configs.append(configObj)
+                if configObj.complete is not None:
+                    # save the config object to the corrsponding list
+                    if configObj.complete:
+                        self.configs.append(configObj)
+                    else:
+                        self.configs_incomplete.append(configObj)
 
     def loadConfigFile(self,fileName):
         # If only filename offered, assume it is in the config path
@@ -1128,38 +1210,53 @@ class ConfigFileParser:
         # Add extension to the name if there isn't one.
         if not fileName.endswith('.config'):
             fileName = fileName+'.config'
-
-        logging.debug(" -> Loading config:\t%s" % os.path.basename(fileName).split('.')[0])
+        
+        logging.debug("Loading config:\t{}".format(os.path.basename(fileName).split('.')[0]))
         try:
             # First try path relative to project path
             config_data = fileMethods.readFromFile(fileName)
         except IOError:
-            logging.ERROR(" -> Cannot load config: %s" % os.path.basename(fileName).split('.')[0])
-            return
+            logging.ERROR("Cannot load config: {}".format(os.path.basename(fileName).split('.')[0]))
+            return ConfigObject()
 
-        # create a config object and update its name
+        # create a config object and update its name and fileName
         configObj = ConfigObject()
+        configObj.fileName= fileName
+        configObj.complete = True
+
         try:
             configObj.name = config_data['General Config']['Name'][0]
         except IOError:
-            logging.ERROR("Missing general config information in config %s" % os.path.basename(fileName).split('.')[0])
+            logging.warning("Missing general config information in config {}".format(os.path.basename(fileName).split('.')[0]))
+            configObj.complete = False
 
         # parse the string for sensor prop mapping
-        for sensorMapping in config_data['General Config']['Sensor_Proposition_Mapping']:
-            try:
-                sensorProp,sensorFun = [s.strip() for s in sensorMapping.split('=',1)]
-            except IOError:
-                logging.ERROR("Wrong sensor mapping -- %s" % sensorMapping)
+        if 'Sensor_Proposition_Mapping' in config_data['General Config']:
+            for sensorMapping in config_data['General Config']['Sensor_Proposition_Mapping']:
+                try:
+                    sensorProp,sensorFun = [s.strip() for s in sensorMapping.split('=',1)]
+                except IOError:
+                    logging.warning("Wrong sensor mapping -- {}".format(sensorMapping))
+                    configObj.complete = False
+                configObj.prop_mapping[sensorProp]=sensorFun
+        else:
+            logging.warning("Cannot find sensor proposition mapping in config file: {}".format(fileName))
+            configObj.complete = False
 
-            configObj.prop_mapping[sensorProp]=sensorFun
 
         # parse the string for actuator prop mapping
-        for actuatorMapping in config_data['General Config']['Actuator_Proposition_Mapping']:
-            try:
-                actuatorProp,actuatorFun = [s.strip() for s in actuatorMapping.split('=',1)]
-            except IOError:
-                logging.ERROR("Wrong actuator mapping -- %s" % actuatorMapping)
-            configObj.prop_mapping[actuatorProp]=actuatorFun
+        if 'Actuator_Proposition_Mapping' in config_data['General Config']:
+            for actuatorMapping in config_data['General Config']['Actuator_Proposition_Mapping']:
+                try:
+                    actuatorProp,actuatorFun = [s.strip() for s in actuatorMapping.split('=',1)]
+                except IOError:
+                    logging.warning("Wrong actuator mapping -- {}".format(actuatorMapping))
+                    configObj.complete = False
+                configObj.prop_mapping[actuatorProp]=actuatorFun
+        else:
+            logging.warning("Cannot find actuator proposition mapping in config file: {}".format(fileName))
+            configObj.complete = False
+
 
         if 'Initial_Truths' in config_data['General Config']:
             # parse the initially true propositions
@@ -1167,19 +1264,33 @@ class ConfigFileParser:
                 try:
                     configObj.initial_truths.append(propName)
                 except IOError:
-                    logging.ERROR("Cannot recognize initially true propositions -- %s" %propName)
+                    logging.warning("Cannot recognize initially true propositions -- {}".format(propName))
+                    configObj.complete = False
+        else:
+            logging.warning("Cannot find initial truth proposition in config file: {}".format(fileName))
+            configObj.complete = False
 
         if 'Region_Tags' in config_data['General Config']:
             # parse the region tags
             try:
                 configObj.region_tags = json.loads("".join(config_data['General Config']['Region_Tags']))
             except ValueError:
-                logging.ERROR("Wrong region tags")
+                logging.warning("Wrong region tags")
+                configObj.complete = False
+        else:
+            logging.warning("Cannot find Region tag in config file: {}".format(fileName))
+            configObj.complete = False
 
-        try:
-            configObj.main_robot = config_data['General Config']['Main_Robot'][0]
-        except (IndexError, KeyError):
-            logging.ERROR("Cannot find main robot in config file %s" % fileName)
+        if 'Main_Robot' in config_data['General Config']:
+            # Load main robot name
+            try:
+                configObj.main_robot = config_data['General Config']['Main_Robot'][0]
+            except (IndexError, KeyError):
+                logging.warning("Cannot parse main robot name {0} in config file {1}".format(config_data['General Config']['Main_Robot'],fileName))
+                configObj.complete = False
+        else:
+            logging.warning("Cannot find main robot in config file: {}".format(fileName))
+            configObj.complete = False
 
         # load robot configs
         robot_data = []
@@ -1188,8 +1299,7 @@ class ConfigFileParser:
                 robot_data.append(configValue)
 
         if robot_data == []:
-            logging.ERROR("Missing Robot data in config file %s" % fileName)
-
+            logging.warning("Missing Robot data in config file {}".format(fileName))
         else:
             # using the parsing function in RobotFileParser to parse the data
             robot_parser = RobotFileParser(self.handler_path)
@@ -1197,10 +1307,11 @@ class ConfigFileParser:
             for data in robot_data:
                 try:
                     robotObj = robot_parser.loadRobotData(data)
+                    # TODO chage this to check uncomplete obj
                     if robotObj is not None:
                         configObj.robots.append(robotObj)
                 except IOError:
-                    logging.ERROR("Cannot parse robot data in config file %s" % fileName)
+                    logging.warning("Cannot parse robot data in config file %s" % fileName)
 
         # Missing main robot doesn't affect importing. TODO:Will this create problem?
         """
@@ -1241,7 +1352,7 @@ class ConfigFileParser:
             fileName = configObj.name.replace(' ','_')
 
 
-         # Add extension to the name if there isn't one.
+        # Add extension to the name if there isn't one.
         if not fileName.endswith('.config'):
             fileName = fileName+'.config'
 
