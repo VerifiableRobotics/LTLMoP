@@ -200,7 +200,7 @@ class AsynchronousProcessThread(threading.Thread):
 
         # Start the process
         try:
-            self.process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+            self.process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False, bufsize=-1)
         except err_types as (errno, strerror):
             print "ERROR: " + strerror
             self.startComplete.set()
