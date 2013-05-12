@@ -339,7 +339,8 @@ class ConfigObject:
         fileName = fileName+'.config'
 
         # Add the path to the file name
-        os.path.join(os.path.dirname(self.fileName),fileName)
+        fileName = os.path.join(os.path.dirname(self.fileName),fileName)
+        self.fileName = fileName
 
         data = {'General Config':{'Name':self.name}}
 
@@ -405,7 +406,7 @@ class HandlerSubsystem:
     """
     Interface dealing with configuration files and hanlders
     """
-    def __init__(self,proj,loggerLevel='warning'):
+    def __init__(self,proj,loggerLevel='debug'):
         self.proj = proj
 
         # Set up loggers for printing error messages
@@ -1195,12 +1196,11 @@ class ConfigFileParser:
         for fileName in fileList:
             if fileName.endswith('.config'):
                 configObj = self.loadConfigFile(os.path.join(self.config_path,fileName))
-                if configObj.complete is not None:
-                    # save the config object to the corrsponding list
-                    if configObj.complete:
-                        self.configs.append(configObj)
-                    else:
-                        self.configs_incomplete.append(configObj)
+                # save the config object to the corrsponding list
+                if configObj.complete:
+                    self.configs.append(configObj)
+                else:
+                    self.configs_incomplete.append(configObj)
 
     def loadConfigFile(self,fileName):
         # If only filename offered, assume it is in the config path
@@ -1212,16 +1212,16 @@ class ConfigFileParser:
             fileName = fileName+'.config'
         
         logging.debug("Loading config:\t{}".format(os.path.basename(fileName).split('.')[0]))
+        # create a config object and update its name and fileName
+        configObj = ConfigObject()
+        configObj.fileName= fileName
         try:
             # First try path relative to project path
             config_data = fileMethods.readFromFile(fileName)
         except IOError:
-            logging.ERROR("Cannot load config: {}".format(os.path.basename(fileName).split('.')[0]))
-            return ConfigObject()
+            logging.ERROR("Cannot load config: {}".format(fileName))
+            return configObj
 
-        # create a config object and update its name and fileName
-        configObj = ConfigObject()
-        configObj.fileName= fileName
         configObj.complete = True
 
         try:
@@ -1335,11 +1335,20 @@ class ConfigFileParser:
         # save all config objects
         savedFileName = []
         for configObj in self.configs:
-            self.saveConfigFile(configObj)
-            savedFileName.append(configObj.name.replace(' ','_'))
+            logging.debug("Saving config file {0}".format(configObj.fileName))
+            if configObj.saveConfig():
+                # successfully saved
+                logging.debug("Config file {0} successfully saved.".format(configObj.fileName))
+                savedFileName.append(configObj.fileName)
+            else:
+                logging.error("Could not save config file {0}".format(configObj.fileName))
+        
+        # construct a list of config filenames that are not loaded successfully, so that we don't delete them
+        incomplete_list = [c.fileName for c in self.configs_incomplete]
+
         # remove delected files
         for configFile in os.listdir(self.config_path):
-            if configFile.split('.')[0] not in savedFileName:
+            if (os.path.join(self.config_path,configFile) not in savedFileName) or (os.path.join(self.config_path,configFile) not in savedFileName): 
                 os.remove(os.path.join(self.config_path,configFile))
 
 

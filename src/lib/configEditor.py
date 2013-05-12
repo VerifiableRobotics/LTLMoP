@@ -540,6 +540,9 @@ class simSetupDialog(wx.Dialog):
             cfg = ConfigObject()
             # TODO: Check for existing untitleds and add a number at the end (steal from reged)
             cfg.name = "Untitled configuration"
+            cfg.fileName = os.path.join(self.proj.hsub.config_parser.config_path,cfg.name.replace(' ','_'))
+            # since this config is not loaded, we assume it is complete
+            cfg.complete = True
             self.proj.hsub.config_parser.configs.append(cfg)
             self.list_box_experiment_name.Append(cfg.name, cfg)
 
@@ -686,6 +689,9 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: Check for existing untitleds and add a number at the end (steal from reged)
         cfg.name = "Untitled configuration"
+        cfg.fileName = os.path.join(self.proj.hsub.config_parser.config_path,cfg.name.replace(' ','_'))
+        # since this config is not loaded, we assume it is complete
+        cfg.complete = True
         self.proj.hsub.configs.append(cfg)
 
         self.list_box_experiment_name.Append(cfg.name, cfg)
