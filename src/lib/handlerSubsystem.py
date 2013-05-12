@@ -1290,7 +1290,7 @@ class ConfigFileParser:
                 configObj.complete = False
         else:
             logging.warning("Cannot find Region tag in config file: {}".format(fileName))
-            configObj.complete = False
+            configObj.complete = True
 
         if 'Main_Robot' in config_data['General Config']:
             # Load main robot name
