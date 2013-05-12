@@ -890,7 +890,8 @@ class HandlerParser:
             __import__(handlerFile)
         except Exception as e:
             logging.warning(" -> Failed to import handler {0} : {1}".format(handlerFile.split('.')[-1],e))
-            logging.debug(traceback.format_exc())
+            if not isinstance(e, ImportError):
+                logging.debug(traceback.format_exc())
             return handlerObj
 
         # Find the class object specifies the handler
