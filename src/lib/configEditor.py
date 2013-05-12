@@ -739,6 +739,8 @@ class simSetupDialog(wx.Dialog):
     def onSimNameEdit(self, event): # wxGlade: simSetupDialog.<event_handler>
         pos = self.list_box_experiment_name.GetSelection()
         self.list_box_experiment_name.GetClientData(pos).name = event.GetString()
+        pathName = os.path.dirname(self.list_box_experiment_name.GetClientData(pos).fileName)
+        self.list_box_experiment_name.GetClientData(pos).fileName = os.path.join(pathName,event.GetString().replace(' ','_'))
         self.list_box_experiment_name.SetString(pos, event.GetString())
         event.Skip()
 

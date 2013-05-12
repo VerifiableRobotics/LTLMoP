@@ -330,7 +330,10 @@ class ConfigObject:
         Return True for successfully saved, False for not
         """
         # Check if the config object is a complete one, if not then return not successful
-        if not self.complete: return False
+        if not self.complete:
+            logging.warning("Config {} is not completely loaded. Aborting saving.".format(self.name))
+            return False
+
 
         # the file name is default to be the config name with underscore
         fileName = self.name.replace(' ','_')
@@ -371,13 +374,17 @@ class ConfigObject:
 
             data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
             # TODO: change to string function
-            data[header]['InitHandler'] = robot.handlers['init'].toString()
-            data[header]['PoseHandler'] = robot.handlers['pose'].toString()
-            data[header]['MotionControlHandler'] = robot.handlers['motionControl'].toString()
-            data[header]['DriveHandler'] = robot.handlers['drive'].toString()
-            data[header]['LocomotionCommandHandler'] = robot.handlers['locomotionCommand'].toString()
-            data[header]['SensorHandler'] = robot.handlers['sensor'].toString()
-            data[header]['ActuatorHandler'] = robot.handlers['actuator'].toString()
+            try:
+                data[header]['InitHandler'] = robot.handlers['init'].toString()
+                data[header]['PoseHandler'] = robot.handlers['pose'].toString()
+                data[header]['MotionControlHandler'] = robot.handlers['motionControl'].toString()
+                data[header]['DriveHandler'] = robot.handlers['drive'].toString()
+                data[header]['LocomotionCommandHandler'] = robot.handlers['locomotionCommand'].toString()
+                data[header]['SensorHandler'] = robot.handlers['sensor'].toString()
+                data[header]['ActuatorHandler'] = robot.handlers['actuator'].toString()
+            except AttributeError:
+                logging.warning("Cannot save all handlers for robot {}. Please make sure they are all successfully loaded. Aborting saving.".format(robot.name))
+                return False
 
 
         comments = {"FILE_HEADER": "This is a configuration definition file in folder \"%s\".\n" % os.path.dirname(self.fileName)+
@@ -1339,9 +1346,9 @@ class ConfigFileParser:
             if configObj.saveConfig():
                 # successfully saved
                 logging.debug("Config file {0} successfully saved.".format(configObj.fileName))
-                savedFileName.append(configObj.fileName)
             else:
                 logging.error("Could not save config file {0}".format(configObj.fileName))
+            savedFileName.append(configObj.fileName)
         
         # construct a list of config filenames that are not loaded successfully, so that we don't delete them
         incomplete_list = [c.fileName for c in self.configs_incomplete]
