@@ -1,0 +1,432 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+boundary	3
+boundary	9
+boundary	10
+
+Obstacles: # Names of regions to treat as obstacles
+r5
+r4
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "r6", 
+        "color": [
+            160, 
+            32, 
+            240
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                377, 
+                59
+            ], 
+            [
+                377, 
+                157
+            ], 
+            [
+                1, 
+                153
+            ], 
+            [
+                0, 
+                0
+            ], 
+            [
+                123, 
+                0
+            ], 
+            [
+                124, 
+                59
+            ]
+        ], 
+        "position": [
+            108, 
+            397
+        ], 
+        "type": "poly", 
+        "size": [
+            377, 
+            157
+        ]
+    }, 
+    {
+        "name": "r2", 
+        "color": [
+            255, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                228, 
+                0
+            ], 
+            [
+                359, 
+                0
+            ], 
+            [
+                359, 
+                150
+            ], 
+            [
+                0, 
+                146
+            ], 
+            [
+                0, 
+                48
+            ], 
+            [
+                225, 
+                49
+            ]
+        ], 
+        "position": [
+            485, 
+            408
+        ], 
+        "type": "poly", 
+        "size": [
+            359, 
+            150
+        ]
+    }, 
+    {
+        "name": "r5", 
+        "color": [
+            255, 
+            165, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                164
+            ], 
+            [
+                0, 
+                0
+            ], 
+            [
+                112, 
+                0
+            ], 
+            [
+                112, 
+                165
+            ], 
+            [
+                402, 
+                165
+            ], 
+            [
+                402, 
+                1
+            ], 
+            [
+                479, 
+                1
+            ], 
+            [
+                482, 
+                175
+            ], 
+            [
+                479, 
+                224
+            ], 
+            [
+                254, 
+                223
+            ], 
+            [
+                1, 
+                223
+            ]
+        ], 
+        "position": [
+            231, 
+            233
+        ], 
+        "type": "poly", 
+        "size": [
+            482, 
+            224
+        ]
+    }, 
+    {
+        "name": "r4", 
+        "color": [
+            255, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                1, 
+                3
+            ], 
+            [
+                0, 
+                0
+            ], 
+            [
+                83, 
+                3
+            ], 
+            [
+                83, 
+                243
+            ], 
+            [
+                1, 
+                243
+            ]
+        ], 
+        "position": [
+            453, 
+            71
+        ], 
+        "type": "poly", 
+        "size": [
+            83, 
+            243
+        ]
+    }, 
+    {
+        "name": "r3", 
+        "color": [
+            255, 
+            0, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                376, 
+                4
+            ], 
+            [
+                735, 
+                8
+            ], 
+            [
+                731, 
+                112
+            ], 
+            [
+                0, 
+                103
+            ], 
+            [
+                0, 
+                0
+            ]
+        ], 
+        "position": [
+            109, 
+            550
+        ], 
+        "type": "poly", 
+        "size": [
+            735, 
+            112
+        ]
+    }, 
+    {
+        "name": "boundary", 
+        "color": [
+            0, 
+            0, 
+            255
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                2, 
+                480
+            ], 
+            [
+                1, 
+                327
+            ], 
+            [
+                1, 
+                58
+            ], 
+            [
+                0, 
+                0
+            ], 
+            [
+                346, 
+                1
+            ], 
+            [
+                429, 
+                4
+            ], 
+            [
+                735, 
+                7
+            ], 
+            [
+                737, 
+                338
+            ], 
+            [
+                737, 
+                488
+            ], 
+            [
+                733, 
+                592
+            ], 
+            [
+                2, 
+                583
+            ]
+        ], 
+        "position": [
+            107, 
+            70
+        ], 
+        "type": "poly", 
+        "size": [
+            737, 
+            592
+        ]
+    }, 
+    {
+        "name": "r1", 
+        "color": [
+            0, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                1, 
+                58
+            ], 
+            [
+                1, 
+                327
+            ], 
+            [
+                124, 
+                327
+            ], 
+            [
+                124, 
+                163
+            ], 
+            [
+                236, 
+                163
+            ], 
+            [
+                236, 
+                328
+            ], 
+            [
+                526, 
+                328
+            ], 
+            [
+                526, 
+                164
+            ], 
+            [
+                603, 
+                164
+            ], 
+            [
+                606, 
+                338
+            ], 
+            [
+                737, 
+                338
+            ], 
+            [
+                735, 
+                7
+            ], 
+            [
+                429, 
+                4
+            ], 
+            [
+                429, 
+                244
+            ], 
+            [
+                430, 
+                244
+            ], 
+            [
+                429, 
+                244
+            ], 
+            [
+                347, 
+                244
+            ], 
+            [
+                347, 
+                4
+            ], 
+            [
+                346, 
+                1
+            ], 
+            [
+                0, 
+                0
+            ]
+        ], 
+        "position": [
+            107, 
+            70
+        ], 
+        "type": "poly", 
+        "size": [
+            737, 
+            338
+        ]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+r6	r2	485	456	485	554
+r6	r5	232	456	485	456	231	397	232	456
+r6	r3	109	550	485	554
+r6	boundary	108	397	109	550
+r6	r1	108	397	231	397
+r2	r5	485	456	710	457	710	457	713	408
+r2	r3	485	554	844	558
+r2	boundary	844	408	844	558
+r2	r1	713	408	844	408
+r5	r1	231	233	231	397	343	398	633	398	710	234	713	408	343	233	343	398	633	234	633	398	231	233	343	233	633	234	710	234
+r4	boundary	453	71	536	74
+r4	r1	454	314	536	314	453	71	454	74	536	74	536	314	454	74	454	314
+r3	boundary	109	550	109	653	109	653	840	662	840	662	844	558
+boundary	r1	536	74	842	77	107	70	453	71	842	77	844	408	108	128	108	397	107	70	108	128
+

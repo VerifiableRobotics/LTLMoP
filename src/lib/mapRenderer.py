@@ -1,4 +1,5 @@
 import wx
+import math
 import sys, os
 from regions import *
 
@@ -144,7 +145,7 @@ class DrawableRegion(Region):
 
 #----------------------------------------------------------------------------
 
-def drawMap(target, rfi, scaleToFit=True, drawLabels=LABELS_ALL, highlightList=[], deemphasizeList=[], memory=False):
+def drawMap(target, rfi, scaleToFit=True, drawLabels=LABELS_ALL, highlightList=[], deemphasizeList=[], memory=False, showBits=False):
     """ Draw the map contained in the given RegionFileInterface onto the target canvas.
     """
 
@@ -223,7 +224,12 @@ def drawMap(target, rfi, scaleToFit=True, drawLabels=LABELS_ALL, highlightList=[
             font = wx.Font(12, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.BOLD, False)
             dc.SetFont(font)
             
-            textWidth, textHeight = dc.GetTextExtent(obj.name)
+            msg = obj.name
+            if showBits:
+                bs = "{0:0>{1}}".format(bin(i)[2:], int(math.ceil(math.log(len(rfi.regions), 2))))
+                msg += " [{}]".format(bs)
+
+            textWidth, textHeight = dc.GetTextExtent(msg)
             
             # TODO: Better text placement algorithm for concave polygons?
             if doDeemphasize:
@@ -243,7 +249,7 @@ def drawMap(target, rfi, scaleToFit=True, drawLabels=LABELS_ALL, highlightList=[
                 textY = mapScale*center.y - textHeight/2
 
             dc.DrawRoundedRectangle(textX - 5, textY - 3, textWidth + 10, textHeight + 6, 3)
-            dc.DrawText(obj.name, textX, textY)
+            dc.DrawText(msg, textX, textY)
 
     dc.EndDrawing()
 

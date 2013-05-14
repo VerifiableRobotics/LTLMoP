@@ -45,7 +45,7 @@ class Project:
                                 "fastslow": False,  # Enable "fast-slow" synthesis algorithm
                                 "decompose": True,  # Create regions for free space and region overlaps (required for Locative Preposition support)
                                 "use_region_bit_encoding": True, # Use a vector of "bitX" propositions to represent regions, for efficiency
-                                "parser": "slurp"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
+                                "parser": "structured"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
 
         # Climb the tree to find out where we are
         p = os.path.abspath(__file__)
@@ -224,7 +224,6 @@ class Project:
         """
 
         self.hsub = handlerSubsystem.HandlerSubsystem(self)
-        self.hsub.setSilent(self.silent)
         self.hsub.loadAllConfigFiles()
 
         if name is None:

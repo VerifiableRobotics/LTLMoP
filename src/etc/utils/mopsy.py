@@ -241,7 +241,9 @@ class MopsyFrame(wx.Frame):
             self.history_grid.SetColSize(i,-1)  # Auto-size
         self.history_grid.EnableEditing(False)
 
-
+        # Decide whether to enable core-finding
+        self.coreFindingEnabled = self.compiler._getPicosatCommand() is not None
+        
         # Put initial condition into log
         self.appendToHistory()
 
@@ -338,8 +340,11 @@ class MopsyFrame(wx.Frame):
 
         region_constrained_goable_states = [s for s in goable_states if (self.regionFromEnvState(s) == self.dest_region)]
         if region_constrained_goable_states == []:
-            self.label_violation.SetLabel("Invalid move...")
-            self.showCore()
+            if self.coreFindingEnabled:
+                self.label_violation.SetLabel("Invalid move...")
+                self.showCore()
+            else:
+                self.label_violation.SetLabel("Invalid move.")
             self.button_next.Enable(False)
         else:
             self.label_violation.SetLabel("")

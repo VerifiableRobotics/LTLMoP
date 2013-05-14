@@ -20,8 +20,8 @@ class driveHandler:
 
         maxspeed (float): Scale speed with repect to Nao maximum speed (default=1.0,min=0.5,max=1.0)
         maxfreq (float): Scale step frequency with repect to Nao maximum frequency (default=1.0,min=0.5,max=1.0)
-        angcur (float): If robot is directed between +/- angcur, it walks in a curve (default=pi/3,min=pi/6,max=pi/2)
-        angfwd (float): If robot is directed between +/- angfwd, it walks straight forward (default=pi/12,min=pi/12,max=pi/6)
+        angcur (float): If robot is directed between +/- angcur, it walks in a curve (default=1.047,min=0.5236,max=1.571)
+        angfwd (float): If robot is directed between +/- angfwd, it walks straight forward (default=0.262,min=0.262,max=0.5236)
         minvel (float): If robot is given a velocity less than minvel it doesn't move. Otherwise it turns in place (default=0.3,min=0.2,max=0.4)
         silent (bool): If true, no debug message will be printed (default=True)
         """

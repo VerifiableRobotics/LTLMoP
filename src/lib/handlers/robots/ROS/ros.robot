@@ -20,7 +20,7 @@ MotionControlHandler: # Robot default motion control handler with default argume
 heatController()
 
 DriveHandler: # Robot default drive handler with deafult argument values
-differentialDrive(d=.3)
+rosDrive(d=.3)
 
 LocomotionCommandHandler: # Robot default locomotion command handler with default argument values
 rosLocomotionCommand(velocityTopic='/base_controller/command')

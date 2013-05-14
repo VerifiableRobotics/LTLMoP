@@ -17,10 +17,8 @@ class motionControlHandler:
         self.rfi = proj.rfi
         self.coordmap_map2lab = proj.coordmap_map2lab
 
-    def gotoRegion(self, current_reg, next_reg, last=False):
+    def gotoRegion(self, current_reg, next_reg):
         """
-        If ``last`` is True, we will move to the center of the destination region.
-
         Returns ``True`` if we've reached the destination region.
         """
 

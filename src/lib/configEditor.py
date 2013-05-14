@@ -359,7 +359,7 @@ class handlerConfigDialog(wx.Dialog):
         proj_copy.hsub.config_parser.saveConfigFile(cfg)
 
         print "Running calibration tool..."
-        proc = subprocess.Popen(["python", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
+        proc = subprocess.Popen(["python", "-u", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
 
         # Listen on socket for return value
         host = 'localhost'
@@ -540,6 +540,9 @@ class simSetupDialog(wx.Dialog):
             cfg = ConfigObject()
             # TODO: Check for existing untitleds and add a number at the end (steal from reged)
             cfg.name = "Untitled configuration"
+            cfg.fileName = os.path.join(self.proj.hsub.config_parser.config_path,cfg.name.replace(' ','_'))
+            # since this config is not loaded, we assume it is complete
+            cfg.complete = True
             self.proj.hsub.config_parser.configs.append(cfg)
             self.list_box_experiment_name.Append(cfg.name, cfg)
 
@@ -686,6 +689,9 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: Check for existing untitleds and add a number at the end (steal from reged)
         cfg.name = "Untitled configuration"
+        cfg.fileName = os.path.join(self.proj.hsub.config_parser.config_path,cfg.name.replace(' ','_'))
+        # since this config is not loaded, we assume it is complete
+        cfg.complete = True
         self.proj.hsub.configs.append(cfg)
 
         self.list_box_experiment_name.Append(cfg.name, cfg)
@@ -733,6 +739,8 @@ class simSetupDialog(wx.Dialog):
     def onSimNameEdit(self, event): # wxGlade: simSetupDialog.<event_handler>
         pos = self.list_box_experiment_name.GetSelection()
         self.list_box_experiment_name.GetClientData(pos).name = event.GetString()
+        pathName = os.path.dirname(self.list_box_experiment_name.GetClientData(pos).fileName)
+        self.list_box_experiment_name.GetClientData(pos).fileName = os.path.join(pathName,event.GetString().replace(' ','_'))
         self.list_box_experiment_name.SetString(pos, event.GetString())
         event.Skip()
 

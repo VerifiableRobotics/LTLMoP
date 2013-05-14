@@ -157,9 +157,9 @@ class RegionFileInterface(object):
             * values = Lists of faces connecting the two regions
     """
 
-    def __init__(self, background="None", regions=[], transitions=None):
+    def __init__(self, background="None", regions=None, transitions=None):
         self.background = background
-        self.regions = regions
+        self.regions = [] if regions is None else regions
         self.transitions = transitions
         self.filename = None
 
@@ -211,6 +211,9 @@ class RegionFileInterface(object):
         
         # Everything was full, so let's just append to the end
         return last + 1
+
+    def getMaximumHeight(self):
+	    return max(r.height for r in self.regions)
 
     def splitSubfaces(self, obj1, obj2):
         """
@@ -472,7 +475,7 @@ class Region(object):
     """
 
     def __init__(self, type=reg_POLY, position=Point(0, 0), size=Size(0, 0),
-                 color=None, points=[], name=''):
+                 height=0, color=None, points=None, name=''):
 
         if color is None:
             # Give a random color
@@ -483,8 +486,9 @@ class Region(object):
         self.type              = type
         self.position          = position
         self.size              = size
+        self.height            = height
         self.color             = color
-        self.pointArray        = points
+        self.pointArray        = [] if points is None else points
         self.alignmentPoints   = [False] * len([x for x in self.getPoints()])
         self.isObstacle = False
         self.holeList = []
@@ -599,6 +603,7 @@ class Region(object):
         data = {'name': self.name,
                 'position': (self.position.x, self.position.y),
                 'size': (self.size.width, self.size.height),
+                'height': self.height,
                 'color': (self.color.Red(), self.color.Green(), self.color.Blue())}
 
         if self.type == reg_RECT:
@@ -632,6 +637,9 @@ class Region(object):
         if 'size' in data:
             self.size = Size(*data['size'])
         self.color = Color(*data['color'])
+
+        if 'height' in data:
+            self.height = data['height']
 
         if 'type' in data:
             if data['type'].lower() == "rect":

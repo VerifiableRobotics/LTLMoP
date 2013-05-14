@@ -85,9 +85,9 @@ class _RobotCommunicator:
 
     # Communication parameters
     #LOCAL_IP = "0.0.0.0"       # boardcasting local IP
-    #LOCAL_IP = "10.0.0.122"    # Catherine's computer
+    LOCAL_IP = "10.0.0.122"    # Catherine's computer
     #LOCAL_IP = "10.0.0.107"    # BEE09
-    LOCAL_IP = "10.0.0.190"     # BEE06
+    #LOCAL_IP = "10.0.0.190"     # BEE06
     DEFAULT_LISTEN_PORT = 6501
     #NETWORK_BROADCAST_IP = "10.255.255.255" # lab boardcasting
     NETWORK_BROADCAST_IP = "10.0.0.96"       # spider06 (Pioneer)
