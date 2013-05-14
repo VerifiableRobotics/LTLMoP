@@ -10,7 +10,6 @@ import StringIO
 from multiprocessing import Pool
 
 sys.path.append("lib")
-sys.path.append(os.path.join("lib","cores"))
 
 import project
 import regions
@@ -19,7 +18,7 @@ from createJTLVinput import createLTLfile, createSMVfile, createTopologyFragment
 from parseEnglishToLTL import bitEncoding, replaceRegionName, createStayFormula
 import fsa
 from copy import deepcopy
-from coreUtils import *
+from cores.coreUtils import *
 
 # Hack needed to ensure there's only one
 _SLURP_SPEC_GENERATOR = None
