@@ -72,11 +72,12 @@ class GumboMainFrame(wx.Frame):
         self.map_pane.Bind(wx.EVT_PAINT, self.onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBG)
 
-        self.dialogueManager = None
         self.proj = project.Project()
         self.proj.loadProject(config.base_spec_file)
         self.Bind(wx.EVT_SIZE, self.onResize, self)
         self.onResize()
+
+        self.dialogueManager = BarebonesDialogueManager(self.proj.specText)
 
         self.appendLog("Hello.", "System")
 
@@ -132,7 +133,7 @@ class GumboMainFrame(wx.Frame):
         if self.dialogueManager is None:
             self.appendLog("Dialogue manager not initialized", "!!! Error")
         else:
-            sys_text = self.dialogueManager.tell(user_text, self.currentGoal)
+            sys_text = self.dialogueManager.tell(user_text)
             self.appendLog(sys_text, "System")
 
         event.Skip()
@@ -186,6 +187,46 @@ class GumboMainFrame(wx.Frame):
             event.Skip()
 
 # end of class GumboMainFrame
+
+class BarebonesDialogueManager(object):
+    def __init__(self, base_spec=None):
+        """ optionally initialize with some base spec text """
+        if base_spec is None:
+            self.base_spec = []
+        else:
+            self.base_spec = base_spec.split("\n")
+            print "initializing with base spec text:"
+            print base_spec
+
+        self.spec = []
+
+    def tell(self, message):
+        """ take in a message from the user, return a response"""
+        msg = message.lower().strip()
+        if msg == "clear":
+            self.spec = []
+            return "cleared spec"
+        elif msg == "go":
+            # pause
+            # add in initial state
+            # synthesize
+            # resume
+            return "doing what you said"
+        elif msg == "wait":
+            # pause
+            return "pausing"
+        elif msg == "status":
+            # print current goal
+            return "i'm doing stuff"
+        elif msg == "list":
+            return "\n".join(self.spec)
+        else:
+            self.spec.append(message.strip())
+            return "got it"
+
+    def getSpec(self):
+        """ return the current specification as one big string """
+        return "\n".join(self.base_spec + self.spec)
 
 class GumboMainApp(wx.App):
     def OnInit(self):
