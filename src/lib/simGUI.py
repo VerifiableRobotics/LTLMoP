@@ -16,8 +16,11 @@ import wxversion
 import wx, wx.richtext, wx.grid
 import threading
 import project, mapRenderer, regions
-from socket import *
+import socket
 import copy
+import xmlrpclib
+from SimpleXMLRPCServer import SimpleXMLRPCServer
+import random
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -74,28 +77,38 @@ class SimGUI_Frame(wx.Frame):
 
         self.button_sim_log_export.Enable(False)
 
-        #??# Set up socket for communication to executor
-        print "(GUI) Starting socket for communication to controller"
-        self.host = 'localhost'
-        self.portTo = 9562
-        self.buf = 1024
-        self.addrTo = (self.host,self.portTo)
-        self.UDPSockTo = socket(AF_INET,SOCK_DGRAM)
-        
-        #??# Set up socket for communication from executor
-        print "(GUI) Starting socket for communication from controller"
-        self.portFrom = 9563
-        self.addrFrom = (self.host,self.portFrom)
-        self.UDPSockFrom = socket(AF_INET,SOCK_DGRAM)
-        self.UDPSockFrom.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        self.UDPSockFrom.bind(self.addrFrom)
+        # Connect to executor
+        try:
+            executor_port = int(sys.argv[1])
+        except ValueError:
+            print "ERROR: Invalid port '{}'".format(arg)
+            sys.exit(2)
 
-        # Create new thread to communicate with subwindow
-        print >>sys.__stdout__, "(GUI) Starting controller listen thread..."
-        self.controllerListenThread = threading.Thread(target = self.controllerListen)
-        self.controllerListenThread.daemon = True
-        self.controllerListenThread.start()
-    
+        self.executorProxy = xmlrpclib.ServerProxy("http://localhost:{}".format(executor_port), allow_none=True)
+
+        # Create the XML-RPC server
+        # Search for a port we can successfully bind to
+        while True:
+            listen_port = random.randint(10000, 65535)
+            try:
+                self.xmlrpc_server = SimpleXMLRPCServer(("localhost", listen_port), logRequests=False, allow_none=True)
+            except socket.error as e:
+                pass
+            else:
+                break
+
+        # Register functions with the XML-RPC server
+        self.xmlrpc_server.register_function(self.handleEvent)
+
+        # Kick off the XML-RPC server thread    
+        self.XMLRPCServerThread = threading.Thread(target=self.xmlrpc_server.serve_forever)
+        self.XMLRPCServerThread.daemon = True
+        self.XMLRPCServerThread.start()
+        print "SimGUI listening for XML-RPC calls on http://localhost:{} ...".format(listen_port)
+
+        # Register with executor for event callbacks   
+        self.executorProxy.registerExternalEventTarget("http://localhost:{}".format(listen_port))
+ 
         self.robotPos = None
         self.robotVel = (0,0)
 
@@ -104,10 +117,7 @@ class SimGUI_Frame(wx.Frame):
         self.dialogueManager = None
         self.currentGoal = None
 
-        self.Bind( wx.EVT_CLOSE, self.onClose)
-
-        # Let everyone know we're ready
-        self.UDPSockTo.sendto("Hello!",self.addrTo)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def loadRegionFile(self, filename):
         self.proj.rfi = regions.RegionFileInterface()
@@ -128,70 +138,53 @@ class SimGUI_Frame(wx.Frame):
 
         self.onResize()
 
-    def controllerListen(self):
+    def handleEvent(self, eventType, eventData):
         """
         Processes messages from the controller, and updates the GUI accordingly
         """
 
-        ############################
-        # CONTROLLER LISTEN THREAD #
-        ############################
+        # Update stuff (should put these in rough order of frequency for optimal speed
+        if eventType == "FREQ":
+            wx.CallAfter(self.sb.SetStatusText, "Running at approximately {}Hz...".format(eventData), 0)
+        elif eventType == "POSE":
+            self.robotPos = eventData
+            wx.CallAfter(self.onPaint)
+        elif eventType == "MARKER":
+            self.markerPos = eventData
+            wx.CallAfter(self.onPaint)
+        elif eventType == "VEL":
+            # We can't plot anything before we have a map
+            if self.mapBitmap is None:
+                print "Received drawing command before map.  You probably have an old execute.py process running; please kill it and try again."
+                return
+            [x,y] = eventData
+            [x,y] = map(int, (self.mapScale*x, self.mapScale*y)) 
+            self.robotVel = (x, y)
+        elif eventType == "PAUSE":
+            wx.CallAfter(self.sb.SetStatusText, "PAUSED.", 0)
+        elif eventType == "SPEC":
+            wx.CallAfter(self.loadSpecFile, eventData)
+        elif eventType == "REGIONS":
+            wx.CallAfter(self.loadRegionFile, eventData)
+        elif eventData.startswith("Output proposition"):
+            if self.checkbox_statusLog_propChange.GetValue():
+                wx.CallAfter(self.appendLog, eventData + "\n", color="GREEN") 
+        elif eventData.startswith("Heading to"):
+            if self.checkbox_statusLog_targetRegion.GetValue():
+                wx.CallAfter(self.appendLog, eventData + "\n", color="BLUE") 
+        elif eventData.startswith("Crossed border"):
+            if self.checkbox_statusLog_border.GetValue():
+                wx.CallAfter(self.appendLog, eventData + "\n", color="CYAN") 
+        else:
+            # Detect our current goal index
+            if eventData.startswith("Currently pursuing goal"):
+                m = re.search(r"#(\d+)", eventData)
+                if m is not None:
+                    self.currentGoal = int(m.group(1))
 
-        while 1: 
-            # Wait for and receive a message from the controller
-            input,self.addrFrom = self.UDPSockFrom.recvfrom(self.buf)
-            if input == '':  # EOF indicates that the connection has been destroyed
-                print "Controller listen thread is shutting down."
-                break
-
-            input = input.strip()
-            #print >>sys.__stdout__, input
-
-            # Update stuff (should put these in rough order of frequency for optimal speed
-            if input.startswith("Running at"):
-                wx.CallAfter(self.sb.SetStatusText, input, 0)
-            elif input.startswith("POSE:"):
-                [x,y] = map(float, input.split(":")[1].split(","))
-                self.robotPos = (x, y)
-                wx.CallAfter(self.onPaint)
-            elif input.startswith("marker:"):
-                [x,y] = map(float, input.split(":")[1].split(","))
-                self.markerPos = (x, y)
-                wx.CallAfter(self.onPaint)
-            elif input.startswith("VEL:"):
-                # We can't plot anything before we have a map
-                if self.mapBitmap is None:
-                    print "Received drawing command before map.  You probably have an old execute.py process running; please kill it and try again."
-                    continue
-                [x,y] = map(float, input.split(":")[1].split(","))
-                [x,y] = map(int, (self.mapScale*x, self.mapScale*y)) 
-                self.robotVel = (x, y)
-            elif input.startswith("PAUSE"):
-                # FIXME: Sometimes we'll still get rate updates AFTER a pause
-                wx.CallAfter(self.sb.SetStatusText, input, 0)
-            elif input.startswith("Output proposition"):
-                if self.checkbox_statusLog_propChange.GetValue():
-                    wx.CallAfter(self.appendLog, input + "\n", color="GREEN") 
-            elif input.startswith("Heading to"):
-                if self.checkbox_statusLog_targetRegion.GetValue():
-                    wx.CallAfter(self.appendLog, input + "\n", color="BLUE") 
-            elif input.startswith("Crossed border"):
-                if self.checkbox_statusLog_border.GetValue():
-                    wx.CallAfter(self.appendLog, input + "\n", color="CYAN") 
-            elif input.startswith("SPEC:"):
-                wx.CallAfter(self.loadSpecFile, input.split(":",1)[1])
-            elif input.startswith("REGIONS:"):
-                wx.CallAfter(self.loadRegionFile, input.split(":",1)[1])
-            else:
-                # Detect our current goal index
-                if input.startswith("Currently pursuing goal"):
-                    m = re.search(r"#(\d+)", input)
-                    if m is not None:
-                        self.currentGoal = int(m.group(1))
-
-                if self.checkbox_statusLog_other.GetValue():
-                    if input != "":
-                        wx.CallAfter(self.appendLog, input + "\n", color="BLACK") 
+            if self.checkbox_statusLog_other.GetValue():
+                if eventData != "":
+                    wx.CallAfter(self.appendLog, eventData + "\n", color="BLACK") 
 
     def __set_properties(self):
         # begin wxGlade: SimGUI_Frame.__set_properties
@@ -330,11 +323,11 @@ class SimGUI_Frame(wx.Frame):
         btn_label = self.button_sim_startPause.GetLabel()
         if btn_label == "Start" or btn_label == "Resume":
             self.button_sim_log_export.Enable(False)
-            self.UDPSockTo.sendto("START",self.addrTo) # This goes to the controller
+            self.executorProxy.resume()
             self.appendLog("%s!\n" % btn_label,'GREEN')
             self.button_sim_startPause.SetLabel("Pause")
         else:
-            self.UDPSockTo.sendto("PAUSE",self.addrTo) # This goes to the controller
+            self.executorProxy.pause()
             self.appendLog('Pause...\n','RED')
             self.button_sim_log_export.Enable(True)
             self.button_sim_startPause.SetLabel("Resume")
@@ -384,8 +377,9 @@ class SimGUI_Frame(wx.Frame):
         f.close()
 
     def onClose(self, event):
-        print >>sys.__stderr__, "Telling execute.py to quit!"
-        self.UDPSockTo.sendto("QUIT",self.addrTo) # This goes to the controller
+        self.executorProxy.shutdown()
+        self.xmlrpc_server.shutdown()
+        self.XMLRPCServerThread.join()
         #time.sleep(2)
         event.Skip()
 
