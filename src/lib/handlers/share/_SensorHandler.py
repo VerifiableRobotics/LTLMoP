@@ -85,13 +85,13 @@ class SensorEditorFrame(wx.Frame):
     def checkForInput(self):
         return sys.stdin.readline()
 
-    def updateFromInput(self, input):
+    def updateFromInput(self, text):
         """
         We decide what buttons to create based on messages via stdin
         """
-        line = input.get().strip()
+        line = text.get().strip()
 
-        if line == ":QUIT":
+        if line == ":QUIT" or line == '': # EOF means Executor crashed
             wx.CallAfter(self.Close)
             return
 

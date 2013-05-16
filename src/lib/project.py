@@ -16,6 +16,19 @@ from numpy import *
 import handlerSubsystem
 import inspect
 
+
+def get_ltlmop_root():
+    # Climb the tree to find out where we are
+    p = os.path.abspath(__file__)
+    t = ""
+    while t != "src":
+        (p, t) = os.path.split(p)
+        if p == "" or p == "/":
+            print "I have no idea where I am; this is ridiculous"
+            return None
+
+    return os.path.join(p, "src")
+
 class Project:
     """
     A project object.
@@ -56,7 +69,7 @@ class Project:
                 print "I have no idea where I am; this is ridiculous"
                 return None
 
-        self.ltlmop_root = os.path.join(p, "src")
+        self.ltlmop_root = get_ltlmop_root()
 
     def setSilent(self, silent):
         self.silent = silent

@@ -6,27 +6,29 @@
 
     This module executes a hybrid controller for a robot in a simulated or real environment.
 
-    :Usage: ``execute.py [-hn] [-a automaton_file] [-s spec_file]``
+    :Usage: ``execute.py [-hn] [-p listen_port] [-a automaton_file] [-s spec_file]``
 
-    * The controlling automaton is imported from the specified ``automaton_file``.
+    * The controlling automaton is imported from the specified ``automaton_file``. If no automaton is specified, one with the same prefix as the spec file will be tried.
 
     * The supporting handler modules (e.g. sensor, actuator, motion control, simulation environment initialization, etc)
-      are loaded according to the settings provided in the specified ``spec_file``.
+      are loaded according to the settings in the config file specified as current in the ``spec_file``.
 
+    * If no port to listen on is specified, an open one will be chosen randomly.
     * Unless otherwise specified with the ``-n`` or ``--no_gui`` option, a status/control window
       will also be opened for informational purposes.
 """
 
 import sys, os, getopt, textwrap
 import threading, subprocess, time
-import fileMethods, regions, fsa, project
+import fsa, project
 from copy import deepcopy
-import functools, re
-from numpy import *
-from handlers.motionControl.__is_inside import is_inside
-from socket import *
+from SimpleXMLRPCServer import SimpleXMLRPCServer
+import xmlrpclib
+import socket
 import specCompiler
 import itertools
+import random
+import re, math
 
 
 ####################
@@ -37,12 +39,14 @@ def usage(script_name):
     """ Print command-line usage information. """
 
     print textwrap.dedent("""\
-                              Usage: %s [-hn] [-a automaton_file] [-s spec_file]
+                              Usage: %s [-hn] [-p listen_port] [-a automaton_file] [-s spec_file]
 
                               -h, --help:
                                   Display this message
                               -n, --no-gui:
                                   Do not show status/control window
+                              -p PORT, --xmlrpc-listen-port PORT:
+                                  Listen on PORT for XML-RPC calls
                               -a FILE, --aut-file FILE:
                                   Load automaton from FILE
                               -s FILE, --spec-file FILE:
@@ -54,13 +58,10 @@ class LTLMoPExecutor(object):
     with a set of handlers (as specified in a .config file) to create and run a hybrid controller
     """
 
-    def __init__(self, spec_file, aut_file, show_gui=True):
+    def __init__(self):
         """
-        Create a new execution object, based on the given spec and aut files.
-        If show_gui is True, a Simulation Status window will be opened.
+        Create a new execution context object
         """
-
-        self.show_gui = show_gui
 
         self.proj = project.Project() # this is the project that we are currently using to execute
 
@@ -70,18 +71,24 @@ class LTLMoPExecutor(object):
         else:
             self.timer_func = time.time
 
+        self.externalEventTarget = None
+        self.externalEventTargetRegistered = threading.Event()
         self.runFSA = threading.Event()  # Start out paused
-        self.initialize(spec_file, aut_file, firstRun=True)
+        self.alive = threading.Event()
+        self.alive.set()
+
+    def postEvent(self, eventType, eventData=None):
+        """ Send a notice that an event occurred, if anyone wants it """
+        if self.externalEventTarget is not None:
+            self.externalEventTarget.handleEvent(eventType, eventData)
 
     def loadSpecFile(self, filename):
-        if filename is not None:
-            # Update with this new project
-            self.proj = project.Project()
-            self.proj.loadProject(filename)
+        # Update with this new project
+        self.proj = project.Project()
+        self.proj.loadProject(filename)
 
-        if self.show_gui:
-            # Tell GUI to load the spec file
-            print "SPEC:" + self.proj.getFilenamePrefix() + ".spec"
+        # Tell GUI to load the spec file
+        self.postEvent("SPEC", self.proj.getFilenamePrefix() + ".spec")
 
     def loadAutFile(self, filename):
         print "Loading automaton..."
@@ -93,6 +100,7 @@ class LTLMoPExecutor(object):
         return aut if success else None
 
     def _getCurrentRegionFromPose(self, rfi=None):
+        # TODO: move this to regions.py
         if rfi is None:
             rfi = self.proj.rfi
 
@@ -184,44 +192,6 @@ class LTLMoPExecutor(object):
 
         return new_proj
         
-    def _guiListen(self):
-        """
-        Processes messages from the GUI window, and reacts accordingly
-        """
-
-        # Set up socket for communication from simGUI
-        addrFrom = ('localhost', 9562)
-        UDPSockFrom = socket(AF_INET, SOCK_DGRAM)
-        UDPSockFrom.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-        UDPSockFrom.bind(addrFrom)
-
-        while 1:
-            # Wait for and receive a message from the subwindow
-            data_in, addrFrom = UDPSockFrom.recvfrom(1024)
-
-            if data_in == '':  # EOF indicates that the connection has been destroyed
-                print "GUI listen thread is shutting down!"
-                break
-
-            data_in = data_in.strip()
-
-            # Check for the initialization signal, if necessary
-            if not self.guiListenInitialized.isSet() and data_in == "Hello!":
-                self.guiListenInitialized.set()
-                continue
-
-            # Do what the GUI tells us, lest we anger it
-            if data_in == "START":
-                self.resume()
-            elif data_in == "PAUSE":
-                self.pause()
-            elif data_in == "QUIT":
-                self.shutdown()
-                print >>sys.__stderr__, "ending gui listen thread..."
-                return                
-
-            else:
-                print "WARNING: Unknown command received from GUI: " + data_in
 
     def shutdown(self):
         self.runFSA.clear()
@@ -246,56 +216,36 @@ class LTLMoPExecutor(object):
             else:
                 print >>sys.__stderr__, "not found in h_instance"
 
+        self.alive.clear()
+
     def pause(self):
         self.runFSA.clear()
         time.sleep(0.1) # Wait for FSA to stop
-        print "PAUSED."
+        self.postEvent("PAUSE")
 
     def resume(self):
         self.runFSA.set()
 
-    def startGUI(self):
-        """
-        Start the Simulation Status GUI window, and redirect all output to it via a local UDP connection
-        """
-
-        self.guiListenInitialized = threading.Event()
-
-        # Create a subprocess
-        print "Starting GUI window and listen thread..."
-        p_gui = subprocess.Popen(["python", "-u", os.path.join(self.proj.ltlmop_root, "lib", "simGUI.py")])
-
-        # Create new thread to communicate with subwindow
-        self.guiListenThread = threading.Thread(target = self._guiListen)
-        self.guiListenThread.daemon = True
-        self.guiListenThread.start()
-
-        # Set up socket for communication to simGUI
-        addrTo = ('localhost', 9563)
-        UDPSockTo = socket(AF_INET, SOCK_DGRAM)
-
-        # Block until the GUI listener gets the go-ahead from the subwindow
-        self.guiListenInitialized.wait()
+    def registerExternalEventTarget(self, address):
+        self.externalEventTarget = xmlrpclib.ServerProxy(address, allow_none=True)
 
         # Redirect all output to the log
-        redir = RedirectText(UDPSockTo, addrTo)
+        redir = RedirectText(self.externalEventTarget.handleEvent)
 
         sys.stdout = redir
-        #sys.stderr = redir
+        sys.stderr = redir
+
+        self.externalEventTargetRegistered.set()
 
     def initialize(self, spec_file, aut_file, firstRun=True):
         """
         Prepare for execution, by loading and initializing all the relevant files (specification, map, handlers, aut)
-        Also start the Simulation Status GUI if necessary.
 
         If `firstRun` is true, all handlers will be imported; otherwise, only the motion control handler will be reloaded.
         """
 
-        # Start status/control GUI
-        if firstRun and self.show_gui:
-            self.startGUI()
-
         # load project only first time; otherwise self.proj is modified in-place
+        # TODO: what? ^^^
         self.loadSpecFile(spec_file)
 
         self.proj.rfiold = self.proj.rfi  # Save the undecomposed regions
@@ -316,16 +266,15 @@ class LTLMoPExecutor(object):
             self.proj.importHandlers(['motionControl'])
 
         # Load automaton file
+        if aut_file is None:
+            aut_file = self.proj.getFilenamePrefix() + ".aut"
+
         new_aut = self.loadAutFile(aut_file)
 
         if firstRun:
             ### Wait for the initial start command
-            if show_gui:
-                print "Ready.  Press [Start] to begin..."
-                self.runFSA.wait()
-            else:
-                raw_input('Press enter to begin...')
-                self.runFSA.set()
+            print "Ready.  Press [Start] to begin..."
+            self.runFSA.wait()
 
         ### Figure out where we should start from
 
@@ -366,12 +315,13 @@ class LTLMoPExecutor(object):
         avg_freq = 20
         last_gui_update_time = 0
 
-        while not self.show_gui or self.guiListenThread.isAlive():
+        # FIXME: don't crash if no spec file is loaded initially
+        while self.alive.isSet():
             # Idle if we're not running
             if not self.runFSA.isSet():
                 self.proj.h_instance['drive'].setVelocity(0,0)
                 # wait for either the FSA to unpause or for termination
-                while (not self.runFSA.wait(0.1)) and self.guiListenThread.isAlive():
+                while (not self.runFSA.wait(0.1)) and self.alive.isSet():
                     pass
 
             self.prev_outputs = deepcopy(self.aut.current_outputs)
@@ -391,34 +341,82 @@ class LTLMoPExecutor(object):
             # Update GUI
             # If rate limiting is disabled in the future add in rate limiting here for the GUI:
             # if show_gui and (timer_func() - last_gui_update_time > 0.05)
-            if show_gui:
-                avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic) # IIR filter
-                print "Running at approximately %dHz..." % int(math.ceil(avg_freq))
-                pose = self.proj.h_instance['pose'].getPose(cached=True)[0:2]
-                print "POSE:%d,%d" % tuple(map(int, self.proj.coordmap_lab2map(pose)))
+            avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic) # IIR filter
+            self.postEvent("FREQ", int(math.ceil(avg_freq)))
+            pose = self.proj.h_instance['pose'].getPose(cached=True)[0:2]
+            self.postEvent("POSE", tuple(map(int, self.proj.coordmap_lab2map(pose))))
 
-
-                last_gui_update_time = self.timer_func()
+            last_gui_update_time = self.timer_func()
 
         print "execute.py quitting..."
 
 class RedirectText:
-    """
-    A class that lets the output of a stream be directed into a socket.
+    def __init__(self, event_handler):
+        self.event_handler = event_handler
 
-    http://mail.python.org/pipermail/python-list/2007-June/445795.html
-    """
+    def write(self, message):
+        if message.strip() != "":
+            self.event_handler("OTHER", message.strip())
 
-    def __init__(self,s,addrTo):
-        self.s = s
-        self.addrTo = addrTo
-
-    def write(self,string):
-        self.s.sendto(string, self.addrTo)
 
 ####################################################
 # Main function, run when called from command-line #
 ####################################################
+
+def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False):
+    print "\n[ LTLMOP HYBRID CONTROLLER EXECUTION MODULE ]\n"
+    print "Hello. Let's do this!\n"
+
+    # Create the XML-RPC server
+    if listen_port is None:
+        # Search for a port we can successfully bind to
+        while True:
+            listen_port = random.randint(10000, 65535)
+            try:
+                xmlrpc_server = SimpleXMLRPCServer(("localhost", listen_port), logRequests=False, allow_none=True)
+            except socket.error as e:
+                pass
+            else:
+                break
+    else:
+        xmlrpc_server = SimpleXMLRPCServer(("localhost", listen_port), logRequests=False, allow_none=True)
+    
+    # Create the execution context object
+    e = LTLMoPExecutor()
+
+    # Register functions with the XML-RPC server
+    xmlrpc_server.register_instance(e)
+
+    # Kick off the XML-RPC server thread    
+    XMLRPCServerThread = threading.Thread(target=xmlrpc_server.serve_forever)
+    XMLRPCServerThread.daemon = True
+    XMLRPCServerThread.start()
+    print "Executor listening for XML-RPC calls on http://localhost:{} ...".format(listen_port)
+
+    # Start the GUI if necessary
+    if show_gui:
+        # Create a subprocess
+        print "Starting GUI window..."
+        p_gui = subprocess.Popen(["python", "-u", os.path.join(project.get_ltlmop_root(), "lib", "simGUI.py"), str(listen_port)])
+
+        # Wait for GUI to fully load, to make sure that
+        # to make sure all messages are redirected
+        e.externalEventTargetRegistered.wait()
+
+    if spec_file is not None:
+        # Tell executor to load spec & aut
+        e.initialize(spec_file, aut_file, firstRun=True)
+
+    # Start the executor's main loop in this thread
+    e.run()
+
+    # Clean up on exit
+    print "Waiting for XML-RPC server to shut down..."
+    xmlrpc_server.shutdown()
+    XMLRPCServerThread.join()
+
+
+### Command-line argument parsing ###
 
 if __name__ == "__main__":
     ### Check command-line arguments
@@ -426,9 +424,10 @@ if __name__ == "__main__":
     aut_file = None
     spec_file = None
     show_gui = True
+    listen_port = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hna:s:", ["help", "no-gui", "aut-file=", "spec-file="])
+        opts, args = getopt.getopt(sys.argv[1:], "hnp:a:s:", ["help", "no-gui", "xmlrpc-listen-port=", "aut-file=", "spec-file="])
     except getopt.GetoptError, err:
         print str(err)
         usage(sys.argv[0])
@@ -440,25 +439,15 @@ if __name__ == "__main__":
             sys.exit()
         elif opt in ("-n", "--no-gui"):
             show_gui = False
+        elif opt in ("-p", "--xmlrpc-listen-port"):
+            try:
+                listen_port = int(arg)
+            except ValueError:
+                print "ERROR: Invalid port '{}'".format(arg)
+                sys.exit(2)
         elif opt in ("-a", "--aut-file"):
             aut_file = arg
         elif opt in ("-s", "--spec-file"):
             spec_file = arg
 
-    if aut_file is None:
-        print "ERROR: Automaton file needs to be specified."
-        usage(sys.argv[0])
-        sys.exit(2)
-
-    if spec_file is None:
-        print "ERROR: Specification file needs to be specified."
-        usage(sys.argv[0])
-        sys.exit(2)
-
-    print "\n[ LTLMOP HYBRID CONTROLLER EXECUTION MODULE ]\n"
-    print "Hello. Let's do this!\n"
-
-    e = LTLMoPExecutor(spec_file, aut_file, show_gui)
-    e.run()
-
-
+    execute_main(listen_port, spec_file, aut_file, show_gui)
