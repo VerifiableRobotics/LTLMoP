@@ -377,7 +377,12 @@ class SimGUI_Frame(wx.Frame):
         f.close()
 
     def onClose(self, event):
-        self.executorProxy.shutdown()
+        try:
+            self.executorProxy.shutdown()
+        except socket.error:
+            # Executor probably crashed
+            pass
+
         self.xmlrpc_server.shutdown()
         self.XMLRPCServerThread.join()
         #time.sleep(2)
