@@ -313,6 +313,7 @@ class SimGUI_Frame(wx.Frame):
                     break
             text = re.sub(r'\b'+p_reg+r'\b', '%s (%s)' % (p_reg, rname), text)
 
+        self.text_ctrl_sim_log.SetInsertionPointEnd()
         self.text_ctrl_sim_log.BeginTextColour(color)
         self.text_ctrl_sim_log.WriteText("["+time.strftime("%H:%M:%S")+"] "+text)
         self.text_ctrl_sim_log.EndTextColour()
