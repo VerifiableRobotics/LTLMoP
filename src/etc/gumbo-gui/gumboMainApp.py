@@ -14,6 +14,7 @@ import gettext
 # end wxGlade
 
 import os, sys
+import socket
 
 # Climb the tree to find out where we are
 p = os.path.abspath(__file__)
@@ -31,7 +32,10 @@ sys.path.append(os.path.join(p,"src","lib"))
 ############## CONFIGURATION SECTION ##################
 #######################################################
 class config:
-    base_spec_file = os.path.join(ltlmop_root, "src", "examples", "gumbotest", "test.spec")
+    #base_spec_file = os.path.join(ltlmop_root, "src", "examples", "gumbotest", "test.spec")
+    base_spec_file = os.path.join(ltlmop_root, "src", "examples", "firefighting", "firefighting.spec")
+    executor_listen_port = 20000
+    gumbo_gui_listen_port = 20001
 
 
 
@@ -43,6 +47,11 @@ class config:
 import project
 import mapRenderer
 from specCompiler import SpecCompiler
+import execute
+import multiprocessing
+import xmlrpclib
+from SimpleXMLRPCServer import SimpleXMLRPCServer
+import threading
 
 class GumboMainFrame(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -63,11 +72,15 @@ class GumboMainFrame(wx.Frame):
         self.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.onResize, self.window_1)
         # end wxGlade
 
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+
         self.window_1.SetSashGravity(0.5)
         self.window_1.SetMinimumPaneSize(100)
 
         self.map_pane.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         self.mapBitmap = None
+
+        self.robotPos = None
 
         self.map_pane.Bind(wx.EVT_PAINT, self.onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBG)
@@ -77,8 +90,42 @@ class GumboMainFrame(wx.Frame):
         self.Bind(wx.EVT_SIZE, self.onResize, self)
         self.onResize()
 
-        self.dialogueManager = BarebonesDialogueManager(self.proj.specText)
+        # Start execution context
+        print "Starting executor..."
+        self.executorProcess = multiprocessing.Process(target=execute.execute_main, args=(config.executor_listen_port, self.proj.getFilenamePrefix()+".spec", self.proj.getFilenamePrefix()+".aut", False))
+        self.executorProcess.start()
 
+        # Connect to executor
+        print "Connecting to executor...",
+        while True:
+            try:
+                self.executorProxy = xmlrpclib.ServerProxy("http://localhost:{}".format(config.executor_listen_port), allow_none=True)
+            except socket.error:
+                print ".",
+            else:
+                break
+
+        print
+
+        # Start our own xml-rpc server to receive events from execute
+        self.xmlrpc_server = SimpleXMLRPCServer(("localhost", config.gumbo_gui_listen_port), logRequests=False, allow_none=True)
+
+        # Register functions with the XML-RPC server
+        self.xmlrpc_server.register_function(self.handleEvent)
+
+        # Kick off the XML-RPC server thread    
+        self.XMLRPCServerThread = threading.Thread(target=self.xmlrpc_server.serve_forever)
+        self.XMLRPCServerThread.daemon = True
+        self.XMLRPCServerThread.start()
+        print "GumboGUI listening for XML-RPC calls on http://localhost:{} ...".format(config.gumbo_gui_listen_port)
+
+        # Register with executor for event callbacks   
+        self.executorProxy.registerExternalEventTarget("http://localhost:{}".format(config.gumbo_gui_listen_port))
+
+        # Start dialogue manager
+        self.dialogueManager = BarebonesDialogueManager(self.executorProxy, self.proj.specText)
+
+        # Tell the user we are ready
         self.appendLog("Hello.", "System")
 
 
@@ -106,7 +153,41 @@ class GumboMainFrame(wx.Frame):
         self.Layout()
         # end wxGlade
 
+    def handleEvent(self, eventType, eventData):
+        """
+        Processes messages from the controller, and updates the GUI accordingly
+        """
+        if eventType in ["FREQ"]: # Events to ignore
+            pass
+        elif eventType == "POSE":
+            self.robotPos = eventData
+            wx.CallAfter(self.onPaint)
+        else:
+            print "[{}] {}".format(eventType, eventData)
+
+    def onClose(self, event):
+        print "Shutting down executor..."
+        try:
+            self.executorProxy.shutdown()
+        except socket.error:
+            # Executor probably crashed
+            pass
+
+        self.xmlrpc_server.shutdown()
+        self.XMLRPCServerThread.join()
+        print "Waiting for executor to quit..."
+        print "(If this takes more than 5 seconds it has crashed and you will need to run `killall python` for now)"
+        self.executorProcess.join(5)
+        # After ten seconds, just kill it
+        if self.executorProcess.is_alive():
+            self.executorProcess.terminate() 
+            self.executorProcess.join() 
+            
+        event.Skip()
+
     def appendLog(self, message, agent=None):
+        self.text_ctrl_dialogue.SetInsertionPointEnd()
+
         if agent is not None:
             self.text_ctrl_dialogue.BeginBold()
             self.text_ctrl_dialogue.WriteText(agent + ": ")
@@ -172,14 +253,14 @@ class GumboMainFrame(wx.Frame):
         dc.DrawBitmap(self.mapBitmap, 0, 0)
 
         # Draw robot
-#        if self.robotPos is not None:
-#            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
-#            dc.DrawCircle(x, y, 5)
+        if self.robotPos is not None:
+            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
+            dc.DrawCircle(x, y, 5)
+
 #        if self.markerPos is not None:
 #            [m,n] = map(lambda m: int(self.mapScale*m), self.markerPos) 
 #            dc.SetBrush(wx.Brush(wx.RED))
 #            dc.DrawCircle(m, n, 5)
-
 
         dc.EndDrawing()
         
@@ -189,8 +270,12 @@ class GumboMainFrame(wx.Frame):
 # end of class GumboMainFrame
 
 class BarebonesDialogueManager(object):
-    def __init__(self, base_spec=None):
-        """ optionally initialize with some base spec text """
+    def __init__(self, executor, base_spec=None):
+        """ take reference to execution context
+            optionally initialize with some base spec text """
+
+        self.executor = executor
+
         if base_spec is None:
             self.base_spec = []
         else:
@@ -208,12 +293,14 @@ class BarebonesDialogueManager(object):
             return "cleared spec"
         elif msg == "go":
             # pause
+            self.executor.pause()
             # add in initial state
             # synthesize
             # resume
+            self.executor.resume()
             return "doing what you said"
         elif msg == "wait":
-            # pause
+            self.executor.pause()
             return "pausing"
         elif msg == "status":
             # print current goal
@@ -237,6 +324,7 @@ class GumboMainApp(wx.App):
         return 1
 
 # end of class GumboMainApp
+
 
 if __name__ == "__main__":
     gettext.install("gumboMainApp") # replace with the appropriate catalog name
