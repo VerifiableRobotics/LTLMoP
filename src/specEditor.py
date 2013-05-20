@@ -200,7 +200,10 @@ class AsynchronousProcessThread(threading.Thread):
 
         # Start the process
         try:
-            self.process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False, bufsize=-1)
+            if self.logFunction is not None:
+                self.process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False, bufsize=-1)
+            else:
+                self.process = subprocess.Popen(self.cmd, bufsize=-1)
         except err_types as (errno, strerror):
             print "ERROR: " + strerror
             self.startComplete.set()
@@ -215,13 +218,10 @@ class AsynchronousProcessThread(threading.Thread):
             if not self.running:
                 return
 
-            output = self.process.stdout.readline() # Blocking :(
-
             # Output to either a RichTextCtrl or the console
             if self.logFunction is not None:
+                output = self.process.stdout.readline() # Blocking :(
                 wx.CallAfter(self.logFunction, "\t"+output, "BLACK")
-            else:
-                print output,
 
             # Check the status of the process
             self.process.poll()
