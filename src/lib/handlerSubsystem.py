@@ -15,10 +15,10 @@ import inspect,types
 from numpy import *
 from copy import deepcopy
 import project
-import logging
 import ast
 import json
 import traceback
+import globalConfig, logging
 
 
 
@@ -413,44 +413,8 @@ class HandlerSubsystem:
     """
     Interface dealing with configuration files and hanlders
     """
-    def __init__(self,proj,loggerLevel='debug'):
+    def __init__(self,proj):
         self.proj = proj
-
-        # Set up loggers for printing error messages
-        class ColorLogFormatter(logging.Formatter):
-            def __init__(self, *args, **kwds):
-                super(ColorLogFormatter, self).__init__(*args, **kwds)
-                self.formatter = logging.Formatter(" --> [%(levelname)s] (%(pathname)s, line %(lineno)s): %(message)s")
-
-            def colorize(self, level, string):
-                if sys.platform in ['win32', 'cygwin']:
-                    # Message with color is not yet supported in Windows
-                    return string
-                elif not hasattr(sys.stderr, "isatty") or not sys.stderr.isatty():
-                    # Only try to colorize if outputting to a terminal 
-                    return string
-                else:
-                    colors = {'ERROR': 91, 'WARNING': 93, 'INFO': 94, 'DEBUG': 97}
-                    return "\033[{0}m{1}\033[0m".format(colors[level], string)
-
-            def format(self, record):
-                precolor = self.formatter.format(record)
-                return self.colorize(record.levelname, precolor)
-                
-        logger = logging.getLogger()
-        h = logging.StreamHandler()
-        f = ColorLogFormatter()
-        h.setFormatter(f)
-        logger.addHandler(h)
-
-        if loggerLevel == 'error':
-            logger.setLevel(logging.ERROR)
-        elif loggerLevel == 'warning':
-            logger.setLevel(logging.WARNING)
-        elif loggerLevel == 'info':
-            logger.setLevel(logging.INFO)
-        elif loggerLevel == 'debug':
-            logger.setLevel(logging.DEBUG)
 
         self.handler_dic = {}       # dictionary for all handler information {type of handler:list of handlers of that type}
         self.robots = []            # list of robot objects
@@ -644,7 +608,7 @@ class HandlerSubsystem:
             for robotName,handlerObj in self.h_obj[handler_type].iteritems():
                 # get handler class object for initiating
                 fileName = handlerObj.fullPath(robotName,configObj)
-                logging.debug(" -> Loading handler:\t%s" % fileName.split('.')[-1])
+                logging.info(" -> Loading handler:\t%s" % fileName.split('.')[-1])
                 try:
                     __import__(fileName)
                 except ImportError as import_error:
@@ -888,7 +852,7 @@ class HandlerParser:
                                        [^,\s]*    # other
                                     )""")
         # Try to load the handler file
-        logging.debug(" -> Loading handler:\t%s" % handlerFile.split('.')[-1])
+        logging.info(" -> Loading handler:\t%s" % handlerFile.split('.')[-1])
         try:
             __import__(handlerFile)
         except Exception as e:
