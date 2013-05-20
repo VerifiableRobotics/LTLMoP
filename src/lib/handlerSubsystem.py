@@ -78,7 +78,10 @@ class ParameterObject:
             except ValueError:
                 logging.error("Invalid int value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
-            self.value = value
+            if str(value).lower() in ['1','true','t']:
+                self.value = True
+            elif str(value).lower() in ['0','false','f']:
+                self.value = False
         elif self.type.lower() == 'region':
             try:
                 self.value = ast.literal_eval(value)
