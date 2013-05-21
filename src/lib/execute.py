@@ -219,12 +219,27 @@ class LTLMoPExecutor(object):
         self.alive.clear()
 
     def pause(self):
+        """ pause execution of the automaton """
         self.runFSA.clear()
         time.sleep(0.1) # Wait for FSA to stop
         self.postEvent("PAUSE")
 
     def resume(self):
+        """ start/resume execution of the automaton """
         self.runFSA.set()
+
+    def isRunning(self):
+        """ return whether the automaton is currently executing """
+        return self.runFSA.isSet()
+
+    def getCurrentGoalNumber(self):
+        """ return the index of the goal currently being pursued (jx)"""
+        return self.aut.next_state.rank
+
+    def getCurrentStateAsLTL(self, include_env=False):
+        """ return a boolean formula (as a string) capturing the current discrete state of the system (and, optionally, the environment as well)"""
+
+        return fsa.stateToLTL(self.aut.current_state, include_env=include_env)
 
     def registerExternalEventTarget(self, address):
         self.externalEventTarget = xmlrpclib.ServerProxy(address, allow_none=True)
