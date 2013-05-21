@@ -4,8 +4,6 @@
 """ ================================================
     handlerSubsystem.py - Interface for working with handlers, configs
     ================================================
-
-    This module Defines objects for handler system. It also provides interface that deal with handler and config files
 """
 
 
