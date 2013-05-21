@@ -98,15 +98,14 @@ class LTLFormula(object):
         else:
             return ""
 
-    def getConjunctsByKind(self, kind):
+    def getConjunctsByType(self, kind):
         return [t for t in self.getConjuncts() if t.getType() == kind]
 
     def getConjuncts(self):
         if not self.tree[0] == "Conjunction":
             raise ValueError("Highest level not conjunction")
         
-        for subtree in self.tree[1:]:
-            yield LTLFormula(subtree)
+        return [LTLFormula(t) for t in self.tree[1:]]
 
     def __repr__(self):
         return '"' + self.__str__() + '"'
@@ -116,7 +115,7 @@ class LTLFormula(object):
             # If we are a conjunction at highest level
             # Note: This is done separately just so we can insert
             # linebreaks between each conjunct
-            return " &\n".join(str(t) for t in self.getConjuncts())
+            return " &\n".join(treeToString(t.tree, top_level=False) for t in self.getConjuncts())
         except ValueError:
             # Otherwise, if we are a single conjunct
             return treeToString(self.tree)
@@ -257,14 +256,18 @@ if __name__ == "__main__":
 
     assumptions, guarantees = LTLFormula.fromLTLFile(fname)
 
-    print assumptions.getConjunctsByKind(LTLFormulaType.INITIAL)
-    print assumptions.getConjunctsByKind(LTLFormulaType.SAFETY)
-    print assumptions.getConjunctsByKind(LTLFormulaType.LIVENESS)
+    print assumptions.getConjunctsByType(LTLFormulaType.INITIAL)
+    print assumptions.getConjunctsByType(LTLFormulaType.SAFETY)
+    print assumptions.getConjunctsByType(LTLFormulaType.LIVENESS)
 
     print assumptions 
 
-    print guarantees.getConjunctsByKind(LTLFormulaType.INITIAL)
-    print guarantees.getConjunctsByKind(LTLFormulaType.SAFETY)
-    print guarantees.getConjunctsByKind(LTLFormulaType.LIVENESS)
+    print guarantees.getConjunctsByType(LTLFormulaType.INITIAL)
+    print guarantees.getConjunctsByType(LTLFormulaType.SAFETY)
+    print guarantees.getConjunctsByType(LTLFormulaType.LIVENESS)
 
     print guarantees
+
+    #x = assumptions.getConjuncts()
+    #x.append(LTLFormula.fromString("[]<>whatever"))
+    #createLTLfile("test.ltl", x, g)

@@ -10,6 +10,7 @@
 import math
 import parseEnglishToLTL
 import textwrap
+from LTLParser.LTLFormula import LTLFormula, LTLFormulaType
 
 def createSMVfile(fileName, sensorList, robotPropList):
     ''' This function writes the skeleton SMV file.
@@ -111,6 +112,35 @@ def createInitialRegionFragment(regions, use_bits=True):
         
     return initreg_formula
 
+def createNecessaryFillerSpec(spec_part):
+    """ Both assumptions guarantees need to have at least one each of
+        initial, safety, and liveness.  If any are not present,
+        create trivial TRUE ones. """
+
+    filler_spec = []
+    formula = LTLFormula.fromString(spec_part)
+    if not formula.getConjunctsByType(LTLFormulaType.INITIAL):
+        filler_spec.append("TRUE")
+    if not formula.getConjunctsByType(LTLFormulaType.SAFETY):
+        filler_spec.append("[](TRUE)")
+    if not formula.getConjunctsByType(LTLFormulaType.LIVENESS):
+        filler_spec.append("[]<>(TRUE)")
+
+    return " & ".join(filler_spec) 
+
+def flattenLTLFormulas(f):
+    if isinstance(f, LTLFormula):
+        return str(f)
+
+    # If we've received a list of LTLFormula, assume that they should be conjoined
+    if isinstance(f, list) and all((isinstance(sf, LTLFormula) for sf in f)):
+        return " & \n".join([str(sf) for sf in f])
+
+    if isinstance(f, str):
+        return f
+
+    raise ValueError("Invalid formula type: must be either string, LTLFormula, or LTLFormula list")
+
 def createLTLfile(fileName, spec_env, spec_sys):
     ''' This function writes the LTL file. It encodes the specification and 
     topological relation. 
@@ -120,7 +150,13 @@ def createLTLfile(fileName, spec_env, spec_sys):
     a specification
     '''
 
-    fileName = fileName + '.ltl'
+    spec_env = flattenLTLFormulas(spec_env)
+    spec_sys = flattenLTLFormulas(spec_sys)
+
+    # Force .ltl suffix
+    if not fileName.endswith('.ltl'):
+        fileName = fileName + '.ltl'
+
     ltlFile = open(fileName, 'w')
 
     # Write the header and begining of the formula
@@ -132,25 +168,26 @@ def createLTLfile(fileName, spec_env, spec_sys):
     ltlFile.write('LTLSPEC -- Assumptions\n')
     ltlFile.write('\t(\n')
 
-    # TODO: only do this if necessary
-    ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE)\n')
+    filler = createNecessaryFillerSpec(spec_env) 
+    if filler: 
+        ltlFile.write('\t' + filler + ' & \n')
 
     # Write the environment assumptions
     # from the 'spec' input 
     if spec_env.strip() != "":
-        ltlFile.write('\t\t&\n' + spec_env)
+        ltlFile.write(spec_env)
     ltlFile.write('\n\t);\n\n')
 
     ltlFile.write('LTLSPEC -- Guarantees\n')
     ltlFile.write('\t(\n')
 
-    # TODO: only do this if necessary
-    ltlFile.write('\tTRUE & [](TRUE) & []<>(TRUE) \n')
-
+    filler = createNecessaryFillerSpec(spec_sys) 
+    if filler: 
+        ltlFile.write('\t' + filler + ' & \n')
 
     # Write the desired robot behavior
     if spec_sys.strip() != "":
-        ltlFile.write('\t\t&\n' + spec_sys)
+        ltlFile.write(spec_sys)
 
     # Close the LTL formula
     ltlFile.write('\n\t);\n')
