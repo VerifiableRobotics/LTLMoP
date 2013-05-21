@@ -10,13 +10,6 @@
 
 # TODO: Document better
 
-import os, sys
-import fileMethods, regions
-from numpy import *
-import handlerSubsystem
-import inspect
-
-
 def get_ltlmop_root():
     # Climb the tree to find out where we are
     p = os.path.abspath(__file__)
@@ -28,6 +21,12 @@ def get_ltlmop_root():
             return None
 
     return os.path.join(p, "src")
+
+import os, sys
+import fileMethods, regions
+from numpy import *
+import handlerSubsystem
+import inspect
 
 class Project:
     """

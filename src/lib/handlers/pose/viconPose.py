@@ -12,7 +12,7 @@ import _pyvicon
 class poseHandler:
     def __init__(self, proj, shared_data,host,port,x_VICON_name,y_VICON_name,theta_VICON_name):
         """
-        Posw handler for VICON system
+        Pose handler for VICON system
 
         host (string): The ip address of VICON system (default="10.0.0.102")
         port (int): The port of VICON system (default=800)
