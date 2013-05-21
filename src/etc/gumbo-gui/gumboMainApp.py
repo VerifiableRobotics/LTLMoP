@@ -123,7 +123,7 @@ class GumboMainFrame(wx.Frame):
         self.executorProxy.registerExternalEventTarget("http://localhost:{}".format(config.gumbo_gui_listen_port))
 
         # Start dialogue manager
-        self.dialogueManager = BarebonesDialogueManager(self.executorProxy, self.proj.specText)
+        self.dialogueManager = BarebonesDialogueManager(self.executorProxy)
 
         # Tell the user we are ready
         self.appendLog("Hello.", "System")
@@ -294,8 +294,8 @@ class BarebonesDialogueManager(object):
         elif msg == "go":
             # pause
             self.executor.pause()
-            # add in initial state
-            # synthesize
+            # trigger resynthesis
+            self.executor.resynthesizeFromNewSpecification(self.getSpec())
             # resume
             self.executor.resume()
             return "doing what you said"
@@ -303,8 +303,8 @@ class BarebonesDialogueManager(object):
             self.executor.pause()
             return "pausing"
         elif msg == "status":
-            # print current goal
-            return "i'm doing stuff"
+            curr_goal_num = self.executor.getCurrentGoalNumber()
+            return "currently pursuing goal #{}!".format(curr_goal_num)
         elif msg == "list":
             return "\n".join(self.spec)
         else:
