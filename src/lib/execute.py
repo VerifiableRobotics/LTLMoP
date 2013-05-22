@@ -22,12 +22,13 @@ import sys, os, getopt, textwrap
 import threading, subprocess, time
 import fsa, project
 from copy import deepcopy
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 import xmlrpclib
 import socket
 import specCompiler
 import random
 import math
+import traceback
 from resynthesis import ExecutorResynthesisExtensions
 
 
@@ -288,6 +289,15 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             last_gui_update_time = self.timer_func()
 
         print "execute.py quitting..."
+
+    # This function is necessary to prevent xmlrpcserver from catching
+    # exceptions and eating the tracebacks
+    def _dispatch(self, method, args): 
+        try: 
+            return getattr(self, method)(*args) 
+        except: 
+            traceback.print_exc()
+            raise
 
 class RedirectText:
     def __init__(self, event_handler):
