@@ -259,7 +259,11 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         while self.alive.isSet():
             # Idle if we're not running
             if not self.runFSA.isSet():
-                self.proj.h_instance['drive'].setVelocity(0,0)
+                try:
+                    self.proj.h_instance['motionControl'].stop()
+                except AttributeError:
+                    self.proj.h_instance['drive'].setVelocity(0,0)
+
                 # wait for either the FSA to unpause or for termination
                 while (not self.runFSA.wait(0.1)) and self.alive.isSet():
                     pass
