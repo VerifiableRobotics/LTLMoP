@@ -8,7 +8,7 @@
 
     :Usage: ``execute.py [-hn] [-p listen_port] [-a automaton_file] [-s spec_file]``
 
-    * The controlling automaton is imported from the specified ``automaton_file``. If no automaton is specified, one with the same prefix as the spec file will be tried.
+    * The controlling automaton is imported from the specified ``automaton_file``.
 
     * The supporting handler modules (e.g. sensor, actuator, motion control, simulation environment initialization, etc)
       are loaded according to the settings in the config file specified as current in the ``spec_file``.
@@ -22,13 +22,14 @@ import sys, os, getopt, textwrap
 import threading, subprocess, time
 import fsa, project
 from copy import deepcopy
-from SimpleXMLRPCServer import SimpleXMLRPCServer
+from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 import xmlrpclib
 import socket
 import specCompiler
-import itertools
 import random
-import re, math
+import math
+import traceback
+from resynthesis import ExecutorResynthesisExtensions
 
 
 ####################
@@ -52,7 +53,7 @@ def usage(script_name):
                               -s FILE, --spec-file FILE:
                                   Load experiment configuration from FILE """ % script_name)
 
-class LTLMoPExecutor(object):
+class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
     """
     This is the main execution object, which combines the synthesized discrete automaton
     with a set of handlers (as specified in a .config file) to create and run a hybrid controller
@@ -64,6 +65,7 @@ class LTLMoPExecutor(object):
         """
 
         self.proj = project.Project() # this is the project that we are currently using to execute
+        self.aut = None
 
         # Choose a timer func with maximum accuracy for given platform
         if sys.platform in ['win32', 'cygwin']:
@@ -114,85 +116,6 @@ class LTLMoPExecutor(object):
 
         return region
 
-    def doResynthesis(self, proj):
-        """Resynthesize with a given Project, and then restart execution using the resulting automaton.
-           Returns True on success, False on failure"""
-
-        print "Starting resynthesis..."
-        
-        c = specCompiler.SpecCompiler()
-        c.proj = proj
-
-        # make sure rfi is non-decomposed here
-        # NOTE: only matters if this is a proj that has been initialized
-        if c.proj == self.proj:
-            print "Resynthesis not necessary! (Specification has not changed)"
-            return True
-
-        #c.proj.loadRegionFile(decomposed=False)
-
-        (realizable, realizableFS, output) = c.compile()
-        print output
-
-        if not (realizable or realizableFS):
-            print "!!!!!!!!!!!!!!!!!!!!!!"
-            print "ERROR: UNSYNTHESIZABLE"
-            print "!!!!!!!!!!!!!!!!!!!!!!"
-            self.runFSA.clear()
-            print "PAUSED."
-            return False
-
-        print "New automaton has been created."
-
-        self.proj = proj
-
-        print "Reinitializing execution..."
-
-        aut_file = self.proj.getFilenamePrefix() + ".aut"
-        self.initialize(None, aut_file, firstRun=False)
-
-        return True
-
-    def rewriteSpec(self, proj, n=itertools.count(1)):
-        # reload from file instead of deepcopy because hsub stuff can include uncopyable thread locks, etc
-        new_proj = project.Project()
-        new_proj.setSilent(True)
-        new_proj.loadProject(proj.getFilenamePrefix() + ".spec")
-
-        # copy hsub references manually
-        new_proj.hsub = self.proj.hsub
-        new_proj.hsub.proj = new_proj # oh my god, guys
-        new_proj.h_instance = self.proj.h_instance
-        
-        new_proj.sensor_handler = self.proj.sensor_handler
-        new_proj.actuator_handler = self.proj.actuator_handler
-
-        base_name = proj.getFilenamePrefix().rsplit('.',1)[0] # without the modifier
-        newSpecName = "%s.step%d.spec" % (base_name, n.next())
-
-        # Constrain initial condition to current state
-        # FIXME: We probably ought to constrain to the decomposed region, not the larger one
-        current_region = new_proj.rfi.regions[self._getCurrentRegionFromPose(rfi=new_proj.rfi)].name
-        current_sys_state = " and ".join([k if v else "not " + k for k,v in self.aut.current_outputs.iteritems() if not k.startswith("_") and not k.startswith("m_")])
-        sys_init_formula = "robot starts in {0} with {1}\n".format(current_region, current_sys_state)
-
-        # delete old ones
-        r = re.compile("^robot\s+starts\s+(in|with).*\n", flags=re.IGNORECASE|re.MULTILINE)
-        new_proj.specText = r.sub("", new_proj.specText)
-        # TODO: can we constrain the environment more?
-        r = re.compile("^env(ironment)?\s+starts\s+with.*\n", flags=re.IGNORECASE|re.MULTILINE)
-        new_proj.specText = r.sub("", new_proj.specText)
-
-        # prepend to beginning
-        new_proj.specText = sys_init_formula + new_proj.specText
-
-        new_proj.writeSpecFile(newSpecName)
-
-        print "Wrote new spec file: %s" % newSpecName
-
-        return new_proj
-        
-
     def shutdown(self):
         self.runFSA.clear()
         print >>sys.__stderr__, "QUITTING."
@@ -219,12 +142,26 @@ class LTLMoPExecutor(object):
         self.alive.clear()
 
     def pause(self):
+        """ pause execution of the automaton """
         self.runFSA.clear()
         time.sleep(0.1) # Wait for FSA to stop
         self.postEvent("PAUSE")
 
     def resume(self):
+        """ start/resume execution of the automaton """
         self.runFSA.set()
+
+    def isRunning(self):
+        """ return whether the automaton is currently executing """
+        return self.runFSA.isSet()
+
+    def getCurrentGoalNumber(self):
+        """ Return the index of the goal currently being pursued (jx).
+            If no automaton is loaded, return None. """
+        if not self.aut:
+            return None
+        else:
+            return self.aut.next_state.rank
 
     def registerExternalEventTarget(self, address):
         self.externalEventTarget = xmlrpclib.ServerProxy(address, allow_none=True)
@@ -245,8 +182,9 @@ class LTLMoPExecutor(object):
         """
 
         # load project only first time; otherwise self.proj is modified in-place
-        # TODO: what? ^^^
-        self.loadSpecFile(spec_file)
+        # TODO: make this less hacky
+        if firstRun:
+            self.loadSpecFile(spec_file)
 
         self.proj.rfiold = self.proj.rfi  # Save the undecomposed regions
         self.proj.rfi = self.proj.loadRegionFile(decomposed=True)
@@ -262,13 +200,15 @@ class LTLMoPExecutor(object):
             print "Importing handler functions..."
             self.proj.importHandlers()
         else:
-            print "Reloading motion control handler..."
-            self.proj.importHandlers(['motionControl'])
+            #print "Reloading motion control handler..."
+            #self.proj.importHandlers(['motionControl'])
+            pass
+
+        # We are done initializing at this point if there is no aut file yet
+        if aut_file is None:
+            return
 
         # Load automaton file
-        if aut_file is None:
-            aut_file = self.proj.getFilenamePrefix() + ".aut"
-
         new_aut = self.loadAutFile(aut_file)
 
         if firstRun:
@@ -287,7 +227,7 @@ class LTLMoPExecutor(object):
 
         ### Have the FSA find a valid initial state
 
-        if firstRun:
+        if firstRun or self.aut is None:
             # Figure out our initially true outputs
             init_outputs = []
             for prop in self.proj.currentConfig.initial_truths:
@@ -350,6 +290,15 @@ class LTLMoPExecutor(object):
 
         print "execute.py quitting..."
 
+    # This function is necessary to prevent xmlrpcserver from catching
+    # exceptions and eating the tracebacks
+    def _dispatch(self, method, args): 
+        try: 
+            return getattr(self, method)(*args) 
+        except: 
+            traceback.print_exc()
+            raise
+
 class RedirectText:
     def __init__(self, event_handler):
         self.event_handler = event_handler
@@ -405,6 +354,8 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
 
     if spec_file is not None:
         # Tell executor to load spec & aut
+        #if aut_file is None:
+        #    aut_file = spec_file.rpartition('.')[0] + ".aut"
         e.initialize(spec_file, aut_file, firstRun=True)
 
     # Start the executor's main loop in this thread

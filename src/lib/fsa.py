@@ -15,6 +15,30 @@ import numpy
 import fileMethods
 
 
+def stateToLTL(state, use_next=False, include_env=True, swap_io=False):
+    """ swap_io is for the counterstrategy aut in mopsy """
+
+    def decorate_prop(prop, polarity):
+        if int(polarity) == 0:
+            prop = "!"+prop
+        if use_next:
+            prop = "next({})".format(prop)
+        return prop
+        
+    inputs = state.inputs
+    outputs = state.outputs
+
+    if swap_io:
+        inputs, outputs = outputs, inputs
+
+    sys_state = " & ".join([decorate_prop("s."+p, v) for p,v in outputs.iteritems()])
+
+    if include_env:
+        env_state = " & ".join([decorate_prop("e."+p, v) for p,v in inputs.iteritems()])
+        return " & ".join([env_state, sys_state])
+    else:
+        return sys_state
+
 ###########################################################
 
 class FSA_State:
@@ -112,8 +136,6 @@ class Automaton:
                 print trans.name
                 
                 
-                
-
     def updateOutputs(self, state=None):
         """
         Update the values of current outputs in our execution environment to reflect the output

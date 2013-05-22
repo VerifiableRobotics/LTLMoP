@@ -379,17 +379,6 @@ class MopsyFrame(wx.Frame):
         self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+2), 0)
 
 
-    def stateToLTL(self, state, use_next=False):
-        def decorate_prop(prop, polarity):
-            if int(polarity) == 0:
-                prop = "!"+prop
-            if use_next:
-                prop = "next({})".format(prop)
-            return prop
-            
-        sys_state = " & ".join([decorate_prop("s."+p, v) for p,v in state.inputs.iteritems()])
-        env_state = " & ".join([decorate_prop("e."+p, v) for p,v in state.outputs.iteritems()])
-        return env_state + " & " + sys_state
 
     def showCore(self):
         """
@@ -418,11 +407,11 @@ class MopsyFrame(wx.Frame):
         # TODO: actually cache trans CNF
         # TODO: support SLURP parser
 
-        ltl_current = self.stateToLTL(self.env_aut.current_state).strip()
+        ltl_current = fsa.stateToLTL(self.env_aut.current_state, swap_io=True).strip()
         next_state = copy.deepcopy(self.env_aut.current_state.transitions[0])
         next_state.inputs.update(self.actuatorStates)
         next_state.inputs.update(self.regionToBitEncoding(self.dest_region))
-        ltl_next = self.stateToLTL(next_state, use_next=True).strip()
+        ltl_next = fsa.stateToLTL(next_state, use_next=True, swap_io=True).strip()
         ltl_topo = self.spec['Topo'].replace('\n','').replace('\t','').strip()
         ltl_trans = [s.strip() for s in self.spec['SysTrans'].split('\n')]
         # note: strip()s make canonical (i.e. terminate in &, no whitespace on either side)
