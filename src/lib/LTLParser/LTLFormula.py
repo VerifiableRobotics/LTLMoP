@@ -103,7 +103,9 @@ class LTLFormula(object):
 
     def getConjuncts(self):
         if not self.tree[0] == "Conjunction":
-            raise ValueError("Highest level not conjunction")
+            # This can happen if there is only one conjunct in the spec, for example
+            logging.warning("Highest level not conjunction")
+            return [self]
         
         return [LTLFormula(t) for t in self.tree[1:]]
 
