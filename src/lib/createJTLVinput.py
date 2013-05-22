@@ -10,7 +10,7 @@
 import math
 import parseEnglishToLTL
 import textwrap
-from LTLParser.LTLFormula import LTLFormula, LTLFormulaType
+from LTLParser.LTLFormula import LTLFormula, LTLFormulaType, treeToString
 
 def createSMVfile(fileName, sensorList, robotPropList):
     ''' This function writes the skeleton SMV file.
@@ -134,7 +134,7 @@ def flattenLTLFormulas(f):
 
     # If we've received a list of LTLFormula, assume that they should be conjoined
     if isinstance(f, list) and all((isinstance(sf, LTLFormula) for sf in f)):
-        return " & \n".join([str(sf) for sf in f])
+        return " & \n".join([treeToString(sf.tree, top_level=False) for sf in f])
 
     if isinstance(f, str):
         return f
