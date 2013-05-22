@@ -92,7 +92,7 @@ class GumboMainFrame(wx.Frame):
 
         # Start execution context
         print "Starting executor..."
-        self.executorProcess = multiprocessing.Process(target=execute.execute_main, args=(config.executor_listen_port, self.proj.getFilenamePrefix()+".spec", self.proj.getFilenamePrefix()+".aut", False))
+        self.executorProcess = multiprocessing.Process(target=execute.execute_main, args=(config.executor_listen_port, self.proj.getFilenamePrefix()+".spec", None, False))
         self.executorProcess.start()
 
         # Connect to executor
@@ -303,8 +303,14 @@ class BarebonesDialogueManager(object):
             self.executor.pause()
             return "pausing"
         elif msg == "status":
+            if not self.executor.isRunning():
+                return "currently paused."
+
             curr_goal_num = self.executor.getCurrentGoalNumber()
-            return "currently pursuing goal #{}!".format(curr_goal_num)
+            if curr_goal_num is None:
+                return "not doing anything."
+            else:
+                return "currently pursuing goal #{}!".format(curr_goal_num)
         elif msg == "list":
             return "\n".join(self.spec)
         else:
