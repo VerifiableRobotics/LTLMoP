@@ -244,12 +244,19 @@ class SpecCompiler(object):
         elif self.proj.compile_options["parser"] == "structured":
             import parseEnglishToLTL
 
-            # substitute decomposed region 
-            for r in self.proj.rfi.regions:
-                if not (r.isObstacle or r.name.lower() == "boundary"):
-                    text = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
+            if self.proj.compile_options["decompose"]:
+                # substitute decomposed region 
+                for r in self.proj.rfi.regions:
+                    if not (r.isObstacle or r.name.lower() == "boundary"):
+                        text = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
 
-            regionList = ["s."+x.name for x in self.parser.proj.rfi.regions]
+                regionList = ["s."+x.name for x in self.parser.proj.rfi.regions]
+            else:
+                for r in self.proj.rfi.regions:
+                    if not (r.isObstacle or r.name.lower() == "boundary"):
+                        text = re.sub('\\b' + r.name + '\\b', "s."+r.name, text)
+
+                regionList = ["s."+x.name for x in self.proj.rfi.regions]
 
             spec, traceback, failed, self.LTL2SpecLineNumber, self.proj.internal_props = parseEnglishToLTL.writeSpec(text, sensorList, regionList, robotPropList)
 
@@ -266,7 +273,10 @@ class SpecCompiler(object):
             print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
             return None, None, None
 
-        regionList = [x.name for x in self.parser.proj.rfi.regions]
+        if self.proj.compile_options["decompose"]:
+            regionList = [x.name for x in self.parser.proj.rfi.regions]
+        else:
+            regionList = [x.name for x in self.proj.rfi.regions]
 
         if self.proj.compile_options["use_region_bit_encoding"]:
             # Define the number of bits needed to encode the regions
@@ -295,7 +305,10 @@ class SpecCompiler(object):
 
         # Store some data needed for later analysis
         self.spec = {}
-        self.spec['Topo'] = createTopologyFragment(adjData, self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+        if self.proj.compile_options["decompose"]:
+            self.spec['Topo'] = createTopologyFragment(adjData, self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+        else: 
+            self.spec['Topo'] = createTopologyFragment(adjData, self.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
 
         # Substitute any macros that the parsers passed us
         LTLspec_env = self.substituteMacros(LTLspec_env)
@@ -318,7 +331,10 @@ class SpecCompiler(object):
         self.spec.update(self.splitSpecIntoComponents(LTLspec_env, LTLspec_sys))
 
         # Add in a fragment to make sure that we start in a valid region
-        self.spec['InitRegionSanityCheck'] = createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+        if self.proj.compile_options["decompose"]:
+            self.spec['InitRegionSanityCheck'] = createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
+        else:
+            self.spec['InitRegionSanityCheck'] = createInitialRegionFragment(self.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
         LTLspec_sys += "\n&\n" + self.spec['InitRegionSanityCheck']
 
         LTLspec_sys += "\n&\n" + self.spec['Topo']

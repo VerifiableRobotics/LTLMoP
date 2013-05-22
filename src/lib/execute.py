@@ -186,9 +186,9 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         if firstRun:
             self.loadSpecFile(spec_file)
 
-        self.proj.rfiold = self.proj.rfi  # Save the undecomposed regions
-        self.proj.rfi = self.proj.loadRegionFile(decomposed=True)
-        self.proj.hsub.proj = self.proj  # FIXME: this is kind of ridiculous...
+            if self.proj.compile_options['decompose']:
+                self.proj.rfiold = self.proj.rfi  # Save the undecomposed regions
+                self.proj.rfi = self.proj.loadRegionFile(decomposed=True)
 
         if self.proj.currentConfig is None:
             print "ERROR: Can not simulate without a simulation configuration."
