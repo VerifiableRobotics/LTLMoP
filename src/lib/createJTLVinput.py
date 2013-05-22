@@ -136,7 +136,7 @@ def flattenLTLFormulas(f):
     if isinstance(f, list) and all((isinstance(sf, LTLFormula) for sf in f)):
         return " & \n".join([treeToString(sf.tree, top_level=False) for sf in f])
 
-    if isinstance(f, str):
+    if isinstance(f, basestring):
         return f
 
     raise ValueError("Invalid formula type: must be either string, LTLFormula, or LTLFormula list")
