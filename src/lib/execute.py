@@ -167,10 +167,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         self.externalEventTarget = xmlrpclib.ServerProxy(address, allow_none=True)
 
         # Redirect all output to the log
-        redir = RedirectText(self.externalEventTarget.handleEvent)
+        #redir = RedirectText(self.externalEventTarget.handleEvent)
 
-        sys.stdout = redir
-        sys.stderr = redir
+        #sys.stdout = redir
+        #sys.stderr = redir
 
         self.externalEventTargetRegistered.set()
 
