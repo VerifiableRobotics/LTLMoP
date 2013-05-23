@@ -1058,7 +1058,14 @@ class RobotFileParser:
             logging.ERROR("Cannot load robot: %s" % os.path.basename(fileName).split('.')[0])
             return
 
-        return self.loadRobotData(robot_data)
+        robotObj = self.loadRobotData(robot_data)
+
+        for handler_type in robotObj.handlers.keys():
+            if robotObj.handlers[handler_type] is None:
+                logging.warning("Default {} handler specified in .robot file for {!r} could not be loaded".format(handler_type, robotObj.type))
+
+        return robotObj
+
 
     def loadRobotData(self,robot_data):
         """
