@@ -25,10 +25,11 @@ import globalConfig, logging
 ###################################################
 # Define individual objects for handler subsystem #
 ###################################################
-class ParameterObject:
+class MethodParameterConfig:
     """
-    A parameter object
-    Each object represents one parameter of a given method
+    An argument to a handler method
+    Contains name, description, type, value, and default as determined
+    by performing introspection on the individual handler modules
     """
 
     def __init__(self,para_name=""):
