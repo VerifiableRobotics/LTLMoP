@@ -18,7 +18,8 @@ class ExecutorResynthesisExtensions:
         if self.aut:
             # If we have current state in the automaton, use it (since it can capture
             # state of internal propositions).
-            return fsa.stateToLTL(self.aut.current_state, include_env=include_env)
+            return ""
+            #return fsa.stateToLTL(self.aut.current_state, include_env=include_env)
         else:
             # If we have no automaton yet, determine our state manually
             # TODO: support env
