@@ -23,4 +23,4 @@ SensorHandler: # Robot default sensor handler with default argument values
 gumboSensor()
 
 ActuatorHandler: # Robot default actuator handler with default argument values
-nullActuator()
+gumboActuator()
