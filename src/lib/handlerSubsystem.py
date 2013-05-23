@@ -517,6 +517,7 @@ class HandlerSubsystem:
 
             if handlerObj is None:
                 logging.error("Cannot recognize robot {}".format(robotName)) 
+                logging.error("I only know about these robots: {!r}".format([r.name for r in self.robots]))
                 return
 
             for method_obj in handlerObj.methods:
@@ -611,11 +612,11 @@ class HandlerSubsystem:
             for robotName,handlerObj in self.h_obj[handler_type].iteritems():
                 # get handler class object for initiating
                 fileName = handlerObj.fullPath(robotName,configObj)
-                logging.info(" -> Loading handler:\t%s" % fileName.split('.')[-1])
+                logging.info("Loading handler: %s" % fileName.split('.')[-1])
                 try:
                     __import__(fileName)
                 except ImportError as import_error:
-                    logging.error(" -> Failed to import handler %s : %s" % (fileName.split('.')[-1],import_error))
+                    logging.error("Failed to import handler %s : %s" % (fileName.split('.')[-1],import_error))
 
                 handlerModule = sys.modules[fileName]
                 allClass = inspect.getmembers(handlerModule,inspect.isclass)
@@ -643,6 +644,7 @@ class HandlerSubsystem:
         # initialize sensor and actuator methods
         # first need to get the method used for sensor and actuator
 
+        logging.info("Initializing sensor/actuator methods...")
         for prop in self.proj.enabled_sensors:
             if prop in configObj.prop_mapping:
                 method = configObj.prop_mapping[prop]
@@ -855,11 +857,11 @@ class HandlerParser:
                                        [^,\s]*    # other
                                     )""")
         # Try to load the handler file
-        logging.info(" -> Loading handler:\t%s" % handlerFile.split('.')[-1])
+        logging.info("Inspecting handler: %s" % handlerFile.split('.')[-1])
         try:
             __import__(handlerFile)
         except Exception as e:
-            logging.warning(" -> Failed to import handler {0} : {1}".format(handlerFile.split('.')[-1],e))
+            logging.warning("Failed to import handler {0} : {1}".format(handlerFile.split('.')[-1],e))
             if not isinstance(e, ImportError):
                 logging.debug(traceback.format_exc())
             return handlerObj
@@ -932,13 +934,13 @@ class HandlerParser:
                                         try:
                                             for k, v in settingRE.findall(m.group('range')):
                                                 if k.lower() not in ['default', 'min', 'max', 'options']:
-                                                    logging.warning(' -> Unrecognized setting name "{}" for parameter "{}" of method "{}"'.format(k.lower(), m.group('argName'), methodName))
+                                                    logging.warning('Unrecognized setting name "{}" for parameter "{}" of method "{}"'.format(k.lower(), m.group('argName'), methodName))
                                                     continue
 
                                                 setattr(paraObj, k.lower(), json.loads(v.lower()))
                                         except ValueError:
                                             # LOG AN ERROR HERE
-                                            logging.warning(' -> Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'), methodName))
+                                            logging.warning('Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'), methodName))
 
                                         paraObj.resetValue()
 
@@ -1044,12 +1046,12 @@ class RobotFileParser:
         """
         Given a robot file, return a dictionary holding its information
         """
-        logging.debug(" -> Loading robot:\t\t%s" % os.path.basename(fileName).split('.')[0])
+        logging.debug("Loading robot: %s" % os.path.basename(fileName).split('.')[0])
         try:
             # try to load the robot file
             robot_data = fileMethods.readFromFile(fileName)
         except IOError:
-            logging.ERROR(" -> Cannot load robot: %s" % os.path.basename(fileName).split('.')[0])
+            logging.ERROR("Cannot load robot: %s" % os.path.basename(fileName).split('.')[0])
             return
 
         return self.loadRobotData(robot_data)
@@ -1189,7 +1191,7 @@ class ConfigFileParser:
         if not fileName.endswith('.config'):
             fileName = fileName+'.config'
         
-        logging.debug("Loading config:\t{}".format(os.path.basename(fileName).split('.')[0]))
+        logging.debug("Loading config: {}".format(os.path.basename(fileName).split('.')[0]))
         # create a config object and update its name and fileName
         configObj = ConfigObject()
         configObj.fileName= fileName
