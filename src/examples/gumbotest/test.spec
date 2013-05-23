@@ -9,7 +9,7 @@ panic, 1
 
 CompileOptions:
 convexify: False
-parser: structured
+parser: slurp
 fastslow: False
 decompose: False
 use_region_bit_encoding: True
@@ -44,9 +44,5 @@ hall = hall
 kitchen = kitchen
 
 Spec: # Specification in structured English
-group cool_places is classroom1
-do panic if and only if you are sensing badguy
-if you are not sensing badguy then visit all cool_places
-
-if you are sensing start of badguy or end of badguy then stay there
+Patrol the office and the lounge.
 
