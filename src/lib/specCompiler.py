@@ -394,7 +394,10 @@ class SpecCompiler(object):
                     text = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
                     text = re.sub('\\be\.' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
 
-        regionList = [x.name for x in self.parser.proj.rfi.regions]
+        if self.proj.compile_options["decompose"]:
+            regionList = [x.name for x in self.parser.proj.rfi.regions]
+        else:
+            regionList = [x.name for x in self.proj.rfi.regions]
 
         # Define the number of bits needed to encode the regions
         numBits = int(math.ceil(math.log(len(regionList),2)))
