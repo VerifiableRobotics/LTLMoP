@@ -872,8 +872,8 @@ class HandlerParser:
             # if there are multiple classes without underscore, then prefer the one ends with "handler"
             # each handler file should only have one main class not starts with underscore
             # the underscore classes are those used by the main class by not concerned by the user
-            if classObj[1].__module__ == handlerFile and not (classObj[0].startswith('_') or \
-                re.match('\w+handler', classObj[0])):
+            if classObj[1].__module__ == handlerFile and (not classObj[0].startswith('_') or \
+                re.match('\w+handler', classObj[0], re.I)):
                 handlerClass = classObj[1]
                 break
 
