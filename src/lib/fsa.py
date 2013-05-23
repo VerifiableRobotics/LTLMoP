@@ -489,17 +489,6 @@ class Automaton:
         # Define our pool of states to select from
         if initial:
             state_list = self.states
-
-            # initialize all sensor and actuators
-            for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
-                if prop in self.sensors:
-                    for code in codes:
-                        eval(code, {'self':self,'initial':True})
-            for prop,codes in self.actuator_handler['initializing_handler'].iteritems():
-                if prop in self.actuators:
-                    new_val = self.current_outputs[prop]
-                    for code in codes:
-                        eval(code, {'self':self,'initial':True,'new_val':new_val})
         else:
             state_list = self.current_state.transitions
 
