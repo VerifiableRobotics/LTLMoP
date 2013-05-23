@@ -277,8 +277,8 @@ class RobotObject:
                     if h_obj:
                         strRepr.append("{0}:{1}".format(key,val)) 
                         break
-
-            elif val: strRepr.append("{0}:{1}".format(key,val))
+            elif val is not None and val != "":
+                strRepr.append("{0}:{1}".format(key,val))
         
         # if all attributes have values of None or empty
         if not strRepr: 
