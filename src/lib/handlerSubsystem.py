@@ -514,6 +514,8 @@ class HandlerSubsystem:
                         else:
                             logging.error("Cannot recognize handler {}".format(handlerName)) 
                             return
+                        
+                        break
 
             if handlerObj is None:
                 logging.error("Cannot recognize robot {}".format(robotName)) 
@@ -794,6 +796,8 @@ class HandlerParser:
                                 else:
                                     onlyLoadInit = False
                                 # The handler object is stored as a list even there is only one item in the list
+                                if robotFolder in self.handler_dic[handler_type]:
+                                    logging.warning("Multiple handlers of same type in one robot folder.  Only using the last one!!!")
                                 self.handler_dic[handler_type][robotFolder] = [self.parseHandlers(h_file,handler_type,onlyLoadInit)]
 
     def loadHandler(self,folder,onlyLoadInit=False):
