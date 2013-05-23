@@ -117,14 +117,17 @@ def createNecessaryFillerSpec(spec_part):
         initial, safety, and liveness.  If any are not present,
         create trivial TRUE ones. """
 
-    filler_spec = []
-    formula = LTLFormula.fromString(spec_part)
-    if not formula.getConjunctsByType(LTLFormulaType.INITIAL):
-        filler_spec.append("TRUE")
-    if not formula.getConjunctsByType(LTLFormulaType.SAFETY):
-        filler_spec.append("[](TRUE)")
-    if not formula.getConjunctsByType(LTLFormulaType.LIVENESS):
-        filler_spec.append("[]<>(TRUE)")
+    if spec_part.strip() == "":
+        filler_spec = ["TRUE", "[](TRUE)", "[]<>(TRUE)"]
+    else:
+        formula = LTLFormula.fromString(spec_part)
+        filler_spec = []
+        if not formula.getConjunctsByType(LTLFormulaType.INITIAL):
+            filler_spec.append("TRUE")
+        if not formula.getConjunctsByType(LTLFormulaType.SAFETY):
+            filler_spec.append("[](TRUE)")
+        if not formula.getConjunctsByType(LTLFormulaType.LIVENESS):
+            filler_spec.append("[]<>(TRUE)")
 
     return " & ".join(filler_spec) 
 
@@ -170,11 +173,13 @@ def createLTLfile(fileName, spec_env, spec_sys):
 
     filler = createNecessaryFillerSpec(spec_env) 
     if filler: 
-        ltlFile.write('\t' + filler + ' & \n')
+        ltlFile.write('\t' + filler)
 
     # Write the environment assumptions
     # from the 'spec' input 
     if spec_env.strip() != "":
+        if filler:
+            ltlFile.write('& \n')
         ltlFile.write(spec_env)
     ltlFile.write('\n\t);\n\n')
 
@@ -187,6 +192,8 @@ def createLTLfile(fileName, spec_env, spec_sys):
 
     # Write the desired robot behavior
     if spec_sys.strip() != "":
+        if filler:
+            ltlFile.write('& \n')
         ltlFile.write(spec_sys)
 
     # Close the LTL formula
