@@ -868,6 +868,10 @@ class SpecEditorFrame(wx.Frame):
     def openFile(self, filename):
         proj = project.Project()
 
+        # If necessary, try appending ".spec"
+        if not os.path.exists(filename):
+            filename = os.path.splitext(filename)[0] + ".spec"
+
         if not proj.loadProject(filename):
             wx.MessageBox("Cannot open specification file %s" % (filename), "Error",
                         style = wx.OK | wx.ICON_ERROR)
