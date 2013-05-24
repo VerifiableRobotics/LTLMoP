@@ -30,6 +30,7 @@ import random
 import math
 import traceback
 from resynthesis import ExecutorResynthesisExtensions
+import globalConfig, logging
 
 
 ####################
@@ -75,14 +76,24 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
         self.externalEventTarget = None
         self.externalEventTargetRegistered = threading.Event()
+        self.postEventLock = threading.Lock()
         self.runFSA = threading.Event()  # Start out paused
         self.alive = threading.Event()
         self.alive.set()
 
     def postEvent(self, eventType, eventData=None):
         """ Send a notice that an event occurred, if anyone wants it """
-        if self.externalEventTarget is not None:
-            self.externalEventTarget.handleEvent(eventType, eventData)
+        
+        if self.externalEventTarget is None:
+            return
+
+        with self.postEventLock:
+            try:
+                self.externalEventTarget.handleEvent(eventType, eventData)
+            except socket.error as e:
+                logging.warning("Could not send event to remote event target: %s", e)
+                logging.warning("Forcefully unsubscribing target.")
+                self.externalEventTarget = None
 
     def loadSpecFile(self, filename):
         # Update with this new project
