@@ -16,12 +16,12 @@ decompose: False
 use_region_bit_encoding: True
 
 CurrentConfigName:
-sim
+ros
 
 Customs: # List of custom propositions
 
 RegionFile: # Relative path of region description file
-nerve_for_basicsim.regions
+nerve.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
 bomb, 1
@@ -33,19 +33,18 @@ sweep_done, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 classroom1 = classroom1
 east_hall = east_hall
-cafeteria = cafeteria
+classroom2 = classroom2
+receiving = receiving
 closet = closet
 office = office
 entrance = entrance
 library = library
 lounge = lounge
-classroom2 = classroom2
 lab = lab
-receiving = receiving
+cafeteria = cafeteria
 hall = hall
 kitchen = kitchen
 
 Spec: # Specification in structured English
-Go to the office and classroom1.
-If you see a bomb, defuse it.
+
 

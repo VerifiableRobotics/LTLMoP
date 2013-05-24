@@ -32,7 +32,7 @@ sys.path.append(os.path.join(p,"src","lib"))
 ############## CONFIGURATION SECTION ##################
 #######################################################
 class config:
-    base_spec_file = os.path.join(ltlmop_root, "src", "examples", "gumbotest", "test.spec")
+    base_spec_file = os.path.join(ltlmop_root, "src", "examples", "gumbotest", "skeleton.spec")
     #base_spec_file = os.path.join(ltlmop_root, "src", "examples", "firefighting", "firefighting.spec")
     executor_listen_port = 20000
     gumbo_gui_listen_port = 20001
