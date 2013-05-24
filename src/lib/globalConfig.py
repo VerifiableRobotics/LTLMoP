@@ -37,6 +37,7 @@ def setupLogging(loggerLevel=None):
             
     logger = logging.getLogger()
     h = logging.StreamHandler()
+    h.addFilter(logging.Filter('root')) # filter rospy out
     f = ColorLogFormatter()
     h.setFormatter(f)
     logger.addHandler(h)
