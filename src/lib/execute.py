@@ -84,10 +84,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
     def postEvent(self, eventType, eventData=None):
         """ Send a notice that an event occurred, if anyone wants it """
         
-        if self.externalEventTarget is None:
-            return
-
         with self.postEventLock:
+            if self.externalEventTarget is None:
+                return
+
             try:
                 self.externalEventTarget.handleEvent(eventType, eventData)
             except socket.error as e:
