@@ -196,8 +196,7 @@ class GumboMainFrame(wx.Frame):
         # After ten seconds, just kill it
         if self.executorProcess.is_alive():
             self.executorProcess.terminate() 
-            self.executorProcess.join() 
-            
+
         event.Skip()
 
     def appendLog(self, message, agent=None):
