@@ -32,8 +32,8 @@ sys.path.append(os.path.join(p,"src","lib"))
 ############## CONFIGURATION SECTION ##################
 #######################################################
 class config:
-    #base_spec_file = os.path.join(ltlmop_root, "src", "examples", "gumbotest", "test.spec")
-    base_spec_file = os.path.join(ltlmop_root, "src", "examples", "firefighting", "firefighting.spec")
+    base_spec_file = os.path.join(ltlmop_root, "src", "examples", "gumbotest", "test.spec")
+    #base_spec_file = os.path.join(ltlmop_root, "src", "examples", "firefighting", "firefighting.spec")
     executor_listen_port = 20000
     gumbo_gui_listen_port = 20001
 
@@ -81,6 +81,7 @@ class GumboMainFrame(wx.Frame):
         self.mapBitmap = None
 
         self.robotPos = None
+        self.fiducialPositions = {}
 
         self.map_pane.Bind(wx.EVT_PAINT, self.onPaint)
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.onEraseBG)
@@ -162,6 +163,9 @@ class GumboMainFrame(wx.Frame):
         elif eventType == "POSE":
             self.robotPos = eventData
             wx.CallAfter(self.onPaint)
+        elif eventType == "FID":
+            # Update fiducial position
+            self.fiducialPositions[eventData[0]] = eventData[1:]
         else:
             print "[{}] {}".format(eventType, eventData)
 
@@ -255,7 +259,26 @@ class GumboMainFrame(wx.Frame):
         # Draw robot
         if self.robotPos is not None:
             [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
+            dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
             dc.DrawCircle(x, y, 5)
+
+        # Draw fiducials
+        for fid_name, fid_pos in self.fiducialPositions.iteritems():
+            [x,y] = map(lambda x: int(self.mapScale*x), fid_pos) 
+            dc.SetBrush(wx.Brush(wx.BLACK, wx.SOLID))
+            dc.DrawCircle(x, y, 5)
+
+            # Draw label
+            dc.SetTextForeground(wx.BLACK)
+            dc.SetBackgroundMode(wx.TRANSPARENT)
+            font = wx.Font(12, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.NORMAL, False)
+            dc.SetFont(font)
+            
+            textWidth, textHeight = dc.GetTextExtent(fid_name)
+            
+            textX = x + 8 # - textWidth/2
+            textY = y - 0.5*textHeight
+            dc.DrawText(fid_name, textX, textY)
 
 #        if self.markerPos is not None:
 #            [m,n] = map(lambda m: int(self.mapScale*m), self.markerPos) 
