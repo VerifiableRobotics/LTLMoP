@@ -172,8 +172,12 @@ class GumboMainFrame(wx.Frame):
             self.robotPos = eventData
             wx.CallAfter(self.onPaint)
         elif eventType == "FID":
-            # Update fiducial position
-            self.fiducialPositions[eventData[0]] = eventData[1:]
+            if eventData[1] is None:
+                # Hide the fiducial
+                del self.fiducialPositions[eventData[0]]
+            else:
+                # Update fiducial position
+                self.fiducialPositions[eventData[0]] = eventData[1:]
         elif eventType == "MESSAGE":
             # Provide a way for any part of LTLMoP to give feedback
             wx.CallAfter(self.appendLog, eventData, "System")
