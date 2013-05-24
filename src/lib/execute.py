@@ -89,6 +89,9 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         self.proj = project.Project()
         self.proj.loadProject(filename)
 
+        # HACK: store ref to executor in proj
+        self.proj.executor = self
+
         # Tell GUI to load the spec file
         self.postEvent("SPEC", self.proj.getFilenamePrefix() + ".spec")
 

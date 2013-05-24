@@ -143,6 +143,9 @@ class SimGUI_Frame(wx.Frame):
         Processes messages from the controller, and updates the GUI accordingly
         """
 
+        if eventType == "FID":
+            return
+
         # Update stuff (should put these in rough order of frequency for optimal speed
         if eventType == "FREQ":
             wx.CallAfter(self.sb.SetStatusText, "Running at approximately {}Hz...".format(eventData), 0)

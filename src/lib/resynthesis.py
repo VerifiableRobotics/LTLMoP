@@ -44,6 +44,9 @@ class ExecutorResynthesisExtensions:
         new_proj.sensor_handler = proj.sensor_handler
         new_proj.actuator_handler = proj.actuator_handler
 
+        # HACK: put executor ref in proj
+        new_proj.executor = self
+
         # Choose a name by incrementing the stepX suffix
         # Note: old files from previous executions will be overwritten
         base_name = self.proj.getFilenamePrefix().rsplit('.',1)[0] # without the modifier
