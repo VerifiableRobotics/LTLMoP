@@ -646,7 +646,6 @@ class HandlerSubsystem:
         # initialize sensor and actuator methods
         # first need to get the method used for sensor and actuator
 
-        logging.info("Initializing sensor/actuator methods...")
         for prop in self.proj.enabled_sensors:
             if prop in configObj.prop_mapping:
                 method = configObj.prop_mapping[prop]
