@@ -125,7 +125,7 @@ class GumboMainFrame(wx.Frame):
         self.executorProxy.registerExternalEventTarget("http://localhost:{}".format(config.gumbo_gui_listen_port))
 
         # Start dialogue manager
-        self.dialogueManager = BarebonesDialogueManager(self.executorProxy)
+        self.dialogueManager = BarebonesDialogueManager(self, self.executorProxy)
 
         # Figure out the user's name, if we can
         try:
@@ -174,6 +174,9 @@ class GumboMainFrame(wx.Frame):
         elif eventType == "FID":
             # Update fiducial position
             self.fiducialPositions[eventData[0]] = eventData[1:]
+        elif eventType == "MESSAGE":
+            # Provide a way for any part of LTLMoP to give feedback
+            wx.CallAfter(self.appendLog, eventData, "System")
         else:
             print "[{}] {}".format(eventType, eventData)
 
@@ -209,6 +212,8 @@ class GumboMainFrame(wx.Frame):
 
         self.text_ctrl_dialogue.ShowPosition(self.text_ctrl_dialogue.GetLastPosition())
         self.text_ctrl_dialogue.Refresh()
+
+        wx.Yield()
 
     def onSubmitInput(self, event):  # wxGlade: GumboMainFrame.<event_handler>
         if self.text_ctrl_input.GetValue() == "":
@@ -301,52 +306,71 @@ class GumboMainFrame(wx.Frame):
 # end of class GumboMainFrame
 
 class BarebonesDialogueManager(object):
-    def __init__(self, executor, base_spec=None):
-        """ take reference to execution context
+    def __init__(self, gui_window, executor, base_spec=None):
+        """ take reference to execution context and gui_window
             optionally initialize with some base spec text """
 
+        self.gui = gui_window
         self.executor = executor
 
         if base_spec is None:
             self.base_spec = []
         else:
             self.base_spec = base_spec.split("\n")
-            print "initializing with base spec text:"
-            print base_spec
 
         self.spec = []
+
+        # Initiate a specCompiler to hang around and give us immediate parser feedback
+        self.compiler = SpecCompiler()
+        self.compiler.proj = self.gui.proj
 
     def tell(self, message):
         """ take in a message from the user, return a response"""
         msg = message.lower().strip()
         if msg == "clear":
             self.spec = []
-            return "cleared spec"
+            return "Cleared the specification."
         elif msg == "go":
+            # TODO: don't resynthesize if the specification hasn't changed?
+            #       i.e. distinguish between resuming from pause, versus a new command
+
             # pause
             self.executor.pause()
+
+            self.gui.appendLog("Please wait...", "System") 
+
             # trigger resynthesis
-            self.executor.resynthesizeFromNewSpecification(self.getSpec())
-            # resume
-            self.executor.resume()
-            return "doing what you said"
+            success = self.executor.resynthesizeFromNewSpecification(self.getSpec())
+            if success:
+                # resume
+                self.executor.resume()
+                return "Doing as you asked."
+            else:
+                return "I'm sorry, I can't do that.\nPlease try something else."
         elif msg == "wait":
             self.executor.pause()
-            return "pausing"
+            return "Paused."
         elif msg == "status":
             if not self.executor.isRunning():
-                return "currently paused."
+                return "Currently paused."
 
             curr_goal_num = self.executor.getCurrentGoalNumber()
             if curr_goal_num is None:
-                return "not doing anything."
+                return "I'm not doing anything right now."
             else:
-                return "currently pursuing goal #{}!".format(curr_goal_num)
+                return "I'm currently pursuing goal #{}.".format(curr_goal_num)
         elif msg == "list":
             return "\n".join(self.spec)
         else:
-            self.spec.append(message.strip())
-            return "got it"
+            # Ask parser if this individual line is OK
+            # FIXME: Because _writeLTLFile() is so monolithic, this will
+            # clobber the `.ltl` file
+            # FIXME: This may only work with SLURP
+            self.compiler.proj.specText = message.strip()
+            spec, tracebackTree, response = self.compiler._writeLTLFile()
+            if spec is not None:
+                self.spec.append(message.strip())
+            return response[0]
 
     def getSpec(self):
         """ return the current specification as one big string """
