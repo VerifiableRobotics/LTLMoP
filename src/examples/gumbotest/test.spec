@@ -5,7 +5,8 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-panic, 1
+defuse, 1
+sweep, 1
 
 CompileOptions:
 convexify: False
@@ -23,7 +24,8 @@ RegionFile: # Relative path of region description file
 nerve.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-badguy, 1
+bomb, 1
+sweep_done, 1
 
 
 ======== SPECIFICATION ========
@@ -31,18 +33,19 @@ badguy, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 classroom1 = classroom1
 east_hall = east_hall
-cafeteria = cafeteria
+classroom2 = classroom2
+receiving = receiving
 closet = closet
 office = office
 entrance = entrance
 library = library
 lounge = lounge
-classroom2 = classroom2
 lab = lab
-receiving = receiving
+cafeteria = cafeteria
 hall = hall
 kitchen = kitchen
 
 Spec: # Specification in structured English
-Patrol the office and the lounge.
+Go to the office and library.
+If you see a bomb, defuse it.
 
