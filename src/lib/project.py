@@ -27,6 +27,7 @@ import fileMethods, regions
 from numpy import *
 import handlerSubsystem
 import inspect
+import logging
 
 class Project:
     """
@@ -324,12 +325,13 @@ class Project:
 
         self.hsub.importHandlers(self.currentConfig, all_handler_types)
 
+        logging.info("Initializing sensor/actuator methods...")
+
         # initialize all sensor and actuators
         for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
             if prop in self.enabled_sensors:
                 for code in codes:
                     eval(code, {'self':self,'initial':True})
-
 
         # Figure out our initially true outputs
         init_outputs = []

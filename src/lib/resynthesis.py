@@ -54,7 +54,7 @@ class ExecutorResynthesisExtensions:
 
         new_proj.writeSpecFile(newSpecName)
 
-        print "Wrote new spec file: %s" % newSpecName
+        logging.info("Wrote new spec file: %s" % newSpecName)
         
         return new_proj
 
@@ -115,22 +115,20 @@ class ExecutorResynthesisExtensions:
 
         # Synthesize a strategy
         (realizable, realizableFS, output) = c._synthesize()
-        print output
+        logging.debug(output)
 
         if not (realizable or realizableFS):
-            print "!!!!!!!!!!!!!!!!!!!!!!"
-            print "ERROR: UNSYNTHESIZABLE"
-            print "!!!!!!!!!!!!!!!!!!!!!!"
+            logging.error("Specification for resynthesis was unsynthesizable!")
             self.pause()
             return False
 
-        print "New automaton has been created."
+        logging.info("New automaton has been created.")
 
         # Load in the new strategy
 
         self.proj = new_proj
 
-        print "Reinitializing execution..."
+        logging.info("Reinitializing execution...")
 
         spec_file = self.proj.getFilenamePrefix() + ".spec"
         aut_file = self.proj.getFilenamePrefix() + ".aut"

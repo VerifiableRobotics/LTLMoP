@@ -25,7 +25,6 @@ from copy import deepcopy
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 import xmlrpclib
 import socket
-import specCompiler
 import random
 import math
 import traceback
