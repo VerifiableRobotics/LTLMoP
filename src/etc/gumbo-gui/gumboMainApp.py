@@ -14,6 +14,7 @@ import gettext
 # end wxGlade
 
 import os, sys
+import getpass
 import socket
 
 # Climb the tree to find out where we are
@@ -126,6 +127,12 @@ class GumboMainFrame(wx.Frame):
         # Start dialogue manager
         self.dialogueManager = BarebonesDialogueManager(self.executorProxy)
 
+        # Figure out the user's name, if we can
+        try:
+            self.user_name = getpass.getuser().title()
+        except:
+            self.user_name = "User"
+
         # Tell the user we are ready
         self.appendLog("Hello.", "System")
 
@@ -158,6 +165,7 @@ class GumboMainFrame(wx.Frame):
         """
         Processes messages from the controller, and updates the GUI accordingly
         """
+
         if eventType in ["FREQ"]: # Events to ignore
             pass
         elif eventType == "POSE":
@@ -210,7 +218,7 @@ class GumboMainFrame(wx.Frame):
         user_text = self.text_ctrl_input.GetValue()
 
         # echo
-        self.appendLog(user_text, "User")
+        self.appendLog(user_text, self.user_name)
 
         self.text_ctrl_input.Clear()
 
