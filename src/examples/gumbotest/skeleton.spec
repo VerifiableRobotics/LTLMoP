@@ -26,6 +26,7 @@ nerve.regions
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
 bomb, 1
 sweep_done, 1
+hostage, 1
 
 
 ======== SPECIFICATION ========
@@ -46,5 +47,7 @@ hall = hall
 kitchen = kitchen
 
 Spec: # Specification in structured English
-
+Search the library, classroom1, and classroom2.
+If you see a bomb, defuse it.
+#If you see a hostage, stay there.
 

@@ -26,6 +26,7 @@ nerve_for_basicsim.regions
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
 bomb, 1
 sweep_done, 1
+hostage, 1
 
 
 ======== SPECIFICATION ========
