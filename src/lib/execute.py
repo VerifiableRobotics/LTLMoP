@@ -219,6 +219,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             #self.proj.importHandlers(['motionControl'])
             pass
 
+        # Emit initial pose
+        pose = self.proj.h_instance['pose'].getPose()[0:2]
+        self.postEvent("POSE", tuple(map(int, self.proj.coordmap_lab2map(pose))))
+
         # We are done initializing at this point if there is no aut file yet
         if aut_file is None:
             return
