@@ -82,6 +82,9 @@ class ExecutorResynthesisExtensions:
         # write the file back
         createLTLfile(ltl_filename, assumptions, gc)
 
+    def getParserTraceback(self):
+        return self.parserTraceback
+
     def resynthesizeFromNewSpecification(self, spec_text):
         self.pause()
 
@@ -109,6 +112,9 @@ class ExecutorResynthesisExtensions:
         # Call the parser
         c._writeLTLFile()
         c._writeSMVFile()
+
+        # Save traceback
+        self.parserTraceback = c.traceback
 
         # Constrain the initial conditions to our current state
         self._setSpecificationInitialConditionsToCurrent(new_proj)

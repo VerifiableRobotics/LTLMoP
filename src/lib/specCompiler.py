@@ -347,6 +347,8 @@ class SpecCompiler(object):
         #for k,v in self.reversemapping.iteritems():
         #    print "{!r}:{!r}".format(k,v)        
 
+        self.traceback = traceback
+
         return self.spec, traceback, response
 
     def substituteMacros(self, text):
