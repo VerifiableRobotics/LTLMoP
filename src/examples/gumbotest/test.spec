@@ -47,6 +47,7 @@ hall = hall
 kitchen = kitchen
 
 Spec: # Specification in structured English
-Go to the office and classroom1.
+Search the office, classroom1, and classroom2.
 If you see a bomb, defuse it.
+#If you see a hostage, stay there.
 

@@ -34,20 +34,20 @@ hostage, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 classroom1 = classroom1
 east_hall = east_hall
-classroom2 = classroom2
-receiving = receiving
+cafeteria = cafeteria
 closet = closet
 office = office
 entrance = entrance
 library = library
 lounge = lounge
+classroom2 = classroom2
 lab = lab
-cafeteria = cafeteria
+receiving = receiving
 hall = hall
 kitchen = kitchen
 
 Spec: # Specification in structured English
-Search the library, classroom1, and classroom2.
+Search the office, classroom1, and classroom2.
 If you see a bomb, defuse it.
 #If you see a hostage, stay there.
 
