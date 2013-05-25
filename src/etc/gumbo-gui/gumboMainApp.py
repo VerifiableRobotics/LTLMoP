@@ -101,17 +101,6 @@ class GumboMainFrame(wx.Frame):
         self.executorProcess = multiprocessing.Process(target=execute.execute_main, args=(config.executor_listen_port, self.proj.getFilenamePrefix()+".spec", None, False))
         self.executorProcess.start()
 
-        # Connect to executor
-        print "Connecting to executor...",
-        while True:
-            try:
-                self.executorProxy = xmlrpclib.ServerProxy("http://localhost:{}".format(config.executor_listen_port), allow_none=True)
-            except socket.error:
-                print ".",
-            else:
-                break
-
-        print
 
         # Start our own xml-rpc server to receive events from execute
         self.xmlrpc_server = SimpleXMLRPCServer(("localhost", config.gumbo_gui_listen_port), logRequests=False, allow_none=True)
@@ -125,8 +114,20 @@ class GumboMainFrame(wx.Frame):
         self.XMLRPCServerThread.start()
         print "GumboGUI listening for XML-RPC calls on http://localhost:{} ...".format(config.gumbo_gui_listen_port)
 
-        # Register with executor for event callbacks   
-        self.executorProxy.registerExternalEventTarget("http://localhost:{}".format(config.gumbo_gui_listen_port))
+        # Connect to executor
+        print "Connecting to executor...",
+        while True:
+            try:
+                self.executorProxy = xmlrpclib.ServerProxy("http://localhost:{}".format(config.executor_listen_port), allow_none=True)
+
+                # Register with executor for event callbacks   
+                self.executorProxy.registerExternalEventTarget("http://localhost:{}".format(config.gumbo_gui_listen_port))
+            except socket.error:
+                sys.stdout.write(".")
+            else:
+                break
+
+        print
 
         # Start dialogue manager
         self.dialogueManager = BarebonesDialogueManager(self, self.executorProxy)
