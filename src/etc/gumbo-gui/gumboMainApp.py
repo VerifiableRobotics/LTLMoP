@@ -380,7 +380,7 @@ class BarebonesDialogueManager(object):
             
             if self.gui.SLURPDialogManager:
                 # tell the SLURP dialog manager about it
-                self.gui.SLURPDialogManager.gen_tree = self.executor.getParserTraceback()
+                self.gui.SLURPDialogManager.set_gen_tree(self.executor.getParserTraceback())
 
     def tell(self, message):
         """ take in a message from the user, return a response"""
@@ -403,7 +403,7 @@ class BarebonesDialogueManager(object):
                 return "I'm not doing anything right now."
             else:
                 if self.gui.SLURPDialogManager:
-                    return self.gui.SLURPDialogManager.explain_goal(curr_goal_num)
+                    return self.gui.SLURPDialogManager.explain_goal(int(curr_goal_num))
                 else:
                     return "I'm currently pursuing goal #{}.".format(curr_goal_num)
         elif msg == "list":
