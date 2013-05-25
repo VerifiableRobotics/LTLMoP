@@ -247,6 +247,7 @@ class GumboMainFrame(wx.Frame):
         self.appendLog(user_text, self.user_name)
 
         self.text_ctrl_input.Clear()
+        wx.Yield()
 
         # response
         if self.dialogueManager is None:
