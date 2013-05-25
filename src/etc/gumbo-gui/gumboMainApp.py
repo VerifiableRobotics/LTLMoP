@@ -16,6 +16,7 @@ import gettext
 import os, sys
 import getpass
 import socket
+import math
 
 # Climb the tree to find out where we are
 p = os.path.abspath(__file__)
@@ -131,6 +132,12 @@ class GumboMainFrame(wx.Frame):
 
         # Start dialogue manager
         self.dialogueManager = BarebonesDialogueManager(self, self.executorProxy)
+
+        # Load in robot icon
+        # https://commons.wikimedia.org/wiki/File:Hamton_the_hamster.gif
+        self.robotIcon = wx.Bitmap("Hamton_the_hamster.gif", wx.BITMAP_TYPE_GIF)
+        self.robotIconRotOffset = 90 * math.pi/180 # to account for orientation of robot within image
+        self.robotIconSize = (19, 28)
 
         # Figure out the user's name, if we can
         try:
@@ -270,51 +277,52 @@ class GumboMainFrame(wx.Frame):
         if self.mapBitmap is None:
             return
 
-        if event is None:
-            dc = wx.ClientDC(self.map_pane)
-        else:
-            pdc = wx.AutoBufferedPaintDC(self.map_pane)
-            try:
-                dc = wx.GCDC(pdc)
-            except:
-                dc = pdc
-
-        dc.BeginDrawing()
+        # Let's do some manual double-buffering, because the automatic stuff didn't seem to work
+        draw_buf = wx.EmptyBitmap(*self.map_pane.GetClientSizeTuple())
+        dc = wx.MemoryDC()
+        dc.SelectObject(draw_buf)
+        gc = wx.GraphicsContext.Create(dc)
 
         # Draw background
-        dc.DrawBitmap(self.mapBitmap, 0, 0)
+        gc.DrawBitmap(self.mapBitmap, 0, 0, self.mapBitmap.GetWidth(), self.mapBitmap.GetHeight())
 
         # Draw robot
         if self.robotPos is not None:
-            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos) 
-            dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
-            dc.DrawCircle(x, y, 5)
-
+            gc.PushState()
+            [x,y] = map(lambda x: int(self.mapScale*x), self.robotPos[0:2]) 
+            #dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
+            #dc.DrawCircle(x, y, 5)
+            gc.Translate(x, y)
+            gc.Rotate(-(self.robotPos[2]-self.robotIconRotOffset))
+            gc.DrawBitmap(self.robotIcon, -self.robotIconSize[0]/2, -self.robotIconSize[1]/2, self.robotIconSize[0], self.robotIconSize[1])
+            gc.PopState()
+        
         # Draw fiducials
         for fid_name, fid_pos in self.fiducialPositions.iteritems():
             [x,y] = map(lambda x: int(self.mapScale*x), fid_pos) 
-            dc.SetBrush(wx.Brush(wx.BLACK, wx.SOLID))
-            dc.DrawCircle(x, y, 5)
+            gc.SetPen(wx.Pen(wx.WHITE, 2, wx.SOLID))
+            gc.SetBrush(wx.Brush(wx.BLACK, wx.SOLID))
+            gc.DrawEllipse(x, y, 10, 10)
 
             # Draw label
-            dc.SetTextForeground(wx.BLACK)
-            dc.SetBackgroundMode(wx.TRANSPARENT)
             font = wx.Font(12, wx.FONTFAMILY_SWISS, wx.NORMAL, wx.NORMAL, False)
-            dc.SetFont(font)
+            gc.SetFont(font, wx.BLACK)
             
             textWidth, textHeight = dc.GetTextExtent(fid_name)
             
             textX = x + 8 # - textWidth/2
             textY = y - 0.5*textHeight
-            dc.DrawText(fid_name, textX, textY)
+            gc.DrawText(fid_name, textX, textY)
 
 #        if self.markerPos is not None:
 #            [m,n] = map(lambda m: int(self.mapScale*m), self.markerPos) 
 #            dc.SetBrush(wx.Brush(wx.RED))
 #            dc.DrawCircle(m, n, 5)
 
-        dc.EndDrawing()
-        
+        # Blit our buffer to the window
+        pane_gc = wx.GraphicsContext.Create(self.map_pane)
+        pane_gc.DrawBitmap(draw_buf, 0, 0, draw_buf.GetWidth(), draw_buf.GetHeight())
+
         if event is not None:
             event.Skip()
 
