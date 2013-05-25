@@ -6,6 +6,7 @@ import logging
 from LTLParser.LTLFormula import LTLFormula, LTLFormulaType
 from createJTLVinput import createLTLfile
 import specCompiler
+import sys, os
 
 class ExecutorResynthesisExtensions:
     """ Extensions to Executor to allow for specification rewriting and resynthesis.
@@ -82,8 +83,32 @@ class ExecutorResynthesisExtensions:
         # write the file back
         createLTLfile(ltl_filename, assumptions, gc)
 
-    def getParserTraceback(self):
-        return self.parserTraceback
+    def getCurrentGoalDescription(self):
+        """ Return a description (in the specification language) of
+            the goal currently being pursued (jx).
+            If no automaton is loaded, return None. """
+
+        if not self.aut:
+            return None
+
+        curr_goal_num = self.getCurrentGoalNumber()
+
+        if self.proj.compile_options["parser"] == "slurp":
+            # Import the SLURP dialog manager, if necessary
+            try:
+                dm = self.SLURPDialogManager
+            except AttributeError:
+                # Add SLURP to path for import
+                sys.path.append(os.path.join(project.get_ltlmop_root(), "src", "etc", "SLURP"))
+                from ltlbroom.dialog import DialogManager
+                self.SLURPDialogManager = DialogManager()
+                dm = self.SLURPDialogManager
+
+            logging.debug(self.parserTraceback)
+            dm.set_gen_tree(self.parserTraceback)
+            return dm.explain_goal(int(curr_goal_num))
+        else:
+            return str(curr_goal_num)
 
     def resynthesizeFromNewSpecification(self, spec_text):
         self.pause()

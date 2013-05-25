@@ -131,15 +131,6 @@ class GumboMainFrame(wx.Frame):
         # Start dialogue manager
         self.dialogueManager = BarebonesDialogueManager(self, self.executorProxy)
 
-        # Import the SLURP dialog manager, if necessary
-        if self.proj.compile_options["parser"] == "slurp":
-            # Add SLURP to path for import
-            sys.path.append(os.path.join(ltlmop_root, "src", "etc", "SLURP"))
-            from ltlbroom.dialog import DialogManager
-            self.SLURPDialogManager = DialogManager()
-        else:
-            self.SLURPDialogManager = None
-
         # Figure out the user's name, if we can
         try:
             self.user_name = getpass.getuser().title()
@@ -148,7 +139,6 @@ class GumboMainFrame(wx.Frame):
 
         # Tell the user we are ready
         self.appendLog("Hello.", "System")
-
 
     def __set_properties(self):
         # begin wxGlade: GumboMainFrame.__set_properties
@@ -378,10 +368,6 @@ class BarebonesDialogueManager(object):
         else:
             self.gui.appendLog("I'm sorry, I can't do that.  Please try something else.", "System")
             
-            if self.gui.SLURPDialogManager:
-                # tell the SLURP dialog manager about it
-                self.gui.SLURPDialogManager.set_gen_tree(self.executor.getParserTraceback())
-
     def tell(self, message):
         """ take in a message from the user, return a response"""
         msg = message.lower().strip()
@@ -402,10 +388,7 @@ class BarebonesDialogueManager(object):
             if curr_goal_num is None:
                 return "I'm not doing anything right now."
             else:
-                if self.gui.SLURPDialogManager:
-                    return self.gui.SLURPDialogManager.explain_goal(int(curr_goal_num))
-                else:
-                    return "I'm currently pursuing goal #{}.".format(curr_goal_num)
+                return self.executor.getCurrentGoalDescription()
         elif msg == "list":
             return "\n".join(self.spec)
         else:
