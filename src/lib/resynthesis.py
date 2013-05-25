@@ -104,7 +104,6 @@ class ExecutorResynthesisExtensions:
                 self.SLURPDialogManager = DialogManager()
                 dm = self.SLURPDialogManager
 
-            logging.debug(self.parserTraceback)
             dm.set_gen_tree(self.parserTraceback)
             return dm.explain_goal(int(curr_goal_num))
         else:
