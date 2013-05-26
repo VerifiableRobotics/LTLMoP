@@ -249,7 +249,7 @@ class GumboMainFrame(wx.Frame):
         self.text_ctrl_dialogue.ShowPosition(self.text_ctrl_dialogue.GetLastPosition())
         self.text_ctrl_dialogue.Refresh()
 
-        wx.Yield()
+        wx.GetApp().Yield(True) # TODO: Why does a normal yield cause re-entrance here? Are we masking a bug?
 
     def onSubmitInput(self, event):  # wxGlade: GumboMainFrame.<event_handler>
         if self.text_ctrl_input.GetValue() == "" or \
@@ -420,7 +420,8 @@ class BarebonesDialogueManager(object):
             self.gui.appendLog("I'm sorry, I can't do that.  Please try something else.", "System")
             
     def tell(self, message):
-        """ take in a message from the user, return a response"""
+        """ take in a message from the user, return a response.
+            WARNING: this is effectively running in non-main thread"""
         msg = message.lower().strip()
         if msg == "clear":
             wx.CallAfter(self.clear)
