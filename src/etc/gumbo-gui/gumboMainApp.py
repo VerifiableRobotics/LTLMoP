@@ -139,7 +139,7 @@ class GumboMainFrame(wx.Frame):
         # Load in robot icon
         # https://commons.wikimedia.org/wiki/File:Hamton_the_hamster.gif
         self.robotIcon = wx.Bitmap("Hamton_the_hamster.gif", wx.BITMAP_TYPE_GIF)
-        self.robotIconRotOffset = 90 * math.pi/180 # to account for orientation of robot within image
+        self.robotIconRotOffset = 270 * math.pi/180 # to account for orientation of robot within image
         self.robotIconSize = (19, 28)
 
         # Figure out the user's name, if we can
