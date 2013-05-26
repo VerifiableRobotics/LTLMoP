@@ -261,21 +261,27 @@ class GumboMainFrame(wx.Frame):
         user_text = self.text_ctrl_input.GetValue()
 
         # echo
-        self.appendLog(user_text, self.user_name)
-
-        self.text_ctrl_input.Clear()
-        wx.Yield()
+        wx.CallAfter(self.appendLog, user_text, self.user_name)
+        wx.CallAfter(self.text_ctrl_input.Clear)
 
         # response
         if self.dialogueManager is None:
-            self.appendLog("Dialogue manager not initialized", "!!! Error")
+            wx.CallAfter(self.appendLog, "Dialogue manager not initialized", "!!! Error")
         else:
-            self.button_submit.Enable(False)
-            self.button_submit.SetLabel("Please wait...")
-            self.Layout()
+            wx.CallAfter(self._enableSubmitButton, False)
             wx.lib.delayedresult.startWorker(self.onReceiveReply, self.dialogueManager.tell, wargs=(user_text,), daemon=True)
 
         event.Skip()
+
+    def _enableSubmitButton(self, state):
+        if state:
+            self.button_submit.Enable(True)
+            self.button_submit.SetLabel("Submit")
+        else:
+            self.button_submit.Enable(False)
+            self.button_submit.SetLabel("Please wait...")
+
+        self.Layout()
 
     def onReceiveReply(self, result):
         """ when the dialoguemanager has gotten back to us """
@@ -290,9 +296,7 @@ class GumboMainFrame(wx.Frame):
         if result:
             self.appendLog(result, "System")
 
-        self.button_submit.SetLabel("Submit")
-        self.Layout()
-        self.button_submit.Enable(True)
+        self._enableSubmitButton(True)
 
     def onResize(self, event=None):  # wxGlade: GumboMainFrame.<event_handler>
         size = self.map_pane.GetSize()
@@ -363,11 +367,11 @@ class GumboMainFrame(wx.Frame):
             event.Skip()
 
     def onClearCommands(self, event):  # wxGlade: GumboMainFrame.<event_handler>
-        self.dialogueManager.clear()
+        wx.CallAfter(self.dialogueManager.clear)
         event.Skip()
 
     def onExecute(self, event):  # wxGlade: GumboMainFrame.<event_handler>
-        self.dialogueManager.execute()
+        wx.CallAfter(self.dialogueManager.execute)
         event.Skip()
 
 # end of class GumboMainFrame
@@ -419,10 +423,10 @@ class BarebonesDialogueManager(object):
         """ take in a message from the user, return a response"""
         msg = message.lower().strip()
         if msg == "clear":
-            self.clear()
+            wx.CallAfter(self.clear)
             return
         elif msg == "go":
-            self.execute()
+            wx.CallAfter(self.execute)
             return
         elif msg == "wait":
             self.executor.pause()
