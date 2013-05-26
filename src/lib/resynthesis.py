@@ -134,6 +134,7 @@ class ExecutorResynthesisExtensions:
             c._decompose()
 
         # Call the parser
+        logging.debug("Calling parser...")
         c._writeLTLFile()
         c._writeSMVFile()
 
@@ -144,6 +145,7 @@ class ExecutorResynthesisExtensions:
         self._setSpecificationInitialConditionsToCurrent(new_proj)
 
         # Synthesize a strategy
+        logging.debug("Calling synthesizer...")
         (realizable, realizableFS, output) = c._synthesize()
         logging.debug(output)
 
