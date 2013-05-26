@@ -280,6 +280,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
                 while (not self.runFSA.wait(0.1)) and self.alive.isSet():
                     pass
 
+            # Exit immediately if we're quitting
+            if not self.alive.isSet():
+                break
+            
             self.prev_outputs = deepcopy(self.aut.current_outputs)
             self.prev_z = self.aut.current_state.rank
 
