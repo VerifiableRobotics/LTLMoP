@@ -223,6 +223,9 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         pose = self.proj.h_instance['pose'].getPose()
         self.postEvent("POSE", tuple(map(int, self.proj.coordmap_lab2map(pose[0:2])) + [float(pose[2])]))
 
+
+        self.postEvent("READY")
+
         # We are done initializing at this point if there is no aut file yet
         if aut_file is None:
             return
