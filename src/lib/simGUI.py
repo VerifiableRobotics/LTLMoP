@@ -150,7 +150,7 @@ class SimGUI_Frame(wx.Frame):
         if eventType == "FREQ":
             wx.CallAfter(self.sb.SetStatusText, "Running at approximately {}Hz...".format(eventData), 0)
         elif eventType == "POSE":
-            self.robotPos = eventData
+            self.robotPos = eventData[0:2]
             wx.CallAfter(self.onPaint)
         elif eventType == "MARKER":
             self.markerPos = eventData
@@ -169,6 +169,8 @@ class SimGUI_Frame(wx.Frame):
             wx.CallAfter(self.loadSpecFile, eventData)
         elif eventType == "REGIONS":
             wx.CallAfter(self.loadRegionFile, eventData)
+        elif not isinstance(eventData, basestring):
+            return
         elif eventData.startswith("Output proposition"):
             if self.checkbox_statusLog_propChange.GetValue():
                 wx.CallAfter(self.appendLog, eventData + "\n", color="GREEN") 
