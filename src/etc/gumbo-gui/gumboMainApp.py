@@ -365,6 +365,8 @@ class GumboMainFrame(wx.Frame):
         pane_gc = wx.GraphicsContext.Create(self.map_pane)
         pane_gc.DrawBitmap(draw_buf, 0, 0, draw_buf.GetWidth(), draw_buf.GetHeight())
 
+        dc.SelectObject(wx.NullBitmap)
+
         if event is not None:
             event.Skip()
 
