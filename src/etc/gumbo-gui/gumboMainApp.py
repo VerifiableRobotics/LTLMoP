@@ -99,7 +99,7 @@ class GumboMainFrame(wx.Frame):
         self.onResize()
 
     def initialize(self):
-        wx.CallAfter(self.text_ctrl_input.SetFocus)
+        self.text_ctrl_input.SetFocus()
 
         # Start execution context
         print "Starting executor..."
@@ -466,7 +466,7 @@ class GumboMainApp(wx.App):
         gumboMainFrame = GumboMainFrame(None, wx.ID_ANY, "")
         self.SetTopWindow(gumboMainFrame)
         gumboMainFrame.Show()
-        gumboMainFrame.initialize()
+        wx.CallAfter(gumboMainFrame.initialize)
         return 1
 
 # end of class GumboMainApp
