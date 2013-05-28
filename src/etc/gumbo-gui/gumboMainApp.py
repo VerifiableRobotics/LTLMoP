@@ -99,6 +99,8 @@ class GumboMainFrame(wx.Frame):
         self.onResize()
 
     def initialize(self):
+        wx.CallAfter(self.text_ctrl_input.SetFocus)
+
         # Start execution context
         print "Starting executor..."
         self.executorReadyFlag = threading.Event()
