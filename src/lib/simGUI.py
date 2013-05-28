@@ -84,14 +84,14 @@ class SimGUI_Frame(wx.Frame):
             print "ERROR: Invalid port '{}'".format(arg)
             sys.exit(2)
 
-        self.executorProxy = xmlrpclib.ServerProxy("http://localhost:{}".format(executor_port), allow_none=True)
+        self.executorProxy = xmlrpclib.ServerProxy("http://127.0.0.1:{}".format(executor_port), allow_none=True)
 
         # Create the XML-RPC server
         # Search for a port we can successfully bind to
         while True:
             listen_port = random.randint(10000, 65535)
             try:
-                self.xmlrpc_server = SimpleXMLRPCServer(("localhost", listen_port), logRequests=False, allow_none=True)
+                self.xmlrpc_server = SimpleXMLRPCServer(("127.0.0.1", listen_port), logRequests=False, allow_none=True)
             except socket.error as e:
                 pass
             else:
@@ -104,10 +104,10 @@ class SimGUI_Frame(wx.Frame):
         self.XMLRPCServerThread = threading.Thread(target=self.xmlrpc_server.serve_forever)
         self.XMLRPCServerThread.daemon = True
         self.XMLRPCServerThread.start()
-        print "SimGUI listening for XML-RPC calls on http://localhost:{} ...".format(listen_port)
+        print "SimGUI listening for XML-RPC calls on http://127.0.0.1:{} ...".format(listen_port)
 
         # Register with executor for event callbacks   
-        self.executorProxy.registerExternalEventTarget("http://localhost:{}".format(listen_port))
+        self.executorProxy.registerExternalEventTarget("http://127.0.0.1:{}".format(listen_port))
  
         self.robotPos = None
         self.robotVel = (0,0)

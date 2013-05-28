@@ -342,13 +342,13 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
         while True:
             listen_port = random.randint(10000, 65535)
             try:
-                xmlrpc_server = SimpleXMLRPCServer(("localhost", listen_port), logRequests=False, allow_none=True)
+                xmlrpc_server = SimpleXMLRPCServer(("127.0.0.1", listen_port), logRequests=False, allow_none=True)
             except socket.error as e:
                 pass
             else:
                 break
     else:
-        xmlrpc_server = SimpleXMLRPCServer(("localhost", listen_port), logRequests=False, allow_none=True)
+        xmlrpc_server = SimpleXMLRPCServer(("127.0.0.1", listen_port), logRequests=False, allow_none=True)
     
     # Create the execution context object
     e = LTLMoPExecutor()
@@ -360,7 +360,7 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
     XMLRPCServerThread = threading.Thread(target=xmlrpc_server.serve_forever)
     XMLRPCServerThread.daemon = True
     XMLRPCServerThread.start()
-    print "Executor listening for XML-RPC calls on http://localhost:{} ...".format(listen_port)
+    print "Executor listening for XML-RPC calls on http://127.0.0.1:{} ...".format(listen_port)
 
     # Start the GUI if necessary
     if show_gui:
