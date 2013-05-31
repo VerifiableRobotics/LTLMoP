@@ -327,6 +327,9 @@ class RedirectText:
         if message.strip() != "":
             self.event_handler("OTHER", message.strip())
 
+    def flush(self):
+        pass
+
 
 ####################################################
 # Main function, run when called from command-line #
