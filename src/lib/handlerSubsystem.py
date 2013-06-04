@@ -860,7 +860,7 @@ class HandlerParser:
                                        [^,\s]*    # other
                                     )""")
         # Try to load the handler file
-        logging.info("Inspecting handler: %s" % handlerFile.split('.')[-1])
+        logging.debug("Inspecting handler: %s" % handlerFile.split('.')[-1])
         try:
             __import__(handlerFile)
         except Exception as e:
