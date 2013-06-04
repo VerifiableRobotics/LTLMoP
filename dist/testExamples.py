@@ -18,9 +18,16 @@ class TestExample(unittest.TestCase):
         title_str = "#### Testing project '{0}' ####".format(self.spec_filename)
 
         print
+
+        if sys.platform not in ['win32', 'cygwin']:
+            print "\033[41m"  # red background color
+
         print "#"*len(title_str)
         print title_str
         print "#"*len(title_str)
+
+        if sys.platform not in ['win32', 'cygwin']:
+            print "\033[0m"   # end coloring
 
         c = specCompiler.SpecCompiler(self.spec_filename)
         c_out = c.compile()
