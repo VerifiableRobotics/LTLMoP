@@ -103,7 +103,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         self.postEvent("SPEC", self.proj.getFilenamePrefix() + ".spec")
 
     def loadAutFile(self, filename):
-        print "Loading automaton..."
+        logging.info("Loading automaton...")
 
         aut = fsa.Automaton(self.proj)
 
@@ -122,18 +122,18 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
                         r.objectContainsPoint(*pose)), None)
  
         if region is None:
-            print "Pose of ", pose, "not inside any region!"
+            logging.warning("Pose of {} not inside any region!".format(pose))
 
         return region
 
     def shutdown(self):
         self.runFSA.clear()
-        print >>sys.__stderr__, "QUITTING."
+        logging.info("QUITTING.")
 
         all_handler_types = ['init', 'pose', 'locomotionCommand', 'drive', 'motionControl', 'sensor', 'actuator']
 
         for htype in all_handler_types:
-            print >>sys.__stderr__, "terminating {} handler...".format(htype)
+            logging.info("Terminating {} handler...".format(htype))
             if htype in self.proj.h_instance:
                 if isinstance(self.proj.h_instance[htype], dict):
                     handlers = [v for k,v in self.proj.h_instance[htype].iteritems()]
@@ -142,12 +142,12 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             
                 for h in handlers:
                     if hasattr(h, "_stop"):
-                        print >>sys.__stderr__, "> calling _stop() on {}".format(h.__class__.__name__) 
+                        logging.debug("Calling _stop() on {}".format(h.__class__.__name__))
                         h._stop()
                     else:
-                        print >>sys.__stderr__, "> {} does not have _stop() function".format(h.__class__.__name__) 
+                        logging.debug("{} does not have _stop() function".format(h.__class__.__name__))
             else:
-                print >>sys.__stderr__, "not found in h_instance"
+                logging.debug("{} handler not found in h_instance".format(htype))
 
         self.alive.clear()
 
@@ -203,13 +203,13 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             self.proj.rfi = self.proj.loadRegionFile(decomposed=True)
 
         if self.proj.currentConfig is None:
-            print "ERROR: Can not simulate without a simulation configuration."
-            print "Please create one by going to [Run] > [Configure Simulation...] in SpecEditor and then try again."
+            logging.error("Can not simulate without a simulation configuration.")
+            logging.error("Please create one by going to [Run] > [Configure Simulation...] in SpecEditor and then try again.")
             sys.exit(2)
 
         # Import the relevant handlers
         if firstRun:
-            print "Importing handler functions..."
+            logging.info("Importing handler functions...")
             self.proj.importHandlers()
         else:
             #print "Reloading motion control handler..."
@@ -225,17 +225,17 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
         if firstRun:
             ### Wait for the initial start command
-            print "Ready.  Press [Start] to begin..."
+            logging.info("Ready.  Press [Start] to begin...")
             self.runFSA.wait()
 
         ### Figure out where we should start from
 
         init_region = self._getCurrentRegionFromPose()
         if init_region is None:
-            print "Initial pose not inside any region!"
+            logging.error("Initial pose not inside any region!")
             sys.exit(-1)
 
-        print "Starting from initial region: " + self.proj.rfi.regions[init_region].name
+        logging.info("Starting from initial region: " + self.proj.rfi.regions[init_region].name)
 
         ### Have the FSA find a valid initial state
 
@@ -254,10 +254,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             init_state = new_aut.chooseInitialState(init_region, init_outputs)#, goal=prev_z)
 
         if init_state is None:
-            print "No suitable initial state found; unable to execute. Quitting..."
+            logging.error("No suitable initial state found; unable to execute. Quitting...")
             sys.exit(-1)
         else:
-            print "Starting from state %s." % init_state.name
+            logging.info("Starting from state %s." % init_state.name)
 
         self.aut = new_aut
 
@@ -308,7 +308,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
             last_gui_update_time = self.timer_func()
 
-        print "execute.py quitting..."
+        logging.debug("execute.py quitting...")
 
     # This function is necessary to prevent xmlrpcserver from catching
     # exceptions and eating the tracebacks
@@ -336,8 +336,7 @@ class RedirectText:
 ####################################################
 
 def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False):
-    print "\n[ LTLMOP HYBRID CONTROLLER EXECUTION MODULE ]\n"
-    print "Hello. Let's do this!\n"
+    logging.info("Hello. Let's do this!")
 
     # Create the XML-RPC server
     if listen_port is None:
@@ -363,12 +362,12 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
     XMLRPCServerThread = threading.Thread(target=xmlrpc_server.serve_forever)
     XMLRPCServerThread.daemon = True
     XMLRPCServerThread.start()
-    print "Executor listening for XML-RPC calls on http://127.0.0.1:{} ...".format(listen_port)
+    logging.info("Executor listening for XML-RPC calls on http://127.0.0.1:{} ...".format(listen_port))
 
     # Start the GUI if necessary
     if show_gui:
         # Create a subprocess
-        print "Starting GUI window..."
+        logging.info("Starting GUI window...")
         p_gui = subprocess.Popen(["python", "-u", os.path.join(project.get_ltlmop_root(), "lib", "simGUI.py"), str(listen_port)])
 
         # Wait for GUI to fully load, to make sure that
@@ -385,7 +384,7 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
     e.run()
 
     # Clean up on exit
-    print "Waiting for XML-RPC server to shut down..."
+    logging.info("Waiting for XML-RPC server to shut down...")
     xmlrpc_server.shutdown()
     XMLRPCServerThread.join()
 
@@ -402,8 +401,8 @@ if __name__ == "__main__":
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hnp:a:s:", ["help", "no-gui", "xmlrpc-listen-port=", "aut-file=", "spec-file="])
-    except getopt.GetoptError, err:
-        print str(err)
+    except getopt.GetoptError:
+        logging.exception("Bad arguments") 
         usage(sys.argv[0])
         sys.exit(2)
 
@@ -417,7 +416,7 @@ if __name__ == "__main__":
             try:
                 listen_port = int(arg)
             except ValueError:
-                print "ERROR: Invalid port '{}'".format(arg)
+                logging.error("Invalid port '{}'".format(arg))
                 sys.exit(2)
         elif opt in ("-a", "--aut-file"):
             aut_file = arg

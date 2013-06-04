@@ -6,6 +6,7 @@ import subprocess
 import numpy
 import glob
 import StringIO
+import logging
 
 from multiprocessing import Pool
 
@@ -37,14 +38,14 @@ class SpecCompiler(object):
 
         # Check to make sure this project is complete
         if self.proj.rfi is None:
-            print "ERROR: Please define regions before compiling."
+            logging.warning("Please define regions before compiling.")
             return
     
         # Remove comments
         self.specText = re.sub(r"#.*$", "", self.proj.specText, flags=re.MULTILINE)
 
         if self.specText.strip() == "":
-            print "ERROR: Please write a specification before compiling."
+            logging.warning("Please write a specification before compiling.")
             return
 
     def loadSimpleSpec(self,text="", regionList=[], sensors=[], actuators=[], customs=[], adj=[], outputfile=""):
@@ -58,7 +59,7 @@ class SpecCompiler(object):
         """
 
         if outputfile == "":
-            print "need to specify output filename"
+            logging.error("Need to specify output filename")
             return
 
         self.proj.compile_options['decompose'] = False
@@ -179,7 +180,7 @@ class SpecCompiler(object):
  
             for ln, result in enumerate(results):
                 if not result:
-                    print "WARNING: Could not parse the sentence in line {0}".format(ln)
+                    logging.warning("Could not parse the sentence in line {0}".format(ln))
 
             # Abort compilation if there were any errors
             if not all(results):
@@ -224,9 +225,6 @@ class SpecCompiler(object):
             while '' in LTLspec_sys:
                 LTLspec_sys.remove('')
 
-            print LTLspec_env
-            print LTLspec_sys
-
             # automatically conjoin all the subformulas
             LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
             LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
@@ -267,7 +265,7 @@ class SpecCompiler(object):
             # HACK: account for the []<>TRUE goal we are adding
             traceback['SysGoals'].insert(0, None)
         else:
-            print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
+            logging.error("Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"]))
             return None, None, None
 
         if self.proj.compile_options["decompose"]:
@@ -356,7 +354,7 @@ class SpecCompiler(object):
         # This creates a mirrored copy of topological constraints for the target we are following
         if "FOLLOW_SENSOR_CONSTRAINTS" in text:
             if not self.proj.compile_options["use_region_bit_encoding"]:
-                print "WARNING: currently, bit encoding must be enabled for follow sensor"
+                logging.warning("Currently, bit encoding must be enabled for follow sensor")
             else:
                 env_topology = self.spec['Topo'].replace("s.bit", "e.sbit")
                 initreg_formula = createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=True).replace("s.bit", "e.sbit")
@@ -458,14 +456,14 @@ class SpecCompiler(object):
                 config = libs.findGait(words)
                 #print config
                 if type(config) == type(None):
-                    err_message = "WARNING: No config-gait pair for actuator T_" + act + "\n"
-                    print err_message
+                    err_message = "No config-gait pair for actuator T_" + act + "\n"
+                    logging.warning(err_message)
                     err = 1
 
     def _getGROneCommand(self, module):
         # Check that GROneMain, etc. is compiled
         if not os.path.exists(os.path.join(self.proj.ltlmop_root,"etc","jtlv","GROne","GROneMain.class")):
-            print "Please compile the synthesis Java code first.  For instructions, see etc/jtlv/JTLV_INSTRUCTIONS."
+            logging.error("Please compile the synthesis Java code first.  For instructions, see etc/jtlv/JTLV_INSTRUCTIONS.")
             # TODO: automatically compile for the user
             return None
 
@@ -637,7 +635,7 @@ class SpecCompiler(object):
                 rank_str = s.transitions[0].rank
                 m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
                 if m is None:
-                    print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
+                    logging.error("Error parsing jx in automaton.  Are you sure the spec is unrealizable?")
                     return
                 jx = int(m.group(1))         
                 return (jx == desiredGoal)
@@ -750,11 +748,11 @@ class SpecCompiler(object):
 
         paths = [p for p in glob.glob(os.path.join(self.proj.ltlmop_root,"lib","cores","picosat-*")) if os.path.isdir(p)]
         if len(paths) == 0:
-            print "Where is your sat solver? We use Picosat."
+            logging.error("Where is your sat solver? We use Picosat.")
             # TODO: automatically compile for the user
             return None
         else:
-            print "Found Picosat in " + paths[0]
+            logging.debug("Found Picosat in " + paths[0])
 
         if os.name == "nt":
             cmd = os.path.join(paths[0],"picomus.exe")
@@ -824,17 +822,19 @@ class SpecCompiler(object):
 
     def compile(self, with_safety_aut=False):
         if self.proj.compile_options["decompose"]:
-            print "--> Decomposing..."
+            logging.info("Decomposing...")
             self._decompose()
-        print "--> Writing LTL file..."
+        logging.info("Writing LTL file...")
         spec, tb, resp = self._writeLTLFile()
-        print "--> Writing SMV file..."
+        logging.info("Writing SMV file...")
         self._writeSMVFile()
 
         if tb is None:
-            print "ERROR: Compilation aborted"
+            logging.error("Compilation aborted")
             return 
 
         #self._checkForEmptyGaits()
+        logging.info("Synthesizing a strategy...")
+
         return self._synthesize(with_safety_aut)
 
