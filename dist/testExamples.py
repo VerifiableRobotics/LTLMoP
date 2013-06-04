@@ -5,7 +5,7 @@ Checks that all examples load and synthesize successfully.
 import unittest
 import glob
 import sys, os
-sys.path.append(os.path.join("..","src","lib"))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","lib"))
 import specCompiler
 
 
@@ -40,7 +40,7 @@ def getTester(spec_filename):
     
 def suite():
     suite = unittest.TestSuite()
-    suite.addTests(getTester(fname) for fname in glob.iglob(os.path.join("..","src","examples","*","*.spec")))
+    suite.addTests(getTester(fname) for fname in glob.iglob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","examples","*","*.spec")))
     return suite
 
 if __name__ == '__main__':
