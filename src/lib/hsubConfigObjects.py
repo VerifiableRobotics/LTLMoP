@@ -25,7 +25,7 @@ import globalConfig, logging
 ###################################################
 # Define individual objects for handler subsystem #
 ###################################################
-class MethodParameterConfig:
+class MethodParameterConfig(object):
     """
     An argument to a handler method
     Contains name, description, type, value, and default as determined
@@ -45,20 +45,13 @@ class MethodParameterConfig:
         """
         Overwrite string representation function
         """
-        strRepr = []
+        strRepr = ""
         # Get all attribute names and values
         for key,val in self.__dict__.iteritems():
-            # Only show if the value is not None or empty
-            if not(val == None or val == ""): 
-                strRepr.append("{0}:{1}".format(key,val))
-        
-        # if all attributes have values of None or empty
-        if not strRepr: 
-            reprString = "All attributes have values of None or empty."
-        else:
-            reprString = "\n".join(strRepr)
-        
-        return "Parameter Object -- \n" + reprString + "\n"
+            strRepr = strRepr + ("{0}:{1}\n".format(key,val))
+        reprString = " -- Parameter Object {0} -- \n".format(self.name) + \
+                    strRepr + " -- End of Parameter Object {0} -- \n".format(self.name) 
+        return reprString
 
     def setValue(self,value):
         """
