@@ -66,7 +66,7 @@ class parseLP:
                     self.regionBetween.append((m.group("rA"),m.group("rB")))
                 
             # generate new regions
-            #self.generateNewRegion()
+            self.generateNewRegion()
             # break the overlapped regions into seperated parts
             self.checkOverLapping()
             # remove small regions

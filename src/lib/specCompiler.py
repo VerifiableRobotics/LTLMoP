@@ -117,7 +117,7 @@ class SpecCompiler(object):
 
         self.proj.regionMapping = self.parser.proj.regionMapping
         self.proj.writeSpecFile()
-        
+
     def _writeSMVFile(self):
         if self.proj.compile_options["decompose"]:
             numRegions = len(self.parser.proj.rfi.regions)
@@ -240,6 +240,14 @@ class SpecCompiler(object):
             import parseEnglishToLTL
 
             if self.proj.compile_options["decompose"]:
+                # substitute the regions name in specs
+                for m in re.finditer(r'near (?P<rA>\w+)', text):
+                    text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(["s."+r for r in self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+str(50)]])+")", text)
+                for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
+                    text=re.sub(r'within ' + m.group('dist')+' (from|of) '+ m.group('rA'), "("+' or '.join(["s."+r for r in self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+m.group('dist')]])+")", text)
+                for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
+                    text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(["s."+r for r in self.parser.proj.regionMapping['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"]])+")", text)
+
                 # substitute decomposed region 
                 for r in self.proj.rfi.regions:
                     if not (r.isObstacle or r.name.lower() == "boundary"):
