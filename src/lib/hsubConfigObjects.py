@@ -46,11 +46,12 @@ class MethodParameterConfig(object):
         Overwrite string representation function
         """
         strRepr = ""
-        # Get all attribute names and values
-        for key,val in self.__dict__.iteritems():
-            strRepr = strRepr + ("{0}:{1}\n".format(key,val))
-        reprString = " -- Parameter Object {0} -- \n".format(self.name) + \
-                    strRepr + " -- End of Parameter Object {0} -- \n".format(self.name) 
+        # Only show the atrributes we are interested in
+        keyList = ['name','type','default','max','min','value']
+        for key in keyList:
+            strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+        reprString = " -- Method Parameter <{0}> -- \n".format(self.name) + \
+                    strRepr + " -- End of Method Parameter <{0}> -- \n".format(self.name) 
         return reprString
 
     def setValue(self,value):
@@ -111,7 +112,7 @@ class MethodParameterConfig(object):
             self.setValue(self.default)
 
 
-class MethodObject:
+class HandlerMethodConfig(object):
     """
     A method object
     Each object represents one method of a given handler
@@ -120,26 +121,25 @@ class MethodObject:
         self.name = ""        # name of the method
         self.handler = None     # which handler the method belongs to
         self.comment = ""       # comment of the method
-        self.para = []          # list of parameter object of this method
+        self.para = []          # list of method parameter config of this method
         self.omitPara = []      # list of parameter names that are omitted
 
     def __repr__(self):
         """
         Overwrite string representation function
         """
-        strRepr = []
-        # Get all attribute names and values
-        for key,val in self.__dict__.iteritems():
-            # Only show if the value is not None or empty
-            if val: strRepr.append("{0}:{1}".format(key,val))
-        
-        # if all attributes have values of None or empty
-        if not strRepr: 
-            reprString = "All attributes have values of None or empty."
-        else:
-            reprString = "\n".join(strRepr)
-        
-        return "Method Object -- \n" + reprString + "\n"
+        strRepr = ""
+        # Only show the atrributes we are interested in
+        keyList = ['name','handler','para']
+        for key in keyList:
+            if key == 'para':
+                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
+            else:
+                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+        reprString = " -- Handler Method <{0}> -- \n".format(self.name) + \
+                    strRepr + " -- End of Handler <{0}> -- \n".format(self.name) 
+        return reprString
+
 
     def getParaByName(self, name):
         # get the parameter object with given name
