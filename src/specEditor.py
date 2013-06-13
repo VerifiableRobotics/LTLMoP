@@ -584,7 +584,7 @@ class SpecEditorFrame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
-        self.SetSize((929, 782))
+        self.SetSize((929, 700))
         self.button_map.Enable(False)
         self.list_box_sensors.SetMinSize((123, 75))
         self.button_sensor_remove.Enable(False)
@@ -658,7 +658,7 @@ class SpecEditorFrame(wx.Frame):
         self.notebook_1.AddPage(self.notebook_1_pane_3, "Workspace Decomposition")
         sizer_2.Add(self.notebook_1, 1, wx.EXPAND, 0)
         self.window_1_pane_2.SetSizer(sizer_2)
-        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 479)
+        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 425)
         sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
