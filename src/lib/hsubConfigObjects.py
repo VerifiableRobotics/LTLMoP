@@ -137,7 +137,7 @@ class HandlerMethodConfig(object):
             else:
                 strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
         reprString = " -- Handler Method <{0}> -- \n".format(self.name) + \
-                    strRepr + " -- End of Handler <{0}> -- \n".format(self.name) 
+                    strRepr + " -- End of Handler Method <{0}> -- \n".format(self.name) 
         return reprString
 
 
@@ -149,7 +149,7 @@ class HandlerMethodConfig(object):
         logging.error("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
         return ParameterObject()
 
-class HandlerObject:
+class HandlerConfig(object):
     """
     A handler object!
     """
@@ -164,7 +164,18 @@ class HandlerObject:
         """
         Overwrite string presentation function
         """
-        strRepr = []
+        strRepr = ""
+        # Only show the atrributes we are interested in
+        keyList = ['name','type','methods','robotType']
+        for key in keyList:
+            if key == 'methods':
+                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
+            else:
+                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+        reprString = " -- Handler <{0}> -- \n".format(self.name) + \
+                    strRepr + " -- End of Handler <{0}> -- \n".format(self.name) 
+        return reprString
+        
         # Get all attribute names and values
         for key,val in self.__dict__.iteritems():
             # Only show if the value is not None or empty
@@ -248,9 +259,9 @@ class HandlerObject:
         self.type=h_type
         return self
 
-class RobotObject:
+class RobotConfig(object):
     """
-    A Robot object
+    A Robot config object
     """
     def __init__(self,r_name="" ,r_type="",driveH=None,initH=None,locoH=None,motionH=None,poseH=None,sensorH=None,actuatorH=None):
         self.name = r_name  # name of the robot
@@ -262,27 +273,21 @@ class RobotObject:
         """
         Overwrite string representation function
         """
-        strRepr = []
-        # Get all attribute names and values
-        for key,val in self.__dict__.iteritems():
-            # Only show if the value is not None or empty
-            if key == "handlers":
-                for h_type,h_obj in self.handlers.iteritems():
-                    if h_obj:
-                        strRepr.append("{0}:{1}".format(key,val)) 
-                        break
+        strRepr = ""
+        # Only show the atrributes we are interested in
+        keyList = ['name','type','handlers']
+        for key in keyList:
+            if key == 'handlers':
+                handlerDict = getattr(self,key,{})
+                strRepr = strRepr + ("{0}{1}\n".format("<"+key+">:\n", \
+                '\n'.join(["{0:13}{1:23}{2}".format('',handlerType+':',getattr(handlerDict[handlerType],'name','None')) for handlerType in handlerDict.keys()])))
+            else:
+                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+        reprString = " -- Robot <{0}> -- \n".format(self.name) + \
+                    strRepr + " -- End of Robot <{0}> -- \n".format(self.name) 
+        return reprString
 
-            elif val: strRepr.append("{0}:{1}".format(key,val))
-        
-        # if all attributes have values of None or empty
-        if not strRepr: 
-            reprString = "All attributes have values of None or empty."
-        else:
-            reprString = "\n".join(strRepr)
-        
-        return "Robot Object -- \n" + reprString + "\n"
-
-class ConfigObject:
+class ExperimentConfig(object):
     """
     A config file object!
     """
@@ -299,6 +304,23 @@ class ConfigObject:
         """
         Overwrite string representation function
         """
+        strRepr = ""
+        # Only show the atrributes we are interested in
+        keyList = ['name','robots','main_robot','initial_truths','prop_mapping','fileName']
+        for key in keyList:
+            if key in ['robots','initial_truths']:
+                strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",','.join([getattr(p,'name',p) for p in getattr(self,key,[])])))
+            elif key == 'prop_mapping':
+                prop_mapping = getattr(self,key,{})
+                strRepr = strRepr + "{0}{1}\n".format("<"+key+">:\n", \
+                '\n'.join(["{0:18}{1}".format('',prop+' = ' + prop_mapping[prop]) for prop in prop_mapping.keys()]))
+            elif key == 'main_robot':
+                strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",getattr(getattr(self,key,'NOT DEFINED'),'name','NOT DEFINED')))
+            else:
+                strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+        reprString = " -- Config <{0}> -- \n".format(self.name) + \
+                    strRepr + " -- End of Config <{0}> -- \n".format(self.name) 
+        return reprString
         strRepr = []
         # Get all attribute names and values
         for key,val in self.__dict__.iteritems():
