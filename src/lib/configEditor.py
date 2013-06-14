@@ -338,7 +338,7 @@ class handlerConfigDialog(wx.Dialog):
 
         # Create a temp config with one robot, with
         # the currently selected init and pose handlers
-        cfg = ConfigObject()
+        cfg = ExperimentConfig()
         robot = deepcopy(self.robot)
 
         cfg.name = "calibrate"
@@ -537,7 +537,7 @@ class simSetupDialog(wx.Dialog):
         # Check for case where no config files are present
         if self.list_box_experiment_name.GetCount() == 0:
             # Create blank default config
-            cfg = ConfigObject()
+            cfg = ExperimentConfig()
             # TODO: Check for existing untitleds and add a number at the end (steal from reged)
             cfg.name = "Untitled configuration"
             cfg.fileName = os.path.join(self.proj.hsub.config_parser.config_path,cfg.name.replace(' ','_'))
@@ -549,7 +549,7 @@ class simSetupDialog(wx.Dialog):
         if self.list_box_experiment_name.GetSelection() < 0:
             self.list_box_experiment_name.SetSelection(0)
 
-        self._cfg2dialog(self._getSelectedConfigObject())
+        self._cfg2dialog(self._getSelectedExperimentConfig())
 
     def __set_properties(self):
         # begin wxGlade: simSetupDialog.__set_properties
@@ -684,7 +684,7 @@ class simSetupDialog(wx.Dialog):
 
     def onConfigNew(self, event): # wxGlade: simSetupDialog.<event_handler>
         # Create blank default config
-        cfg = ConfigObject()
+        cfg = ExperimentConfig()
 
         # TODO: Check for existing untitleds and add a number at the end (steal from reged)
         cfg.name = "Untitled configuration"
@@ -745,7 +745,7 @@ class simSetupDialog(wx.Dialog):
     def onClickAddRobot(self, event): # wxGlade: simSetupDialog.<event_handler>
         dlg = addRobotDialog(self, None, -1, "")
         if dlg.ShowModal() != wx.ID_CANCEL:
-            obj = self._getSelectedConfigObject()
+            obj = self._getSelectedExperimentConfig()
             obj.robots += [dlg.robot]
 
             if obj.main_robot == '':
@@ -765,7 +765,7 @@ class simSetupDialog(wx.Dialog):
         r = self.list_box_robots.GetClientData(pos)
         dlg._robot2dialog(deepcopy(r), original=True)
         if dlg.ShowModal() != wx.ID_CANCEL:
-            obj = self._getSelectedConfigObject()
+            obj = self._getSelectedExperimentConfig()
 
             # Update the name of the main robot if necessary
             if obj.main_robot == obj.robots[pos].name:
@@ -786,7 +786,7 @@ class simSetupDialog(wx.Dialog):
             return
 
         numel = self.list_box_robots.GetCount()
-        obj = self._getSelectedConfigObject()
+        obj = self._getSelectedExperimentConfig()
 
         # TODO: gray out button when no action possible
         if numel > 0:
@@ -812,7 +812,7 @@ class simSetupDialog(wx.Dialog):
 
     def onClickEditMapping(self, event): # wxGlade: simSetupDialog.<event_handler>
         dlg = propMappingDialog(self, None, -1, "")
-        obj = self._getSelectedConfigObject()
+        obj = self._getSelectedExperimentConfig()
         dlg._mapping2dialog(deepcopy(obj.prop_mapping))
         if dlg.ShowModal() != wx.ID_CANCEL:
             obj.prop_mapping = dlg.mapping
@@ -825,7 +825,7 @@ class simSetupDialog(wx.Dialog):
         self.proj.hsub.config_parser.saveAllConfigFiles()
 
         # Save the name of the currently active config in the spec file
-        self.proj.currentConfig = self._getSelectedConfigObject()
+        self.proj.currentConfig = self._getSelectedExperimentConfig()
         self.proj.writeSpecFile()
 
         event.Skip()
@@ -837,7 +837,7 @@ class simSetupDialog(wx.Dialog):
         self.doClose(event)
         event.Skip()
 
-    def _getSelectedConfigObject(self):
+    def _getSelectedExperimentConfig(self):
         pos = self.list_box_experiment_name.GetSelection()
         obj = self.list_box_experiment_name.GetClientData(pos)
         return obj
@@ -848,7 +848,7 @@ class simSetupDialog(wx.Dialog):
         newstate = obj.IsChecked(i)
         name = obj.GetString(i)
 
-        obj = self._getSelectedConfigObject()
+        obj = self._getSelectedExperimentConfig()
 
         if newstate == True:
             obj.initial_truths += [name]
@@ -864,8 +864,8 @@ class simSetupDialog(wx.Dialog):
         if obj is None:
             return
 
-        self._getSelectedConfigObject().main_robot = obj.name
-        self._cfg2dialog(self._getSelectedConfigObject()) 
+        self._getSelectedExperimentConfig().main_robot = obj.name
+        self._cfg2dialog(self._getSelectedExperimentConfig()) 
         self.list_box_robots.SetSelection(pos)
         event.Skip()
 
@@ -876,7 +876,7 @@ class simSetupDialog(wx.Dialog):
 
     def onClickEditRegionTags(self, event):  # wxGlade: simSetupDialog.<event_handler>
         dlg = regionTagsDialog(self, None, -1, "")
-        obj = self._getSelectedConfigObject()
+        obj = self._getSelectedExperimentConfig()
         dlg._tags2dialog(deepcopy(obj.region_tags))
         if dlg.ShowModal() != wx.ID_CANCEL:
             obj.region_tags = dlg.tags
@@ -909,7 +909,7 @@ class addRobotDialog(wx.Dialog):
 
         self.parent = parent
         self.proj = parent.proj
-        self.robot = RobotObject()
+        self.robot = RobotConfig()
         self.original_robot = RobotObject()
 
         self.handler_labels = {}
@@ -1169,7 +1169,7 @@ class propMappingDialog(wx.Dialog):
         self.text_ctrl_mapping.Bind(wx.EVT_KEY_DOWN, self.onClickMapping)
 
         self.proj = parent.proj
-        self.robots = parent._getSelectedConfigObject().robots
+        self.robots = parent._getSelectedExperimentConfig().robots
 
         # Set up the list of robots
 

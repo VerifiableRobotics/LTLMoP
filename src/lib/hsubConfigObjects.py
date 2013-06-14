@@ -194,7 +194,7 @@ class HandlerConfig(object):
             if m.name == name:
                 return m
         logging.error("Could not find method of name '{0}' in handler '{1}'".format(name, self.name))
-        return MethodObject()
+        return HandlerMethodConfig()
 
     def toString(self,forsave = True):
         """
@@ -345,7 +345,7 @@ class ExperimentConfig(object):
 
         incomplete_attr = []
         # First, let's create a default config object
-        configObj = ConfigObject()
+        configObj = ExperimentConfig()
         # Then let's compare all attributes
         for key,val in self.__dict__.iteritems():
             if val == getattr(configObj,key):
@@ -358,7 +358,7 @@ class ExperimentConfig(object):
             if r.name == name:
                 return r
         logging.error("Could not find robot of name '{0}' in config '{1}'.".format(name, self.name))
-        return RobotObject()
+        return RobotConfig()
 
     def saveConfig(self):
         """
