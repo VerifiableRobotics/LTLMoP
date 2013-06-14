@@ -7,7 +7,7 @@
     ================================================
 """
 
-import globalConfig
+import lib.globalConfig
 
 class Handler(object):
     def __init__(self, executor, *args, **kwds):
@@ -72,7 +72,6 @@ class MotionControlHandler(Handler):
     def __init__(self, *args, **kwds):
         super(MotionControlHandler, self).__init__(*args, **kwds)
     
-    def 
 
 class DriveHandler(Handler):
     """
