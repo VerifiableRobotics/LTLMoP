@@ -11,14 +11,12 @@
 """
 
 import os, sys, re
-import fileMethods, regions
+import fileMethods
 import inspect,types
 from numpy import *
 from copy import deepcopy
-import project
 import ast
 import json
-import traceback
 import globalConfig, logging
 
 
@@ -50,7 +48,7 @@ class MethodParameterConfig(object):
         keyList = ['name','type','default','max','min','value']
         for key in keyList:
             strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
-        reprString = " -- Method Parameter <{0}> -- \n".format(self.name) + \
+        reprString = "\n -- Method Parameter <{0}> -- \n".format(self.name) + \
                     strRepr + " -- End of Method Parameter <{0}> -- \n".format(self.name) 
         return reprString
 
@@ -136,7 +134,7 @@ class HandlerMethodConfig(object):
                 strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
             else:
                 strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
-        reprString = " -- Handler Method <{0}> -- \n".format(self.name) + \
+        reprString = "\n --Handler Method <{0}> -- \n".format(self.name) + \
                     strRepr + " -- End of Handler Method <{0}> -- \n".format(self.name) 
         return reprString
 
@@ -172,7 +170,7 @@ class HandlerConfig(object):
                 strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
             else:
                 strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
-        reprString = " -- Handler <{0}> -- \n".format(self.name) + \
+        reprString = "\n --Handler <{0}> -- \n".format(self.name) + \
                     strRepr + " -- End of Handler <{0}> -- \n".format(self.name) 
         return reprString
         
@@ -283,7 +281,7 @@ class RobotConfig(object):
                 '\n'.join(["{0:13}{1:23}{2}".format('',handlerType+':',getattr(handlerDict[handlerType],'name','None')) for handlerType in handlerDict.keys()])))
             else:
                 strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
-        reprString = " -- Robot <{0}> -- \n".format(self.name) + \
+        reprString = "\n --Robot <{0}> -- \n".format(self.name) + \
                     strRepr + " -- End of Robot <{0}> -- \n".format(self.name) 
         return reprString
 
@@ -318,7 +316,7 @@ class ExperimentConfig(object):
                 strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",getattr(getattr(self,key,'NOT DEFINED'),'name','NOT DEFINED')))
             else:
                 strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
-        reprString = " -- Config <{0}> -- \n".format(self.name) + \
+        reprString = "\n --Config <{0}> -- \n".format(self.name) + \
                     strRepr + " -- End of Config <{0}> -- \n".format(self.name) 
         return reprString
         strRepr = []
