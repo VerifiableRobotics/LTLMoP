@@ -17,104 +17,12 @@ import ast
 import json
 import traceback
 import globalConfig, logging
-
+from hsubConfigObjects import MethodParameterConfig
 
 
 ###################################################
 # Define individual objects for handler subsystem #
 ###################################################
-class ParameterObject:
-    """
-    A parameter object
-    Each object represents one parameter of a given method
-    """
-
-    def __init__(self,para_name=""):
-        self.name = para_name   # name of the parameter
-        self.type = ""      # type of the parameter
-        self.des = ""       # description of the parameter
-        self.default = None # the default values of the parameter
-        self.max = None     # the max value allowed for the parameter
-        self.min = None     # the min value allowed for the parameter
-        self.value = None   # the value user set for the parameter
-    
-    def __repr__(self):
-        """
-        Overwrite string representation function
-        """
-        strRepr = []
-        # Get all attribute names and values
-        for key,val in self.__dict__.iteritems():
-            # Only show if the value is not None or empty
-            if not(val == None or val == ""): 
-                strRepr.append("{0}:{1}".format(key,val))
-        
-        # if all attributes have values of None or empty
-        if not strRepr: 
-            reprString = "All attributes have values of None or empty."
-        else:
-            reprString = "\n".join(strRepr)
-        
-        return "Parameter Object -- \n" + reprString + "\n"
-
-    def setValue(self,value):
-        """
-        This function makes sure all parameter are set according to the desired type
-        """
-
-        # Change None type to empty string to avoid None.lower()
-        if self.type == None: self.type = ""
-
-        if self.type.lower() in ['float','double']:
-            try:
-                self.value = float(value)
-            except ValueError:
-                logging.error("Invalid float value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() in ['int','integer']:
-            try:
-                self.value = int(value)
-            except ValueError:
-                logging.error("Invalid int value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
-            if str(value).lower() in ['1','true','t']:
-                self.value = True
-            elif str(value).lower() in ['0','false','f']:
-                self.value = False
-        elif self.type.lower() == 'region':
-            try:
-                self.value = str(value).strip("'\"")
-            except ValueError:
-                logging.error("Invalid region value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() in ['str','string']:
-            try:
-                self.value = str(value).strip('\"\'') 
-            except ValueError:
-                logging.error("Invalid string value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() == 'choice':
-            try:
-                self.value = str(value).strip('\"\'')
-            except ValueError:
-                logging.error("Invalid choice value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() == 'multichoice':
-            try:
-                self.value = str(value).strip('\"\'')
-            except ValueError:
-                logging.error("Invalid multichoice value: {0} for parameter {1}".format(value,self.name))
-        else:
-            logging.error("Cannot set the value of parameter {0}, because its type {1} cannot be recognized.".format(self.name,self.type))
-
-    def getValue(self):
-        return self.value
-
-    def resetValue(self):
-        # Reset the parameter value to its default value.
-        # If the default value is not define, then the value is set to None
-        if self.default is None:
-            self.value = None
-        else:
-            self.setValue(self.default)
-
-
 class MethodObject:
     """
     A method object
@@ -151,7 +59,7 @@ class MethodObject:
             if p.name == name:
                 return p
         logging.error("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
-        return ParameterObject()
+        return MethodParameterConfig()
 
 class HandlerObject:
     """
@@ -373,9 +281,7 @@ class ConfigObject:
             data[header]['RobotName'] = robot.name
             data[header]['Type'] = robot.type
 
-            if robot.calibrationMatrix is not None:
-                data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
-
+            data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
             # TODO: change to string function
             try:
                 data[header]['InitHandler'] = robot.handlers['init'].toString()
@@ -906,7 +812,7 @@ class HandlerParser:
                 for para_name in inspect.getargspec(method)[0]:
                     # create a parameter object if the parameter is not ignorable
                     if para_name not in self.ignore_parameter:
-                        paraObj = ParameterObject(para_name)
+                        paraObj = MethodParameterConfig(para_name)
                         methodObj.para.append(paraObj)
                     else:
                         methodObj.omitPara.append(para_name)
@@ -1342,7 +1248,7 @@ class ConfigFileParser:
 if __name__ == '__main__':
     m = MethodObject()
     print m
-    m = ParameterObject('Jim')
+    m = MethodParameterConfig('Jim')
     print m
     m = HandlerObject()
     print m

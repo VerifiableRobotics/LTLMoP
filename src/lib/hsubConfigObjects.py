@@ -147,7 +147,7 @@ class HandlerMethodConfig(object):
             if p.name == name:
                 return p
         logging.error("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
-        return ParameterObject()
+        return MethodParameterConfig()
 
 class HandlerConfig(object):
     """
