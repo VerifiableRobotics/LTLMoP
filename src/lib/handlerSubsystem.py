@@ -8,7 +8,7 @@
 
 
 import os, sys, re
-import fileMethods, regions
+import fileMethods
 import inspect,types
 from numpy import *
 from copy import deepcopy
