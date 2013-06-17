@@ -6,7 +6,18 @@ Currently, this only sets up logging.
 import logging
 import ConfigParser
 import sys, os
-import project
+
+def get_ltlmop_root():
+    # Climb the tree to find out where we are
+    p = os.path.abspath(__file__)
+    t = ""
+    while t != "src":
+        (p, t) = os.path.split(p)
+        if p == "" or p == "/":
+            print "I have no idea where I am; this is ridiculous"
+            return None
+
+    return os.path.join(p, "src")
 
 def setupLogging(loggerLevel=None):
     # Set up loggers for printing error messages
@@ -44,7 +55,7 @@ def setupLogging(loggerLevel=None):
     cfg = ConfigParser.ConfigParser()
 
     try:
-        cfg.read(os.path.join(project.get_ltlmop_root(), "global.cfg"))
+        cfg.read(os.path.join(get_ltlmop_root(), "global.cfg"))
         loggerLevel = cfg.get("logging", "level").lower()
     except:
         logging.warning("Could not parse global.cfg file; using defaults")

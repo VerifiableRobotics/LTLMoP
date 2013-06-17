@@ -10,24 +10,13 @@
 
 # TODO: Document better
 
-def get_ltlmop_root():
-    # Climb the tree to find out where we are
-    p = os.path.abspath(__file__)
-    t = ""
-    while t != "src":
-        (p, t) = os.path.split(p)
-        if p == "" or p == "/":
-            print "I have no idea where I am; this is ridiculous"
-            return None
-
-    return os.path.join(p, "src")
-
 import os, sys
 import fileMethods, regions
 from numpy import *
 import handlerSubsystem
 import inspect
 import logging
+import globalConfig
 
 class Project:
     """
@@ -60,16 +49,7 @@ class Project:
                                 "use_region_bit_encoding": True, # Use a vector of "bitX" propositions to represent regions, for efficiency
                                 "parser": "structured"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
 
-        # Climb the tree to find out where we are
-        p = os.path.abspath(__file__)
-        t = ""
-        while t != "src":
-            (p, t) = os.path.split(p)
-            if p == "" or p == "/":
-                print "I have no idea where I am; this is ridiculous"
-                return None
-
-        self.ltlmop_root = get_ltlmop_root()
+        self.ltlmop_root = globalConfig.get_ltlmop_root()
 
     def setSilent(self, silent):
         self.silent = silent
