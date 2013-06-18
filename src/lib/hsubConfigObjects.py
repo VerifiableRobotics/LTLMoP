@@ -257,13 +257,136 @@ class HandlerConfig(object):
         self.type=h_type
         return self
 
+    def parseHandler(self,handlerModule,onlyLoadInit=False,over_write_h_type=None):
+        """
+        Load method info (name,arg...) in the given handler file
+        If onlyLoadInit is True, only the info of __init__ method will be loaded
+        If over_write_h_type is given, then over write the handler type with it
+
+        returns a handler object or None if fail to load the given handler file
+        """
+
+        # Regular expressions to help us out
+        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
+        settingRE = re.compile(r"""(?x)
+                                   (?P<key>\w+)
+                                   \s*=\s*
+                                   (?P<val>
+                                       "[^"]*" | # double-quoted string
+                                       \[[^\]]*\] | # array
+                                       [^,\s]*    # other
+                                    )""")
+
+        # add lib to the module name if it is not there already
+        if not handlerModule.startswith('lib.'): handlerModule = 'lib.' + handlerModule
+        handlerModuleName = handlerModule.rpartition('.')[2]
+        # Try to load the handler file
+        logging.debug("Inspecting handler: {}".format(handlerModuleName))
+        try:
+            handlerModule = importlib.import_module(handlerModule)
+        except Exception as e:
+            logging.warning("Failed to import handler {0} : {1}".format(handlerModuleName,e))
+            if not isinstance(e, ImportError):
+                logging.debug(traceback.format_exc())
+            raise ImportError
+
+
+        # Find the class object that specifies the handler
+        handlerClass = inspect.getmembers(handlerModule, lambda c: inspect.isclass(c) and \
+                                                                   c.__module__ == handlerModule and \
+                                                                   ht.Handler in inspect.getmro(c))
+        # Warn if there are multiple handlerClass in one handler file
+        if len(handlerClass) > 1:
+            logging.warning("Multiple handler classes found in file {}. Randomly choose one to import.".format(handlerModuleName))
+        handlerClass = handlerClass[0][1]
+        # Raise error if there are no handlerClass found in the handler file
+        if len(handlerClass) < 1:
+            logging.warning("No handler class found in file {}. Abort importing.".format(handlerModuleName))
+
+        # update the handler name and type info
+        # handler name is the name of the file
+        # handler type is the corresponding handler object defined in handlerTemplates.py
+        self.name = handlerModuleName
+        self.type = inspect.getmro(handlerClass)[1] # direct parent
+
+        # get all methods in this handler
+        handlerMethod = inspect.getmembers(handlerClass,inspect.ismethod)
+        # parse each method into method object
+        for methodName,method in handlerMethod:
+            # only parse the method not start with underscore (exclude __inti__)
+            # only parse the __init__ method if required
+            if ((not onlyLoadInit and (not str(methodName).startswith('_')) or str(methodName)=='__init__') ):
+                # Create a method object and update it
+                methodObj = HandlerMethodConfig()
+                methodObj.name = methodName
+                methodObj.handler = handlerObj
+                for para_name in inspect.getargspec(method)[0]:
+                    # create a parameter object if the parameter is not ignorable
+                    if para_name not in self.ignore_parameter:
+                        paraObj = MethodParameterConfig(para_name)
+                        methodObj.para.append(paraObj)
+                    else:
+                        methodObj.omitPara.append(para_name)
+
+                # parse the description of the function
+                doc = inspect.getdoc(method)
+                if doc is not None:
+                    for line in doc.split('\n'):
+
+                        # If it is an empty line, ignore it
+                        if re.search('^(\s*)$',line):
+                            continue
+
+                        # If there is a newline at the end, remove it
+                        if re.search('\n$',line):
+                            line = re.sub('\n$','',line)
+
+                        # If the line defines an argument variable
+                        if argRE.search(line):
+                            m = argRE.search(line)
+                            for paraObj in methodObj.para:
+                                # match the definition of a parameter and a parameter object with their names
+                                if paraObj.name.lower() == m.group('argName').strip().lower():
+                                    # update the parameter object
+                                    paraObj.type = m.group('type')
+                                    paraObj.des = m.group('description')
+                                    if m.group('range') is not None:
+                                        try:
+                                            for k, v in settingRE.findall(m.group('range')):
+                                                if k.lower() not in ['default', 'min', 'max', 'options']:
+                                                    logging.warning('Unrecognized setting name "{}" for parameter "{}" of method "{}"'.format(k.lower(), m.group('argName'), methodName))
+                                                    continue
+
+                                                setattr(paraObj, k.lower(), json.loads(v.lower()))
+                                        except ValueError:
+                                            # LOG AN ERROR HERE
+                                            logging.warning('Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'), methodName))
+
+                                        paraObj.resetValue()
+
+                        # If the line comments the function
+                        else:
+                            methodObj.comment += line + "\n"
+                methodObj.comment = methodObj.comment.strip()
+
+                # remove the parameter that has no definition
+                argToRemove = []
+                for paraObj in methodObj.para:
+                    if paraObj.des == None:
+                        argToRemove.append(paraObj)
+                map(methodObj.para.remove,argToRemove)
+                # add this method into the method list of the handler
+                handlerObj.methods.append(methodObj)
+
+        return handlerObj
+
 class RobotConfig(object):
     """
     A Robot config object
     """
     def __init__(self,r_name="" ,r_type="",driveH=None,initH=None,locoH=None,motionH=None,poseH=None,sensorH=None,actuatorH=None):
         self.name = r_name  # name of the robot
-        self.type = r_type  # type of the robot
+        self.r_type = r_type  # type of the robot
         self.handlers = {'drive':driveH, 'init':initH, 'locomotionCommand':locoH, 'motionControl':motionH, 'pose':poseH, 'sensor':sensorH,'actuator':actuatorH} # dictionary of handler object for this robot
         self.calibrationMatrix = None # 3x3 matrix for converting coordinates, stored as lab->map
 
@@ -273,7 +396,7 @@ class RobotConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','type','handlers']
+        keyList = ['name','r_type','handlers']
         for key in keyList:
             if key == 'handlers':
                 handlerDict = getattr(self,key,{})
@@ -289,14 +412,14 @@ class ExperimentConfig(object):
     """
     A config file object!
     """
-    def __init__(self):
-        self.name = "" # name of the config file
-        self.robots = []    # list of robot object used in this config file
-        self.prop_mapping = {}  # dictionary for storing the propositions mapping
-        self.initial_truths = [] # list of initially true propoisitions
-        self.main_robot = "" # name of robot for moving in this config
-        self.region_tags = {} # dictionary mapping tag names to region groups, for quantification
-        self.fileName = ""  # full path filename of the config
+    def __init__(self, name="", robots = [], prop_mapping = {}, initial_truths = [], main_robot = "", region_tags = {}, file_name = ""):
+        self.name = name                    # name of the config file
+        self.robots = robots                # list of robot object used in this config file
+        self.prop_mapping = prop_mapping    # dictionary for storing the propositions mapping
+        self.initial_truths = initial_truths# list of initially true propoisitions
+        self.main_robot = main_robot        # name of robot for moving in this config
+        self.region_tags = region_tags      # dictionary mapping tag names to region groups, for quantification
+        self.file_name = file_name          # full path filename of the config
 
     def __repr__(self):
         """
@@ -304,7 +427,7 @@ class ExperimentConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','robots','main_robot','initial_truths','prop_mapping','fileName']
+        keyList = ['name','robots','main_robot','initial_truths','prop_mapping','file_name']
         for key in keyList:
             if key in ['robots','initial_truths']:
                 strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",','.join([getattr(p,'name',p) for p in getattr(self,key,[])])))
@@ -371,14 +494,14 @@ class ExperimentConfig(object):
         # the file name is default to be the config name with underscore
         if 'name' in incomplete_attr:
             self.name = 'Untitled configuration'
-        fileName = self.name.replace(' ','_')
+        file_name = self.name.replace(' ','_')
 
         # Add extension to the name
-        fileName = fileName+'.config'
+        file_name = file_name+'.config'
 
         # Add the path to the file name
-        fileName = os.path.join(os.path.dirname(self.fileName),fileName)
-        self.fileName = fileName
+        file_name = os.path.join(os.path.dirname(self.file_name),file_name)
+        self.file_name = file_name
 
         data = {'General Config':{'Name':self.name}}
 
@@ -422,7 +545,7 @@ class ExperimentConfig(object):
                 return False
 
 
-        comments = {"FILE_HEADER": "This is a configuration definition file in folder \"%s\".\n" % os.path.dirname(self.fileName)+
+        comments = {"FILE_HEADER": "This is a configuration definition file in folder \"%s\".\n" % os.path.dirname(self.file_name)+
                     "Format details are described at the beginning of each section below.\n",
                     "PoseHandler": "Input value for robot pose handler, refer to file inside the handlers/pose folder",
                     "DriveHandler": "Input value for robot drive handler, refer to file inside the handlers/drive folder",
@@ -441,5 +564,5 @@ class ExperimentConfig(object):
                     "Initial_Truths": "Initially true propositions",
                     "Region_Tags": "Mapping from tag names to region groups, for quantification"}
 
-        fileMethods.writeToFile(fileName, data, comments)
+        fileMethods.writeToFile(file_name, data, comments)
         return True
