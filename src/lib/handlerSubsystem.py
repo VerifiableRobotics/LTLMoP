@@ -27,7 +27,7 @@ from hsubConfigObjects import MethodParameterConfig,HandlerMethodConfig,\
 
 class HandlerSubsystem:
     """
-    Interface dealing with configuration files and hanlders
+    Interface dealing with configuration files and handlers
     """
     def __init__(self,proj):
         self.proj = proj
@@ -377,7 +377,7 @@ class HandlerParser:
                 else:
                     self.handler_dic[handler_type] = self.loadHandler(handler_type,True)
 
-        # now let's load all robot specific hanlders. Store them using nested dictionary with keys of [handlerType][robotType]
+        # now let's load all robot specific handlers. Store them using nested dictionary with keys of [handlerType][robotType]
         # we also want to add the simulated sensor and actuator handler into the sensor and actuator list even they are robot independent handlers
         self.handler_dic['sensor'] = {'share': [handlerObj.setType('sensor') for handlerObj in self.handler_dic['share'] if 'sensor' in handlerObj.name.lower()]}
         self.handler_dic['actuator'] = {'share': [handlerObj.setType('actuator') for handlerObj in self.handler_dic['share'] if 'actuator' in handlerObj.name.lower()]}
@@ -953,16 +953,17 @@ class ConfigFileParser:
 
 
 if __name__ == '__main__':
-    m = HandlerMethodConfig()
-    print m
-    m = MethodParameterConfig('Jim')
-    print m
-    m = HandlerConfig()
-    print m
-    m = RobotConfig()
-    print m
-    m = ExperimentConfig()
-    print m
+    pass
+#    m = HandlerMethodConfig()
+#    print m
+#    m = MethodParameterConfig('Jim')
+#    print m
+#    m = HandlerConfig()
+#    print m
+#    m = RobotConfig()
+#    print m
+#    m = ExperimentConfig()
+#    print m
 #    proj = project.Project()
 #    proj.ltlmop_root = '/home/jim/Desktop/ltlmop_git/src'
 #    proj.project_root = '/home/jim/Desktop/ltlmop_git/src/examples/newSensorTest'
@@ -972,8 +973,8 @@ if __name__ == '__main__':
 #    h.loadAllConfigFiles()
 
 
-    #h.handler_parser.printHandler()
-    #print h.configs[0].robots[0].handlers['sensor'].methods
+#    h.handler_parser.printHandler()
+#    print h.configs[0].robots[0].handlers['sensor'].methods
 
 #    testStringBefore = 'share.dummySensor.buttonPress(button_name="Wave")'
 #    testMethod = h.string2Method(testStringBefore)
@@ -987,4 +988,3 @@ if __name__ == '__main__':
 #    testMethod = h.string2Method(testStringBefore)
 #    testStringAfter = h.method2String(testMethod,'MAE')
 #    print testStringBefore == testStringAfter
-
