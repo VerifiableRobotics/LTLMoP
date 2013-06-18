@@ -6,7 +6,7 @@
     handlerSubsystem.py
     ================================================
 
-    This module Defines objects for handler system.
+    This module defines objects for handler system.
     It also provides interface that deal with handler and config files
 """
 
@@ -30,14 +30,14 @@ class MethodParameterConfig(object):
     by performing introspection on the individual handler modules
     """
 
-    def __init__(self,para_name=""):
-        self.name = para_name   # name of the parameter
-        self.type = ""      # type of the parameter
-        self.des = ""       # description of the parameter
-        self.default = None # the default values of the parameter
-        self.max = None     # the max value allowed for the parameter
-        self.min = None     # the min value allowed for the parameter
-        self.value = None   # the value user set for the parameter
+    def __init__(self, name="", para_type="", desc="", default=None, max_val=None, min_val=None, value=None):
+        self.name = name                # name of the parameter
+        self.para_type = para_type      # type of the parameter
+        self.desc = desc                # description of the parameter
+        self.default = default          # the default values of the parameter
+        self.max_val = max_val          # the max value allowed for the parameter
+        self.min_val = min_val          # the min value allowed for the parameter
+        self.value = value              # the value user set for the parameter
     
     def __repr__(self):
         """
@@ -45,7 +45,7 @@ class MethodParameterConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','type','default','max','min','value']
+        keyList = ['name','para_type','default','max_val','min_val','value']
         for key in keyList:
             strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
         reprString = "\n -- Method Parameter <{0}> -- \n".format(self.name) + \
@@ -57,46 +57,46 @@ class MethodParameterConfig(object):
         This function makes sure all parameter are set according to the desired type
         """
 
-        # Change None type to empty string to avoid None.lower()
-        if self.type == None: self.type = ""
+        # Change None para_type to empty string to avoid None.lower()
+        if self.para_type == None: self.para_type = ""
 
-        if self.type.lower() in ['float','double']:
+        if self.para_type.lower() in ['float','double']:
             try:
                 self.value = float(value)
             except ValueError:
                 logging.error("Invalid float value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() in ['int','integer']:
+        elif self.para_type.lower() in ['int','integer']:
             try:
                 self.value = int(value)
             except ValueError:
                 logging.error("Invalid int value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() == 'bool' or self.type.lower() == 'boolean':
+        elif self.para_type.lower() == 'bool' or self.para_type.lower() == 'boolean':
             if str(value).lower() in ['1','true','t']:
                 self.value = True
             elif str(value).lower() in ['0','false','f']:
                 self.value = False
-        elif self.type.lower() == 'region':
+        elif self.para_type.lower() == 'region':
             try:
                 self.value = ast.literal_eval(value)
             except ValueError:
                 logging.error("Invalid region value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() in ['str','string']:
+        elif self.para_type.lower() in ['str','string']:
             try:
                 self.value = str(value).strip('\"\'') 
             except ValueError:
                 logging.error("Invalid string value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() == 'choice':
+        elif self.para_type.lower() == 'choice':
             try:
                 self.value = ast.literal_eval(value)
             except ValueError:
                 logging.error("Invalid choice value: {0} for parameter {1}".format(value,self.name))
-        elif self.type.lower() == 'multichoice':
+        elif self.para_type.lower() == 'multichoice':
             try:
                 self.value = ast.literal_eval(value)
             except ValueError:
                 logging.error("Invalid multichoice value: {0} for parameter {1}".format(value,self.name))
         else:
-            logging.error("Cannot set the value of parameter {0}, because its type {1} cannot be recognized.".format(self.name,self.type))
+            logging.error("Cannot set the value of parameter {0}, because its type {1} cannot be recognized.".format(self.name,self.para_type))
 
     def getValue(self):
         return self.value
@@ -115,12 +115,12 @@ class HandlerMethodConfig(object):
     A method object
     Each object represents one method of a given handler
     """
-    def __init__(self):
-        self.name = ""        # name of the method
-        self.handler = None     # which handler the method belongs to
-        self.comment = ""       # comment of the method
-        self.para = []          # list of method parameter config of this method
-        self.omitPara = []      # list of parameter names that are omitted
+    def __init__(self, name="", handler=None, comment="", para=[], omit_para=[]):
+        self.name = name            # name of the method
+        self.handler = handler      # which handler the method belongs to
+        self.comment = comment      # comment of the method
+        self.para = para            # list of method parameter config of this method
+        self.omit_para = omit_para  # list of parameter names that are omitted
 
     def __repr__(self):
         """
@@ -151,12 +151,12 @@ class HandlerConfig(object):
     """
     A handler object!
     """
-    def __init__(self):
-        self.name = "" # name of the handler
-        self.type = "" # type of the handler e.g. motionControl or drive
-        self.shared = ""    # whether the handler is in the shared folder ("y") or not ("n")
-        self.methods = []   # list of method objects in this handler
-        self.robotType = "" # type of the robot using this handler for robot specific handlers
+    def __init__(self, name="", h_type=None, shared="", methods=[], robot_type=""):
+        self.name = name                # name of the handler
+        self.h_type = h_type            # type of the handler e.g. motionControl or drive
+        self.shared = shared            # whether the handler is in the shared folder ("y") or not ("n")
+        self.methods = methods          # list of method objects in this handler
+        self.robot_type = robot_type    # type of the robot using this handler for robot specific handlers
 
     def __repr__(self):
         """
@@ -164,7 +164,7 @@ class HandlerConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','type','methods','robotType']
+        keyList = ['name','type','methods','robot_type']
         for key in keyList:
             if key == 'methods':
                 strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
