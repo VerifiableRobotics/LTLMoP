@@ -1,0 +1,495 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+boundary	0
+boundary	3
+boundary	4
+dining	5
+
+Obstacles: # Names of regions to treat as obstacles
+wall2
+wall1
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "wall2", 
+        "color": [
+            255, 
+            165, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                346, 
+                0
+            ], 
+            [
+                353, 
+                0
+            ], 
+            [
+                353, 
+                249
+            ], 
+            [
+                0, 
+                249
+            ], 
+            [
+                1, 
+                242
+            ], 
+            [
+                1, 
+                241
+            ], 
+            [
+                1, 
+                242
+            ], 
+            [
+                347, 
+                243
+            ]
+        ], 
+        "position": [
+            518, 
+            320
+        ], 
+        "type": "poly", 
+        "size": [
+            353, 
+            249
+        ]
+    }, 
+    {
+        "name": "wall1", 
+        "color": [
+            255, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                1
+            ], 
+            [
+                0, 
+                0
+            ], 
+            [
+                0, 
+                1
+            ], 
+            [
+                220, 
+                1
+            ], 
+            [
+                220, 
+                2
+            ], 
+            [
+                220, 
+                11
+            ], 
+            [
+                220, 
+                12
+            ], 
+            [
+                220, 
+                11
+            ], 
+            [
+                0, 
+                9
+            ]
+        ], 
+        "position": [
+            299, 
+            319
+        ], 
+        "type": "poly", 
+        "size": [
+            220, 
+            12
+        ]
+    }, 
+    {
+        "name": "boundary", 
+        "color": [
+            160, 
+            32, 
+            240
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                0
+            ], 
+            [
+                241, 
+                0
+            ], 
+            [
+                813, 
+                0
+            ], 
+            [
+                1041, 
+                0
+            ], 
+            [
+                1040, 
+                494
+            ], 
+            [
+                907, 
+                657
+            ], 
+            [
+                361, 
+                657
+            ], 
+            [
+                237, 
+                496
+            ], 
+            [
+                0, 
+                503
+            ]
+        ], 
+        "position": [
+            58, 
+            80
+        ], 
+        "type": "poly", 
+        "size": [
+            1041, 
+            657
+        ]
+    }, 
+    {
+        "name": "kitchen", 
+        "color": [
+            255, 
+            165, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                4, 
+                0
+            ], 
+            [
+                224, 
+                2
+            ], 
+            [
+                224, 
+                3
+            ], 
+            [
+                224, 
+                4
+            ], 
+            [
+                224, 
+                233
+            ], 
+            [
+                224, 
+                234
+            ], 
+            [
+                223, 
+                241
+            ], 
+            [
+                0, 
+                248
+            ]
+        ], 
+        "position": [
+            295, 
+            328
+        ], 
+        "type": "poly", 
+        "size": [
+            224, 
+            248
+        ]
+    }, 
+    {
+        "name": "porch", 
+        "color": [
+            255, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                0
+            ], 
+            [
+                241, 
+                0
+            ], 
+            [
+                241, 
+                239
+            ], 
+            [
+                241, 
+                240
+            ], 
+            [
+                241, 
+                248
+            ], 
+            [
+                237, 
+                496
+            ], 
+            [
+                0, 
+                503
+            ]
+        ], 
+        "position": [
+            58, 
+            80
+        ], 
+        "type": "poly", 
+        "size": [
+            241, 
+            503
+        ]
+    }, 
+    {
+        "name": "deck", 
+        "color": [
+            0, 
+            255, 
+            1
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                576, 
+                0
+            ], 
+            [
+                803, 
+                5
+            ], 
+            [
+                670, 
+                168
+            ], 
+            [
+                124, 
+                168
+            ], 
+            [
+                0, 
+                7
+            ], 
+            [
+                223, 
+                0
+            ]
+        ], 
+        "position": [
+            295, 
+            569
+        ], 
+        "type": "poly", 
+        "size": [
+            803, 
+            168
+        ]
+    }, 
+    {
+        "name": "bedroom", 
+        "color": [
+            139, 
+            76, 
+            132
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                240
+            ], 
+            [
+                0, 
+                0
+            ], 
+            [
+                228, 
+                0
+            ], 
+            [
+                227, 
+                494
+            ], 
+            [
+                0, 
+                489
+            ]
+        ], 
+        "position": [
+            871, 
+            80
+        ], 
+        "type": "poly", 
+        "size": [
+            228, 
+            494
+        ]
+    }, 
+    {
+        "name": "dining", 
+        "color": [
+            255, 
+            247, 
+            0
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                242
+            ], 
+            [
+                0, 
+                241
+            ], 
+            [
+                0, 
+                12
+            ], 
+            [
+                0, 
+                11
+            ], 
+            [
+                0, 
+                10
+            ], 
+            [
+                0, 
+                1
+            ], 
+            [
+                0, 
+                0
+            ], 
+            [
+                345, 
+                0
+            ], 
+            [
+                346, 
+                243
+            ]
+        ], 
+        "position": [
+            519, 
+            320
+        ], 
+        "type": "poly", 
+        "size": [
+            346, 
+            243
+        ]
+    }, 
+    {
+        "name": "living", 
+        "color": [
+            233, 
+            123, 
+            19
+        ], 
+        "holeList": [], 
+        "points": [
+            [
+                0, 
+                239
+            ], 
+            [
+                0, 
+                0
+            ], 
+            [
+                572, 
+                0
+            ], 
+            [
+                572, 
+                240
+            ], 
+            [
+                565, 
+                240
+            ], 
+            [
+                220, 
+                240
+            ], 
+            [
+                0, 
+                240
+            ]
+        ], 
+        "position": [
+            299, 
+            80
+        ], 
+        "type": "poly", 
+        "size": [
+            572, 
+            240
+        ]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+wall2	kitchen	519	561	519	562	518	569	519	562
+wall2	deck	518	569	871	569
+wall2	bedroom	871	320	871	569
+wall2	dining	519	562	865	563	519	561	519	562	864	320	865	563
+wall2	living	864	320	871	320
+wall1	kitchen	519	330	519	331	299	328	519	330
+wall1	porch	299	320	299	328	299	319	299	320
+wall1	dining	519	330	519	331	519	320	519	321	519	321	519	330
+wall1	living	299	320	519	320	299	319	299	320
+boundary	porch	58	80	58	583	58	583	295	576	58	80	299	80
+boundary	deck	965	737	1098	574	295	576	419	737	419	737	965	737
+boundary	bedroom	1098	574	1099	80	871	80	1099	80
+boundary	living	299	80	871	80
+kitchen	porch	295	576	299	328
+kitchen	deck	295	576	518	569
+kitchen	dining	519	330	519	331	519	332	519	561	519	331	519	332	519	561	519	562
+porch	living	299	319	299	320	299	80	299	319
+deck	bedroom	871	569	1098	574
+bedroom	living	871	80	871	320
+dining	living	519	320	864	320
+
