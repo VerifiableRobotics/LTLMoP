@@ -11,7 +11,7 @@ radio, 1
 extinguish, 0
 
 CompileOptions:
-convexify: True
+convexify: False
 parser: ltl
 fastslow: False
 decompose: False
@@ -35,15 +35,14 @@ hazardous_item, 1
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-living = p4
-porch = p3
-deck = p7
-others = 
-dining = p6
-bedroom = p8
-kitchen = p5
+living = living
+deck = deck
+porch = porch
+dining = dining
+bedroom = bedroom
+kitchen = kitchen
 
 Spec: # Specification in structured English
-[]<>(s.porch)
-
+--
+[]<>(porch | living)
 
