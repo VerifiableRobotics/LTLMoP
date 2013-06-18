@@ -948,11 +948,15 @@ class addRobotDialog(wx.Dialog):
             self.handler_combos[htype].Clear()
 
             if htype in self.proj.hsub.handler_parser.handler_robotSpecific_type: 
-                for i, h in enumerate(self.proj.hsub.handler_dic[htype][self.robot.type]):
-                    self.handler_combos[htype].Insert(h.name, i)
+                # HACK: temporary fix for hsub returning empty handlers when loading fails
+                hnames = [h.name for h in self.proj.hsub.handler_dic[htype][self.robot.type] if h.name != '']
+                for i, hn in enumerate(hnames):
+                    self.handler_combos[htype].Insert(hn, i)
             else:
-                for i, h in enumerate(self.proj.hsub.handler_dic[htype]):
-                    self.handler_combos[htype].Insert(h.name, i)
+                # HACK: temporary fix for hsub returning empty handlers when loading fails
+                hnames = [h.name for h in self.proj.hsub.handler_dic[htype] if h.name != '']
+                for i, hn in enumerate(hnames):
+                    self.handler_combos[htype].Insert(hn, i)
 
     def __set_properties(self):
         # begin wxGlade: addRobotDialog.__set_properties
