@@ -58,6 +58,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     spec['EnvInit']= ''
     spec['EnvTrans']= ''
     spec['EnvGoals']= ''
+    spec['SysInit']= ''
     spec['SysTrans']= ''
     spec['SysGoals']= ''
 
@@ -84,16 +85,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     bitEncode = bitEncoding(len(regionList),numBits)
     currBitEnc = bitEncode['current']
     nextBitEnc = bitEncode['next']
-
-    # Setting the system initial formula to allow only valid
-    #  region encoding. This may be redundent if an initial region is
-    #  specified, but it is here to ensure the system cannot start from
-    #  an invalid encoding
-    spec['SysInit']= '\t\t\t( ' + currBitEnc[0] + ' '
-    for regionInd in range(1,len(regionList)):
-        spec['SysInit'] = spec['SysInit'] + '| ' + currBitEnc[regionInd] + ''
-    spec['SysInit'] = spec['SysInit'] + ') & '
-    
 
     # Regular expressions to help us out
     EnvInitRE = re.compile('^(environment|env) starts with',re.IGNORECASE)
