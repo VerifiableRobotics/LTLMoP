@@ -17,7 +17,11 @@ from numpy import *
 from copy import deepcopy
 import ast
 import json
+import traceback
 import globalConfig, logging
+import project
+import importlib
+import handlers.handlerTemplates as ht
 
 
 ###################################################
@@ -109,6 +113,42 @@ class MethodParameterConfig(object):
         else:
             self.setValue(self.default)
 
+    def fromString(self, para_string, method_config):
+        """
+        Create a MethodParameterConfig from a line of comments in the method object
+
+        para_string : a line of comments in the method object specifies the properties of the parameter
+        method_config: a HandlerMethodConfig object where the parameter exists
+        """
+        # Regular expressions to help us out
+        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
+        settingRE = re.compile(r"""(?x)
+                                   (?P<key>\w+)
+                                   \s*=\s*
+                                   (?P<val>
+                                       "[^"]*" | # double-quoted string
+                                       \[[^\]]*\] | # array
+                                       [^,\s]*    # other
+                                    )""")
+
+        # update the parameter object
+        m = argRE.search(para_string)
+        self.para_type = m.group('type')
+        self.desc = m.group('description')
+        if m.group('range') is not None:
+            try:
+                for k, v in settingRE.findall(m.group('range')):
+                    if k.lower() not in ['default', 'min_val', 'max_val', 'options', 'min', 'max']:
+                        logging.warning('Unrecognized setting name "{0}" for parameter "{1}" of method "{2}"'.format(k.lower(), m.group('argName'),method_config.name))
+                        continue
+
+                    setattr(self, k.lower(), json.loads(v.lower()))
+            except ValueError:
+                # LOG AN ERROR HERE
+                logging.warning('Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'),method_config.name))
+
+            self.resetValue()
+
 
 class HandlerMethodConfig(object):
     """
@@ -132,6 +172,8 @@ class HandlerMethodConfig(object):
         for key in keyList:
             if key == 'para':
                 strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
+            elif key == 'handler':
+                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(getattr(self,key,'NOT DEFINED'),'name','NOT DEFINED')))
             else:
                 strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
         reprString = "\n --Handler Method <{0}> -- \n".format(self.name) + \
@@ -147,6 +189,62 @@ class HandlerMethodConfig(object):
         logging.error("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
         return MethodParameterConfig()
 
+    def fromMethod(self, method, handler_config):
+        """
+        Create a HandlerMethodConfig from the python method object
+
+        method: python method object
+        handler_config: instance of HandlerConfig where this HandlerMethodConfig locates
+        """
+        # Regular expressions to help us out
+        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
+
+        self.name = method.__name__
+        self.handler = handler_config
+
+        # parsing parameters of the method
+        for para_name in inspect.getargspec(method)[0]:
+            # create a parameter object if the parameter is not ignorable
+            if para_name not in self.handler.ignore_parameter:
+                para_config = MethodParameterConfig(para_name)
+                self.para.append(para_config)
+            else:
+                self.omit_para.append(para_name)
+
+        # parse the description of the function
+        doc = inspect.getdoc(method)
+        if doc is not None:
+            for line in doc.split('\n'):
+
+                # If it is an empty line, ignore it
+                if re.search('^(\s*)$',line):
+                    continue
+
+                # If there is a newline at the end, remove it
+                if re.search('\n$',line):
+                    line = re.sub('\n$','',line)
+
+                # If the line defines an argument variable
+                if argRE.search(line):
+                    m = argRE.search(line)
+                    for para_config in self.para:
+                        # match the definition of a parameter and a parameter object with their names
+                        if para_config.name.lower() == m.group('argName').strip().lower():
+                            # update the parameter config
+                            para_config.fromString(line,self)
+
+                # If the line comments the function
+                else:
+                    self.comment += line + "\n"
+        self.comment = self.comment.strip()
+
+        # remove the parameter that has no definition
+        argToRemove = []
+        for para_config in self.para:
+            if para_config.desc == "":
+                argToRemove.append(para_config)
+        map(self.para.remove,argToRemove)
+
 class HandlerConfig(object):
     """
     A handler object!
@@ -157,6 +255,8 @@ class HandlerConfig(object):
         self.shared = shared            # whether the handler is in the shared folder ("y") or not ("n")
         self.methods = methods          # list of method objects in this handler
         self.robot_type = robot_type    # type of the robot using this handler for robot specific handlers
+        self.ignore_parameter = ['self','initial','proj','shared_data','actuatorVal']
+                                        # list of name of parameter that should be ignored where parse the handler methods
 
     def __repr__(self):
         """
@@ -164,7 +264,7 @@ class HandlerConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','type','methods','robot_type']
+        keyList = ['name','h_type','methods','robot_type']
         for key in keyList:
             if key == 'methods':
                 strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
@@ -173,19 +273,6 @@ class HandlerConfig(object):
         reprString = "\n --Handler <{0}> -- \n".format(self.name) + \
                     strRepr + " -- End of Handler <{0}> -- \n".format(self.name) 
         return reprString
-        
-        # Get all attribute names and values
-        for key,val in self.__dict__.iteritems():
-            # Only show if the value is not None or empty
-            if val: strRepr.append("{0}:{1}".format(key,val))
-        
-        # if all attributes have values of None or empty
-        if not strRepr: 
-            reprString = "All attributes have values of None or empty."
-        else:
-            reprString = "\n".join(strRepr)
-        
-        return "Handler Object -- \n" + reprString + "\n"
 
     def getMethodByName(self, name):
         for m in self.methods:
@@ -257,7 +344,7 @@ class HandlerConfig(object):
         self.type=h_type
         return self
 
-    def parseHandler(self,handlerModule,onlyLoadInit=False,over_write_h_type=None):
+    def parseHandler(self,handler_module_path,onlyLoadInit=False):
         """
         Load method info (name,arg...) in the given handler file
         If onlyLoadInit is True, only the info of __init__ method will be loaded
@@ -266,119 +353,50 @@ class HandlerConfig(object):
         returns a handler object or None if fail to load the given handler file
         """
 
-        # Regular expressions to help us out
-        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
-        settingRE = re.compile(r"""(?x)
-                                   (?P<key>\w+)
-                                   \s*=\s*
-                                   (?P<val>
-                                       "[^"]*" | # double-quoted string
-                                       \[[^\]]*\] | # array
-                                       [^,\s]*    # other
-                                    )""")
-
         # add lib to the module name if it is not there already
-        if not handlerModule.startswith('lib.'): handlerModule = 'lib.' + handlerModule
-        handlerModuleName = handlerModule.rpartition('.')[2]
+        if not handler_module_path.startswith('lib.'): handler_module_path = 'lib.' + handler_module_path
+        handler_module_name = handler_module_path.rpartition('.')[2]
         # Try to load the handler file
-        logging.debug("Inspecting handler: {}".format(handlerModuleName))
+        logging.debug("Inspecting handler: {}".format(handler_module_name))
         try:
-            handlerModule = importlib.import_module(handlerModule)
+            handler_module = importlib.import_module(handler_module_path)
         except Exception as e:
-            logging.warning("Failed to import handler {0} : {1}".format(handlerModuleName,e))
+            logging.warning("Failed to import handler {0} : {1}".format(handler_module_name,e))
             if not isinstance(e, ImportError):
                 logging.debug(traceback.format_exc())
             raise ImportError
 
 
         # Find the class object that specifies the handler
-        handlerClass = inspect.getmembers(handlerModule, lambda c: inspect.isclass(c) and \
-                                                                   c.__module__ == handlerModule and \
+        handler_class = inspect.getmembers(handler_module, lambda c: inspect.isclass(c) and \
+                                                                   c.__module__ == handler_module_path and \
                                                                    ht.Handler in inspect.getmro(c))
-        # Warn if there are multiple handlerClass in one handler file
-        if len(handlerClass) > 1:
-            logging.warning("Multiple handler classes found in file {}. Randomly choose one to import.".format(handlerModuleName))
-        handlerClass = handlerClass[0][1]
-        # Raise error if there are no handlerClass found in the handler file
-        if len(handlerClass) < 1:
-            logging.warning("No handler class found in file {}. Abort importing.".format(handlerModuleName))
+
+        # Raise error if there are no handler_class found in the handler file
+        if len(handler_class) < 1:
+            logging.warning("No handler class found in file {}. Abort importing.".format(handler_module_name))
+        # Warn if there are multiple handler classes in one handler file
+        if len(handler_class) > 1:
+            logging.warning("Multiple handler classes found in file {}. Randomly choose one to import.".format(handler_module_name))
+        handler_class = handler_class[0][1]
 
         # update the handler name and type info
         # handler name is the name of the file
         # handler type is the corresponding handler object defined in handlerTemplates.py
-        self.name = handlerModuleName
-        self.type = inspect.getmro(handlerClass)[1] # direct parent
+        self.name = handler_module_name
+        self.h_type = inspect.getmro(handler_class)[1] # direct parent
 
         # get all methods in this handler
-        handlerMethod = inspect.getmembers(handlerClass,inspect.ismethod)
+        handler_methods = inspect.getmembers(handler_class,inspect.ismethod)
         # parse each method into method object
-        for methodName,method in handlerMethod:
+        for method_name,method in handler_methods:
             # only parse the method not start with underscore (exclude __inti__)
             # only parse the __init__ method if required
-            if ((not onlyLoadInit and (not str(methodName).startswith('_')) or str(methodName)=='__init__') ):
-                # Create a method object and update it
-                methodObj = HandlerMethodConfig()
-                methodObj.name = methodName
-                methodObj.handler = handlerObj
-                for para_name in inspect.getargspec(method)[0]:
-                    # create a parameter object if the parameter is not ignorable
-                    if para_name not in self.ignore_parameter:
-                        paraObj = MethodParameterConfig(para_name)
-                        methodObj.para.append(paraObj)
-                    else:
-                        methodObj.omitPara.append(para_name)
-
-                # parse the description of the function
-                doc = inspect.getdoc(method)
-                if doc is not None:
-                    for line in doc.split('\n'):
-
-                        # If it is an empty line, ignore it
-                        if re.search('^(\s*)$',line):
-                            continue
-
-                        # If there is a newline at the end, remove it
-                        if re.search('\n$',line):
-                            line = re.sub('\n$','',line)
-
-                        # If the line defines an argument variable
-                        if argRE.search(line):
-                            m = argRE.search(line)
-                            for paraObj in methodObj.para:
-                                # match the definition of a parameter and a parameter object with their names
-                                if paraObj.name.lower() == m.group('argName').strip().lower():
-                                    # update the parameter object
-                                    paraObj.type = m.group('type')
-                                    paraObj.des = m.group('description')
-                                    if m.group('range') is not None:
-                                        try:
-                                            for k, v in settingRE.findall(m.group('range')):
-                                                if k.lower() not in ['default', 'min', 'max', 'options']:
-                                                    logging.warning('Unrecognized setting name "{}" for parameter "{}" of method "{}"'.format(k.lower(), m.group('argName'), methodName))
-                                                    continue
-
-                                                setattr(paraObj, k.lower(), json.loads(v.lower()))
-                                        except ValueError:
-                                            # LOG AN ERROR HERE
-                                            logging.warning('Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'), methodName))
-
-                                        paraObj.resetValue()
-
-                        # If the line comments the function
-                        else:
-                            methodObj.comment += line + "\n"
-                methodObj.comment = methodObj.comment.strip()
-
-                # remove the parameter that has no definition
-                argToRemove = []
-                for paraObj in methodObj.para:
-                    if paraObj.des == None:
-                        argToRemove.append(paraObj)
-                map(methodObj.para.remove,argToRemove)
+            if ((not onlyLoadInit and (not str(method_name).startswith('_')) or str(method_name)=='__init__') ):
+                method_config = HandlerMethodConfig(name=method_name)
+                method_config.fromMethod(method,self)
                 # add this method into the method list of the handler
-                handlerObj.methods.append(methodObj)
-
-        return handlerObj
+                self.methods.append(method_config)
 
 class RobotConfig(object):
     """
@@ -566,3 +584,17 @@ class ExperimentConfig(object):
 
         fileMethods.writeToFile(file_name, data, comments)
         return True
+
+if __name__ == '__main__':
+#    m = HandlerMethodConfig()
+#    print m
+#    m = MethodParameterConfig('Jim')
+#    print m
+    m = HandlerConfig()
+    try:
+        m.parseHandler('handlers.basicSim.basicSimLocomotionCommand')
+    except ImportError:
+        logging.warning('Cannot import file {}'.format('init'))
+    print m
+    for method in m.methods:
+        print method
