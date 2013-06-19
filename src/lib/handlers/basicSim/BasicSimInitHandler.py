@@ -4,7 +4,7 @@
 basicSimInit.py -- Basic Simulated Robot Initialization Handler
 ================================================================
 """
-import simulator.basic.basicSimulator as basicSimulator
+import lib.simulator.basic.basicSimulator as basicSimulator
 
 import lib.handlers.handlerTemplates as handlerTemplates
 

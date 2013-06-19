@@ -8,7 +8,7 @@ PioneerODEInit.py -- Pioneer Simulation Initialization Handler
 import os, sys, time,subprocess
 from numpy import *
 
-from simulator.ode.pioneer import DiffDriveSim
+from lib.simulator.ode.pioneer import DiffDriveSim
 
 import lib.handlers.handlerTemplates as handlerTemplates
 

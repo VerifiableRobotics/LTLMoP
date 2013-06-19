@@ -7,7 +7,7 @@ NullPose.py - Pose Handler for single region without Vicon
 
 import sys, time
 from numpy import *
-from regions import *
+from lib.regions import *
 
 import lib.handlers.handlerTemplates as handlerTemplates
 
