@@ -65,7 +65,7 @@ class SpiderInitHandler(handlerTemplates.InitHandler):
         """
         The initialization for the Spider
         
-        comPort (string): The comport to connect to (default=COM8)
+        comPort (string): The comport to connect to (default="COM8")
         """
         self.spiderSer = None   #serial port to spider
         self.gaits = {}         #dictionary of gaits indexed by string of names
