@@ -8,7 +8,7 @@ deadReckoningPose.py - Pose Handler for dead reckoning
 import sys, time
 from numpy import *
 from lib.regions import *
-import _pyvicon
+from lib.handlers.share.pose import _pyvicon
 from math import pi, sin, cos
 import thread
 from time import sleep
