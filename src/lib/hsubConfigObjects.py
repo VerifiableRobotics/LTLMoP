@@ -155,12 +155,19 @@ class HandlerMethodConfig(object):
     A method object
     Each object represents one method of a given handler
     """
-    def __init__(self, name="", handler=None, comment="", para=[], omit_para=[]):
+    def __init__(self, name="", handler=None, comment="", para=None, omit_para=None):
         self.name = name            # name of the method
         self.handler = handler      # which handler the method belongs to
         self.comment = comment      # comment of the method
         self.para = para            # list of method parameter config of this method
         self.omit_para = omit_para  # list of parameter names that are omitted
+
+        # To avoid recursive setting
+        if self.para is None:
+            self.para = []
+        # To avoid recursive setting
+        if self.omit_para is None:
+            self.omit_para = []
 
     def __repr__(self):
         """
@@ -249,11 +256,14 @@ class HandlerConfig(object):
     """
     A handler object!
     """
-    def __init__(self, name="", h_type=None, shared="", methods=[], robot_type=""):
+    def __init__(self, name="", h_type=None, shared="", methods=None, robot_type=""):
         self.name = name                # name of the handler
         self.h_type = h_type            # type of the handler e.g. motionControl or drive
         self.shared = shared            # whether the handler is in the shared folder ("y") or not ("n")
         self.methods = methods          # list of method objects in this handler
+        # To avoid recursive setting
+        if self.methods is None:
+            self.methods = []
         self.robot_type = robot_type    # type of the robot using this handler for robot specific handlers
         self.ignore_parameter = ['self','initial','proj','shared_data','actuatorVal']
                                         # list of name of parameter that should be ignored where parse the handler methods
@@ -375,10 +385,13 @@ class HandlerConfig(object):
         # Raise error if there are no handler_class found in the handler file
         if len(handler_class) < 1:
             logging.warning("No handler class found in file {}. Abort importing.".format(handler_module_name))
+            raise ImportError
         # Warn if there are multiple handler classes in one handler file
         if len(handler_class) > 1:
             logging.warning("Multiple handler classes found in file {}. Randomly choose one to import.".format(handler_module_name))
         handler_class = handler_class[0][1]
+        if handler_class.__name__.lower() != handler_module_name.lower():
+            logging.warning("File name: {0} mismatch with class name: {1}.".format(handler_class.__name__,handler_module_name))
 
         # update the handler name and type info
         # handler name is the name of the file
@@ -430,7 +443,7 @@ class ExperimentConfig(object):
     """
     A config file object!
     """
-    def __init__(self, name="", robots = [], prop_mapping = {}, initial_truths = [], main_robot = "", region_tags = {}, file_name = ""):
+    def __init__(self, name="", robots = None, prop_mapping = {}, initial_truths = None , main_robot = "", region_tags = {}, file_name = ""):
         self.name = name                    # name of the config file
         self.robots = robots                # list of robot object used in this config file
         self.prop_mapping = prop_mapping    # dictionary for storing the propositions mapping
@@ -438,6 +451,13 @@ class ExperimentConfig(object):
         self.main_robot = main_robot        # name of robot for moving in this config
         self.region_tags = region_tags      # dictionary mapping tag names to region groups, for quantification
         self.file_name = file_name          # full path filename of the config
+        
+        # To avoid recursive setting
+        if self.robots is None:
+            self.robots = []
+        # To avoid recursive setting
+        if self.initial_truths is None:
+            self.initial_truths = []
 
     def __repr__(self):
         """
