@@ -765,7 +765,7 @@ class simSetupDialog(wx.Dialog):
 
         pos = self.list_box_robots.GetSelection()
         r = self.list_box_robots.GetClientData(pos)
-        dlg._robot2dialog(deepcopy(r))
+        dlg._robot2dialog(deepcopy(r), original=True)
         if dlg.ShowModal() != wx.ID_CANCEL:
             obj = self._getSelectedConfigObject()
 
@@ -907,6 +907,7 @@ class addRobotDialog(wx.Dialog):
         self.parent = parent
         self.proj = parent.proj
         self.robot = RobotObject()
+        self.original_robot = RobotObject()
 
         self.handler_labels = {}
         self.handler_combos = {}
@@ -990,8 +991,15 @@ class addRobotDialog(wx.Dialog):
         # end wxGlade
         self.sizer_9 = sizer_9
 
-    def _robot2dialog(self, robot):
+    def _robot2dialog(self, robot, original=False):
+        """
+        Update the GUI based on a robot object.
+        If `original` is True, save a reference to allow for reversion to defaults.
+        """
+
         self.robot = robot
+        if original:
+            self.original_robot = deepcopy(robot)
         self.combo_box_robottype.SetStringSelection(self.robot.type)
         self.text_ctrl_robotname.SetValue(self.robot.name)
         self._populateHandlerCombos()
@@ -1071,7 +1079,8 @@ class addRobotDialog(wx.Dialog):
         name = re.sub(r"\W", "_", name.strip())
 
         # Make sure another robot doesn't already have this name
-        if name in (r.name for r in self.parent._getSelectedConfigObject().robots):
+        if name != self.original_robot.name and \
+           name in (r.name for r in self.parent._getSelectedConfigObject().robots):
             raise ValueError('Current configuration already contains a robot with name "{}".\n\nPlease rename.'.format(name))
 
         return name
