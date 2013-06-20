@@ -34,11 +34,12 @@ class HandlerSubsystem:
         self.proj = proj
 
         self.handler_configs = {}   # dictionary for all handler information [robot type or shared][handler type]
+
         self.robots = []            # list of robot objectsirq
         self.configs = []           # list of config objects
 
-        # Create Handler parser
-        self.handler_path = os.path.join(globalConfig.get_ltlmop_root(),'lib','handlers')
+        # Create Handler path
+        self.handler_path = os.path.join('lib','handlers')
 
         # Create robot parser
         self.robot_parser = RobotFileParser(self.handler_path)
@@ -47,41 +48,53 @@ class HandlerSubsystem:
         self.config_path = os.path.join(self.proj.project_root,'configs')
         self.config_parser = ConfigFileParser(self.config_path,self.handler_path,self.proj)
 
+    def _getSubdirectories(self, path):
+        """
+        Return subdirectories in `path` relative to ltlmop root.
+        Only goes one level.
+        """
+        abs_path = os.path.join(globalConfig.get_ltlmop_root(), path)
+        return [os.path.join(path, item) for item in os.listdir(abs_path) \
+                if os.path.isdir(os.path.join(abs_path, item))]
+
     def loadAllHandlers(self):
         """
         Load all handlers in the handler folder
         """
+        # get a list of folders in lib/handlers/ directory
+        handler_folders = self._getSubdirectories(self.handler_path)
+        try:
+            handler_folders.remove(os.path.join(self.handler_path, 'share'))
+        except ValueError:
+            logging.warning('No shared handler directory found in {!r}'.format(self.handler_path))
+        else:
+            handler_folders.extend(self._getSubdirectories(os.path.join(self.handler_path, 'share')))
+            
+        for folder in handler_folders:
+            for handler_file in os.listdir(os.path.join(globalConfig.get_ltlmop_root(), folder)):
+                abs_path = os.path.join(globalConfig.get_ltlmop_root(), folder, handler_file)
 
-        file_items = os.listdir(self.handler_path)
-        handler_folders = []
-        for item in file_items:
-            path = os.path.join(self.handler_path,item)
-            # we only wants the robot folders and the shared folder
-            if os.path.isdir(path) and item not in ['deprecated']:
-                handler_folders.append(item)
-        for item in handler_folders:
-            path = os.path.join(self.handler_path,item)
-            for dir_path,dir_name,file_names in os.walk(path):
-                module_path = re.sub(r"[\\/]", ".", os.path.relpath(dir_path,globalConfig.get_ltlmop_root()))
-                for file_name in file_names:
-                    # find all handler files and ignore internal files
-                    if file_name.endswith('.py') and not file_name.startswith('_'):
-                        # Create a handler config object first
-                        handler_config = HandlerConfig()
-                        try:
-                            handler_config.parseHandler('.'.join([module_path,os.path.splitext(file_name)[0]]))
-                        except ImportError as import_error:
-                            # TODO: Log an error here if the handler is necessary
-                            continue
-                        # save it into the dictionary
-                        if item not in self.handler_configs.keys():
-                            self.handler_configs[item] = {}
-                        if handler_config.h_type is not None:
-                            if handler_config.h_type not in self.handler_configs[item].keys():
-                                self.handler_configs[item][handler_config.h_type] = []
-                            self.handler_configs[item][handler_config.h_type].append(handler_config)
-                        else:
-                            logging.warning("Handler {0} has None type. Cannot be saved.".format(handler_config.name))
+                # find all handler files and ignore internal files
+                if not (os.path.isfile(abs_path) and handler_file.endswith('.py') and not handler_file.startswith('_')): 
+                    continue
+
+                module_info = re.split(r"[\\/]", folder)
+                robot_type = module_info[2]
+
+                # create a handler config object first
+                handler_config = HandlerConfig()
+                try:
+                    handler_config.parseHandler('.'.join(module_info + [os.path.splitext(handler_file)[0]]))
+                except ImportError as import_error:
+                    # TODO: Log an error here if the handler is necessary
+                    continue
+
+                # save it into the dictionary
+                if robot_type not in self.handler_configs.keys():
+                    self.handler_configs[robot_type] = {}
+                if handler_config.h_type not in self.handler_configs[robot_type].keys():
+                    self.handler_configs[robot_type][handler_config.h_type] = []
+                self.handler_configs[robot_type][handler_config.h_type].append(handler_config)
 
 
     def loadAllRobots(self):
