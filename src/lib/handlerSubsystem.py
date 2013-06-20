@@ -19,6 +19,7 @@ import traceback
 import globalConfig, logging
 from hsubConfigObjects import MethodParameterConfig,HandlerMethodConfig,\
                                 HandlerConfig,RobotConfig,ExperimentConfig
+import lib.handlers.handlerTemplates as ht
 
 
 ###################################################
@@ -32,13 +33,12 @@ class HandlerSubsystem:
     def __init__(self,proj):
         self.proj = proj
 
-        self.handler_dic = {}       # dictionary for all handler information {type of handler:list of handlers of that type}
-        self.robots = []            # list of robot objects
+        self.handler_configs = {}   # dictionary for all handler information [robot type or shared][handler type]
+        self.robots = []            # list of robot objectsirq
         self.configs = []           # list of config objects
 
         # Create Handler parser
-        self.handler_path = os.path.join(self.proj.ltlmop_root,'lib','handlers')
-        self.handler_parser = HandlerParser(self.handler_path)
+        self.handler_path = os.path.join(globalConfig.get_ltlmop_root(),'lib','handlers')
 
         # Create robot parser
         self.robot_parser = RobotFileParser(self.handler_path)
@@ -48,16 +48,47 @@ class HandlerSubsystem:
         self.config_parser = ConfigFileParser(self.config_path,self.handler_path,self.proj)
 
     def loadAllHandlers(self):
-        self.handler_parser.loadAllHandlers()
-        self.handler_dic = self.handler_parser.handler_dic
+        """
+        Load all handlers in the handler folder
+        """
+
+        file_items = os.listdir(self.handler_path)
+        handler_folders = []
+        for item in file_items:
+            path = os.path.join(self.handler_path,item)
+            # we only wants the robot folders and the shared folder
+            if os.path.isdir(path) and item not in ['deprecated']:
+                handler_folders.append(item)
+        for item in handler_folders:
+            path = os.path.join(self.handler_path,item)
+            for dir_path,dir_name,file_names in os.walk(path):
+                module_path = re.sub(r"[\\/]", ".", os.path.relpath(dir_path,globalConfig.get_ltlmop_root()))
+                for file_name in file_names:
+                    # find all handler files and ignore internal files
+                    if file_name.endswith('.py') and not file_name.startswith('_'):
+                        # Create a handler config object first
+                        handler_config = HandlerConfig()
+                        try:
+                            handler_config.parseHandler('.'.join([module_path,os.path.splitext(file_name)[0]]))
+                        except ImportError as import_error:
+                            # TODO: Log an error here if the handler is necessary
+                            continue
+                        # save it into the dictionary
+                        if item not in self.handler_configs.keys():
+                            self.handler_configs[item] = {}
+                        if handler_config.h_type is not None:
+                            if handler_config.h_type not in self.handler_configs[item].keys():
+                                self.handler_configs[item][handler_config.h_type] = []
+                            self.handler_configs[item][handler_config.h_type].append(handler_config)
+                        else:
+                            logging.warning("Handler {0} has None type. Cannot be saved.".format(handler_config.name))
+
 
     def loadAllRobots(self):
-        self.robot_parser.handler_dic = self.handler_dic
         self.robot_parser.loadAllRobots()
         self.robots = self.robot_parser.robots
 
     def loadAllConfigFiles(self):
-        self.config_parser.handler_dic = self.handler_dic
         self.config_parser.loadAllConfigFiles()
         self.configs = self.config_parser.configs
 
@@ -363,19 +394,18 @@ class HandlerParser:
         """
 
         handlerFolders = os.listdir(self.handler_path)
-        # load all robot-independent handlers first
-        for handler_type in self.handler_types:
-            self.handler_dic[handler_type] = []
-            if handler_type not in handlerFolders:
-                # Can't find the folder containing the type of handlers
-                logging.warning("Cannot find {0} handler folder in {1}".format(handler_type, self.handler_path))
+        # load all robot-independent handlersos.for handler_type in self.handler_types:
+        self.handler_dic[handler_type] = []
+        if handler_type not in handlerFolders:
+            # Can't find the folder containing the type of handlers
+            logging.warning("Cannot find {0} handler folder in {1}".format(handler_type, self.handler_path))
+        else:
+            # For the robot independent handlers, we only want to parse the init function to get the parameters information
+            if handler_type == 'share':
+                # But both simulated sensor and actuator handlers are in the shared folder. All of their function need to be parsed.
+                self.handler_dic[handler_type] = self.loadHandler(handler_type,False)
             else:
-                # For the robot independent handlers, we only want to parse the init function to get the parameters information
-                if handler_type == 'share':
-                    # But both simulated sensor and actuator handlers are in the shared folder. All of their function need to be parsed.
-                    self.handler_dic[handler_type] = self.loadHandler(handler_type,False)
-                else:
-                    self.handler_dic[handler_type] = self.loadHandler(handler_type,True)
+                self.handler_dic[handler_type] = self.loadHandler(handler_type,True)
 
         # now let's load all robot specific handlers. Store them using nested dictionary with keys of [handlerType][robotType]
         # we also want to add the simulated sensor and actuator handler into the sensor and actuator list even they are robot independent handlers
@@ -964,11 +994,13 @@ if __name__ == '__main__':
 #    print m
 #    m = ExperimentConfig()
 #    print m
-#    proj = project.Project()
-#    proj.ltlmop_root = '/home/jim/Desktop/ltlmop_git/src'
-#    proj.project_root = '/home/jim/Desktop/ltlmop_git/src/examples/newSensorTest'
-#    h = HandlerSubsystem(proj)
-#    h.loadAllHandlers()
+    proj = project.Project()
+    proj.project_root = '/home/jim/LTLMoP/src/examples/firefighting/'
+    h = HandlerSubsystem(proj)
+    h.loadAllHandlers()
+
+    print [hcfg.name for hcfg in h.handler_configs['share'][ht.SensorHandler]]
+
 #    h.loadAllRobots()
 #    h.loadAllConfigFiles()
 
