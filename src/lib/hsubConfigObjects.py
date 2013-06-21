@@ -432,9 +432,12 @@ class RobotConfig(object):
         keyList = ['name','r_type','handlers']
         for key in keyList:
             if key == 'handlers':
-                handlerDict = getattr(self,key,{})
-                strRepr = strRepr + ("{0}{1}\n".format("<"+key+">:\n", \
-                '\n'.join(["{0:13}{1:23}{2}".format('',handlerType+':',getattr(handlerDict[handlerType],'name','None')) for handlerType in handlerDict.keys()])))
+                handler_configs = getattr(self,key,{})
+                temp_str_list = []
+                for h_type in handler_configs.keys():
+                    temp_str_list.append("{0:13}{1:23}{2}".format('', ht.getHandlerTypeName(h_type) + ':', \
+                                                             ','.join([h.name for h in handler_configs[h_type]])))
+                strRepr = strRepr + ("{0}{1}\n".format("<"+key+">:\n", '\n'.join(temp_str_list)))
             else:
                 strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
         reprString = "\n --Robot <{0}> -- \n".format(self.name) + \
