@@ -48,7 +48,7 @@ Spec: # Specification in structured English
 
 # this part is auto-generated because it is messy
 
-ENVIRONMENT TOPOLOGY
+FOLLOW_SENSOR_CONSTRAINTS
 
 --
 
