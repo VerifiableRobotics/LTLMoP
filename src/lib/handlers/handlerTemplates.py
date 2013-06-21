@@ -93,3 +93,44 @@ class LoadingError(Exception):
     def __init__(self, msg):
         # Call the base class constructor with the parameters it needs
         Exception.__init__(self, msg)
+
+# a dictionary that maps handler type in str to handler type class object
+handler_type_mapping = {'Init': InitHandler, \
+                        'Pose': PoseHandler, \
+                        'Sensor': SensorHandler, \
+                        'Actuator': ActuatorHandler, \
+                        'Drive': DriveHandler, \
+                        'MotionControl': MotionControlHandler, \
+                        'LocomotionCommand': LocomotionCommandHandler \
+                       }
+
+# update the dictionary to include bidirectional mapping
+handler_type_mapping.update(dict((v, k) for k, v in handler_type_mapping.iteritems()))
+
+def getHandlerTypeClass(name):
+    """
+    Given a handler type name in string, return the corresponding handler class object
+    """
+    if not isinstance(name, str):
+        raise TypeError("Expected handler type name as string")
+
+    # if the name ends with `Handler`, remove it
+    name = re.sub('Handler$', '', name)
+
+    try:
+        return handler_type_mapping[name]
+    except KeyError:
+        raise KeyError("Invalid handler type")
+
+def getHandlerTypeName(h_class, short_name = True):
+    """
+    Given a handler class object, return the corresponding handler type name in string
+    If short_name is True, return the name without tailing `Handler`
+    """
+    if Handler not in h_class.__bases__:
+        raise TypeError("Expected handler type as handler class object")
+
+    try:
+        return handler_type_mapping[h_class] + ('Handler' if not short_name else '')
+    except KeyError:
+        raise KeyError("Invalid handler type")
