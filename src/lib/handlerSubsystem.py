@@ -17,7 +17,7 @@ import ast
 import json
 import traceback
 import globalConfig, logging
-from hsubConfigObjects import MethodParameterConfig,HandlerMethodConfig,\
+from lib.hsubConfigObjects import MethodParameterConfig,HandlerMethodConfig,\
                                 HandlerConfig,RobotConfig,ExperimentConfig
 import lib.handlers.handlerTemplates as ht
 
