@@ -414,11 +414,14 @@ class RobotConfig(object):
     """
     A Robot config object
     """
-    def __init__(self,r_name="" ,r_type="",driveH=None,initH=None,locoH=None,motionH=None,poseH=None,sensorH=None,actuatorH=None):
-        self.name = r_name  # name of the robot
-        self.r_type = r_type  # type of the robot
-        self.handlers = {'drive':driveH, 'init':initH, 'locomotionCommand':locoH, 'motionControl':motionH, 'pose':poseH, 'sensor':sensorH,'actuator':actuatorH} # dictionary of handler object for this robot
-        self.calibrationMatrix = None # 3x3 matrix for converting coordinates, stored as lab->map
+    def __init__(self, r_name = "", r_type = "", handlers = None):
+        self.name = r_name              # name of the robot
+        self.r_type = r_type            # type of the robot
+        self.handlers = handlers        # dictionary of handler object for this robot
+        # To avoid recursive setting
+        if self.handlers is None:
+            self.handlers = {}
+        self.calibration_matrix = None  # 3x3 matrix for converting coordinates, stored as lab->map
 
     def __repr__(self):
         """
@@ -567,7 +570,7 @@ class ExperimentConfig(object):
             data[header]['RobotName'] = robot.name
             data[header]['Type'] = robot.type
 
-            data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
+            data[header]['CalibrationMatrix'] = repr(robot.calibration_matrix)
             # TODO: change to string function
             try:
                 data[header]['InitHandler'] = robot.handlers['init'].toString()
