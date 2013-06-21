@@ -19,7 +19,6 @@ import ast
 import json
 import traceback
 import globalConfig, logging
-import project
 import importlib
 import handlers.handlerTemplates as ht
 
