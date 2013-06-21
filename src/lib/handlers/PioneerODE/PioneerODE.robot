@@ -1,29 +1,27 @@
 RobotName: # Robot Name
-Pioneer ODE
+Charlie
 
 Type: # Robot type
 PioneerODE
 
 ActuatorHandler: # Robot default actuator handler with default argument values
-PioneerODEActuator()
 
 DriveHandler: # Robot default drive handler with default argument values
-differentialDrive(d=0.65)
+share.Drive.DifferentialDriveHandler(d=0.65)
 
 InitHandler: # Robot default init handler with default argument values
-PioneerODEInit()
+PioneerODE.PioneerODEInitHandler()
 
 LocomotionCommandHandler: # Robot locomotion command actuator handler with default argument values
-PioneerODELocomotionCommand()
+PioneerODE.PioneerODELocomotionCommandHandler()
 
 MotionControlHandler: # Robot default motion control handler with default argument values
-vectorController()
+share.MotionControl.VectorControllerHandler()
 
 PoseHandler: # Robot default pose handler with default argument values
-pioneerSimPose()
+PioneerODE.PioneerSimPoseHandler()
 
 SensorHandler: # Robot default sensor handler with default argument values
-PioneerODESensor()
 
 CalibrationMatrix:
 array([[  3.3333,       0, 0],
