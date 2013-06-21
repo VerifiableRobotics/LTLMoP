@@ -81,12 +81,20 @@ class HandlerSubsystem:
                 module_info = re.split(r"[\\/]", folder)
                 robot_type = module_info[2]
 
-                # create a handler config object first
-                handler_config = HandlerConfig()
-                try:
-                    handler_config.parseHandler('.'.join(module_info + [os.path.splitext(handler_file)[0]]))
-                except ImportError as import_error:
-                    # TODO: Log an error here if the handler is necessary
+                # handler type
+                if len(module_info) == 4:
+                    # this is a shared handler
+                    h_type = module_info[3]
+                else:
+                    # this a robot handler
+                    h_type = None
+
+                # handler name
+                h_name = os.path.splitext(handler_file)[0]
+
+                handler_config = self.loadHandler(robot_type, h_type, h_name)
+                if handler_config is None:
+                    # the handler cannot be loaded
                     continue
 
                 # save it into the dictionary
@@ -96,6 +104,64 @@ class HandlerSubsystem:
                     self.handler_configs[robot_type][handler_config.h_type] = []
                 self.handler_configs[robot_type][handler_config.h_type].append(handler_config)
 
+    def loadHandler(self, r_type, h_type, h_name):
+        """
+        Load the handler config object from the file based on the given info
+        """
+        # create a handler config object first
+        handler_config = HandlerConfig()
+
+        if r_type in ['share']:
+            # this is a shared handler, we will require a handler type
+            # if the h_type is a handler type class object, translate it into a str
+            if not isinstance(h_type, str):
+                h_type = ht.getHandlerTypeName(h_type)
+            handler_module = '.'.join(['lib', 'handlers', r_type, h_type, h_name])
+        else:
+            # this is a robot handler, no handler type required
+            handler_module = '.'.join(['lib', 'handlers', r_type, h_name])
+
+        try:
+            handler_config.parseHandler(handler_module)
+        except ImportError as import_error:
+            # TODO: Log an error here if the handler is necessary
+            handler_config = None
+
+        return handler_config
+
+    def getHandlerConfigDefault(self, r_type, h_type, h_name):
+        """
+        Get default handler config object from handler_configs if exists
+        Or load it from corresponding file if not exits
+        given rtype (str: share or robot type (str)), htype (class), h_name (str). NOT yet overridden by .robot defaults
+        """
+
+        default_handler_config = None
+
+        if self.handler_configs == {}:
+            # if no handler has been loaded yet we will load the handler from file
+            default_handler_config = self.loadHandler(r_type, h_type, h_name)
+        else:
+            # fetch it from the exiting handler_configs dictionary
+            if r_type not in self.handler_configs.keys():
+                # robot type is not recognized
+                logging.warning("Cannot find handler config with robot type {!r}.".format(r_type))
+            elif h_type not in self.handler_configs[r_type].keys():
+                # handler type is not recognized
+                logging.warning("Cannot find handler config with handler type {!r} for robot {!r}." \
+                                .format(ht.getHandlerTypeName(h_type), r_type))
+            else:
+                for handler_config in self.handler_configs[r_type][h_type]:
+                    if handler_config.name == h_name:
+                        # we found the handler config object
+                        default_handler_config = handler_config
+                        break
+
+                if default_handler_config is None:
+                    # Cannot find handler config object with given name
+                    logging.warning("Cannot find handler config with handler name {!r}.".format(h_name))
+
+        return default_handler_config
 
     def loadAllRobots(self):
         self.robot_parser.loadAllRobots()
