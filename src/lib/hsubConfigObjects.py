@@ -80,7 +80,7 @@ class MethodParameterConfig(object):
                 self.value = False
         elif self.para_type.lower() == 'region':
             try:
-                self.value = ast.literal_eval(value)
+                self.value = value.strip("'\"")
             except ValueError:
                 logging.error("Invalid region value: {0} for parameter {1}".format(value,self.name))
         elif self.para_type.lower() in ['str','string']:
