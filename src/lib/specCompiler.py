@@ -270,8 +270,6 @@ class SpecCompiler(object):
             LTLspec_env = spec["EnvInit"] + spec["EnvTrans"] + spec["EnvGoals"]
             LTLspec_sys = spec["SysInit"] + spec["SysTrans"] + spec["SysGoals"]
 
-            # HACK: account for the []<>TRUE goal we are adding
-            traceback['SysGoals'].insert(0, None)
         else:
             logging.error("Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"]))
             return None, None, None
