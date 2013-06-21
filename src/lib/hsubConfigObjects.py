@@ -444,6 +444,133 @@ class RobotConfig(object):
                     strRepr + " -- End of Robot <{0}> -- \n".format(self.name) 
         return reprString
 
+    def fromFile(self, file_path, hsub = None):
+        """
+        Given a robot file, return a dictionary holding its information
+        The file_path needs to be the path starting from lib/
+        """
+
+        logging.debug("Loading robot file {!r}".format(os.path.basename(file_path).split('.')[0]))
+        try:
+            # try to load the robot file
+            robot_data = fileMethods.readFromFile(file_path)
+        except IOError:
+            ht.LoadingError("Cannot load the information")
+        else:
+            # now load the robot config from the dictionary data
+            self.fromData(robot_data, hsub)
+
+    def fromData(self, robot_data, hsub = None):
+        """
+        Given a dictionary of robot handler information, returns a robot object holding all the information
+        The dictionary is in the format returned by the readFromFile function
+        If the necessary handler of the robot is not specified or can't be loaded, return None
+        """
+        # make sure we have an instance of handlerSubsystem
+        if hsub is None:
+            raise TypeError("Need an instance of handlerSubsystem to parse robot data")
+
+        # update robot name and type
+        try:
+            self.name = robot_data['RobotName'][0]
+        except (KeyError, IndexError):
+            raise ht.LoadingError("Cannot find robot name")
+
+        try:
+            self.r_type = robot_data['Type'][0]
+        except (KeyError, IndexError):
+            raise ht.LoadingError("Cannot find robot type")
+
+        # update robot calibration matrix
+        try:
+            mat_str = ''.join(robot_data['CalibrationMatrix'])
+            if mat_str.strip() == "": raise KeyError()
+        except KeyError:
+            # Some robot does not have calibration matrix
+            pass
+        else:
+            try:
+                # Convert the string form array to array. Trying not to use eval for security problem
+                mat_str = mat_str.replace("array(","")
+                mat_str = mat_str.replace(")","")
+                self.calibration_matrix = array(ast.literal_eval(mat_str))
+            except SyntaxError:
+                raise ht.LoadingError("Invalid calibration data found for robot {0}({1})".format(self.name, self.r_type))
+
+        # load handler configs
+        for key,val in robot_data.iteritems():
+            if key.endswith('Handler'):
+                # find which type of the handler
+                try:
+                    handler_type = ht.getHandlerTypeClass(key)
+                except KeyError:
+                    logging.warning('Cannot recognize handler type {!r} for robot {}({})'.format(key, self.name, self.r_type))
+                    continue
+
+                # since we allow multiple handlers specified for each type
+                # we will try to load them one by one
+
+                # use regex to help us parse the string
+                handler_re = re.compile(r"(?P<robot>\w+)\.((?P<h_type>\w+)\.)?(?P<h_name>\w+)\((?P<args>[^\)]*)\)")
+
+                for handler_config_str in val:
+                    result = handler_re.match(handler_config_str)
+                    if result:
+                        # this is a valid handler config description
+
+                        # since the robot part of the handler description can be either a robot type or name
+                        # set the robot type of the handler to be this robot type if the robot name matches
+                        robot_type = self.r_type if result.group('robot') == self.name else result.group('robot')
+                        if (robot_type != 'share') and (robot_type != self.r_type):
+                            # this is a handler for a wrong robot
+                            logging.warning('The handler config description: \n \t {!r} \n \
+                                            is for robot {}, but is located in data for robot {}({})' \
+                                            .format(handler_config_str, robot_type, self.name, self.r_type))
+                            continue
+
+                        # if the description also specifies the handler type in it
+                        # we need to make sure it matches with the handler type we get from section name
+                        if result.group('h_type'):
+                            # get the handler type as class object
+                            try:
+                                handler_type_from_str = ht.getHandlerTypeClass(result.group('h_type'))
+                            except KeyError:
+                                logging.warning('Cannot recognize handler type {!r} in config description: \n \t {!r} \n \
+                                                for robot {}({})'.format(result.group('h_type'), handler_config_str, self.name, self.r_type))
+                                continue
+                            if handler_type_from_str != handler_type:
+                                # the handler type from the description does not match the one from section name
+                                logging.warning('Miss placed handler description: \n \t {!r} \n \
+                                                in handler type {!r} for robot {}({})' \
+                                                .format(result.group(handler_config_str, handler_type, self.name, self.r_type)))
+                                # we still want to put this handler config into the right type
+                                handler_type = handler_type_from_str
+                        elif robot_type == 'share':
+                            # This is a shared handler but no handler type information is given
+                            logging.warning('Handler type info missing for {!r} handler in config description: \n \t {!r} \n \
+                                            for robot {}({})'.format(robot_type, handler_config_str, self.name, self.r_type))
+
+                        handler_name = result.group('h_name')
+                        # now let's get the handler config object based on the info we have got
+
+                        handler_config = hsub.getHandlerConfigDefault(robot_type, handler_type, handler_name)
+
+                        # if it is successfully fetched, we save it at the corresponding handler type of this robot
+                        if handler_config is None: continue
+
+                        # TODO: is it necessary to check if self.handlers is a dict
+                        if type(self.handlers) != dict: self.handlers = {}
+
+                        # save it into the dictionary
+                        if handler_type not in self.handlers.keys():
+                            self.handlers[handler_type] = []
+                        if handler_config.name not in [h.name for h in self.handlers[handler_type]]:
+                            self.handlers[handler_type].append(handler_config)
+                    else:
+                        logging.warning('Cannot recognize handler config description: \n \t {!r} \n \
+                                        for handler type {!r} of robot {}({})'.format(handler_config_str, key, self.name, self.r_type))
+                        continue
+
 class ExperimentConfig(object):
     """
     A config file object!
