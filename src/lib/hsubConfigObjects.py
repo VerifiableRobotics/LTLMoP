@@ -738,10 +738,7 @@ class ExperimentConfig(object):
         return True
 
 if __name__ == '__main__':
-#    m = HandlerMethodConfig()
-#    print m
-#    m = MethodParameterConfig('Jim')
-#    print m
+    """ # For testing parsing handler
     m = HandlerConfig()
     try:
         m.parseHandler('handlers.basicSim.basicSimLocomotionCommand')
@@ -750,3 +747,9 @@ if __name__ == '__main__':
     print m
     for method in m.methods:
         print method
+    """
+    robot_config = RobotConfig()
+    try:
+        robot_config.fromData({'RobotName':['jim'],'Type':['jimtype'],'CalibrationMatrix':'[1,2,3]'})
+    except ht.LoadingError, msg:
+        print msg
