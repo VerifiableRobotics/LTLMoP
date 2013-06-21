@@ -84,7 +84,7 @@ class ParameterObject:
                 self.value = False
         elif self.type.lower() == 'region':
             try:
-                self.value = ast.literal_eval(value)
+                self.value = str(value).strip("'\"")
             except ValueError:
                 logging.error("Invalid region value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() in ['str','string']:
@@ -94,12 +94,12 @@ class ParameterObject:
                 logging.error("Invalid string value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() == 'choice':
             try:
-                self.value = ast.literal_eval(value)
+                self.value = str(value).strip('\"\'')
             except ValueError:
                 logging.error("Invalid choice value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() == 'multichoice':
             try:
-                self.value = ast.literal_eval(value)
+                self.value = str(value).strip('\"\'')
             except ValueError:
                 logging.error("Invalid multichoice value: {0} for parameter {1}".format(value,self.name))
         else:
