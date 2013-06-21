@@ -375,7 +375,9 @@ class ConfigObject:
             data[header]['RobotName'] = robot.name
             data[header]['Type'] = robot.type
 
-            data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
+            if robot.calibrationMatrix is not None:
+                data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
+
             # TODO: change to string function
             try:
                 data[header]['InitHandler'] = robot.handlers['init'].toString()
