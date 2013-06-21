@@ -772,6 +772,11 @@ class simSetupDialog(wx.Dialog):
             # Update the name of the main robot if necessary
             if obj.main_robot == obj.robots[pos].name:
                 obj.main_robot = dlg.robot.name
+
+            # Update any propmappings with new name, if necessary
+            for k,v in obj.prop_mapping.iteritems():
+                obj.prop_mapping[k] = re.sub("^"+r.name+"\.", dlg.robot.name+".", v)
+
             obj.robots[pos] = dlg.robot
             self._cfg2dialog(obj)
         dlg.Destroy()
