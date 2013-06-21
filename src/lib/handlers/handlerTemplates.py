@@ -6,7 +6,7 @@
     All handlers should be subclasses of an appropriate handler type (e.g. InitHandler)
     ================================================
 """
-
+import re
 import lib.globalConfig
 
 class Handler(object):
@@ -88,3 +88,8 @@ class LocomotionCommandHandler(Handler):
     """
     def __init__(self, *args, **kwds):
         super(LocomotionCommandHandler, self).__init__(*args, **kwds)
+        
+class LoadingError(Exception):
+    def __init__(self, msg):
+        # Call the base class constructor with the parameters it needs
+        Exception.__init__(self, msg)
