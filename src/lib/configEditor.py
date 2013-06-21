@@ -1079,6 +1079,10 @@ class addRobotDialog(wx.Dialog):
         # Disallow empty names, because that would be super confusing
         if name is None or name == "":
             raise ValueError("Your robot needs a name!")
+
+        # Disallow any reserved names
+        if name in ["share"]:
+            raise ValueError('"{}" is a reserved keyword.  Please choose another name.'.format(name))
         
         # Replace spaces and non-alphanums with underscores
         name = re.sub(r"\W", "_", name.strip())
