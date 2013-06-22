@@ -34,8 +34,8 @@ class HandlerSubsystem:
         self.proj = proj
 
         self.handler_configs = {}   # dictionary for all handler information [robot type or shared][handler type]
-
-        self.robots = []            # list of robot objectsirq
+        self.robot_configs = []     # list of robot objects
+        self.robots = []            # list of robot objects
         self.configs = []           # list of config objects
 
         # Create Handler path
@@ -154,7 +154,7 @@ class HandlerSubsystem:
                 for handler_config in self.handler_configs[r_type][h_type]:
                     if handler_config.name == h_name:
                         # we found the handler config object
-                        default_handler_config = handler_config
+                        default_handler_config = deepcopy(handler_config)
                         break
 
                 if default_handler_config is None:
@@ -164,8 +164,28 @@ class HandlerSubsystem:
         return default_handler_config
 
     def loadAllRobots(self):
-        self.robot_parser.loadAllRobots()
-        self.robots = self.robot_parser.robots
+        """
+        Load all robot files in each handlers/robot_type folder
+        """
+        # get a list of folders in lib/handlers/ directory
+        robot_folders = self._getSubdirectories(self.handler_path)
+        try:
+            robot_folders.remove(os.path.join(self.handler_path, 'share'))
+        except ValueError: pass
+
+        for robot_folder in robot_folders:
+            # find all robot config files
+            robot_files = [f for f in os.listdir(robot_folder) if f.endswith('.robot')]
+            for robot_file in robot_files:
+                robot_config = RobotConfig()
+                # now load the file
+                try:
+                    robot_config.fromFile(os.path.join(robot_folder, robot_file), self)
+                except ht.LoadingError, msg:
+                    logging.warning(str(msg) + ' in robot file {!r}.'.format(os.path.join(robot_folder, robot_file)))
+                    continue
+                else:
+                    self.robot_configs.append(robot_config)
 
     def loadAllConfigFiles(self):
         self.config_parser.loadAllConfigFiles()

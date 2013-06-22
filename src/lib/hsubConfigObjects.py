@@ -195,6 +195,25 @@ class HandlerMethodConfig(object):
         logging.error("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
         return MethodParameterConfig()
 
+    def updateParaFromString(self, para_str):
+        """
+        update all parameter config object of this method config object with info from given string
+        """
+        # if the input string has parentheses around it
+        para_str = para_str.strip('\(\)')
+
+        # parse the string and set the value accordingly
+        for para_name, para_value in re.findall(r'(?P<key>\w+)\s*=\s*(?P<val>"[^"]*"|\'[^\']*\'|[^,]+)', para_str):
+            para_value = para_value.strip("\"\'")
+            set_value = False
+            for para_config in self.para:
+                if para_config.name == para_name:
+                    para_config.setValue(para_value)
+                    set_value = True
+                    break
+            if not set_value:
+                logging.warning('Cannot not find parameter {!r} for method {!r}'.format(para_name, self.name))
+
     def fromMethod(self, method, handler_config):
         """
         Create a HandlerMethodConfig from the python method object
@@ -288,7 +307,7 @@ class HandlerConfig(object):
             if m.name == name:
                 return m
         logging.error("Could not find method of name '{0}' in handler '{1}'".format(name, self.name))
-        return HandlerMethodConfig()
+        raise ValueError
 
     def toString(self,forsave = True):
         """
@@ -560,6 +579,14 @@ class RobotConfig(object):
 
                         # TODO: is it necessary to check if self.handlers is a dict
                         if type(self.handlers) != dict: self.handlers = {}
+
+                        # load all parameter values and overwrite the ones in the __init__ method of default handler config object
+                        try:
+                            init_method_config = handler_config.getMethodByName('__init__')
+                        except ValueError:
+                            logging.warning('Cannot update default parameters of default handler config {!r}'.format(handler_config.name))
+                        else:
+                            init_method_config.updateParaFromString(result.group('args'))
 
                         # save it into the dictionary
                         if handler_type not in self.handlers.keys():
