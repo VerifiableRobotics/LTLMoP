@@ -786,7 +786,7 @@ class SpecCompiler(object):
                 #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
                 #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
                 #newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
-                goals = ["[]<>(TRUE)"] + self.spec[tb_key].split('\n')
+                goals = self.spec[tb_key].split('\n')
                 newCs = [goals[h_item[2]]]
                 newCsOld = newCs
                 
