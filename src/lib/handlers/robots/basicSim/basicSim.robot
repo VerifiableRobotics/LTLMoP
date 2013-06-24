@@ -11,7 +11,7 @@ DriveHandler: # Robot default drive handler with default argument values
 holonomicDrive(multiplier=50.0,maxspeed=999.0)
 
 InitHandler: # Robot default init handler with default argument values
-basicSimInit(init_region=None)
+basicSimInit()
 
 LocomotionCommandHandler: # Robot locomotion command actuator handler with default argument values
 basicSimLocomotionCommand(speed=1.0)

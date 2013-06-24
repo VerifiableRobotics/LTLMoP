@@ -1097,6 +1097,21 @@ class addRobotDialog(wx.Dialog):
     def onClickOK(self, event): # wxGlade: addRobotDialog.<event_handler>
         # TODO: add in checks for all combo boxes (don't allow null handlers)
 
+        # Make sure that all required handler parameters have been specified
+        incomplete_params = []
+        for h_type, handler in self.robot.handlers.iteritems():
+            for param in handler.getMethodByName("__init__").para:
+                if param.getValue() is None:
+                    incomplete_params.append((handler.name, param.name))
+
+        if len(incomplete_params) > 0:
+            wx.MessageBox("The following parameters need to be specified:\n" + \
+                          "\n".join(["  - {}.{}".format(hn, pn) for hn, pn in incomplete_params]),
+                           "Error", style = wx.OK | wx.ICON_ERROR)
+            event.Skip(False)
+            return
+            
+        # Make sure the robot name is OK
         try:
             self.robot.name = self._normalizeRobotName(self.robot.name) 
         except ValueError as e:

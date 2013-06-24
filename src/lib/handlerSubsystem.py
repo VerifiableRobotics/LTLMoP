@@ -111,7 +111,7 @@ class ParameterObject:
     def resetValue(self):
         # Reset the parameter value to its default value.
         # If the default value is not define, then the value is set to None
-        if self.default == None:
+        if self.default is None:
             self.value = None
         else:
             self.setValue(self.default)
