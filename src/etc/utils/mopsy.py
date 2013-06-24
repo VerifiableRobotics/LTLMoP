@@ -263,7 +263,8 @@ class MopsyFrame(wx.Frame):
         if m is None:
             print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
             return
-        jx = int(m.group(1))-1 # minus 1 to account for auto-added []<>true
+
+        jx = int(m.group(1))
 
         if jx < 0:
             print "WARNING: negative jx"
