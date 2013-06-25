@@ -295,7 +295,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         logging.info("Trying to find core without topo or init") 
 
         guiltyList = runMap(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),
-                                                                          range(0, maxDepth + 1),
+                                                                          range(1, maxDepth + 1),
                                                                           itertools.repeat(numProps),
                                                                           itertools.repeat(init),
                                                                           itertools.repeat(trans), 
