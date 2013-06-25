@@ -123,7 +123,7 @@ class AnalysisResultsDialog(wx.Dialog):
 
 
     def markFragments(self, agent, section, jx=None):
-        jx_this = 0 # debug output is 1-indexed
+        jx_this = -1 # debug output is 0-indexed
 
         for f,obj in self.statements[agent]:
             if "[]<>" in f: 
