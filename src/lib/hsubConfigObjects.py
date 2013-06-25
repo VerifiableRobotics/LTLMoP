@@ -193,7 +193,7 @@ class HandlerMethodConfig(object):
             if p.name == name:
                 return p
         logging.error("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
-        return MethodParameterConfig()
+        return None
 
     def updateParaFromString(self, para_str):
         """
@@ -465,7 +465,7 @@ class RobotConfig(object):
 
     def fromFile(self, file_path, hsub = None):
         """
-        Given a robot file, return a dictionary holding its information
+        Given a robot file, load the robot info in it
         The file_path needs to be the path starting from lib/
         """
 
@@ -632,8 +632,6 @@ class ExperimentConfig(object):
                 prop_mapping = getattr(self,key,{})
                 strRepr = strRepr + "{0}{1}\n".format("<"+key+">:\n", \
                 '\n'.join(["{0:18}{1}".format('',prop+' = ' + prop_mapping[prop]) for prop in prop_mapping.keys()]))
-            elif key == 'main_robot':
-                strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",getattr(getattr(self,key,'NOT DEFINED'),'name','NOT DEFINED')))
             else:
                 strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
         reprString = "\n --Config <{0}> -- \n".format(self.name) + \
@@ -653,30 +651,107 @@ class ExperimentConfig(object):
         
         return "Config Object -- \n" + reprString + "\n"
     
-    def checkComplete(self):
-        """
-        This function checks if all of the attributes of the config object are completed by comparing them
-        with the ones of a default config object
-        Return a list of attriute names that are not completed
-        Return an empty list if all attributes are completed
-        """
-
-        incomplete_attr = []
-        # First, let's create a default config object
-        configObj = ExperimentConfig()
-        # Then let's compare all attributes
-        for key,val in self.__dict__.iteritems():
-            if val == getattr(configObj,key):
-                incomplete_attr.append(key)
-                
-        return incomplete_attr
-
     def getRobotByName(self, name):
         for r in self.robots:
             if r.name == name:
                 return r
         logging.error("Could not find robot of name '{0}' in config '{1}'.".format(name, self.name))
         return RobotConfig()
+
+    def fromFile(self, file_path, hsub = None):
+        """
+        Given an experiment config file, load the info
+        """
+
+        # Add extension to the name if there isn't one.
+        if not file_path.endswith('.config'):
+            file_path = file_path + '.config'
+
+        logging.debug("Loading config file: {!r}".format(os.path.basename(file_path).split('.')[0]))
+        try:
+            # try to load the config file
+            config_data = fileMethods.readFromFile(file_path)
+        except IOError:
+            ht.LoadingError("Cannot load the information")
+        else:
+            # now load the robot config from the dictionary data
+            self.fromData(config_data, hsub)
+            # update the file_path
+            self.file_name = file_path
+
+    def fromData(self, config_data, hsub = None):
+        """
+        Given a dictionary of experiment config information, returns an ExperimentConfig object holding all the information
+        The dictionary is in the format returned by the readFromFile function
+        """
+        # make sure we have an instance of handlerSubsystem
+        if hsub is None:
+            raise TypeError("Need an instance of handlerSubsystem to parse experiment config data")
+        try:
+            self.name = config_data['General Config']['Name'][0]
+        except (KeyError, IndexError):
+            raise ht.LoadingError("Missing general config information")
+
+        # parse the string for sensor and actuator prop mapping
+        for prop_type in ['sensor', 'actuator']:
+            if prop_type.title() + '_Proposition_Mapping' in config_data['General Config']:
+                for mapping in config_data['General Config'][prop_type.title() + '_Proposition_Mapping']:
+                    try:
+                        prop, func = [s.strip() for s in mapping.split('=',1)]
+                    except IOError:
+                        raise ht.LoadingError("Wrong {} mapping -- {!r}".format(prop_type, mapping))
+                    else:
+                        self.prop_mapping[prop] = func
+            else:
+                raise ht.LoadingError("Cannot find {} proposition mapping".format(prop_type))
+
+        if 'Initial_Truths' in config_data['General Config']:
+            # parse the initially true propositions
+            for prop_name in config_data['General Config']['Initial_Truths']:
+                self.initial_truths.append(prop_name)
+        else:
+            raise ht.LoadingError("Cannot find initial truth proposition")
+
+        if 'Region_Tags' in config_data['General Config']:
+            # parse the region tags
+            try:
+                self.region_tags = json.loads("".join(config_data['General Config']['Region_Tags']))
+            except ValueError:
+                logging.warning("Wrong region tags")
+
+        # Load main robot name
+        try:
+            self.main_robot = config_data['General Config']['Main_Robot'][0]
+        except (IndexError, KeyError):
+            raise ht.LoadingError("Cannot find main robot name")
+
+        # load robot configs
+        robot_data = []
+        for config_key,config_value in config_data.iteritems():
+            if config_key.startswith('Robot'):
+                robot_data.append(config_value)
+
+        if robot_data == []:
+            raise ht.LoadingError("Missing Robot data")
+        else:
+            # using the parsing function to parse the data
+            for data in robot_data:
+                robot_config = RobotConfig()
+                try:
+                    robot_config.fromData(data, hsub)
+                except LoadingError, msg:
+                    logging.warning(str(msg) + ' in robot data .')
+                    continue
+                except TypeError:
+                    # missing hsub
+                    continue
+                else:
+                    self.robots.append(robot_config)
+
+        # Missing main robot.
+        # if the main robot for this config cannot be loaded, raise an error
+        if self.main_robot not in [r.name for r in self.robots]:
+            ht.LoadingError("Missing main robot config object")
 
     def saveConfig(self):
         """

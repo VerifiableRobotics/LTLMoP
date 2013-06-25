@@ -184,12 +184,32 @@ class HandlerSubsystem:
                 except ht.LoadingError, msg:
                     logging.warning(str(msg) + ' in robot file {!r}.'.format(os.path.join(robot_folder, robot_file)))
                     continue
+                except TypeError:
+                    continue
                 else:
                     self.robot_configs.append(robot_config)
 
     def loadAllConfigFiles(self):
-        self.config_parser.loadAllConfigFiles()
-        self.configs = self.config_parser.configs
+        """
+        Load all experiment config files in the project/configs folder
+        """
+        # Create configs/ directory for project if it doesn't exist already
+        if not os.path.exists(self.config_path):
+            os.mkdir(self.config_path)
+
+        for file_name in os.listdir(self.config_path):
+            if file_name.endswith('.config'):
+                experiment_config = ExperimentConfig()
+                try:
+                    experiment_config.fromFile(os.path.join(self.config_path,file_name), self)
+                except ht.LoadingError, msg:
+                    logging.warning(str(msg) + ' in experiment config file {!r}.'\
+                                    .format(os.path.join(self.config_path, file_name)))
+                    continue
+                except TypeError as e:
+                    logging.error(e)
+                else:
+                    self.configs.append(experiment_config)
 
     def getRobotByType(self, t):
         """
@@ -1096,12 +1116,14 @@ if __name__ == '__main__':
     proj = project.Project()
     proj.project_root = '/home/jim/LTLMoP/src/examples/firefighting/'
     h = HandlerSubsystem(proj)
-    h.loadAllHandlers()
+#    h.loadAllHandlers()
 
-    print [hcfg.name for hcfg in h.handler_configs['share'][ht.SensorHandler]]
+#    print [hcfg.name for hcfg in h.handler_configs['share'][ht.SensorHandler]]
 
 #    h.loadAllRobots()
-#    h.loadAllConfigFiles()
+ #   print h.robot_configs
+    h.loadAllConfigFiles()
+    print h.configs
 
 
 #    h.handler_parser.printHandler()
