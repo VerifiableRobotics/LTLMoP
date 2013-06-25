@@ -11,6 +11,8 @@ CompileOptions:
 convexify: True
 parser: ltl
 fastslow: False
+decompose: True
+use_region_bit_encoding: True
 
 CurrentConfigName:
 basicsim
@@ -31,11 +33,11 @@ sbit2, 1
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
 living = p4
-porch = p3
 deck = p7
-others = 
+porch = p3
 dining = p6
 bedroom = p8
+others = 
 kitchen = p5
 
 Spec: # Specification in structured English
@@ -79,5 +81,5 @@ porch
 
 # UNREALIZABILITY TEST:
 # never go in the bedroom!
-[](!bedroom)
+#[](!bedroom)
 
