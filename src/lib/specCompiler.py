@@ -130,7 +130,10 @@ class SpecCompiler(object):
         if self.proj.compile_options["use_region_bit_encoding"]:
             robotPropList.extend(["bit"+str(i) for i in range(0,int(numpy.ceil(numpy.log2(numRegions))))])
         else:
-            robotPropList.extend([r.name for r in self.parser.proj.rfi.regions])
+            if self.proj.compile_options["decompose"]:
+                robotPropList.extend([r.name for r in self.parser.proj.rfi.regions])
+            else:
+                robotPropList.extend([r.name for r in self.proj.rfi.regions])
 
         self.propList = sensorList + robotPropList
         
@@ -229,11 +232,17 @@ class SpecCompiler(object):
             LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
             LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
 
-            # substitute decomposed region 
-            for r in self.proj.rfi.regions:
-                if not (r.isObstacle or r.name.lower() == "boundary"):
-                    LTLspec_env = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
-                    LTLspec_sys = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
+            if self.proj.compile_options["decompose"]:
+                # substitute decomposed region 
+                for r in self.proj.rfi.regions:
+                    if not (r.isObstacle or r.name.lower() == "boundary"):
+                        LTLspec_env = re.sub('\\b(?:s\.)?' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
+                        LTLspec_sys = re.sub('\\b(?:s\.)?' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
+            else:
+                for r in self.proj.rfi.regions:
+                    if not (r.isObstacle or r.name.lower() == "boundary"):
+                        LTLspec_env = re.sub('\\b(?:s\.)?' + r.name + '\\b', "s."+r.name, LTLspec_env)
+                        LTLspec_sys = re.sub('\\b(?:s\.)?' + r.name + '\\b', "s."+r.name, LTLspec_sys)
 
             traceback = [] # HACK: needs to be something other than None
         elif self.proj.compile_options["parser"] == "structured":
@@ -321,10 +330,15 @@ class SpecCompiler(object):
             # DNF version (extremely slow for core-finding)
             #mutex = "\n\t&\n\t []({})".format(" | ".join(["({})".format(" & ".join(["s."+r2.name if r is r2 else "!s."+r2.name for r2 in self.parser.proj.rfi.regions])) for r in self.parser.proj.rfi.regions]))
 
+            if self.proj.compile_options["decompose"]:
+                region_list = self.parser.proj.rfi.regions
+            else:
+                region_list = self.proj.rfi.regions
+
             # Almost-CNF version
             exclusions = []
-            for i, r1 in enumerate(self.parser.proj.rfi.regions):
-                for r2 in self.parser.proj.rfi.regions[i+1:]:
+            for i, r1 in enumerate(region_list):
+                for r2 in region_list[i+1:]:
                     exclusions.append("!(s.{} & s.{})".format(r1.name, r2.name))
             mutex = "\n&\n\t []({})".format(" & ".join(exclusions))
             LTLspec_sys += mutex
