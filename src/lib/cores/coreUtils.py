@@ -5,10 +5,29 @@ from logic import to_cnf
 from multiprocessing import Pool
 import threading
 import itertools
+import logging
+import random
 
+USE_MULTIPROCESSING = True
 
+def runMap(function, inputs):
+    """ Wrapper for single- and multi-threaded versions of map, to make
+        it easy to disable multiprocessing for debugging purposes
+    """
 
+    logging.debug("Starting map ({}-threaded): {}".\
+                  format("multi" if USE_MULTIPROCESSING else "single", function.__name__))
 
+    if USE_MULTIPROCESSING:
+        pool = Pool()
+        outputs = pool.map(function, inputs, chunksize = 1)   
+        pool.terminate()
+    else:
+        outputs = map(function, inputs)   
+
+    logging.debug("Finished map: {}".format(function.__name__))
+
+    return outputs
 
 def conjunctsToCNF(conjuncts, propList):
     #takes a list of LTL formulas and a list of propositions used in them,
@@ -37,16 +56,10 @@ def conjunctsToCNF(conjuncts, propList):
     p = len(props)+len(propsNext)  
     
     
-    pool = Pool()
-    print "STARTING CNF MAP"
-    allCnfs = pool.map(lineToCnf, conjuncts, chunksize = 1)   
-    #allCnfs = map(lineToCnf, conjuncts)   
-    print "ENDING CNF MAP"
-    pool.terminate()
+    allCnfs = runMap(lineToCnf, conjuncts)   
     
     #associate original LTL conjuncts with CNF clauses
     cnfMapping = {line:cnf.split("&") for cnf, line in zip(allCnfs,conjuncts) if cnf}  
-      
     for cnf, lineOld in zip(allCnfs,conjuncts):     
       if cnf: 
         allClauses = cnf.split("&");
@@ -58,7 +71,7 @@ def conjunctsToCNF(conjuncts, propList):
             for k in propsNext.keys():
                 clause = re.sub("\\b"+k+"\\b",str(propsNext[k]), clause)
             for k in props.keys():
-                    clause = re.sub("\\b"+k+"\\b",str(props[k]), clause)   
+                clause = re.sub("\\b"+k+"\\b",str(props[k]), clause)   
             #add trailing 0   
             if "<>" in lineOld:
                 goalClauses.append(clause.strip()+" 0\n")
@@ -165,7 +178,6 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         input = "p cnf "+str(p)+" "+str(n)+"\n"
         subp.stdin.write(input)                     
         subp.stdin.writelines(init)               
-           
 
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)  
@@ -216,35 +228,30 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
+        #Write output to file (mainly for debugging purposes)
+        #satFileName = "debug"+str(random.randint(0,1000))+".sat"
+        #outputFile = open(satFileName,'w')
+        #outputFile.write("\n".join(output))
+        #logging.debug("wrote {}".format(satFileName))
+        #outputFile.close()
+            
         if any(["WARNING: core extraction disabled" in s for s in output]):
             # never again
-            print "************************************************"
-            print "*** ERROR: picomus needs to be compiled with ***"
-            print "*** trace support, or things will misbehave. ***"
-            print "***                                          ***"
-            print "*** Recompile with ./configure --trace       ***"
-            print "************************************************"
+            logging.error("************************************************")
+            logging.error("*** ERROR: picomus needs to be compiled with ***")
+            logging.error("*** trace support, or things will misbehave. ***")
+            logging.error("***                                          ***")
+            logging.error("*** Recompile with ./configure --trace       ***")
+            logging.error("************************************************")
             return []
 
         if any(["UNSATISFIABLE" in s for s in output]):
-            print "Unsatisfiable core found at depth ", depth
+            logging.info("Unsatisfiable core found at depth {}".format(depth))
         elif any(["SATISFIABLE" in s for s in output]):
-            print "Satisfiable at depth ", depth
+            logging.info("Satisfiable at depth {}".format(depth))
             return []
         else:
-            print "ERROR", output
-            
-                    
-            
-            
-        """#Write output to file (mainly for debugging purposes)
-            satFileName = self.proj.getFilenamePrefix()+".sat"
-            outputFile = open(satFileName,'w')
-            outputFile.write(output)
-            outputFile.close()
-            """
-            
-    
+            logging.error("Picosat error: {!r}".format(output))
         
         """cnfIndices = []
         for line in output.split('\n'):
@@ -284,27 +291,33 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         #first try without topo and init, see if it is satisfiable
         ignoreDepth = 0    
         mapping, cnfMapping, init, trans, goals = conjunctsToCNF([badInit]+conjuncts, propList)
-           
-        pool = Pool()
-                      
-            #print "STARTING PICO MAP"
-            
-        guiltyList = pool.map(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),range(0,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping), itertools.repeat(cnfMapping), itertools.repeat(conjuncts),itertools.repeat(ignoreDepth)))
-            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
-            
-        pool.terminate()
+        
+        logging.info("Trying to find core without topo or init") 
+
+        guiltyList = runMap(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),
+                                                                          range(0, maxDepth + 1),
+                                                                          itertools.repeat(numProps),
+                                                                          itertools.repeat(init),
+                                                                          itertools.repeat(trans), 
+                                                                          itertools.repeat(goals),
+                                                                          itertools.repeat(mapping),
+                                                                          itertools.repeat(cnfMapping),
+                                                                          itertools.repeat(conjuncts),
+                                                                          itertools.repeat(ignoreDepth)))
+
+        #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
             
         allGuilty = set([item for sublist in guiltyList for item in sublist])
             
         if all(guiltyList):
-            print "unsat core found without topo and init"
+            logging.info("Unsat core found without topo or init")
             return trans, allGuilty
         else:
             ignoreDepth = len([g for g in allGuilty if g])
             depth += ignoreDepth
             
         #then try just topo and init and see if it is unsatisfiable. If so, return core.
+        logging.info("Trying to find core with just topo and init") 
         mapping,  cnfMapping, init, trans, goals = conjunctsToCNF([topo, badInit], propList)
        
                     
@@ -314,21 +327,26 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
             #print "ENDING PICO MAP"
  
         if guilty:
-            print "unsat core found with just topo and init"
+            logging.info("Unsat core found with just topo and init")
             return trans, guilty
         
         #if the problem is in conjunction with the topo but not just topo, keep increasing the depth until something more than just topo is returned
         mapping,  cnfMapping, init, trans, goals = conjunctsToCNF([topo,badInit] + conjuncts, propList)
         
-        pool = Pool()
-                      
-            #print "STARTING PICO MAP"
-            
-        guiltyList = pool.map(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),range(maxDepth,maxDepth + 1), itertools.repeat(numProps), itertools.repeat(init), itertools.repeat(trans), itertools.repeat(goals), itertools.repeat(mapping),  itertools.repeat(cnfMapping), itertools.repeat([topo, badInit]+conjuncts), itertools.repeat(ignoreDepth)))
-            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
-            
-        pool.terminate()
+        logging.info("Trying to find core with everything")
+
+        guiltyList = runMap(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),
+                                                                          range(maxDepth, maxDepth + 1),
+                                                                          itertools.repeat(numProps),
+                                                                          itertools.repeat(init),
+                                                                          itertools.repeat(trans),
+                                                                          itertools.repeat(goals),
+                                                                          itertools.repeat(mapping),
+                                                                          itertools.repeat(cnfMapping),
+                                                                          itertools.repeat([topo, badInit] + conjuncts),
+                                                                          itertools.repeat(ignoreDepth)))
+
+        #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
         
         guilty = [item for sublist in guiltyList for item in sublist]        
         
@@ -341,22 +359,22 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         justTopo = set([topo, badInit]).issuperset(guiltyMinusGoal)
         depth = maxDepth + 1
         
-        while justTopo and depth < maxDepth:
+        #while justTopo and depth < maxDepth:
             
-            guilty = findGuiltyLTLConjuncts(cmd,depth,numProps,init,trans,goals,mapping,cnfMapping,[topo, badInit]+conjuncts, ignoreDepth)
-            #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
+            #guilty = findGuiltyLTLConjuncts(cmd,depth,numProps,init,trans,goals,mapping,cnfMapping,[topo, badInit]+conjuncts, ignoreDepth)
+            ##allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
+            ##print "ENDING PICO MAP"
             
             
-            guiltyMinusGoal = [g for g in guilty if '<>' not in g]
-            if not set([topo, badInit]).issuperset(set(guiltyMinusGoal)):
-                justTopo = False
-            else:
-                depth+=1
-            #get contributing conjuncts from CNF indices            
-            #guilty = cnfToConjuncts(allIndices, mapping)
+            #guiltyMinusGoal = [g for g in guilty if '<>' not in g]
+            #if not set([topo, badInit]).issuperset(set(guiltyMinusGoal)):
+                #justTopo = False
+            #else:
+                #depth+=1
+            ##get contributing conjuncts from CNF indices            
+            ##guilty = cnfToConjuncts(allIndices, mapping)
         
-        print "unsat core found with all parts" 
+        logging.info("Unsat core found with all parts")
         
         return trans, guilty
     
