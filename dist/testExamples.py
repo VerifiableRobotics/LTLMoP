@@ -24,10 +24,12 @@ class TestExample(unittest.TestCase):
 
         print "#"*len(title_str)
         print title_str
-        print "#"*len(title_str)
+        print "#"*len(title_str),
 
         if sys.platform not in ['win32', 'cygwin']:
             print "\033[0m"   # end coloring
+
+        print
 
         c = specCompiler.SpecCompiler(self.spec_filename)
         c_out = c.compile()
@@ -36,7 +38,15 @@ class TestExample(unittest.TestCase):
         realizable, realizableFS, output = c_out
 
         print output
-        self.assertTrue(realizable, msg="Specification was unrealizable")
+
+        expectedToBeUnrealizable = ("unsynth" in self.spec_filename) or \
+                                   ("unreal" in self.spec_filename) or \
+                                   ("unsat" in self.spec_filename)
+
+        if expectedToBeUnrealizable:
+            self.assertFalse(realizable, msg="Specification was realizable but we did not expect this")
+        else:
+            self.assertTrue(realizable, msg="Specification was unrealizable")
 
         #self.assertEqual(function_to_test(self.input), self.output)
 
