@@ -300,25 +300,32 @@ public class GROneGame {
 		BDDVarSet env_prime = env.modulePrimeVars();
 		BDDVarSet sys_prime = sys.modulePrimeVars();
 		
-		BDD safeStates = sys.trans().exist(env.moduleUnprimeVars().union(sys.modulePrimeVars()));
-		BDD safeNext = Env.unprime(sys.trans().exist(env.modulePrimeVars().union(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()))));
+		BDD safeStates = sys.trans().exist(env.modulePrimeVars().union(sys.modulePrimeVars()));
+		BDD safeNext = Env.unprime(sys.trans().exist(env.moduleUnprimeVars().union(sys.moduleUnprimeVars())));
 		
-		//Check the complete transition
-		BDD exy1 = Env.prime(to).and(sys.trans());	
+		//Read the new cox starting at the return statement***
+		
+		//And there is a transition to the "to" set, i.e. a slow move as well as the (pre-determined) fast move
+		BDD exy1 = Env.prime(to).and(sys.trans()).exist(sys_slow_prime);	
 		
 		
-		//If both types are changing, check both the intermediate state (exy2) and the complete transition (ex1)
-		BDD exy6 = (slowSame.and(Env.prime(safeStates.and(safeNext)))).exist(sys_slow_prime);	
+		//Such that the slowSame move is safe...
+		BDD exy6 = (slowSame.imp(Env.prime(safeStates.and(safeNext)))).forAll(sys_slow_prime);	
 		
-		BDD exy5 = ((exy1.and(exy6)).and(slowSame.not()).and(fastSame.not())).exist(sys_prime);
 		
-		BDD fs1 = env.trans().imp(exy5).forAll(env_prime);
+		//If both types are changing, check the intermediate state (i.e. the slowSame state):
 		
-        //If only one type of controller changes, use old cox
-		BDD exy4 = Env.prime(to).and(sys.trans()).and(slowSame.or(fastSame)).exist(sys_prime);
-        BDD fs2 = env.trans().imp(exy4).forAll(env_prime);        
+		//There exists a "fast" move...
+		BDD fs1 = (exy1.and(exy6)).exist(sys_fast_prime);
+		
+		
+		//If only one type of controller changes, use old cox
+		BDD fs2 = Env.prime(to).and(sys.trans()).and(slowSame.or(fastSame)).exist(sys_prime);
 
-        return fs1.or(fs2);
+		
+		///***For all environment moves, there is either a move that changes only slow or only fast, 
+		//or one that changes both actions but has a safe intermediate state
+		return env.trans().imp(fs1.or(fs2)).forAll(env_prime);
 	}
 	
 	
@@ -567,6 +574,42 @@ public class GROneGame {
 	
 		
 	public boolean calculate_strategy(int kind, BDD ini, boolean det) {
+		
+		BDDVarSet sys_slow_prime = Env.getEmptySet();
+		BDDVarSet sys_fast_prime = Env.getEmptySet();
+		BDDVarSet sys_slow_unprime = Env.getEmptySet();
+		BDDVarSet sys_fast_unprime = Env.getEmptySet();
+		BDD slowSame = Env.TRUE();
+		BDD fastSame = Env.TRUE();
+		BDD envSame = Env.TRUE();
+
+
+		ModuleBDDField [] allFields = sys.getAllFields();				
+		ModuleBDDField thisField, thisPrime;
+		String fieldName;
+
+		for (int i = 0; i < allFields.length; i++) {
+			thisField = allFields[i];
+			thisPrime = thisField.prime();	
+			fieldName = thisPrime.support().toString();
+			if (fieldName.startsWith("<bit")) {
+				slowSame = slowSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));
+				sys_slow_prime = sys_slow_prime.union(thisPrime.support());
+				sys_slow_unprime = sys_slow_unprime.union(thisField.support());				
+			} else {
+				fastSame = fastSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));
+				sys_fast_prime = sys_fast_prime.union(thisPrime.support());
+				sys_fast_unprime = sys_fast_unprime.union(thisField.support());
+			}		
+		}
+		
+		BDDVarSet env_prime = env.modulePrimeVars();
+		BDDVarSet sys_prime = sys.modulePrimeVars();
+		
+		BDD safeStates = sys.trans().exist(env.modulePrimeVars().union(sys.modulePrimeVars()));
+		BDD safeNext = Env.unprime(sys.trans().exist(env.moduleUnprimeVars().union(sys.moduleUnprimeVars())));
+		
+		
 		int strategy_kind = kind;
 		Stack<BDD> st_stack = new Stack<BDD>();
 		Stack<Integer> j_stack = new Stack<Integer>();
@@ -579,11 +622,11 @@ public class GROneGame {
 		// multiple goals are satisfied in the same location)
         //
         // TODO: There is probably a cleaner way to do this
-        ModuleBDDField [] allFields = sys.getAllFields();        
+        //ModuleBDDField [] allFields = sys.getAllFields();        
         BDDVarSet nonRegionProps = Env.getEmptySet();
         for (int i = 0; i < allFields.length; i++) {      
-          ModuleBDDField thisField = allFields[i];
-          String fieldName = thisField.support().toString();
+          thisField = allFields[i];
+          fieldName = thisField.support().toString();
           if (!fieldName.startsWith("<bit"))
             nonRegionProps = nonRegionProps.union(thisField.support());
         }
@@ -686,12 +729,14 @@ public class GROneGame {
                 for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
                         .hasNext();) {
                     BDD primed_cur_succ = Env.prime(iter_succ.next());
-					BDD next_op = Env
-                            .unprime(sys.trans().and(p_st).and(primed_cur_succ)
+					//for fastSlow, need to make sure we only choose successors that have a safe intermediate state
+                    BDD next_op = Env.unprime(sys.trans().and(p_st).and(primed_cur_succ)
+                    					.and((slowSame.or(fastSame))
+                    							.or(slowSame.and(Env.prime(safeStates.and(safeNext))).exist(sys_slow_prime)))
                                     .exist(
                                             env.moduleUnprimeVars().union(
                                                     sys.moduleUnprimeVars())));
-													
+					
                     candidate = Env.FALSE();
                     int jcand = p_j;
 
