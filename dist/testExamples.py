@@ -47,6 +47,8 @@ class TestExample(unittest.TestCase):
             self.assertFalse(realizable, msg="Specification was realizable but we did not expect this")
         else:
             self.assertTrue(realizable, msg="Specification was unrealizable")
+        # TODO: test analysis/cores
+        # TODO: test config files
 
         #self.assertEqual(function_to_test(self.input), self.output)
 
@@ -57,7 +59,12 @@ def getTester(spec_filename):
     
 def suite():
     suite = unittest.TestSuite()
-    suite.addTests(getTester(fname) for fname in glob.iglob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","examples","*","*.spec")))
+    for fname in glob.iglob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","examples","*","*.spec")):
+        # Skip any files untracked by git
+        if os.system("git ls-files \"{}\" --error-unmatch".format(fname)) != 0:
+            print ">>> Skipping untracked specification: {}".format(fname)
+            continue
+        suite.addTest(getTester(fname))
     return suite
 
 if __name__ == '__main__':
