@@ -699,7 +699,7 @@ class SpecCompiler(object):
         conjuncts = self.ltlConjunctsFromBadLines(to_highlight, useInitFlag)
         
         #filter out props that are actually used
-        self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or [c for c in badStatesLTL if p in c and not unsat] or p in topo]
+        #self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or [c for c in badStatesLTL if p in c and not unsat] or p in topo]
                     
         cmd = self._getPicosatCommand() 
             
