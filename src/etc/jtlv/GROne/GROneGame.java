@@ -38,10 +38,23 @@ public class GROneGame {
 	boolean fastslow;
 
 	
-	// p2_winning in GRGAmes are !p1_winning
+	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys)
+			throws GameException {
+		this(env, sys, false); // default fastslow == false
+	}
 
+    public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, boolean fastslow)
+			throws GameException {
+		this(env, sys, sys.justiceNum(), env.justiceNum(), fastslow);
+    }
+	
 	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, int sysJustNum, int envJustNum)
-	throws GameException {
+			throws GameException {
+		this(env, sys, sysJustNum, envJustNum, false); // default fastslow == false
+    }
+
+	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, int sysJustNum, int envJustNum, boolean fastslow)
+			throws GameException {
 		if ((env == null) || (sys == null)) {
 			throw new GameException(
 					"cannot instanciate a GR[1] Game with an empty player.");
@@ -53,46 +66,6 @@ public class GROneGame {
 		this.sys = sys;
 		this.sysJustNum = sysJustNum;
 		this.envJustNum = envJustNum;
-		this.fastslow = true;
-		
-		
-		// for now I'm giving max_y 50, at the end I'll cut it (and during, I'll
-		// extend if needed. (using vectors only makes things more complicate
-		// since we cannot instantiate vectors with new vectors)
-		x_mem = new BDD[sysJustNum][envJustNum][50];
-		y_mem = new BDD[sysJustNum][50];
-		z_mem = new BDD[sysJustNum];
-		x2_mem = new BDD[sysJustNum][envJustNum][50][50];
-		y2_mem = new BDD[sysJustNum][50];
-		z2_mem = new BDD[50];	
-		
-		//
-		this.player2_winning = this.calculate_win();	//(system winning states)
-		this.player1_winning = this.calculate_loss();   //(environment winning states)
-		//this.player1_winning = this.player2_winning.not(); //commented out after counterstrategy addition - VR
-
-	}
-	
-	
-	
-	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys)
-			throws GameException {
-		this(env, sys, sys.justiceNum(), env.justiceNum());
-	}
-	
-	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, boolean fastslow)
-			throws GameException {
-		if ((env == null) || (sys == null)) {
-			throw new GameException(
-					"cannot instanciate a GR[1] Game with an empty player.");
-		}
-		
-		//Define system and environment modules, and how many liveness conditions are to be considered. 
-		//The first sysJustNum system livenesses and the first envJustNum environment livenesses will be used
-		this.env = env;
-		this.sys = sys;
-		this.sysJustNum = sys.justiceNum();
-		this.envJustNum = env.justiceNum();
 		this.fastslow = fastslow;
 		
 		// for now I'm giving max_y 50, at the end I'll cut it (and during, I'll
@@ -106,8 +79,14 @@ public class GROneGame {
 		z2_mem = new BDD[50];	
 			
 		
-		this.player2_winning = this.calculate_win_FS();	//(system winning states)
-		this.player1_winning = this.player2_winning.not(); //(environment winning states)
+        if (fastslow) {
+            this.player2_winning = this.calculate_win_FS();	//(system winning states)
+            // p2_winning in GRGAmes are !p1_winning
+            this.player1_winning = this.player2_winning.not(); //(environment winning states)
+        } else {
+            this.player2_winning = this.calculate_win();	//(system winning states)
+            this.player1_winning = this.calculate_loss();   //(environment winning states)
+        }
 
 	}
 	
