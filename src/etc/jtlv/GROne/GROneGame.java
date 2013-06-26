@@ -33,7 +33,9 @@ public class GROneGame {
 
 	BDDVarSet sys_slow_prime;
 
-	BDDVarSet sys_fast_prime;		
+	BDDVarSet sys_fast_prime;	
+	
+	boolean fastslow;
 
 	
 	// p2_winning in GRGAmes are !p1_winning
@@ -51,6 +53,8 @@ public class GROneGame {
 		this.sys = sys;
 		this.sysJustNum = sysJustNum;
 		this.envJustNum = envJustNum;
+		this.fastslow = true;
+		
 		
 		// for now I'm giving max_y 50, at the end I'll cut it (and during, I'll
 		// extend if needed. (using vectors only makes things more complicate
@@ -89,6 +93,7 @@ public class GROneGame {
 		this.sys = sys;
 		this.sysJustNum = sys.justiceNum();
 		this.envJustNum = env.justiceNum();
+		this.fastslow = fastslow;
 		
 		// for now I'm giving max_y 50, at the end I'll cut it (and during, I'll
 		// extend if needed. (using vectors only makes things more complicate
@@ -729,13 +734,21 @@ public class GROneGame {
                 for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
                         .hasNext();) {
                     BDD primed_cur_succ = Env.prime(iter_succ.next());
-					//for fastSlow, need to make sure we only choose successors that have a safe intermediate state
-                    BDD next_op = Env.unprime(sys.trans().and(p_st).and(primed_cur_succ)
-                    					.and((slowSame.or(fastSame))
-                    							.or(slowSame.and(Env.prime(safeStates.and(safeNext))).exist(sys_slow_prime)))
-                                    .exist(
-                                            env.moduleUnprimeVars().union(
-                                                    sys.moduleUnprimeVars())));
+                    BDD next_op;
+					if (this.fastslow) {
+						//for fastSlow, need to make sure we only choose successors that have a safe intermediate state					
+	                    next_op = Env.unprime(sys.trans().and(p_st).and(primed_cur_succ)
+	                    					.and((slowSame.or(fastSame))
+	                    							.or(slowSame.and(Env.prime(safeStates.and(safeNext))).exist(sys_slow_prime)))
+	                                    .exist(
+	                                            env.moduleUnprimeVars().union(
+	                                                    sys.moduleUnprimeVars())));
+					} else {
+						next_op = Env.unprime(sys.trans().and(p_st).and(primed_cur_succ)
+                            .exist(
+                                    env.moduleUnprimeVars().union(
+                                            sys.moduleUnprimeVars())));
+					}
 					
                     candidate = Env.FALSE();
                     int jcand = p_j;
