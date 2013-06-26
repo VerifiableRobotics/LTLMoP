@@ -17,7 +17,7 @@ decompose: True
 use_region_bit_encoding: True
 
 CurrentConfigName:
-rock
+basicSim
 
 Customs: # List of custom propositions
 left
