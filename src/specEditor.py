@@ -1495,6 +1495,11 @@ class SpecEditorFrame(wx.Frame):
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Opens the counterstrategy visualization interfacs ("Mopsy")
 
+        if not self.proj.compile_options["use_region_bit_encoding"]:
+            wx.MessageBox("Mopsy currently requires bit-vector region encoding.\nPlease enable it and recompile.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
         # TODO: check for failed compilation before allowing this
         if self.to_highlight is None:
             wx.MessageBox("Please run analysis before trying to run Mopsy.", "Analysis required",
