@@ -8,7 +8,7 @@ import itertools
 import logging
 import random
 
-USE_MULTIPROCESSING = True
+USE_MULTIPROCESSING = False
 
 def runMap(function, inputs):
     """ Wrapper for single- and multi-threaded versions of map, to make
@@ -90,12 +90,20 @@ def conjunctsToCNF(conjuncts, propList):
     return mapping, cnfMapping, cnfClauses, transClauses, goalClauses
     
 
-def cnfToConjuncts(cnfIndices, mapping):
+def cnfToConjuncts(cnfIndices, mapping, cnfMapping):
     #takes a list of cnf line numbers and returns the corresponding LTL
     conjuncts = []
+    
     for k in mapping.keys():
         if not set(mapping[k]).isdisjoint(cnfIndices):
-            conjuncts.append(k)     
+#            print [cnfMapping[k][i%len(cnfMapping[k])] for i in mapping[k] if i in cnfIndices]
+#            print [d for d in zip(mapping[k],cnfMapping[k]) if d[0] in cnfIndices]
+            print "from conjunct ",k
+            for i in range(len(mapping[k])):
+                if mapping[k][i] in set(mapping[k]).intersection(cnfIndices):
+                    print cnfMapping[k][i%len(cnfMapping[k])], ' at time step ', i/len(cnfMapping[k])
+                           
+            conjuncts.append(k)  
             #print k , (set(mapping[k]).intersection(cnfIndices))
     return conjuncts
 
@@ -159,8 +167,8 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         if ignoreDepth == 0:
             ignoreBound = 0
         else:
-            ignoreBound = len(init) + ignoreDepth*len(trans)
-        
+            ignoreBound = len(init) + (ignoreDepth)*len(trans)
+            
         output = []
         
         #find minimal unsatisfiable core by calling picomus
@@ -175,10 +183,11 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         
         
         #send header
-        input = "p cnf "+str(p)+" "+str(n)+"\n"
-        subp.stdin.write(input)                     
-        subp.stdin.writelines(init)               
-
+        input = ["p cnf "+str(p)+" "+str(n)+"\n"]
+        subp.stdin.write(input[0])                     
+        subp.stdin.writelines(init)             
+        input.extend(init)
+        
         #Duplicating transition clauses for depth greater than 1         
         numOrigClauses = len(trans)  
         #the depth tells you how many time steps of trans to use
@@ -194,6 +203,7 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
                         newClause=newClause+"\n"                                                         
                         #send this clause
                         subp.stdin.write(newClause)
+                        input.append(newClause)
                         
                     j = 0    
                     for line in conjuncts:
@@ -207,6 +217,7 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)        
         #send goalClauses
         subp.stdin.writelines(dg)
+        input.extend(dg)
         #send EOF
         subp.stdin.close()
         
@@ -228,12 +239,19 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-        #Write output to file (mainly for debugging purposes)
-        #satFileName = "debug"+str(random.randint(0,1000))+".sat"
-        #outputFile = open(satFileName,'w')
-        #outputFile.write("\n".join(output))
-        #logging.debug("wrote {}".format(satFileName))
-        #outputFile.close()
+#        #Write output to file (mainly for debugging purposes)
+#        satFileName = "debug"+str(random.randint(0,1000))+".sat"
+#        outputFile = open(satFileName,'w')
+#        outputFile.write("\n".join(output))
+#        logging.debug("wrote {}".format(satFileName))
+#        outputFile.close()
+#        
+#        #Write input to file (mainly for debugging purposes)
+#        satFileName = "input"+str(random.randint(0,1000))+".sat"
+#        inputFile = open(satFileName,'w')
+#        inputFile.write("\n".join(input))
+#        logging.debug("wrote {}".format(satFileName))
+#        inputFile.close()
             
         if any(["WARNING: core extraction disabled" in s for s in output]):
             # never again
@@ -265,7 +283,7 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output)))
         
         #get corresponding LTL conjuncts
-        guilty = cnfToConjuncts([idx for idx in cnfIndices if idx > ignoreBound], mapping)
+        guilty = cnfToConjuncts([idx for idx in cnfIndices if idx > ignoreBound], mapping, cnfMapping)
             
         return guilty
     
@@ -313,8 +331,10 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
             logging.info("Unsat core found without topo or init")
             return trans, allGuilty
         else:
-            ignoreDepth = len([g for g in allGuilty if g])
+            ignoreDepth = len([g for g in guiltyList if g])
             depth += ignoreDepth
+        
+        logging.info("ignore depth {}".format(ignoreDepth))
             
         #then try just topo and init and see if it is unsatisfiable. If so, return core.
         logging.info("Trying to find core with just topo and init") 
@@ -334,6 +354,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         mapping,  cnfMapping, init, trans, goals = conjunctsToCNF([topo,badInit] + conjuncts, propList)
         
         logging.info("Trying to find core with everything")
+        
 
         guiltyList = runMap(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),
                                                                           range(maxDepth, maxDepth + 1),
