@@ -1406,9 +1406,9 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.analysisDialog.appendLog("\nSynthesized automaton is trivial.", "RED")
         else:
-            self.analysisDialog.appendLog(output.rstrip(), "RED")
+            self.analysisDialog.appendLog('\n'.join(output_lines), "RED")
         self.analysisDialog.appendLog('\n')
-                
+
         #highlight guilty sentences
         #special treatment for goals: we already know which one to highlight                
         if self.proj.compile_options["parser"] == "structured":
