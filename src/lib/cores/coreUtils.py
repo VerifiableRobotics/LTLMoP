@@ -9,6 +9,7 @@ import logging
 import random
 
 USE_MULTIPROCESSING = False
+props = {}
 
 def function_star_wrapper(function, args):
     """ Work around lack of pool.starmap() and unpickleability of lambda functions.
@@ -61,6 +62,7 @@ def conjunctsToCNF(conjuncts, propList):
     
     propListNext = map(lambda s: 'next_'+s, propList)
     
+    global props
     props = {propList[x]:x+1 for x in range(0,len(propList))}
     propsNext = {propListNext[x]:len(propList)+x+1 for x in range(0,len(propListNext))}
     mapping = {conjuncts[x]:[] for x in range(0,len(conjuncts))}
@@ -249,12 +251,9 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-#        #Write output to file (mainly for debugging purposes)
-#        satFileName = "debug"+str(random.randint(0,1000))+".sat"
-#        outputFile = open(satFileName,'w')
-#        outputFile.write("\n".join(output))
-#        logging.debug("wrote {}".format(satFileName))
-#        outputFile.close()
+        #get indices of contributing clauses
+        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output)))
+        
 #        
 #        #Write input to file (mainly for debugging purposes)
 #        satFileName = "input"+str(random.randint(0,1000))+".sat"
@@ -281,22 +280,49 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         else:
             logging.error("Picosat error: {!r}".format(output))
         
-        """cnfIndices = []
-        for line in output.split('\n'):
-                if re.match('^v', line):
-                    index = int(line.strip('v').strip())
-                    if index!=0:
-                        cnfIndices.append(index)
-            """
-        #pythonified the above
-        #get indices of contributing clauses
-        cnfIndices = filter(lambda y: y!=0, map((lambda x: int(x.strip('v').strip())), filter(lambda z: re.match('^v', z), output)))
-        
+        #Write output to file (mainly for debugging purposes)
+
+        satFileName = "debug"+str(random.randint(0,1000))+".sat"
+        with open(satFileName,'w') as outputFile:
+            outputFile.writelines(makeHumanReadableCNFFromIndices(cnfIndices, input, ignoreBound))
+        logging.debug("wrote {}".format(satFileName))
+
         #get corresponding LTL conjuncts
         guilty = cnfToConjuncts([idx for idx in cnfIndices if idx > ignoreBound], mapping, cnfMapping)
             
         return guilty
-    
+
+def makeHumanReadableCNFFromIndices(indices, input_data, ignoreBound):
+    def cnfVar2LTLVar(m):
+        global props
+        negated = (m.group("sign") == "-")
+        num = int(m.group("num"))
+
+        if num == 0:
+            return ""
+
+        time_step = int(math.floor((num - 1)/len(props)))
+        var_num = (num - len(props)*time_step)
+
+        for k,v in props.iteritems():
+            if v == var_num:
+                var_name = k
+                break
+
+        name = "{}@{}".format(var_name, time_step)
+        if negated:
+            name = "~"+name
+        return name
+        
+    output = []
+    for input_line_num in indices: 
+        cnf_clause = input_data[input_line_num]
+        cnf_clause = re.sub(r"(?P<sign>-)?(?P<num>\d+)", cnfVar2LTLVar, cnf_clause)
+        if input_line_num <= ignoreBound:
+            cnf_clause = cnf_clause.rstrip() + " (ignored)\n"
+        output.append(cnf_clause)
+
+    return output
  
 def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions):
      #returns the minimal unsatisfiable core (LTL formulas) given
