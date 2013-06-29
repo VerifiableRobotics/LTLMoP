@@ -97,7 +97,7 @@ def conjunctsToCNF(conjuncts, propList):
             else:
                 cnfClauses.append(clause.strip()+" 0\n")         
             
-        if not "<>" in lineOld:
+        if not "<>" in lineOld and "[]" in lineOld:
             #for non-goal (i.e. trans and init) formulas, extend mapping with line nos.
             #the guilty goal is always put last, so we don't need the clause nos.
             mapping[lineOld].extend(range(n+1,n+1+len(allClauses)))    
