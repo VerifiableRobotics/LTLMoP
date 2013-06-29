@@ -360,6 +360,9 @@ class SpecCompiler(object):
             self.reversemapping = {self.postprocessLTL(line,sensorList,robotPropList).strip():line.strip() for line in oldspec_env + oldspec_sys}
             self.reversemapping[self.spec['Topo'].replace("\n","").replace("\t","").lstrip().rstrip("\n\t &")] = "TOPOLOGY"
 
+        if not self.proj.compile_options["use_region_bit_encoding"]:
+            self.reversemapping[mutex.replace("\n","").replace("\t","").lstrip().strip("\n\t &")] = "REGION_MUTEX"
+
         #for k,v in self.reversemapping.iteritems():
         #    print "{!r}:{!r}".format(k,v)        
 
