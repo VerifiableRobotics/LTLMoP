@@ -4,19 +4,34 @@ from copy import copy, deepcopy
 from logic import to_cnf
 from multiprocessing import Pool
 import threading
-import itertools
+import itertools, functools
 import logging
 import random
 
 USE_MULTIPROCESSING = False
 
-def runMap(function, inputs):
+def function_star_wrapper(function, args):
+    """ Work around lack of pool.starmap() and unpickleability of lambda functions.
+        See http://stackoverflow.com/questions/5442910/python-multiprocessing-pool-map-for-multiple-arguments """
+    return function(*args)
+
+def runMap(function, inputs, multiarg=True):
     """ Wrapper for single- and multi-threaded versions of map, to make
-        it easy to disable multiprocessing for debugging purposes
+        it easy to disable multiprocessing for debugging purposes.
+
+        If `multiarg` is True, it will call `function(*x)` instead of `function(x)`
+        for each `x` in `inputs`.
     """
 
-    logging.debug("Starting map ({}-threaded): {}".\
-                  format("multi" if USE_MULTIPROCESSING else "single", function.__name__))
+    function_name = function.__name__
+
+    logging.debug("[{}] Starting map ({}-threaded): {}".\
+                  format(time.strftime("%H:%M:%S"),
+                         "multi" if USE_MULTIPROCESSING else "single",
+                         function_name))
+
+    if multiarg:
+        function = functools.partial(function_star_wrapper, function)
 
     if USE_MULTIPROCESSING:
         pool = Pool()
@@ -25,7 +40,8 @@ def runMap(function, inputs):
     else:
         outputs = map(function, inputs)   
 
-    logging.debug("Finished map: {}".format(function.__name__))
+    logging.debug("[{}] Finished map: {}".format(time.strftime("%H:%M:%S"),
+                                                 function_name))
 
     return outputs
 
@@ -56,7 +72,7 @@ def conjunctsToCNF(conjuncts, propList):
     p = len(props)+len(propsNext)  
     
     
-    allCnfs = runMap(lineToCnf, conjuncts)   
+    allCnfs = runMap(lineToCnf, conjuncts, multiarg=False)   
     
     #associate original LTL conjuncts with CNF clauses
     cnfMapping = {line:cnf.split("&") for cnf, line in zip(allCnfs,conjuncts) if cnf}  
@@ -146,12 +162,6 @@ def subprocessReadThread(fd, out):
             for line in fd:                                                                              
                out.append(line) 
                 
-        
-def findGuiltyLTLConjunctsWrapper(x):        
-        return findGuiltyLTLConjuncts(*x)
-
-
-        
 def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  cnfMapping, conjuncts, ignoreDepth): 
         #returns the ltl conjuncts returned as an unsat core when unrolling trans depth times from init and 
         #checking goal at final time step
@@ -253,7 +263,7 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
 #        logging.debug("wrote {}".format(satFileName))
 #        inputFile.close()
             
-        if any(["WARNING: core extraction disabled" in s for s in output]):
+        if any(("WARNING: core extraction disabled" in s for s in output)):
             # never again
             logging.error("************************************************")
             logging.error("*** ERROR: picomus needs to be compiled with ***")
@@ -263,9 +273,9 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
             logging.error("************************************************")
             return []
 
-        if any(["UNSATISFIABLE" in s for s in output]):
+        if any(("UNSATISFIABLE" in s for s in output)):
             logging.info("Unsatisfiable core found at depth {}".format(depth))
-        elif any(["SATISFIABLE" in s for s in output]):
+        elif any(("SATISFIABLE" in s for s in output)):
             logging.info("Satisfiable at depth {}".format(depth))
             return []
         else:
@@ -288,9 +298,6 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         return guilty
     
  
-def unsatCoreCasesWrapper(x): 
-    return unsatCoreCases(*x) 
-    
 def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions):
      #returns the minimal unsatisfiable core (LTL formulas) given
      #        cmd: picosat command
@@ -312,7 +319,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         
         logging.info("Trying to find core without topo or init") 
 
-        guiltyList = runMap(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),
+        guiltyList = runMap(findGuiltyLTLConjuncts, itertools.izip(itertools.repeat(cmd),
                                                                           range(1, maxDepth + 1),
                                                                           itertools.repeat(numProps),
                                                                           itertools.repeat(init),
@@ -344,7 +351,6 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         guilty = findGuiltyLTLConjuncts(cmd,maxDepth,numProps,init,trans,goals,mapping,cnfMapping,[topo, badInit],0)
         
                 #allGuilty = map((lambda (depth, cnfs): self.guiltyParallel(depth+1, cnfs, mapping)), list(enumerate(allCnfs)))
-            #print "ENDING PICO MAP"
  
         if guilty:
             logging.info("Unsat core found with just topo and init")
@@ -356,7 +362,7 @@ def unsatCoreCases(cmd, propList, topo, badInit, conjuncts, maxDepth, numRegions
         logging.info("Trying to find core with everything")
         
 
-        guiltyList = runMap(findGuiltyLTLConjunctsWrapper, itertools.izip(itertools.repeat(cmd),
+        guiltyList = runMap(findGuiltyLTLConjuncts, itertools.izip(itertools.repeat(cmd),
                                                                           range(maxDepth, maxDepth + 1),
                                                                           itertools.repeat(numProps),
                                                                           itertools.repeat(init),
