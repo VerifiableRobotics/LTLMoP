@@ -204,27 +204,30 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         numOrigClauses = len(trans)  
         #the depth tells you how many time steps of trans to use
         #depth 0 just checks init with goals
+       
+        def incrementNumbers(m):
+            """ Shift all numbers in a string by `numProps` away from zero.
+                If zero, don't change. """
+            num = int(m.group())
+            return str(cmp(num,0)*(abs(num)+numProps))
+
+        # mapping is LTL to cnf line #
+        trans_mapping = {k:v for k,v in mapping.iteritems() if "[]" in k and "<>" not in k}
+        current_trans = deepcopy(trans)
+        for i in range(1, depth+1):
+            for ltl_clause, cnf_line_nums in trans_mapping.iteritems():
+                # Increment trans_mapping
+                trans_mapping[ltl_clause] = [num+len(trans) for num in cnf_line_nums]
+                # Update mapping
+                mapping[ltl_clause].extend(trans_mapping[ltl_clause])
+
+            for k, clause in enumerate(current_trans):
+                new_clause = re.sub(r"((?:-)?\d+)", incrementNumbers, clause)
+                current_trans[k] = new_clause
+                #send this clause
+                subp.stdin.write(new_clause)
+                input.append(new_clause)
         
-        
-        for i in range(1,depth+1):
-                    for clause in trans:
-                        newClause = ""
-                        for c in clause.split():
-                            intC = int(c)
-                            newClause= newClause + str(cmp(intC,0)*(abs(intC)+numProps*i)) +" "                            
-                        newClause=newClause+"\n"                                                         
-                        #send this clause
-                        subp.stdin.write(newClause)
-                        input.append(newClause)
-                        
-                    j = 0    
-                    for line in conjuncts:
-                        if "[]" in line and "<>" not in line:                      
-                            numVarsInTrans = (len(mapping[line]))/(i+1)
-                            mapping[line].extend(map(lambda x: x+numOrigClauses, mapping[line][-numVarsInTrans:]))
-                            j = j + 1
-                    #transClauses.extend(transClausesNew)  
-                    
         #create goal clauses
         dg = map(lambda x: ' '.join(map(lambda y: str(cmp(int(y),0)*(abs(int(y))+numProps*(depth))), x.split())) + '\n', goals)        
         #send goalClauses
