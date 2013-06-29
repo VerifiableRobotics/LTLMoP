@@ -10,7 +10,7 @@ pickup, 1
 camera, 0
 
 CompileOptions:
-convexify: True
+convexify: False
 parser: slurp
 fastslow: False
 decompose: True
@@ -36,16 +36,17 @@ r6 = p1
 r1 = p6
 closet = p12
 r3 = p4
-hall_w = p13, p14
+hall_w = p9
 lounge = p7
 r2 = p5
-hall_n = p15, p16
+hall_n = p10
 others = 
 hall_c = p11
 kitchen = p8
 
 Spec: # Specification in structured English
 # Unsat livelock
+Start in the closet.
 Carry meals from the kitchen to all patient rooms.
 Don't go into any public rooms.
 
