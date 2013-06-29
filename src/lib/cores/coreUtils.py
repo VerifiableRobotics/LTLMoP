@@ -111,18 +111,25 @@ def conjunctsToCNF(conjuncts, propList):
 def cnfToConjuncts(cnfIndices, mapping, cnfMapping):
     #takes a list of cnf line numbers and returns the corresponding LTL
     conjuncts = []
-    
+
+    cnfIndices = set(cnfIndices)
+    #print sorted([a for k,b in mapping.iteritems() for a in b])
+
     for k in mapping.keys():
         if not set(mapping[k]).isdisjoint(cnfIndices):
-#            print [cnfMapping[k][i%len(cnfMapping[k])] for i in mapping[k] if i in cnfIndices]
-#            print [d for d in zip(mapping[k],cnfMapping[k]) if d[0] in cnfIndices]
-            print "from conjunct ",k
+            print "\tfrom conjunct ",k
             for i in range(len(mapping[k])):
                 if mapping[k][i] in set(mapping[k]).intersection(cnfIndices):
-                    print cnfMapping[k][i%len(cnfMapping[k])], ' at time step ', i/len(cnfMapping[k])
+                    print "\t\t", cnfMapping[k][i%len(cnfMapping[k])], ' at time step ', i/len(cnfMapping[k])
                            
             conjuncts.append(k)  
+            cnfIndices -= set(mapping[k]).intersection(cnfIndices)
             #print k , (set(mapping[k]).intersection(cnfIndices))
+
+    if cnfIndices:
+        logging.warning("Unable to map all CNF indices to LTL. Leftovers are: {!r}".format(cnfIndices))
+        raise IndexError(cnfIndices)
+
     return conjuncts
 
 
@@ -291,7 +298,13 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         logging.debug("wrote {}".format(satFileName))
 
         #get corresponding LTL conjuncts
-        guilty = cnfToConjuncts([idx for idx in cnfIndices if idx > ignoreBound], mapping, cnfMapping)
+        try:
+            guilty = cnfToConjuncts([idx for idx in cnfIndices if idx > ignoreBound], mapping, cnfMapping)
+        except IndexError as e:
+            unmappedIndices = e.args[0]
+            logging.warning("The unmapped conjuncts are as follows:\n" + \
+                            ''.join(makeHumanReadableCNFFromIndices(unmappedIndices, input, ignoreBound)))
+            return []
             
         return guilty
 
