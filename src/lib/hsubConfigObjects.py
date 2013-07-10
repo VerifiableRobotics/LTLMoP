@@ -540,7 +540,7 @@ class RobotConfig(object):
                         # since the robot part of the handler description can be either a robot type or name
                         # set the robot type of the handler to be this robot type if the robot name matches
                         robot_type = self.r_type if result.group('robot') == self.name else result.group('robot')
-                        if (robot_type != 'share') and (robot_type != self.r_type):
+                        if (robot_type != 'share') and (robot_type.lower() != self.r_type.lower()):
                             # this is a handler for a wrong robot
                             logging.warning('The handler config description: \n \t {!r} \n \
                                             is for robot {}, but is located in data for robot {}({})' \
