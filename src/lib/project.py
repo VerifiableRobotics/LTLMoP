@@ -119,11 +119,11 @@ class Project:
             return (None, None)
 
         r = self.currentConfig.getRobotByName(self.currentConfig.main_robot)
-        if r.calibrationMatrix is None:
+        if r.calibration_matrix is None:
             logging.warning("Main robot has no calibration data.  Using identity matrix.")
             T = eye(3)
         else:
-            T = r.calibrationMatrix
+            T = r.calibration_matrix
 
         # Check for singular matrix
         if abs(linalg.det(T)) < finfo(float).eps:
