@@ -22,7 +22,6 @@ RegionFile: # Relative path of region description file
 slurp_hospital.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-alarm, 1
 sbit0, 1
 sbit1, 1
 sbit2, 1
