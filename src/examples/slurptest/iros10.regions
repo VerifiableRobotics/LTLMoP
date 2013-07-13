@@ -1,0 +1,51 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+None
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+boundary	0
+dining	5
+
+Obstacles: # Names of regions to treat as obstacles
+wall2
+wall1
+
+Regions: # Name, Type, Pos X, Pos Y, Width, Height, Color R, Color G, Color B, Vertices (x1, y1, x2, y2, ...)
+wall2	poly	518	320	353	249	255	255	0	346	0	353	0	353	249	0	249	1	242	1	241	1	242	347	243
+wall1	poly	299	319	220	11	0	0	255	0	1	0	0	0	1	220	1	220	2	220	11	0	9
+boundary	poly	58	80	1041	657	160	32	240	0	0	241	0	813	0	1041	0	1040	494	907	657	361	657	237	496	0	503
+kitchen	poly	295	328	224	248	255	165	0	4	0	224	2	224	3	224	4	224	233	224	234	223	241	0	248
+porch	poly	58	80	241	503	255	255	0	0	0	241	0	241	239	241	240	241	248	237	496	0	503
+deck	poly	295	569	803	168	0	255	1	576	0	803	5	670	168	124	168	0	7	223	0
+bedroom	poly	871	80	228	494	139	76	132	0	240	0	0	228	0	227	494	0	489
+dining	poly	519	320	346	243	255	247	0	0	242	0	241	0	12	0	11	0	10	0	1	0	0	345	0	346	243
+living	poly	299	80	572	240	233	123	19	0	239	0	0	572	0	572	240	565	240	220	240	0	240
+
+Thumbnail: # Relative path of image file that has region shapes overlayed on background image
+iros10_simbg.png
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+wall2	kitchen	519	561	519	562	518	569	519	562
+wall2	deck	518	569	871	569
+wall2	bedroom	871	320	871	569
+wall2	dining	519	562	865	563	519	561	519	562	864	320	865	563
+wall2	living	864	320	871	320
+wall1	kitchen	299	328	519	330
+wall1	porch	299	320	299	328	299	319	299	320
+wall1	dining	519	320	519	321	519	321	519	330
+wall1	living	299	320	519	320	299	319	299	320
+boundary	porch	58	80	58	583	58	583	295	576	58	80	299	80
+boundary	deck	965	737	1098	574	295	576	419	737	419	737	965	737
+boundary	bedroom	1098	574	1099	80	871	80	1099	80
+boundary	living	299	80	871	80
+kitchen	porch	295	576	299	328
+kitchen	deck	295	576	518	569
+kitchen	dining	519	330	519	331	519	332	519	561	519	331	519	332	519	561	519	562
+porch	living	299	319	299	320	299	80	299	319
+deck	bedroom	871	569	1098	574
+bedroom	living	871	80	871	320
+dining	living	519	320	864	320
+
