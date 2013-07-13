@@ -16,6 +16,7 @@ convexify: True
 parser: slurp
 fastslow: False
 decompose: True
+use_region_bit_encoding: True
 
 CurrentConfigName:
 basicsim
