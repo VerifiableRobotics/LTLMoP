@@ -135,7 +135,8 @@ class _CSharpCommunicator:
                 #print 'msg size!!!!',len(response)
                 result = self.parseResponse(response)
                 success = True
-            except:
+            except Exception as e:
+                print e
                 message.ResendRequest = True
                 print 'GOT ERROR DOING IT AGAIN!!!!',message.id
         return result

@@ -15,6 +15,7 @@ import Polygon
 import copy
 from specCompiler import SpecCompiler
 import json
+import logging, globalConfig
 
 class sensorHandler:
     def __init__(self, proj, shared_data):
@@ -117,11 +118,12 @@ class sensorHandler:
                 return False
         
         
-    def open_doorway(self,proj,initial=False):
+    def open_doorway(self,initial=False):
         """
         returns whether a new LIDAR has discovered a new doorway that was
         not included in the original map
         """
+        proj = self.proj
         if initial:
             # init LIDAR at the CSharp end
             ltlmop_msg = PythonRequestMsg()
@@ -130,6 +132,7 @@ class sensorHandler:
             # update the proj with the most current rfi
             # this is needed after resynthesis, otherwise the rfi is still the old one
             self.rfi = proj.rfiold
+            print [r.name for r in self.rfi.regions]
             # make sure we only send the newer rfi when we have finished exploring the region
             if (self.mapThread.mapType==PythonRequestMsg.NEWREGIONFOUND and len(self.oldExternalFaces)>0):
                 self.exposedFaces = self.oldExternalFaces
@@ -191,6 +194,7 @@ class sensorHandler:
             else:
                 sensor.stat = 0 # IDLE
             response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
+            print "!!!!!!!!!!!!", response
             if len(response.map.r)!=0 and not self.mapThread.processing:
                 print "updated MAP RECEIVED",response.map.type
                 self.mapThread.updateMap(response.map)
