@@ -283,7 +283,8 @@ class RegionFileInterface(object):
                     if other_obj.position == obj.position and \
                        [x for x in other_obj.getPoints()] == [x for x in obj.getPoints()]:
                         ignore = True
-    
+                if obj.name.lower()=="boundary":
+                    ignore = True
                 if not ignore:
                     transitionFaces[face].append(obj)
 
@@ -329,6 +330,9 @@ class RegionFileInterface(object):
 
         allFaces = [face for obj in self.regions for face in obj.getFaces(includeHole=True)]
         internalFaces = self.recalcAdjacency()
+        #print >>sys.__stderr__,allFaces
+        #print >>sys.__stderr__,internalFaces
+        print "external length",(len(set(allFaces)),len(set(internalFaces)))
         return list(set(allFaces) - set(internalFaces))
 
     def writeFile(self, filename):
@@ -454,6 +458,39 @@ class RegionFileInterface(object):
         self.filename = filename
 
         return True
+
+    def doMakeBoundary(self):
+        #print 'regionList',[r.name for r in self.regions]
+        if self.indexOfRegionWithName("boundary") != -1:
+            self.regions.pop(self.indexOfRegionWithName("boundary"))
+        #print 'regionListAfter',[r.name for r in self.regions]
+        
+        bound_poly = Polygon.Polygon()
+        for r in self.regions:
+            points = [(pt.x,pt.y) for pt in r.getPoints()]
+            print r.name,[p[0] for p in points]
+            print r.name,[p[1] for p in points]
+            bound_poly += Polygon.Polygon(points)
+
+        # create new region object
+        bound_region = Region()
+        count = 0
+        bound_region.pointArray = [Point(*p) for p in bound_poly[0]]
+        bound_region.name = "boundary"
+        bound_region.recalcBoundingBox()
+        #print 'boundary points', [(pt.x,pt.y) for pt in bound_region.getPoints()]
+        
+        self.regions.append(bound_region)
+        self.checkSubfaces(bound_region)
+        self.recalcAdjacency()
+        
+    def checkSubfaces(self, obj):
+        for other_obj in self.regions:
+            if other_obj is obj:
+                continue
+
+            self.splitSubfaces(obj, other_obj)
+            self.splitSubfaces(other_obj, obj)
    
 ############################################################
  
@@ -695,25 +732,36 @@ class Region(object):
         A face is a frozenset of the two points (in absolute coordinates) that make up the face.
         """
 
+
         lastPt = None
+        count = 0 # added by annie for debugging
         for pt in self.getPoints():
 
             thisPt = pt
-
+            count = count +1 # added by annie for debugging
+        
             if lastPt is not None:
+                #if 'p1' not in str(self.name):
+                #    print "count~!",self.name,(lastPt.x,lastPt.y),(thisPt.x,thisPt.y)
                 if lastPt != thisPt:
                     yield frozenset((lastPt, thisPt))
                 else:
-                    print "WARNING: region {} has side of length 0".format(self.name)
+                    print "WARNING: region {0} has side of length 0".format(self.name)
+                    
+
             else:
                 firstPt = thisPt
-
+           
             lastPt = thisPt
 
         if lastPt != firstPt:
             yield frozenset((lastPt, firstPt)) # Closing face
+            #if 'p1' not in str(self.name):
+            #    print 'close face'
         else:
-            print "WARNING: region {} has side of length 0".format(self.name)
+            print "WARNING: region {0} has side of length 0".format(self.name)
+            #print lastPt.x,lastPt.y,firstPt.x,firstPt.y
+            
 
         # also include edges of holes in the get faces for checking adjancency
         if includeHole:
