@@ -6,10 +6,9 @@ import subprocess
 import numpy
 import glob
 import StringIO
+import logging
 
 from multiprocessing import Pool
-
-sys.path.append("lib")
 
 import project
 import regions
@@ -39,14 +38,14 @@ class SpecCompiler(object):
 
         # Check to make sure this project is complete
         if self.proj.rfi is None:
-            print "ERROR: Please define regions before compiling."
+            logging.warning("Please define regions before compiling.")
             return
     
         # Remove comments
         self.specText = re.sub(r"#.*$", "", self.proj.specText, flags=re.MULTILINE)
 
         if self.specText.strip() == "":
-            print "ERROR: Please write a specification before compiling."
+            logging.warning("Please write a specification before compiling.")
             return
 
     def loadSimpleSpec(self,text="", regionList=[], sensors=[], actuators=[], customs=[], adj=[], outputfile=""):
@@ -60,7 +59,7 @@ class SpecCompiler(object):
         """
 
         if outputfile == "":
-            print "need to specify output filename"
+            logging.error("Need to specify output filename")
             return
 
         self.proj.compile_options['decompose'] = False
@@ -118,7 +117,7 @@ class SpecCompiler(object):
 
         self.proj.regionMapping = self.parser.proj.regionMapping
         self.proj.writeSpecFile()
-        
+
     def _writeSMVFile(self):
         if self.proj.compile_options["decompose"]:
             numRegions = len(self.parser.proj.rfi.regions)
@@ -131,7 +130,10 @@ class SpecCompiler(object):
         if self.proj.compile_options["use_region_bit_encoding"]:
             robotPropList.extend(["bit"+str(i) for i in range(0,int(numpy.ceil(numpy.log2(numRegions))))])
         else:
-            robotPropList.extend([r.name for r in self.parser.proj.rfi.regions])
+            if self.proj.compile_options["decompose"]:
+                robotPropList.extend([r.name for r in self.parser.proj.rfi.regions])
+            else:
+                robotPropList.extend([r.name for r in self.proj.rfi.regions])
 
         self.propList = sensorList + robotPropList
         
@@ -181,7 +183,7 @@ class SpecCompiler(object):
  
             for ln, result in enumerate(results):
                 if not result:
-                    print "WARNING: Could not parse the sentence in line {0}".format(ln)
+                    logging.warning("Could not parse the sentence in line {0}".format(ln))
 
             # Abort compilation if there were any errors
             if not all(results):
@@ -226,24 +228,35 @@ class SpecCompiler(object):
             while '' in LTLspec_sys:
                 LTLspec_sys.remove('')
 
-            print LTLspec_env
-            print LTLspec_sys
-
             # automatically conjoin all the subformulas
             LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
             LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
 
-            # substitute decomposed region 
-            for r in self.proj.rfi.regions:
-                if not (r.isObstacle or r.name.lower() == "boundary"):
-                    LTLspec_env = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
-                    LTLspec_sys = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
+            if self.proj.compile_options["decompose"]:
+                # substitute decomposed region 
+                for r in self.proj.rfi.regions:
+                    if not (r.isObstacle or r.name.lower() == "boundary"):
+                        LTLspec_env = re.sub('\\b(?:s\.)?' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
+                        LTLspec_sys = re.sub('\\b(?:s\.)?' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_sys)
+            else:
+                for r in self.proj.rfi.regions:
+                    if not (r.isObstacle or r.name.lower() == "boundary"):
+                        LTLspec_env = re.sub('\\b(?:s\.)?' + r.name + '\\b', "s."+r.name, LTLspec_env)
+                        LTLspec_sys = re.sub('\\b(?:s\.)?' + r.name + '\\b', "s."+r.name, LTLspec_sys)
 
             traceback = [] # HACK: needs to be something other than None
         elif self.proj.compile_options["parser"] == "structured":
             import parseEnglishToLTL
 
             if self.proj.compile_options["decompose"]:
+                # substitute the regions name in specs
+                for m in re.finditer(r'near (?P<rA>\w+)', text):
+                    text=re.sub(r'near (?P<rA>\w+)', "("+' or '.join(["s."+r for r in self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+str(50)]])+")", text)
+                for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', text):
+                    text=re.sub(r'within ' + m.group('dist')+' (from|of) '+ m.group('rA'), "("+' or '.join(["s."+r for r in self.parser.proj.regionMapping['near$'+m.group('rA')+'$'+m.group('dist')]])+")", text)
+                for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
+                    text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(["s."+r for r in self.parser.proj.regionMapping['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"]])+")", text)
+
                 # substitute decomposed region 
                 for r in self.proj.rfi.regions:
                     if not (r.isObstacle or r.name.lower() == "boundary"):
@@ -266,10 +279,8 @@ class SpecCompiler(object):
             LTLspec_env = spec["EnvInit"] + spec["EnvTrans"] + spec["EnvGoals"]
             LTLspec_sys = spec["SysInit"] + spec["SysTrans"] + spec["SysGoals"]
 
-            # HACK: account for the []<>TRUE goal we are adding
-            traceback['SysGoals'].insert(0, None)
         else:
-            print "Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"])
+            logging.error("Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"]))
             return None, None, None
 
         if self.proj.compile_options["decompose"]:
@@ -319,10 +330,15 @@ class SpecCompiler(object):
             # DNF version (extremely slow for core-finding)
             #mutex = "\n\t&\n\t []({})".format(" | ".join(["({})".format(" & ".join(["s."+r2.name if r is r2 else "!s."+r2.name for r2 in self.parser.proj.rfi.regions])) for r in self.parser.proj.rfi.regions]))
 
+            if self.proj.compile_options["decompose"]:
+                region_list = self.parser.proj.rfi.regions
+            else:
+                region_list = self.proj.rfi.regions
+
             # Almost-CNF version
             exclusions = []
-            for i, r1 in enumerate(self.parser.proj.rfi.regions):
-                for r2 in self.parser.proj.rfi.regions[i+1:]:
+            for i, r1 in enumerate(region_list):
+                for r2 in region_list[i+1:]:
                     exclusions.append("!(s.{} & s.{})".format(r1.name, r2.name))
             mutex = "\n&\n\t []({})".format(" & ".join(exclusions))
             LTLspec_sys += mutex
@@ -360,7 +376,7 @@ class SpecCompiler(object):
         # This creates a mirrored copy of topological constraints for the target we are following
         if "FOLLOW_SENSOR_CONSTRAINTS" in text:
             if not self.proj.compile_options["use_region_bit_encoding"]:
-                print "WARNING: currently, bit encoding must be enabled for follow sensor"
+                logging.warning("Currently, bit encoding must be enabled for follow sensor")
             else:
                 env_topology = self.spec['Topo'].replace("s.bit", "e.sbit")
                 initreg_formula = createInitialRegionFragment(self.parser.proj.rfi.regions, use_bits=True).replace("s.bit", "e.sbit")
@@ -462,14 +478,14 @@ class SpecCompiler(object):
                 config = libs.findGait(words)
                 #print config
                 if type(config) == type(None):
-                    err_message = "WARNING: No config-gait pair for actuator T_" + act + "\n"
-                    print err_message
+                    err_message = "No config-gait pair for actuator T_" + act + "\n"
+                    logging.warning(err_message)
                     err = 1
 
     def _getGROneCommand(self, module):
         # Check that GROneMain, etc. is compiled
         if not os.path.exists(os.path.join(self.proj.ltlmop_root,"etc","jtlv","GROne","GROneMain.class")):
-            print "Please compile the synthesis Java code first.  For instructions, see etc/jtlv/JTLV_INSTRUCTIONS."
+            logging.error("Please compile the synthesis Java code first.  For instructions, see etc/jtlv/JTLV_INSTRUCTIONS.")
             # TODO: automatically compile for the user
             return None
 
@@ -641,7 +657,7 @@ class SpecCompiler(object):
                 rank_str = s.transitions[0].rank
                 m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
                 if m is None:
-                    print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
+                    logging.error("Error parsing jx in automaton.  Are you sure the spec is unrealizable?")
                     return
                 jx = int(m.group(1))         
                 return (jx == desiredGoal)
@@ -685,7 +701,7 @@ class SpecCompiler(object):
         conjuncts = self.ltlConjunctsFromBadLines(to_highlight, useInitFlag)
         
         #filter out props that are actually used
-        self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or [c for c in badStatesLTL if p in c and not unsat] or p in topo]
+        #self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or [c for c in badStatesLTL if p in c and not unsat] or p in topo]
                     
         cmd = self._getPicosatCommand() 
             
@@ -754,11 +770,11 @@ class SpecCompiler(object):
 
         paths = [p for p in glob.glob(os.path.join(self.proj.ltlmop_root,"lib","cores","picosat-*")) if os.path.isdir(p)]
         if len(paths) == 0:
-            print "Where is your sat solver? We use Picosat."
+            logging.error("Where is your sat solver? We use Picosat.")
             # TODO: automatically compile for the user
             return None
         else:
-            print "Found Picosat in " + paths[0]
+            logging.debug("Found Picosat in " + paths[0])
 
         if os.name == "nt":
             cmd = os.path.join(paths[0],"picomus.exe")
@@ -786,7 +802,7 @@ class SpecCompiler(object):
                 #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
                 #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
                 #newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
-                goals = ["[]<>(TRUE)"] + self.spec[tb_key].split('\n')
+                goals = self.spec[tb_key].split('\n')
                 newCs = [goals[h_item[2]]]
                 newCsOld = newCs
                 
@@ -828,17 +844,19 @@ class SpecCompiler(object):
 
     def compile(self, with_safety_aut=False):
         if self.proj.compile_options["decompose"]:
-            print "--> Decomposing..."
+            logging.info("Decomposing...")
             self._decompose()
-        print "--> Writing LTL file..."
+        logging.info("Writing LTL file...")
         spec, tb, resp = self._writeLTLFile()
-        print "--> Writing SMV file..."
+        logging.info("Writing SMV file...")
         self._writeSMVFile()
 
         if tb is None:
-            print "ERROR: Compilation aborted"
+            logging.error("Compilation aborted")
             return 
 
         #self._checkForEmptyGaits()
+        logging.info("Synthesizing a strategy...")
+
         return self._synthesize(with_safety_aut)
 

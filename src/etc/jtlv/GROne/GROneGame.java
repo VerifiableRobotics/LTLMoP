@@ -33,13 +33,28 @@ public class GROneGame {
 
 	BDDVarSet sys_slow_prime;
 
-	BDDVarSet sys_fast_prime;		
+	BDDVarSet sys_fast_prime;	
+	
+	boolean fastslow;
 
 	
-	// p2_winning in GRGAmes are !p1_winning
+	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys)
+			throws GameException {
+		this(env, sys, false); // default fastslow == false
+	}
 
+    public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, boolean fastslow)
+			throws GameException {
+		this(env, sys, sys.justiceNum(), env.justiceNum(), fastslow);
+    }
+	
 	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, int sysJustNum, int envJustNum)
-	throws GameException {
+			throws GameException {
+		this(env, sys, sysJustNum, envJustNum, false); // default fastslow == false
+    }
+
+	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, int sysJustNum, int envJustNum, boolean fastslow)
+			throws GameException {
 		if ((env == null) || (sys == null)) {
 			throw new GameException(
 					"cannot instanciate a GR[1] Game with an empty player.");
@@ -51,44 +66,7 @@ public class GROneGame {
 		this.sys = sys;
 		this.sysJustNum = sysJustNum;
 		this.envJustNum = envJustNum;
-		
-		// for now I'm giving max_y 50, at the end I'll cut it (and during, I'll
-		// extend if needed. (using vectors only makes things more complicate
-		// since we cannot instantiate vectors with new vectors)
-		x_mem = new BDD[sysJustNum][envJustNum][50];
-		y_mem = new BDD[sysJustNum][50];
-		z_mem = new BDD[sysJustNum];
-		x2_mem = new BDD[sysJustNum][envJustNum][50][50];
-		y2_mem = new BDD[sysJustNum][50];
-		z2_mem = new BDD[50];	
-		
-		//
-		this.player2_winning = this.calculate_win();	//(system winning states)
-		this.player1_winning = this.calculate_loss();   //(environment winning states)
-		//this.player1_winning = this.player2_winning.not(); //commented out after counterstrategy addition - VR
-
-	}
-	
-	
-	
-	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys)
-			throws GameException {
-		this(env, sys, sys.justiceNum(), env.justiceNum());
-	}
-	
-	public GROneGame(ModuleWithWeakFairness env, ModuleWithWeakFairness sys, boolean fastslow)
-			throws GameException {
-		if ((env == null) || (sys == null)) {
-			throw new GameException(
-					"cannot instanciate a GR[1] Game with an empty player.");
-		}
-		
-		//Define system and environment modules, and how many liveness conditions are to be considered. 
-		//The first sysJustNum system livenesses and the first envJustNum environment livenesses will be used
-		this.env = env;
-		this.sys = sys;
-		this.sysJustNum = sys.justiceNum();
-		this.envJustNum = env.justiceNum();
+		this.fastslow = fastslow;
 		
 		// for now I'm giving max_y 50, at the end I'll cut it (and during, I'll
 		// extend if needed. (using vectors only makes things more complicate
@@ -101,8 +79,14 @@ public class GROneGame {
 		z2_mem = new BDD[50];	
 			
 		
-		this.player2_winning = this.calculate_win_FS();	//(system winning states)
-		this.player1_winning = this.player2_winning.not(); //(environment winning states)
+        if (fastslow) {
+            this.player2_winning = this.calculate_win_FS();	//(system winning states)
+            // p2_winning in GRGAmes are !p1_winning
+            this.player1_winning = this.player2_winning.not(); //(environment winning states)
+        } else {
+            this.player2_winning = this.calculate_win();	//(system winning states)
+            this.player1_winning = this.calculate_loss();   //(environment winning states)
+        }
 
 	}
 	
@@ -300,25 +284,32 @@ public class GROneGame {
 		BDDVarSet env_prime = env.modulePrimeVars();
 		BDDVarSet sys_prime = sys.modulePrimeVars();
 		
-		BDD safeStates = sys.trans().exist(env.moduleUnprimeVars().union(sys.modulePrimeVars()));
-		BDD safeNext = Env.unprime(sys.trans().exist(env.modulePrimeVars().union(env.moduleUnprimeVars().union(sys.moduleUnprimeVars()))));
+		BDD safeStates = sys.trans().exist(env.modulePrimeVars().union(sys.modulePrimeVars()));
+		BDD safeNext = Env.unprime(sys.trans().exist(env.moduleUnprimeVars().union(sys.moduleUnprimeVars())));
 		
-		//Check the complete transition
-		BDD exy1 = Env.prime(to).and(sys.trans());	
+		//Read the new cox starting at the return statement***
+		
+		//And there is a transition to the "to" set, i.e. a slow move as well as the (pre-determined) fast move
+		BDD exy1 = Env.prime(to).and(sys.trans()).exist(sys_slow_prime);	
 		
 		
-		//If both types are changing, check both the intermediate state (exy2) and the complete transition (ex1)
-		BDD exy6 = (slowSame.and(Env.prime(safeStates.and(safeNext)))).exist(sys_slow_prime);	
+		//Such that the slowSame move is safe...
+		BDD exy6 = (slowSame.imp(Env.prime(safeStates.and(safeNext)))).forAll(sys_slow_prime);	
 		
-		BDD exy5 = ((exy1.and(exy6)).and(slowSame.not()).and(fastSame.not())).exist(sys_prime);
 		
-		BDD fs1 = env.trans().imp(exy5).forAll(env_prime);
+		//If both types are changing, check the intermediate state (i.e. the slowSame state):
 		
-        //If only one type of controller changes, use old cox
-		BDD exy4 = Env.prime(to).and(sys.trans()).and(slowSame.or(fastSame)).exist(sys_prime);
-        BDD fs2 = env.trans().imp(exy4).forAll(env_prime);        
+		//There exists a "fast" move...
+		BDD fs1 = (exy1.and(exy6)).exist(sys_fast_prime);
+		
+		
+		//If only one type of controller changes, use old cox
+		BDD fs2 = Env.prime(to).and(sys.trans()).and(slowSame.or(fastSame)).exist(sys_prime);
 
-        return fs1.or(fs2);
+		
+		///***For all environment moves, there is either a move that changes only slow or only fast, 
+		//or one that changes both actions but has a safe intermediate state
+		return env.trans().imp(fs1.or(fs2)).forAll(env_prime);
 	}
 	
 	
@@ -567,6 +558,42 @@ public class GROneGame {
 	
 		
 	public boolean calculate_strategy(int kind, BDD ini, boolean det) {
+		
+		BDDVarSet sys_slow_prime = Env.getEmptySet();
+		BDDVarSet sys_fast_prime = Env.getEmptySet();
+		BDDVarSet sys_slow_unprime = Env.getEmptySet();
+		BDDVarSet sys_fast_unprime = Env.getEmptySet();
+		BDD slowSame = Env.TRUE();
+		BDD fastSame = Env.TRUE();
+		BDD envSame = Env.TRUE();
+
+
+		ModuleBDDField [] allFields = sys.getAllFields();				
+		ModuleBDDField thisField, thisPrime;
+		String fieldName;
+
+		for (int i = 0; i < allFields.length; i++) {
+			thisField = allFields[i];
+			thisPrime = thisField.prime();	
+			fieldName = thisPrime.support().toString();
+			if (fieldName.startsWith("<bit")) {
+				slowSame = slowSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));
+				sys_slow_prime = sys_slow_prime.union(thisPrime.support());
+				sys_slow_unprime = sys_slow_unprime.union(thisField.support());				
+			} else {
+				fastSame = fastSame.id().and(thisField.getDomain().buildEquals(thisField.getOtherDomain()));
+				sys_fast_prime = sys_fast_prime.union(thisPrime.support());
+				sys_fast_unprime = sys_fast_unprime.union(thisField.support());
+			}		
+		}
+		
+		BDDVarSet env_prime = env.modulePrimeVars();
+		BDDVarSet sys_prime = sys.modulePrimeVars();
+		
+		BDD safeStates = sys.trans().exist(env.modulePrimeVars().union(sys.modulePrimeVars()));
+		BDD safeNext = Env.unprime(sys.trans().exist(env.moduleUnprimeVars().union(sys.moduleUnprimeVars())));
+		
+		
 		int strategy_kind = kind;
 		Stack<BDD> st_stack = new Stack<BDD>();
 		Stack<Integer> j_stack = new Stack<Integer>();
@@ -579,11 +606,11 @@ public class GROneGame {
 		// multiple goals are satisfied in the same location)
         //
         // TODO: There is probably a cleaner way to do this
-        ModuleBDDField [] allFields = sys.getAllFields();        
+        //ModuleBDDField [] allFields = sys.getAllFields();        
         BDDVarSet nonRegionProps = Env.getEmptySet();
         for (int i = 0; i < allFields.length; i++) {      
-          ModuleBDDField thisField = allFields[i];
-          String fieldName = thisField.support().toString();
+          thisField = allFields[i];
+          fieldName = thisField.support().toString();
           if (!fieldName.startsWith("<bit"))
             nonRegionProps = nonRegionProps.union(thisField.support());
         }
@@ -686,12 +713,22 @@ public class GROneGame {
                 for (Iterator<BDD> iter_succ = succs.iterator(); iter_succ
                         .hasNext();) {
                     BDD primed_cur_succ = Env.prime(iter_succ.next());
-					BDD next_op = Env
-                            .unprime(sys.trans().and(p_st).and(primed_cur_succ)
-                                    .exist(
-                                            env.moduleUnprimeVars().union(
-                                                    sys.moduleUnprimeVars())));
-													
+                    BDD next_op;
+					if (this.fastslow) {
+						//for fastSlow, need to make sure we only choose successors that have a safe intermediate state					
+	                    next_op = Env.unprime(sys.trans().and(p_st).and(primed_cur_succ)
+	                    					.and((slowSame.or(fastSame))
+	                    							.or(slowSame.and(Env.prime(safeStates.and(safeNext))).exist(sys_slow_prime)))
+	                                    .exist(
+	                                            env.moduleUnprimeVars().union(
+	                                                    sys.moduleUnprimeVars())));
+					} else {
+						next_op = Env.unprime(sys.trans().and(p_st).and(primed_cur_succ)
+                            .exist(
+                                    env.moduleUnprimeVars().union(
+                                            sys.moduleUnprimeVars())));
+					}
+					
                     candidate = Env.FALSE();
                     int jcand = p_j;
 

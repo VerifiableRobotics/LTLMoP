@@ -123,7 +123,7 @@ class AnalysisResultsDialog(wx.Dialog):
 
 
     def markFragments(self, agent, section, jx=None):
-        jx_this = 0 # debug output is 1-indexed
+        jx_this = -1 # debug output is 0-indexed
 
         for f,obj in self.statements[agent]:
             if "[]<>" in f: 
@@ -307,6 +307,7 @@ class SpecEditorFrame(wx.Frame):
         global MENU_COMPILECONFIG; MENU_COMPILECONFIG = wx.NewId()
         global MENU_CONVEXIFY; MENU_CONVEXIFY = wx.NewId()
         global MENU_FASTSLOW; MENU_FASTSLOW = wx.NewId()
+        global MENU_BITVECTOR; MENU_BITVECTOR = wx.NewId()
         global MENU_PARSERMODE; MENU_PARSERMODE = wx.NewId()
         global MENU_PARSERMODE_SLURP; MENU_PARSERMODE_SLURP = wx.NewId()
         global MENU_PARSERMODE_STRUCTURED; MENU_PARSERMODE_STRUCTURED = wx.NewId()
@@ -338,6 +339,7 @@ class SpecEditorFrame(wx.Frame):
         wxglade_tmp_menu_sub = wx.Menu()
         wxglade_tmp_menu_sub.Append(MENU_CONVEXIFY, "Decompose workspace into convex regions", "", wx.ITEM_CHECK)
         wxglade_tmp_menu_sub.Append(MENU_FASTSLOW, "Enable \"fast-slow\" synthesis", "", wx.ITEM_CHECK)
+        wxglade_tmp_menu_sub.Append(MENU_BITVECTOR, "Use bit-vector region encoding", "", wx.ITEM_CHECK)
         wxglade_tmp_menu_sub_sub = wx.Menu()
         wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_SLURP, "SLURP (NL)", "", wx.ITEM_RADIO)
         wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_STRUCTURED, "Structured English", "", wx.ITEM_RADIO)
@@ -408,6 +410,7 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuCompile, id=MENU_COMPILE)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_CONVEXIFY)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_FASTSLOW)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_BITVECTOR)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_SLURP)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_STRUCTURED)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_LTL)
@@ -535,6 +538,7 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
         self.text_ctrl_log.Clear()
         self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
+        self.frame_1_menubar.Check(MENU_BITVECTOR, self.proj.compile_options["use_region_bit_encoding"])
         self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
         if self.proj.compile_options["parser"] == "slurp":
             self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
@@ -584,7 +588,7 @@ class SpecEditorFrame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
-        self.SetSize((929, 782))
+        self.SetSize((929, 700))
         self.button_map.Enable(False)
         self.list_box_sensors.SetMinSize((123, 75))
         self.button_sensor_remove.Enable(False)
@@ -658,7 +662,7 @@ class SpecEditorFrame(wx.Frame):
         self.notebook_1.AddPage(self.notebook_1_pane_3, "Workspace Decomposition")
         sizer_2.Add(self.notebook_1, 1, wx.EXPAND, 0)
         self.window_1_pane_2.SetSizer(sizer_2)
-        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 479)
+        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 425)
         sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
@@ -931,6 +935,7 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.EmptyUndoBuffer()
 
         # Set compilation option checkboxes
+        self.frame_1_menubar.Check(MENU_BITVECTOR, self.proj.compile_options["use_region_bit_encoding"])
         self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
         self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
 
@@ -1151,6 +1156,11 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuSimulate(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """ Run the simulation with current experiment configuration. """
+
+        if not self.proj.compile_options["use_region_bit_encoding"]:
+            wx.MessageBox("Execution requires bit-vector region encoding.\nPlease enable it and recompile.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
 
         # TODO: or check mtime
         if self.dirty:
@@ -1416,7 +1426,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Initial analysis complete.\n\n", "BLUE")
 
-        if (not realizable or not nonTrivial):# and self.unsat:
+        if (not realizable or not nonTrivial) and self.unsat:
             self.appendLog("Further analysis is possible.\n", "BLUE")
             self.analysisDialog.button_refine.Enable(True)
             self.analysisDialog.button_refine.SetLabel("Refine analysis...")
@@ -1484,6 +1494,11 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Opens the counterstrategy visualization interfacs ("Mopsy")
+
+        if not self.proj.compile_options["use_region_bit_encoding"]:
+            wx.MessageBox("Mopsy currently requires bit-vector region encoding.\nPlease enable it and recompile.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
 
         # TODO: check for failed compilation before allowing this
         if self.to_highlight is None:
@@ -1621,6 +1636,7 @@ class SpecEditorFrame(wx.Frame):
     def onMenuSetCompileOptions(self, event):  # wxGlade: SpecEditorFrame.<event_handler>
         self.proj.compile_options["convexify"] = self.frame_1_menubar.IsChecked(MENU_CONVEXIFY)
         self.proj.compile_options["fastslow"] = self.frame_1_menubar.IsChecked(MENU_FASTSLOW)
+        self.proj.compile_options["use_region_bit_encoding"] = self.frame_1_menubar.IsChecked(MENU_BITVECTOR)
         if self.frame_1_menubar.IsChecked(MENU_PARSERMODE_SLURP):
             self.proj.compile_options["parser"] = "slurp"
         elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_STRUCTURED):
@@ -1659,7 +1675,7 @@ class RedirectText:
 
         m = re.search(r"Could not parse the sentence in line (\d+)", string)
         if m:
-            self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1)),MARKER_PARSEERROR)
+            self.parent.text_ctrl_spec.MarkerAdd(int(m.group(1))-1,MARKER_PARSEERROR)
 
 
 if __name__ == "__main__":

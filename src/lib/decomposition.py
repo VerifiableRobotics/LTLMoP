@@ -9,6 +9,21 @@ class myVertex():
         self.x = x
         self.y = y
         
+def removeDuplicatePoints(points):
+    # remove the duplicated points if they are next to each other
+    removeList = []
+    for i,pt in enumerate(points):
+        if i < len(points)-1:
+            nextPoint = points[i+1]
+        else:
+            nextPoint = points[0]
+        if (pt[0]==nextPoint[0]) and (pt[1]==nextPoint[1]):
+            removeList.append(pt)
+    #print 'removing...............',removeList
+    map(points.remove,removeList)
+
+    return points
+
 class decomposition():
 
     def __init__(self,polygon,holes=[]):
@@ -150,7 +165,7 @@ class decomposition():
                 clean = False
 
                 while not clean:
-                    points = self.removeDuplicatePoints(points)
+                    points = removeDuplicatePoints(points)
                     clean = True                
                     for i in xrange(len(points)):
                         a = points[(i-1)%len(points)]
@@ -168,21 +183,6 @@ class decomposition():
 
                 return Polygon.Polygon(points)    
             
-    def removeDuplicatePoints(self, points):
-        # remove the duplicated points if they are next to each other
-        removeList = []
-        for i,pt in enumerate(points):
-            if i < len(points)-1:
-                nextPoint = points[i+1]
-            else:
-                nextPoint = points[0]
-            if (pt[0]==nextPoint[0]) and (pt[1]==nextPoint[1]):
-                removeList.append(pt)
-        #print 'removing...............',removeList
-        map(points.remove,removeList)
-
-        return points
-
     def mergeHole(self,allVertices,initialIndex,holeIndex,vertexIndex):
         hole = self.holeList[holeIndex]
         del self.holeList[holeIndex]

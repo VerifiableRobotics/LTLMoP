@@ -84,7 +84,7 @@ class ParameterObject:
                 self.value = False
         elif self.type.lower() == 'region':
             try:
-                self.value = ast.literal_eval(value)
+                self.value = str(value).strip("'\"")
             except ValueError:
                 logging.error("Invalid region value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() in ['str','string']:
@@ -94,12 +94,12 @@ class ParameterObject:
                 logging.error("Invalid string value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() == 'choice':
             try:
-                self.value = ast.literal_eval(value)
+                self.value = str(value).strip('\"\'')
             except ValueError:
                 logging.error("Invalid choice value: {0} for parameter {1}".format(value,self.name))
         elif self.type.lower() == 'multichoice':
             try:
-                self.value = ast.literal_eval(value)
+                self.value = str(value).strip('\"\'')
             except ValueError:
                 logging.error("Invalid multichoice value: {0} for parameter {1}".format(value,self.name))
         else:
@@ -111,7 +111,7 @@ class ParameterObject:
     def resetValue(self):
         # Reset the parameter value to its default value.
         # If the default value is not define, then the value is set to None
-        if self.default == None:
+        if self.default is None:
             self.value = None
         else:
             self.setValue(self.default)
@@ -375,7 +375,9 @@ class ConfigObject:
             data[header]['RobotName'] = robot.name
             data[header]['Type'] = robot.type
 
-            data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
+            if robot.calibrationMatrix is not None:
+                data[header]['CalibrationMatrix'] = repr(robot.calibrationMatrix)
+
             # TODO: change to string function
             try:
                 data[header]['InitHandler'] = robot.handlers['init'].toString()
@@ -860,7 +862,7 @@ class HandlerParser:
                                        [^,\s]*    # other
                                     )""")
         # Try to load the handler file
-        logging.info("Inspecting handler: %s" % handlerFile.split('.')[-1])
+        logging.debug("Inspecting handler: %s" % handlerFile.split('.')[-1])
         try:
             __import__(handlerFile)
         except Exception as e:
@@ -1267,9 +1269,6 @@ class ConfigFileParser:
             except ValueError:
                 logging.warning("Wrong region tags")
                 configObj.complete = False
-        else:
-            logging.warning("Cannot find Region tag in config file: {}".format(fileName))
-            configObj.complete = True
 
         if 'Main_Robot' in config_data['General Config']:
             # Load main robot name

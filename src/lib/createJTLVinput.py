@@ -188,7 +188,7 @@ def createLTLfile(fileName, spec_env, spec_sys):
 
     filler = createNecessaryFillerSpec(spec_sys) 
     if filler: 
-        ltlFile.write('\t' + filler + ' & \n')
+        ltlFile.write('\t' + filler)
 
     # Write the desired robot behavior
     if spec_sys.strip() != "":

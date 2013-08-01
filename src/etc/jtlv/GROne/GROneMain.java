@@ -111,7 +111,7 @@ public class GROneMain {
 		}
 		
 
-		g = new GROneGame(env,sys);
+		g = new GROneGame(env,sys,false);
 		long t3 = (System.currentTimeMillis() - time);
 		System.out.println("Games time: " + t3);
 

@@ -908,7 +908,8 @@ class DrawingFrame(wx.Frame):
                 else:
                     labelText = obj.name
 
-                labelText += " [h={}]".format(obj.height)
+                if obj.height != 0:
+                    labelText += " [h={}]".format(obj.height)
 
                 textWidth, textHeight = dc.GetTextExtent(labelText)
                 

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" width="737" height="592">
-<path style="fill:red;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 378, 386 L 125, 386 L 124, 327 L 1, 327 L 2, 480 L 378, 484 z "/>
-<path style="fill:green;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 735, 7 L 429, 4 L 429, 244 L 347, 244 L 347, 4 L 346, 1 L 0, 0 L 1, 58 L 1, 327 L 124, 327 L 124, 163 L 236, 163 L 236, 328 L 526, 328 L 526, 164 L 603, 164 L 606, 338 L 737, 338 z "/>
-<path style="fill:blue;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 733, 592 L 2, 583 L 2, 480 L 378, 484 L 737, 488 z "/>
-<path style="fill:yellow;fill-opacity:1.0;fill-rule:evenodd;stroke:black;stroke-width:1.0;" d="M 737, 338 L 606, 338 L 603, 387 L 378, 386 L 378, 484 L 737, 488 z "/>
-</svg>

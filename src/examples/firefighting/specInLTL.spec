@@ -5,46 +5,44 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-pick_up, 0
-drop, 0
-radio, 0
+pick_up, 1
+drop, 1
+radio, 1
 extinguish, 0
-sweep, 1
 
 CompileOptions:
-convexify: True
-parser: slurp
+convexify: False
+parser: ltl
 fastslow: False
-decompose: True
-use_region_bit_encoding: True
+decompose: False
+use_region_bit_encoding: False
 
 CurrentConfigName:
-basicsim
+Basic Simulation
 
 Customs: # List of custom propositions
+carrying_item
 
 RegionFile: # Relative path of region description file
-iros10.regions
+floorplan.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
 fire, 0
-person, 0
-hazardous_item, 0
-sweep_done, 1
+person, 1
+hazardous_item, 1
 
 
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-living = p4
-deck = p7
-porch = p3
-dining = p6
-bedroom = p8
-others = 
-kitchen = p5
+living = living
+deck = deck
+porch = porch
+dining = dining
+bedroom = bedroom
+kitchen = kitchen
 
 Spec: # Specification in structured English
-Search the porch and the deck.
-Don't go to the kitchen.
+--
+[]<>(porch | living)
 

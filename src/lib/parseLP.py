@@ -66,7 +66,7 @@ class parseLP:
                     self.regionBetween.append((m.group("rA"),m.group("rB")))
                 
             # generate new regions
-            #self.generateNewRegion()
+            self.generateNewRegion()
             # break the overlapped regions into seperated parts
             self.checkOverLapping()
             # remove small regions
@@ -206,7 +206,8 @@ class parseLP:
             # break the polygon into sub-polygons
             newPoly = Polygon.Polygon(polygon[0][overlapPtIndex[0]:overlapPtIndex[1]])
             polyWithoutOverlapNode.extend(self.decomposeWithOverlappingPoint(newPoly))
-            polyWithoutOverlapNode.extend(self.decomposeWithOverlappingPoint(polygon-newPoly))
+            reducedPoly = Polygon.Polygon(decomposition.removeDuplicatePoints((polygon-newPoly)[0]))
+            polyWithoutOverlapNode.extend(self.decomposeWithOverlappingPoint(reducedPoly))
         else:
             # no overlap point is found
             return [polygon]

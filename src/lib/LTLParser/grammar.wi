@@ -26,7 +26,7 @@ BinaryTemporalOperator: UntilOperator | WeakUntilOperator;
 UntilOperator: 'U';
 WeakUntilOperator: 'W';
 ImplicationOperator: '-' '-' '>' | '-' '>';
-BiimplicationOperator: '<' '-' '-' '>' | '<' '-' '>';
+BiimplicationOperator: '<' '-' '-' '>' | '<' '-' '>' | '=';
 DisjunctionOperator: '+' | '\\' '/' | '|' | '|' '|' ;
 ConjunctionOperator: '*' | '/' '\\' | '&' | '&' '&' ;
 XorOperator: '^';

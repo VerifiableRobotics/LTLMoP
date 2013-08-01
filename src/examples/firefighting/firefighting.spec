@@ -15,6 +15,7 @@ convexify: True
 parser: structured
 fastslow: False
 decompose: True
+use_region_bit_encoding: True
 
 CurrentConfigName:
 Basic Simulation
@@ -53,6 +54,7 @@ If you were in porch then do not person
 
 # Define robot safety including how to pick up
 Do pick_up if and only if you are sensing hazardous_item and you are not activating carrying_item
+If you are activating pick_up then stay there
 carrying_item is set on pick_up and reset on drop
 Do drop if and only if you are in porch and you are activating carrying_item
 
