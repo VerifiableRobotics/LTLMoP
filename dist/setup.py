@@ -8,24 +8,29 @@
 import os, sys, time
 import subprocess
 import compileall
+import catUtils
 
 # TODO: use distutils?
 
-def runProgramWithLiveOutput(wd, program, *args):
+def runProgramWithLiveOutput(wd, program, args=None, shell=False):
     if os.name == "nt":
         err_types = (OSError, WindowsError)
     else:
         err_types = OSError
 
+    if args is None:
+        args = []
+
+    print "-> Running command '{} {}'...".format(program, " ".join(args))
     try:
-        p = subprocess.Popen([program] + list(args), cwd=wd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen([program] + args, cwd=wd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=shell)
     except err_types as (errno, strerror):
         print "ERROR: " + strerror
         return
 
     while p.returncode is None:
         output = p.stdout.readline() # Blocking :(
-        print output,
+        print output.strip()
 
         # Check the status of the process
         p.poll()
@@ -37,33 +42,43 @@ if sys.hexversion < 0x02070000:
     raw_input()
     sys.exit(2)
 
-# Find src/ directory
-src_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "src")
+catUtils.patrickSays("Let's get your LTLMoP installation ready for use.")
 
-print ">>> Pre-compiling all modules..."
+# Find src/ directory
+root_dir = os.path.normpath(os.path.join(os.path.abspath(os.path.dirname(__file__)), ".."))
+src_dir = os.path.join(root_dir, "src")
+
+print "\n>>> Pre-compiling all modules...\n"
 os.chdir(src_dir)
 compileall.compile_dir("lib", quiet=True)
 
-print ">>> Building synthesis subsystem..."
+print "\n>>> Building synthesis subsystem...\n"
 jtlv_dir = os.path.join(src_dir, "etc", "jtlv")
-runProgramWithLiveOutput(jtlv_dir, os.path.join(jtlv_dir, "build.sh"))
+runProgramWithLiveOutput(jtlv_dir, os.path.join(jtlv_dir, "build.sh"), shell=True)
 
-print ">>> Setting up SLURP parsing system..."
+print "\n>>> Checkout out submodules...\n"
+runProgramWithLiveOutput(root_dir, "git", "submodule init".split(), shell=False)
+runProgramWithLiveOutput(root_dir, "git", "submodule update".split(), shell=False)
+ 
+print "\n>>> Setting up SLURP parsing system...\n"
 print "Note: This step involves downloading a large file, and is optional."
 skip_slurp = None
 while skip_slurp is None:
     skip_slurp_response = raw_input("Skip this step [y/N]? ")
     if skip_slurp_response.lower() == "y":
-        print "Skipping."
+        print "-> Skipping."
         skip_slurp = True
     elif skip_slurp_response.lower() == "n" or skip_slurp_response == "":
         skip_slurp = False
 
 if not skip_slurp:
     slurp_dir = os.path.join(src_dir, "etc", "SLURP")
-    runProgramWithLiveOutput(slurp_dir, "python", "-u", os.path.join(slurp_dir, "download.py"))
+    runProgramWithLiveOutput(slurp_dir, "python", ["-u", os.path.join(slurp_dir, "download.py")], shell=False)
 
-print ">>> Done!"
+print "\n>>> Done!\n"
+
+catUtils.patrickSays("Alright. Enjoy!")
+print
 
 if os.name == "nt":
     raw_input("Press any key to quit...")
