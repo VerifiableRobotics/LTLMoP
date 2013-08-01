@@ -59,6 +59,7 @@ class sensorHandler:
             if status:
                 print 'I see ARTAG:',ARTagID
             return status
+    
     def lidar_detection(self,initial=False):
         """
         returns the LIDAR points currently observed
@@ -116,8 +117,135 @@ class sensorHandler:
                 return False
             else:
                 return False
+     
+    def init_lidar(self, initial = False):
+        #TODO: Make this sensor be the one that gives LTLMoP the status of a door. ~sm2296
+        #TODO: Document the crap out of this function. ~sm2296
+        """
+        A sensor whose only purpose is to get LIDAR amd GridSLAM running on the robot/DEASL/C# end.
+        Without this sensor enabled in LTLMoP, the LTLMoP-C# Interface won't enable LIDAR and GridSLAM.
+        Written by Spyros Maniatopoulos (sm2296). Created 8/1/2013. Last modified 8/1/2013. 
+        Based on Annie's 'open_doorway' sensor/function, but without the map updates.
+        """
         
-        
+        proj = self.proj
+        # initially, it sends the map to C# and returns True.
+        if initial:
+            # init LIDAR at the CSharp end
+            ltlmop_msg = PythonRequestMsg()
+            ltlmop_msg.id = 6
+            ltlmop_msg.sensor=PythonRequestMsg.OPENDOOR
+            # update the proj with the most current rfi
+            # this is needed after resynthesis, otherwise the rfi is still the old one
+            self.rfi = proj.rfiold
+            print [r.name for r in self.rfi.regions]
+            # make sure we only send the newer rfi when we have finished exploring the region
+            if (self.mapThread.mapType==PythonRequestMsg.NEWREGIONFOUND and len(self.oldExternalFaces)>0):
+                self.exposedFaces = self.oldExternalFaces
+                print 'old external faces!'
+            else:
+                self.exposedFaces = self.rfi.getExternalFaces() # a list of faces that are not connected to aother regions in the map
+                if self.exposedFaces is None:
+                    self.exposedFaces = proj.rfi.getExternalFaces()
+                self.oldExternalFaces = self.exposedFaces
+            print 'exposedFaces:',len(self.exposedFaces)# see how many external faces we have generated
+            # get the points the external faces
+            for face_pta, face_ptb in self.exposedFaces:
+                new_f = ltlmop_msg.Face()
+                face_p1 = self.proj.coordmap_map2lab(face_pta)
+                face_p2 = self.proj.coordmap_map2lab(face_ptb)
+                new_f.p1.x = face_p1[0]
+                new_f.p1.y = face_p1[1]
+                new_f.p2.x = face_p2[0]
+                new_f.p2.y = face_p2[1]
+                ltlmop_msg.exfaces.faces.extend([new_f]) # add face to list
+            # get points in the current map
+            for r in self.rfi.regions:
+                new_r = ltlmop_msg.Region()
+                points = map(self.proj.coordmap_map2lab,r.getPoints())
+                holes = [map(proj.coordmap_map2lab, r.getPoints(hole_id=i)) for i in xrange(len(r.holeList))]
+                #print 'name',r.name,len(r.pointArray)
+                print 'region direction',r.name,Polygon.Polygon(r.pointArray).orientation()
+                if Polygon.Polygon(r.pointArray).orientation()==1:
+                    for p in points:
+                        new_p = ltlmop_msg.Point()
+                        new_p.x = p[0]
+                        new_p.y = p[1]
+                        new_r.points.extend([new_p])
+                else:
+                    for p in reversed(points):
+                        new_p = ltlmop_msg.Point()
+                        new_p.x = p[0]
+                        new_p.y = p[1]
+                        new_r.points.extend([new_p])
+                for h in holes:
+                    new_h = ltlmop_msg.Point()
+                    new_h.x = h[0]
+                    new_h.y = h[1]
+                    new_r.holes.extend([new_h])
+                new_r.name = r.name
+                print '*****',r.name
+                ltlmop_msg.map.r.extend([new_r])# add all the map/external faces to the message
+            ltlmop_msg.map.type = PythonRequestMsg.REGIONUPDATE
+            
+            # start the map update thread
+            if (self.mapThread.notStarted):
+                self.mapThread.start()
+            # setup a sensor in case C# wants to know how we are doing
+            sensor = ltlmop_msg.Sensor()
+            sensor.type = PythonRequestMsg.OPENDOOR
+            ltlmop_msg.sensors.extend([sensor])
+            if self.mapThread.processing:
+                sensor.stat = 1
+            else:
+                sensor.stat = 0 # IDLE
+            response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
+            print "!!!!!!!!!!!! This is the (initial == True) ltlmop_msg:", response
+            if len(response.map.r)!=0 and not self.mapThread.processing:
+                print "updated MAP RECEIVED",response.map.type
+                self.mapThread.updateMap(response.map)      
+            print 'LIDAR/GridSLAM were initialized! ~Spyros'
+            return True
+        # after that, ignores the C# map updates, uses the previous map, and returns False.
+        else:
+            ltlmop_msg = PythonRequestMsg()
+            ltlmop_msg.id = 7
+            sensor = ltlmop_msg.Sensor()
+            sensor.type = PythonRequestMsg.OPENDOOR
+            ltlmop_msg.sensor=PythonRequestMsg.OPENDOOR
+            ltlmop_msg.sensors.extend([sensor])
+            response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
+            #print "!!!!!!!!!!!! This is the first ltlmop_msg:", response
+            
+            ltlmop_msg.id = 75 # this is for when we don't have a new map to send ~Annie
+            response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
+            #print "!!!!!!!!!!!! This is the second ltlmop_msg:", response
+            #TODO: Make this sensor be the one that gives LTLMoP the status of a door. ~sm2296
+            #if response.doorIsClosed:
+            #    print "This door is CLOSED. ~Spyros"
+            #    return True
+            #else:
+            #    print "This door is OPEN. ~Spyros"
+            #    return False
+            s = response.sensors[0]
+            
+            if (s.type==PythonRequestMsg.OPENDOOR):
+                front_free = s.stat # -1 for occupied, 0 for unknown, 1 for free (probably) ~sm2296
+                #print "front_free now is {!r}".format(front_free)
+            else:
+                print "unexpected message for opendoor response"
+                
+            return (front_free != 1)
+            
+    def doorIsClosed(self, initial = False):
+        """
+        A sensor that, on the low-level, uses LIDAR/GridSLAM information ...
+        to decide whether an office door is closed (True) or open (False).
+        """
+        # ...
+        print "Sensor doorIsClosed say the door to this office is %s ~Spyros" % 'CLOSED!'
+        return True
+    
     def open_doorway(self,initial=False):
         """
         returns whether a new LIDAR has discovered a new doorway that was
@@ -194,7 +322,7 @@ class sensorHandler:
             else:
                 sensor.stat = 0 # IDLE
             response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
-            print "!!!!!!!!!!!!", response
+            print "!!!!!!!!!!!! This is the 'response' variable:", response
             if len(response.map.r)!=0 and not self.mapThread.processing:
                 print "updated MAP RECEIVED",response.map.type
                 self.mapThread.updateMap(response.map)
@@ -278,7 +406,7 @@ class sensorHandler:
                 else:
                     return False
             else:
-                ltlmop_msg.id=75 # this is for when we don't have a newe map to send
+                ltlmop_msg.id=75 # this is for when we don't have a new map to send
                 response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
                 # check to see if we are getting a map from C#
                 if len(response.map.r)!=0 and not self.mapThread.processing:

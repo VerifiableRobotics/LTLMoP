@@ -159,12 +159,14 @@ class _CSharpCommunicator:
         self.LIDAR = []
         self.ARTAG = []
         self.BUSY_EXPLORE = False
+             
         for s in msg.sensors:
             if (s.type==ltlmopMsg_pb2.PythonRequestMsg.LIDAR):
                 # we have lidar update
                 self.LIDAR = s.data
             if (s.type==ltlmopMsg_pb2.PythonRequestMsg.ARTAG):
                 self.ARTAG = s.data # this is all the ARTag IDs we got
+
         self.pose=msg.pose
         #if(self.pose!=None):
         #    print 'got some pose!',self.pose.x,self.pose.y
