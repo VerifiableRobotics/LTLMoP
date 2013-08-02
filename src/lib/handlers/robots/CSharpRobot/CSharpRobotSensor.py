@@ -103,6 +103,7 @@ class sensorHandler:
             else:
                 #print 'get V so false'
                 return False
+    
     def doneExploring(self,initial=True):
         """
         returns true if LTLMoP senses that CSharp has just finished exploring
@@ -118,14 +119,11 @@ class sensorHandler:
             else:
                 return False
      
-    def init_lidar(self, initial = False):
-        #TODO: Make this sensor be the one that gives LTLMoP the status of a door. ~sm2296
+    def doorClosed(self, initial = False):
         #TODO: Document the crap out of this function. ~sm2296
         """
-        A sensor whose only purpose is to get LIDAR amd GridSLAM running on the robot/DEASL/C# end.
-        Without this sensor enabled in LTLMoP, the LTLMoP-C# Interface won't enable LIDAR and GridSLAM.
-        Written by Spyros Maniatopoulos (sm2296). Created 8/1/2013. Last modified 8/1/2013. 
-        Based on Annie's 'open_doorway' sensor/function, but without the map updates.
+        A sensor with two purposes: (1) to get LIDAR amd GridSLAM running on the robot/DEASL/C# end,(2) to let LTLMoP know whether the space in front of the robot is free or not. Not free implies that a door would be closed.
+        On the C# side, it uses the method 'openDoorRequest'. (Without this sensor enabled in LTLMoP, the LTLMoP-C# Interface won't enable LIDAR and GridSLAM.)
         """
         
         proj = self.proj
@@ -206,10 +204,10 @@ class sensorHandler:
                 self.mapThread.updateMap(response.map)      
             print 'LIDAR/GridSLAM were initialized! ~Spyros'
             return True
-        # after that, ignores the C# map updates, uses the previous map, and returns False.
+        # after that, ignores the C# map updates, uses the previous map, and returns True or False, depending on whether a door would be closed or open, respectively.
         else:
             ltlmop_msg = PythonRequestMsg()
-            ltlmop_msg.id = 7
+            ltlmop_msg.id = 7           # What does this ID mean?
             sensor = ltlmop_msg.Sensor()
             sensor.type = PythonRequestMsg.OPENDOOR
             ltlmop_msg.sensor=PythonRequestMsg.OPENDOOR
@@ -217,34 +215,19 @@ class sensorHandler:
             response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
             #print "!!!!!!!!!!!! This is the first ltlmop_msg:", response
             
-            ltlmop_msg.id = 75 # this is for when we don't have a new map to send ~Annie
+            ltlmop_msg.id = 75          # this is for when we don't have a new map to send
             response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
             #print "!!!!!!!!!!!! This is the second ltlmop_msg:", response
-            #TODO: Make this sensor be the one that gives LTLMoP the status of a door. ~sm2296
-            #if response.doorIsClosed:
-            #    print "This door is CLOSED. ~Spyros"
-            #    return True
-            #else:
-            #    print "This door is OPEN. ~Spyros"
-            #    return False
+
             s = response.sensors[0]
             
-            if (s.type==PythonRequestMsg.OPENDOOR):
-                front_free = s.stat # -1 for occupied, 0 for unknown, 1 for free (probably) ~sm2296
+            if (s.type == PythonRequestMsg.OPENDOOR):
+                front_free = s.stat     # -1 for occupied, 0 for unknown, 1 for free. See method 'openDoorRequest' on C# side.
                 #print "front_free now is {!r}".format(front_free)
             else:
                 print "unexpected message for opendoor response"
                 
-            return (front_free != 1)
-            
-    def doorIsClosed(self, initial = False):
-        """
-        A sensor that, on the low-level, uses LIDAR/GridSLAM information ...
-        to decide whether an office door is closed (True) or open (False).
-        """
-        # ...
-        print "Sensor doorIsClosed say the door to this office is %s ~Spyros" % 'CLOSED!'
-        return True
+            return (front_free != 1)    # The C# method returns 1 for 'front of robot is free', but we want 1 for 'door closed'.
     
     def open_doorway(self,initial=False):
         """
