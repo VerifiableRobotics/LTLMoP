@@ -42,8 +42,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     regionGroups = {}
     sensorGroups = {}
     
+    correlations = {}
+    
     #Open CFG file
-    grammarFile = open('grammar1.fcfg')
+    grammarFile = open('structuredEnglish.fcfg')
     grammarText = grammarFile.read()
     
     #Add production rules for region names to our grammar string
@@ -79,7 +81,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     #Iterate over the lines in the file
     for line in text.split("\n"):
-
+        
+        line = line.lower()
         lineInd += 1
 
         #If it is an empty line, ignore it
@@ -87,7 +90,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             continue
             
         #If the sentence is a comment, ignore it
-        if CommentRE.search(line):
+        if re.search('^\s*#',line):
             continue
 
         #If there is a newline at the end, remove it
@@ -95,7 +98,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             line = re.sub('\n$','',line)
         
         #Examine input line to find any region group definitons
-        m_groupDef = r_groupDef.match(inputString)
+        m_groupDef = r_groupDef.match(line)
         if m_groupDef:
             #Add semantics of group to our grammar string
             groupName = m_groupDef.groups()[0]
@@ -108,7 +111,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             continue
         
         #Examine input line to find any sensor group definitions
-        m_sensorGroupDef = r_sensorGroupDef.match(inputString)
+        m_sensorGroupDef = r_sensorGroupDef.match(line)
         if m_sensorGroupDef:
             #Add semantics of group to our grammar string
             groupName = m_sensorGroupDef.groups()[0]
@@ -123,7 +126,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         #Parse input line using grammar; the result here is a collection
         # of pairs of syntax trees and semantic representations in a
         # prefix first-order-logic syntax
-        result = nltk.sem.batch_interpret([inputString], grammar, u'SEM', 2)[0]
+        result = nltk.sem.batch_interpret([line], grammar, u'SEM', 2)[0]
         
         nTrees = 0;
         formulaeFound = []
@@ -133,18 +136,18 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             
             #We are not interested multiple parse trees that
             # produce the same LTL formula, so skip them
-            if semstring in formulaeFound
+            if semstring in formulaeFound:
                 continue
             nTrees += 1
             
             #Expand 'stay' phrases
-            semstring = parseStay(semstring)
+            semstring = parseStay(semstring, regionList)
             #Expand region groups, 'any' and 'all'
-            semstring = parseGroupAny(semstring, syntree)
-            semstring = parseGroupAll(semstring, syntree)
+            semstring = parseGroupAny(semstring, regionGroups, sensorGroups)
+            semstring = parseGroupAll(semstring, regionGroups)
             #Expand memory propositions
-            semstring = parseMemory(semstring, syntree)
-            semstring = parseToggle(semstring, syntree)
+            semstring = parseMemory(semstring)
+            semstring = parseToggle(semstring)
             
             formulaeFound.append(semstring)
             
@@ -159,16 +162,16 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #TODO: Need to display and resolve ambiguity in the future
         
         if nTrees == 0:
-            print 'No valid parse found!'
+            print 'Error: No valid parse found for: ' + line
             failed = True
     
     #Set all empty subformulas to TRUE, and removing last & in 'EnvGoals' and 'SysGoals'
     if spec['EnvInit'] == '':
-        spec['EnvInit'] = '\t\t\tTRUE & \n'
+        spec['EnvInit'] = 'TRUE & \n'
     if spec['EnvTrans'] == '':
-        spec['EnvTrans'] = '\t\t\t[](TRUE) & \n'
+        spec['EnvTrans'] = '[](TRUE) & \n'
     if spec['EnvGoals'] == '':
-        spec['EnvGoals'] = '\t\t\t[]<>(TRUE)'
+        spec['EnvGoals'] = '[]<>(TRUE)'
     else:
         # remove last &
         spec['EnvGoals'] = re.sub('& \n$','\n',spec['EnvGoals'])
@@ -176,14 +179,14 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     # No need to change anything in SysTrans,
     # since the transition relation is encoded anyway
     if spec['SysGoals'] == '':
-        spec['SysGoals'] = '\t\t\t[]<>(TRUE)'
+        spec['SysGoals'] = '[]<>(TRUE)'
     else:
         # remove last &
         spec['SysGoals'] = re.sub('& \n$','\n',spec['SysGoals'])
         
     return spec,linemap,failed,LTL2LineNo
             
-def parseStay(semstring):
+def parseStay(semstring, regions):
     def appendStayClause(ind):
         if ind == len(regions) - 1:
             return 'Iff(Next('+regions[ind]+'),'+regions[ind]+')'
@@ -195,7 +198,7 @@ def parseStay(semstring):
     else:
         return semstring
 
-def parseGroupAll(semstring, syntree):
+def parseGroupAll(semstring, regionGroups):
     def appendAllClause(semstring, ind, groupRegions):
         if ind == len(groupRegions) - 1:
             return re.sub('\$All\(\w+\)',groupRegions[ind],semstring)
@@ -210,7 +213,7 @@ def parseGroupAll(semstring, syntree):
         semstring = appendAllClause(semstring, 0, groupItems)
     return semstring
     
-def parseGroupAny(semstring, syntree):
+def parseGroupAny(semstring, regionGroups, sensorGroups):
     def appendAnyClause(ind, groupRegions):
         if ind == len(groupRegions) - 1:
             return groupRegions[ind]
@@ -226,7 +229,7 @@ def parseGroupAny(semstring, syntree):
         semstring = re.sub('\$Any\('+groupName+'\)', anyClause, semstring)
     return semstring
         
-def parseMemory(semstring, syntree):
+def parseMemory(semstring):
     if semstring.find('$Mem') != -1:
         m_Mem = re.search('\$Mem\((.*),(.*),(.*)\)',semstring)
         phi_m = m_Mem.groups()[0]
@@ -244,7 +247,7 @@ def parseMemory(semstring, syntree):
             semstring = 'And('+setClause+',And('+resetClause+',And('+holdOnClause+','+holdOffClause+')))'
     return semstring
     
-def parseToggle(semstring, syntree):
+def parseToggle(semstring):
     if semstring.find('$Tog') != -1:
         m_Tog = re.search('\$Tog\((.*),(.*)\)',semstring)
         phi_m = m_Tog.groups()[0]
@@ -255,6 +258,15 @@ def parseToggle(semstring, syntree):
         holdOffClause = 'Glob(Imp(And(Not('+phi_m+'),Not('+phi_t+')),Not(Next('+phi_m+'))))'
         semstring = 'And('+turnOnClause+',And('+turnOffClause+',And('+holdOnClause+','+holdOffClause+')))'
     return semstring
+    
+def parseCorresponding(semstring):
+    if semstring.find('$Corr') != -1:
+        m_Any = re.search('\$Any\((\w+)/)',semstring)
+        if not m_Any:
+            print('Error: \'corresponding\' must be be preceded by an \'any\' quantifier')
+            failed = True
+            return ''
+    #TODO: METHOD IS INCOMPLETE!! DONT USE 'CORRESPONDING'
 
 def prefixFOL2InfixLTL(prefixString):
     andGroups = re.match('And\((.*),(.*)\)', prefixString)    
