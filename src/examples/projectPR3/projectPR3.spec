@@ -5,33 +5,39 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+isOpen, 1
 
 CompileOptions:
 convexify: True
+parser: structured
 fastslow: False
+decompose: True
+use_region_bit_encoding: True
 
 CurrentConfigName:
-ProjectPR3
+ProjectPR3_new
 
 Customs: # List of custom propositions
 
 RegionFile: # Relative path of region description file
-..\CSharpRobot\demodayloop.regions
+projectPR3.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
-exploreHack, 1
+open_doorway, 0
+door_closed, 1
 
 
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
+r1 = p2
+r2 = p1
 others = 
-r1 = p3
-r2 = p2
-r3 = p1
 
 Spec: # Specification in structured English
-Group regions is r1, r2, r3
+if you are not sensing door_closed then visit r2 and stay there
 
-visit r2
+do isOpen if and only if you are not sensing door_closed
+
+if you are sensing door_closed or you were sensing door_closed then stay there
 
