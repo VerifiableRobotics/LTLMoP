@@ -1,0 +1,172 @@
+%start S
+
+###############
+# Grammar Rules
+###############
+
+# TODO: Allow parentheses for explicit grouping in almost all rules
+
+# Sentence Forms
+################
+
+S[SPEC=?sp,SEM=?s] -> LIVENESS[SPEC=?sp,SEM=?s]
+
+S[SPEC=?sp,SEM=?s] -> SAFETY[SPEC=?sp,SEM=?s]
+
+S[SPEC=?sp,SEM=?s] -> INIT[SPEC=?sp,SEM=?s]
+
+S[SPEC=?sp,SEM=?s] -> MEMORY[SPEC=?sp,SEM=?s]
+
+# Initial condition formulae
+############################
+
+INIT[SPEC=EnvInit,SEM=?ph] -> ENV STARTWITH PHI_ENV[SEM=?ph]
+INIT[SPEC=SysInit,SEM=?ph] -> ROB STARTWITH PHI_ACT[SEM=?ph] | ROB STARTIN PHI_REG[SEM=?ph]
+INIT[SPEC=SysInit,SEM=<And(?ph1,?ph2)>] -> ROB STARTIN PHI_REG[SEM=?ph1] WITH PHI_ACT[SEM=?ph2]
+
+# Safety formulae
+#################
+
+SAFETY[SPEC=EnvTrans,SEM=<Glob(?ph)>,PROP=?ph] -> ALWAYS PHI_ENV[SEM=?ph]
+SAFETY[SPEC=SysTrans,SEM=<Glob(?ph)>,PROP=?ph] -> ALWAYS PHI_ROB[SEM=?ph]
+SAFETY[SPEC=EnvTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=EnvTrans,SEM=?s]
+SAFETY[SPEC=SysTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=SysTrans,SEM=?s]
+
+# Liveness formulae
+###################
+
+LIVENESS[SPEC=EnvGoals,SEM=<GlobFin(?ph)>,PROP=?ph] -> INFDO PHI_ENV[SEM=?ph]
+LIVENESS[SPEC=SysGoals,SEM=<GlobFin(?ph)>,PROP=?ph] -> INFDO PHI_ROB[SEM=?ph]
+LIVENESS[SPEC=SysGoals,SEM=<?lc(GlobFin(?ph1),GlobFin(?ph2))>] -> INFDO PHI_ROB[SEM=?ph1] LC[SEM=?lc] PHI_ROB[SEM=?ph2]
+LIVENESS[SPEC=SysGoals,SEM=<And(GlobFin(?ph),Glob(Imp(?ph,?s)))>] -> GOTO PHI_ROB[SEM=?ph] ANDSTAY[SEM=?s]
+LIVENESS[SPEC=EnvGoals,SEM=<GlobFin(?s)>] -> CONDITIONAL[SPEC=EnvGoals,SEM=?s]
+LIVENESS[SPEC=SysGoals,SEM=<GlobFin(?s)>] -> CONDITIONAL[SPEC=SysGoals,SEM=?s]
+
+# Conditional formulae
+######################
+
+# Conditionals come in one of three forms:
+
+# 1) If [condition] then [requirement]
+CONDITIONAL[SPEC=?sp,SEM=<Imp(?cond,?p)>] -> IF IC[SEM=?cond] THEN REQUIREMENT[SPEC=?sp,SEM=?req,PROP=?p]
+
+# 2) [requirement] unless [condition]
+CONDITIONAL[SPEC=?sp,SEM=<Imp(Not(?cond),?p)>] -> REQUIREMENT[SPEC=?sp,SEM=?req,PROP=?p] UNLESS IC[SEM=?cond]
+
+# 3) [requirement] if and only iff [condition]
+CONDITIONAL[SPEC=?sp,SEM=<Iff(?cond,?p)>] -> REQUIREMENT[SPEC=?sp,SEM=?req,PROP=?p] IFF IC[SEM=?cond]
+
+# Requirements can be either a safety sentence or a liveness sentence
+REQUIREMENT[SPEC=?sp,SEM=?req,PROP=?p] -> SAFETY[SPEC=?sp,SEM=?req,PROP=?p] | LIVENESS[SPEC=?sp,SEM=?req,PROP=?p]
+
+# Conditions are independent clauses (IC) made up of either a noun phrase (NP) and verb phrase (VP)
+# or two ICs conjoined by a logical connective
+IC[SEM=?vp] -> NP[PER=?per] VP[PER=?per,SEM=?vp]
+IC[SEM=<?lc(?ic1,?ic2)>] -> IC[SEM=?ic1] LC[SEM=?lc] IC[SEM=?ic2]
+
+# Valid noun phrases are limited to identifiers of the robot
+NP[PER=?per] -> ROB[PER=?per]
+
+# Valid verb phrases consist of either a linking verb (LV) and a predicative expression (PE), 
+# a transitive verb (of either 'sense' or 'activate') and a corresponding proposition, or 
+# two VPs conjoined by a logical connective.
+VP[PER=?per,SEM=<Next(?pe)>] -> LV[PER=?per,TEN=pres] PE[SEM=?pe]
+VP[PER=?per,SEM=?pe] -> LV[PER=?per,TEN=past] PE[SEM=?pe]
+VP[PER=?per,SEM=<Next(?p)>] -> SENSE[TEN=pres,PER=?per] PHI_ENV[SEM=?p] | ACTIVATE[TEN=pres,PER=?per] PHI_ACT[SEM=?p]
+VP[PER=?per,SEM=?p] -> SENSE[TEN=past,PER=?per] PHI_ENV[SEM=?p] | ACTIVATE[TEN=past,PER=?per] PHI_ACT[SEM=?p]
+VP[PER=?per,SEM=<?lc(?vp1,?vp2)>] -> VP[PER=?per,SEM=?vp1] LC[SEM=?lc] VP[PER=?per,SEM=?vp2]
+
+# Valid predicative expressions are: a preposition (P) and region, a participle (of either
+# 'sense' or 'activate') and a corresponding proposition, a negation (NEG) and a PE, 
+# or two PEs conjoined by a logical connective
+PE[SEM=?r] -> P PHI_REG[SEM=?r]
+PE[SEM=?p] -> SENSING PHI_ENV[SEM=?p] | ACTIVATING PHI_ACT[SEM=?p]
+PE[SEM=<?n(?p)>] -> NEG[SEM=?n] PE[TEN=?t,SEM=?p]
+PE[SEM=<?lc(?p1,?p2)>] -> PE[SEM=?p1] LC[SEM=?lc] PE[SEM=?p2]
+
+# Memory proposition
+MEMORY[SEM=<$Mem(?p,?s,?r)>] -> PHI_ROB[SEM=?p] SETON PHI[SEM=?s] RESETON PHI[SEM=?r]
+
+# Toggle proposition
+MEMORY[SEM=<$Tog(?p,?t)>] -> PHI_ROB[SEM=?p] TOGGLEON PHI[SEM=?t]
+
+# Propositions
+##############
+
+PHI[SEM=?p] -> PHI_ENV[SEM=?p] | PHI_ROB[SEM=?p] | FALSE[SEM=?p]
+
+# Environment propositions, composed of valid sensor propositions
+PHI_ENV[SEM=?ph] -> SENSOR[SEM=?ph]
+PHI_ENV[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ENV[SEM=?ph]
+PHI_ENV[SEM=<?lc(?p1,?p2)>] -> PHI_ENV[SEM=?p1] LC[SEM=?lc] PHI_ENV[SEM=?p2]
+PHI_ENV[SEM=<?q(?g)>] -> ANY[SEM=?q] SENSORGROUP[SEM=?g] | ALL[SEM=?q] SENSORGROUP[SEM=?g] | CORR[SEM=?q] GROUP[SEM=?g]
+
+# Region propositions, composed of valid region names or quantified groups
+PHI_REG[SEM=?ph] -> REGION[SEM=?ph]
+PHI_REG[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_REG[SEM=?ph]
+PHI_REG[SEM=<?lc(?p1,?p2)>] -> PHI_REG[SEM=?p1] LC[SEM=?lc] PHI_REG[SEM=?p2]
+REGION[SEM=<?q(?g)>] -> ANY[SEM=?q] GROUP[SEM=?g] | ALL[SEM=?q] GROUP[SEM=?g] | CORR[SEM=?q] GROUP[SEM=?g]
+
+# Action propositions, composed of valid robot actions and auxilliary propositions
+PHI_ACT[SEM=?ph] -> ACTION[SEM=?ph]
+PHI_ACT[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ACT[SEM=?ph]
+PHI_ACT[SEM=<?lc(?p1,?p2)>] -> PHI_ACT[SEM=?p1] LC[SEM=?lc] PHI_ACT[SEM=?p2]
+
+# Robot propositions, composed of any valid proposition except sensor propositions 
+PHI_ROB[SEM=?ph] -> REGION[SEM=?ph]
+PHI_ROB[SEM=?ph] -> ACTION[SEM=?ph]
+PHI_ROB[SEM=?ph] -> AUXPROP[SEM=?ph]
+PHI_ROB[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ROB[SEM=?ph]
+PHI_ROB[SEM=<?lc(?p1,?p2)>] -> PHI_ROB[SEM=?p1] LC[SEM=?lc] PHI_ROB[SEM=?p2]
+
+###############
+# Lexical Rules
+###############
+
+# Fixed lexicon:
+################
+
+ACTIVATE[TEN=pres,PER=second] -> 'activate'
+ACTIVATE[TEN=pres,PER=third] -> 'activates'
+ACTIVATE[TEN=past,PER=second] -> 'activated'
+ACTIVATE[TEN=past,PER=third] -> 'activated'
+ACTIVATING[SEM=<\x.x>] -> 'activating'
+ALL[SEM=<\x.$All(x)>] -> 'all'
+ALWAYS[SEM=<\x.Glob(x)>] -> 'always' | 'always' 'do' | 'do'
+ANDSTAY[SEM=<$stay>] -> 'and' 'stay' | 'and' 'stay' 'there'
+ANY[SEM=<\x.$Any(x)>] -> 'any'
+CORR[SEM=<\x.$Corr(x)>] -> 'corresponding'
+ENV[SEM=<\x.x>] -> 'environment' | 'env'
+FALSE[SEM=<FALSE>] -> 'false'
+GOTO[SEM=<\x.GlobFin(x)>] -> 'go' 'to'
+IF[SEM=<\x.x>] -> 'if'
+IFF[SEM=<\x.x>] -> 'if' 'and' 'only' 'if' | 'iff'
+INFDO[SEM=<\x.GlobFin(x)>] -> 'go' 'to' | 'visit' | 'infinitely' 'often' 'do' | 'infinitely' 'often'
+LC[SEM=<\x y.Or(x,y)>] -> 'or'
+LC[SEM=<\x y.And(x,y)>] -> 'and'
+LV[TEN=pres,PER=third] -> 'is'
+LV[TEN=pres,PER=second] -> 'are'
+LV[TEN=past,PER=third] -> 'was'
+LV[TEN=past,PER=second] -> 'were'
+NEG[SEM=<\x.Not(x)>] -> 'not'
+P[SEM=<\x.x>] -> 'in'
+RESETON[SEM=<\x.x>] -> 'and' 'reset' 'on'
+ROB[PER=third] -> 'robot' | 'the' 'robot'
+ROB[PER=second] -> 'you'
+SETON[SEM=<\x.x>] -> 'is' 'set' 'on'
+SENSE[TEN=pres,PER=second] -> 'sense'
+SENSE[TEN=pres,PER=third] -> 'senses'
+SENSE[TEN=past,PER=second] -> 'sensed'
+SENSE[TEN=past,PER=third] -> 'sensed'
+SENSING[SEM=<\x.x>] -> 'sensing'
+STARTWITH[SEM=<\x.x>] -> 'starts' 'with' | 'start' 'with'
+STARTIN[SEM=<\x.x>] -> 'starts' 'in' | 'start' 'in'
+THEN[SEM=<\x.x>] -> 'then'
+TOGGLEON[SEM=<\x.x>] -> 'is' 'toggled' 'on'
+TRUE[SEM=<TRUE>] -> 'true'
+UNLESS[SEM=<\x.x>] -> 'unless'
+WITH[SEM=<\x.x>] -> 'with'
+
+# Specification-determined lexicon added below:
+###############################################
+
