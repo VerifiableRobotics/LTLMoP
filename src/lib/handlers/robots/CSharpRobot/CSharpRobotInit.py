@@ -18,7 +18,7 @@ from google.protobuf.message import DecodeError
 
 
 class initHandler:
-    def __init__(self,proj,robotType,IPAddress = '10.0.0.86',commPort=7400,buffer=1024):
+    def __init__(self,proj,robotType,IPAddress = '10.0.0.86',commPort=7400,buffer=1048576):
         """
         Open sockets for communication.
         robotType (int): robot type to be used PIONEER = 1, SEGWAY = 2 (default=1)
@@ -58,6 +58,7 @@ class _CSharpCommunicator:
         # Communication parameters
         self.addFrom = (self.IPAddress,self.commPort)
         self.TCPSock = socket(AF_INET,SOCK_STREAM)
+        self.TCPSock.settimeout(1)
         self.RobotType = robotType
         self.responseStr = ""
 
@@ -108,7 +109,6 @@ class _CSharpCommunicator:
         ltlmop_msg.pose.x = pose[0]
         ltlmop_msg.pose.y = pose[1]
         ltlmop_msg.pose.yaw = pose[2]
-        
         response = self.sendMessage(ltlmop_msg)
         self.updateSensorStatus(response)
         
@@ -130,7 +130,6 @@ class _CSharpCommunicator:
                 temp_serialized = message.SerializeToString()
                 sent_str = pack('!I',len(temp_serialized))+temp_serialized
                 self.TCPSock.send(sent_str)
-                data_length = self.TCPSock.recv(self.buffer)
                 response = self.TCPSock.recv(self.buffer)
                 #print 'msg size!!!!',len(response)
                 result = self.parseResponse(response)
