@@ -40,14 +40,17 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     LTL2LineNo = {}
     
+    #Initialize dictionaries mapping group names to lists of groups
     regionGroups = {}
     sensorGroups = {}
+    allGroups = {}
     
+    #Initialize dictionary mapping propositions to sets of 'corresponding' propositions
     correlations = {}
     
     #Open CFG file
     # TODO MAKE INDEP of path
-    grammarFile = open('lib/structuredEnglish.fcfg')
+    grammarFile = open('structuredEnglish.fcfg')
     grammarText = grammarFile.read()
     
     #Add production rules for region names to our grammar string
@@ -70,11 +73,16 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     r_groupDef = re.compile(groupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining sensor groups
-    #Resultant expression is: 'group (\w+) is (?:(region1),? ?|(region2),? ?|(region3),? ?)+'
+    #Resultant expression is: 'sensor group (\w+) is (?:(sensor1),? ?|(sensor2),? ?|(sensor3),? ?)+'
     sensorGroupDefPattern = '\s*sensor group (\w+) is (?:('
     sensorGroupDefPattern += '),? ?|('.join(sensorList)
     sensorGroupDefPattern += '),? ?)+'
     r_sensorGroupDef = re.compile(sensorGroupDefPattern, re.I)
+
+    #Generate regular expression to match sentences defining correlations
+    correlationDefPattern = '(?:(' + '),? ?|('.join(sensorList+regionList+robotPropList) + '),? ?)+'
+    correlationDefPattern = correlationDefPattern + ' correspond to ' + correlationDefPattern 
+    r_correlationDef = re.compile(correlationDefPattern)
     
     #Generate NLTK feature grammar object from grammar string
     grammar = nltk.grammar.parse_fcfg(grammarText)
@@ -107,6 +115,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             grammarText += '\nGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\''
             #Add specified regions to our dictionary of region groups
             regionGroups[groupName] = filter(lambda x: x != None, m_groupDef.groups()[1:])
+            allGroups[groupName] = regionGroups[groupName]
             print 'Groups updated: ' + str(regionGroups)
             #Re-compile grammar
             grammar = nltk.grammar.parse_fcfg(grammarText)
@@ -120,9 +129,28 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             grammarText += '\nSENSORGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\''
             #Add specified sensors to out dictionary of sensor groups
             sensorGroups[groupName] = filter(lambda x: x != None, m_sensorGroupDef.groups()[1:])
+            allGroups[groupName] = sensorGroups[groupName]
             print 'Sensor groups updated: ' + str(sensorGroups)
             #Re-compile grammar
             grammar = nltk.grammar.parse_fcfg(grammarText)
+            continue
+            
+        #Examine input line to find any correlation definitions
+        m_correlationDef = r_correlationDef.match(line)
+        if m_correlationDef:
+            items = filter(lambda x: x != None, m_correlationDef.groups())
+            if len(items) % 2 != 0:
+                print 'Error: Correlations must be made in pairs!'
+                failed = True
+                continue
+            #Add specified correlation(s) to dictionary of correlations
+            nPairs = len(items)/2
+            for ind in range(0,nPairs):
+                if items[ind] in correlations:
+                    correlations[items[ind]].append(items[ind+nPairs])
+                else:
+                    correlations[items[ind]] = [items[ind+nPairs]]
+                print 'Correlations updated: '+items[ind]+' corresponds to '+items[ind+nPairs]
             continue
         
         #Parse input line using grammar; the result here is a collection
@@ -142,6 +170,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 continue
             nTrees += 1
             
+            #Expand 'corresponding' phrases
+            semstring = parseCorresponding(semstring, correlations, allGroups)
             #Expand 'stay' phrases
             semstring = parseStay(semstring, regionList)
             #Expand region groups, 'any' and 'all'
@@ -261,23 +291,64 @@ def parseToggle(semstring):
         semstring = 'And('+turnOnClause+',And('+turnOffClause+',And('+holdOnClause+','+holdOffClause+')))'
     return semstring
     
-def parseCorresponding(semstring):
+def parseCorresponding(semstring, correlations, allGroups):
     if semstring.find('$Corr') != -1:
-        m_Any = re.search('\$Any\((\w+)/)',semstring)
-        if not m_Any:
-            print('Error: \'corresponding\' must be be preceded by an \'any\' quantifier')
+        print semstring
+        m_Any = re.search('\$Any\((\w+)\)',semstring)
+        m_Each = re.search('\$Each\((\w+)\)',semstring)
+        m_Corr = re.search('\$Corr\((\w+)\)',semstring)
+        indexGroupName = ''
+        indexGroup = []
+        indexPhrase = ''
+        if m_Any:
+            indexGroupName = m_Any.groups()[0]
+            indexPhrase = m_Any.group(0)
+        elif m_Each:
+            indexGroupName = m_Each.groups()[0]
+            indexPhrase = m_Each.group(0)
+        else:
+            print('Error: \'corresponding\' must be be preceded by an \'any\' or \'each\' quantifier')
             failed = True
             return ''
-    #TODO: METHOD IS INCOMPLETE!! DONT USE 'CORRESPONDING'
+        print 'indexGroupName: '+indexGroupName
+        print 'indexPhrase: '+indexPhrase
+        indexGroup = allGroups[indexGroupName]
+        #Iterate over items in indexGroup, replacing each 'corresponding' with the 
+        # intersection of items correlated with indexItem and items in the relevant group
+        newSentences = []
+        for indexItem in indexGroup:
+            if indexItem not in correlations:
+                print('Error: no correlation found for item \'' + indexItem + '\' in group \'' + indexGroupName + '\'')
+                return ''
+            for valueGroupName in m_Corr.groups():
+                print 'Looking for '+valueGroupName+' corresponding to '+indexItem
+                valueGroup = allGroups[valueGroupName]
+                for corrItem in correlations[indexItem]:
+                    print 'Check if '+corrItem+' is in '+valueGroupName
+                    if corrItem in valueGroup:
+                        newSentences.append(semstring.replace(indexPhrase,indexItem).replace('$Corr('+valueGroupName+')',corrItem))
+                        break
+        if len(newSentences) == 0:
+            print 'Error: cannot resolve correlations in \'' + semstring + '\''
+            return ''
+        #Build conjunction out of all generated sentences
+        if len(newSentences) == 1:
+            semstring = newSentences[0]
+        else:
+            semstring = 'And(' + ',And('.join(newSentences[0:-1]) + ',' + newSentences[-1] + ')'*(len(newSentences)-1)
+        
+        print semstring
+        return semstring
 
 def prefixFOL2InfixLTL(prefixString):
-    andGroups = re.match('And\((.*),(.*)\)', prefixString)    
+    andGroups = re.match('And\((.*),(.*)\)', prefixString)
     orGroups = re.match('Or\((.*),(.*)\)', prefixString)
     notGroups = re.match('Not\((.*)\)', prefixString)
     nextGroups = re.match('Next\((.*)\)', prefixString)
     globallyGroups = re.match('Glob\((.*)\)', prefixString)
     globallyFinallyGroups = re.match('GlobFin\((.*)\)', prefixString)
     impGroups = re.match('Imp\((.*),(.*)\)',prefixString)
+    iffGroups = re.match('Iff\((.*),(.*)\)',prefixString)
     
     if andGroups:
         return '(' + prefixFOL2InfixLTL(andGroups.groups()[0]) + ' & ' + prefixFOL2InfixLTL(andGroups.groups()[1]) + ')'
@@ -293,6 +364,8 @@ def prefixFOL2InfixLTL(prefixString):
         return '[]<>(' + prefixFOL2InfixLTL(globallyFinallyGroups.groups()[0]) + ')'
     elif impGroups:
         return '(' + prefixFOL2InfixLTL(impGroups.groups()[0]) + ' -> ' + prefixFOL2InfixLTL(impGroups.groups()[1]) + ')'
+    elif iffGroups:
+        return '(' + prefixFOL2InfixLTL(iffGroups.groups()[0]) + ' <-> ' + prefixFOL2InfixLTL(iffGroups.groups()[1]) + ')'
     else:
         return prefixString
 
