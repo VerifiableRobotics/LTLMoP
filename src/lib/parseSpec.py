@@ -341,53 +341,55 @@ def parseCorresponding(semstring, correlations, allGroups):
         return semstring
 
 def prefixFOL2InfixLTL(prefixString):
-    andGroups = re.match('And\((.*),(.*)\)', prefixString)
-    orGroups = re.match('Or\((.*),(.*)\)', prefixString)
-    notGroups = re.match('Not\((.*)\)', prefixString)
-    nextGroups = re.match('Next\((.*)\)', prefixString)
-    globallyGroups = re.match('Glob\((.*)\)', prefixString)
-    globallyFinallyGroups = re.match('GlobFin\((.*)\)', prefixString)
-    impGroups = re.match('Imp\((.*),(.*)\)',prefixString)
-    iffGroups = re.match('Iff\((.*),(.*)\)',prefixString)
     
-    if andGroups:
-        return '(' + prefixFOL2InfixLTL(andGroups.groups()[0]) + ' & ' + prefixFOL2InfixLTL(andGroups.groups()[1]) + ')'
-    elif orGroups:
-        return '(' + prefixFOL2InfixLTL(orGroups.groups()[0]) + ' | ' + prefixFOL2InfixLTL(orGroups.groups()[1]) + ')'
-    elif notGroups:
-        return '!(' + prefixFOL2InfixLTL(notGroups.groups()[0]) + ')'
-    elif nextGroups:
-        return 'next(' + prefixFOL2InfixLTL(nextGroups.groups()[0]) + ')'
-    elif globallyGroups:
-        return '[](' + prefixFOL2InfixLTL(globallyGroups.groups()[0]) + ')'
-    elif globallyFinallyGroups:
-        return '[]<>(' + prefixFOL2InfixLTL(globallyFinallyGroups.groups()[0]) + ')'
-    elif impGroups:
-        return '(' + prefixFOL2InfixLTL(impGroups.groups()[0]) + ' -> ' + prefixFOL2InfixLTL(impGroups.groups()[1]) + ')'
-    elif iffGroups:
-        return '(' + prefixFOL2InfixLTL(iffGroups.groups()[0]) + ' <-> ' + prefixFOL2InfixLTL(iffGroups.groups()[1]) + ')'
-    else:
-        return prefixString
-
-if __name__ == "__main__":
-    text = """
-    Robot starts in Paris with discomfort.
-    Infinitely often actual_trouble.
-    Group Cities_of_Mongolia is Ulaanbaatar, Erdenet. 
-    If you are sensing actual_trouble then visit all Cities_of_Mongolia.
-    Do eat if and only if you are sensing hunger.
-    """
-
-    text = text.replace(".", "")
-
-    sensors = ["actual_trouble", "hunger"]
-    actuators = ["eat", "discomfort"]
-    regions = ["paris", "ulaanbaatar", "erdenet"]
+    #TODO: There must be a better way to do this regex..
+    twoFcnsRE = '\((\w+\(.*\)),(\w+\(.*\))\)'
+    leftFcnRE = '\((\w+\(.*\)),(\w+)\)'
+    rightFcnRE = '\((\w+),(\w+\(.*\))\)'
+    noFcnsRE = '\((\w+),(\w+\(.*\))\)'
+    r_and = re.compile('And'+twoFcnsRE+'|And'+leftFcnRE+'|And'+rightFcnRE+'|And'+noFcnsRE)
+    r_or = re.compile('Or'+twoFcnsRE+'|Or'+leftFcnRE+'|Or'+rightFcnRE+'|Or'+noFcnsRE)
+    r_not = re.compile('Not\((.*)\)')
+    r_next = re.compile('Next\((.*)\)')
+    r_globally = re.compile('Glob\((.*)\)')
+    r_globallyFinally = re.compile('GlobFin\((.*)\)')
+    r_imp = re.compile('Imp'+twoFcnsRE+'|Imp'+leftFcnRE+'|Imp'+rightFcnRE+'|Imp'+noFcnsRE)
+    r_iff= re.compile('Iff'+twoFcnsRE+'|Iff'+leftFcnRE+'|Iff'+rightFcnRE+'|Iff'+noFcnsRE)
     
-
-    spec, linemap, failed, LTL2LineNo = writeSpec(text, sensors, regions, actuators)
-
-    print spec
-    print linemap
-    print failed
-    print LTL2LineNo
+    def parsePrefix(prefixString):
+        m_and = r_and.match(prefixString)
+        if m_and:
+            arg1 = filter(lambda x: x != None, m_and.groups())[0]
+            arg2 = filter(lambda x: x != None, m_and.groups())[1]
+            return '(' + parsePrefix(arg1) + ' & ' + parsePrefix(arg2) + ')'
+        m_or = r_or.match(prefixString)
+        if m_or:
+            arg1 = filter(lambda x: x != None, m_or.groups())[0]
+            arg2 = filter(lambda x: x != None, m_or.groups())[1]
+            return '(' + parsePrefix(arg1) + ' | ' + parsePrefix(arg2) + ')'
+        m_not = r_not.match(prefixString)
+        if m_not:
+            return '!(' + parsePrefix(m_not.group(1)) + ')'
+        m_next = r_next.match(prefixString)
+        if m_next:
+            return 'next(' + parsePrefix(m_next.group(1)) + ')'
+        m_globally = r_globally.match(prefixString)
+        if m_globally:
+            return '[](' + parsePrefix(m_globally.group(1)) + ')'
+        m_globallyFinally = r_globallyFinally.match(prefixString)
+        if m_globallyFinally:
+            return '[]<>(' + parsePrefix(m_globallyFinally.group(1)) + ')'
+        m_imp = r_imp.match(prefixString)
+        if m_imp:
+            arg1 = filter(lambda x: x != None, m_imp.groups())[0]
+            arg2 = filter(lambda x: x != None, m_imp.groups())[1]
+            return '(' + parsePrefix(arg1) + ' -> ' + parsePrefix(arg2) + ')'
+        m_iff = r_iff.match(prefixString)
+        if m_iff:
+            arg1 = filter(lambda x: x != None, m_iff.groups())[0]
+            arg2 = filter(lambda x: x != None, m_iff.groups())[1]
+            return '(' + parsePrefix(arg1) + ' <-> ' + parsePrefix(arg2) + ')'
+        else:
+            return prefixString
+    
+    return parsePrefix(prefixString)
