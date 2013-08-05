@@ -64,17 +64,17 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     #Generate regular expression to match sentences defining region groups
     #Resultant expression is: 'group (\w+) is (?:(region1),? ?|(region2),? ?|(region3),? ?)+'
-    groupDefPattern = 'group (\w+) is (?:('
+    groupDefPattern = '\s*group (\w+) is (?:('
     groupDefPattern += '),? ?|('.join(regionList)
     groupDefPattern += '),? ?)+'
-    r_groupDef = re.compile(groupDefPattern)
+    r_groupDef = re.compile(groupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining sensor groups
     #Resultant expression is: 'group (\w+) is (?:(region1),? ?|(region2),? ?|(region3),? ?)+'
-    sensorGroupDefPattern = 'sensor group (\w+) is (?:('
+    sensorGroupDefPattern = '\s*sensor group (\w+) is (?:('
     sensorGroupDefPattern += '),? ?|('.join(sensorList)
     sensorGroupDefPattern += '),? ?)+'
-    r_sensorGroupDef = re.compile(sensorGroupDefPattern)
+    r_sensorGroupDef = re.compile(sensorGroupDefPattern, re.I)
     
     #Generate NLTK feature grammar object from grammar string
     grammar = nltk.grammar.parse_fcfg(grammarText)
