@@ -85,10 +85,10 @@ PE[SEM=<?n(?p)>] -> NEG[SEM=?n] PE[TEN=?t,SEM=?p]
 PE[SEM=<?lc(?p1,?p2)>] -> PE[SEM=?p1] LC[SEM=?lc] PE[SEM=?p2]
 
 # Memory proposition
-MEMORY[SEM=<$Mem(?p,?s,?r)>] -> PHI_ROB[SEM=?p] SETON PHI[SEM=?s] RESETON PHI[SEM=?r]
+MEMORY[SPEC=SysTrans,SEM=<$Mem(?p,?s,?r)>] -> PHI_ROB[SEM=?p] SETON PHI[SEM=?s] RESETON PHI[SEM=?r]
 
 # Toggle proposition
-MEMORY[SEM=<$Tog(?p,?t)>] -> PHI_ROB[SEM=?p] TOGGLEON PHI[SEM=?t]
+MEMORY[SPEC=SysTrans,SEM=<$Tog(?p,?t)>] -> PHI_ROB[SEM=?p] TOGGLEON PHI[SEM=?t]
 
 # Propositions
 ##############
