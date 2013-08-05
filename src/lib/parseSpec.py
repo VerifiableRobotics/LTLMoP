@@ -293,3 +293,26 @@ def prefixFOL2InfixLTL(prefixString):
         return '(' + prefixFOL2InfixLTL(impGroups.groups()[0]) + ' -> ' + prefixFOL2InfixLTL(impGroups.groups()[1]) + ')'
     else:
         return prefixString
+
+if __name__ == "__main__":
+    text = """
+    Robot starts in Paris with discomfort.
+    Infinitely often actual_trouble.
+    Group Cities_of_Mongolia is Ulaanbaatar, Erdenet. 
+    If you are sensing actual_trouble then visit all Cities_of_Mongolia.
+    Do eat if and only if you are sensing hunger.
+    """
+
+    text = text.replace(".", "")
+
+    sensors = ["actual_trouble", "hunger"]
+    actuators = ["eat", "discomfort"]
+    regions = ["paris", "ulaanbaatar", "erdenet"]
+    
+
+    spec, linemap, failed, LTL2LineNo = writeSpec(text, sensors, regions, actuators)
+
+    print spec
+    print linemap
+    print failed
+    print LTL2LineNo
