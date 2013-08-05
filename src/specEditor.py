@@ -311,6 +311,7 @@ class SpecEditorFrame(wx.Frame):
         global MENU_PARSERMODE; MENU_PARSERMODE = wx.NewId()
         global MENU_PARSERMODE_SLURP; MENU_PARSERMODE_SLURP = wx.NewId()
         global MENU_PARSERMODE_STRUCTURED; MENU_PARSERMODE_STRUCTURED = wx.NewId()
+        global MENU_PARSERMODE_NLTK; MENU_PARSERMODE_NLTK = wx.NewId()
         global MENU_PARSERMODE_LTL; MENU_PARSERMODE_LTL = wx.NewId()
         global MENU_SIMULATE; MENU_SIMULATE = wx.NewId()
         global MENU_SIMCONFIG; MENU_SIMCONFIG = wx.NewId()
@@ -342,7 +343,8 @@ class SpecEditorFrame(wx.Frame):
         wxglade_tmp_menu_sub.Append(MENU_BITVECTOR, "Use bit-vector region encoding", "", wx.ITEM_CHECK)
         wxglade_tmp_menu_sub_sub = wx.Menu()
         wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_SLURP, "SLURP (NL)", "", wx.ITEM_RADIO)
-        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_STRUCTURED, "Structured English", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_STRUCTURED, "Structured English (old)", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_NLTK, "Structured English (via NTLK)", "", wx.ITEM_RADIO)
         wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_LTL, "LTL", "", wx.ITEM_RADIO)
         wxglade_tmp_menu_sub.AppendMenu(MENU_PARSERMODE, "Parser mode", wxglade_tmp_menu_sub_sub, "")
         wxglade_tmp_menu.AppendMenu(MENU_COMPILECONFIG, "Compilation options", wxglade_tmp_menu_sub, "")
@@ -413,6 +415,7 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_BITVECTOR)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_SLURP)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_STRUCTURED)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_NLTK)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_LTL)
         self.Bind(wx.EVT_MENU, self.onMenuSimulate, id=MENU_SIMULATE)
         self.Bind(wx.EVT_MENU, self.onMenuConfigSim, id=MENU_SIMCONFIG)
@@ -544,6 +547,8 @@ class SpecEditorFrame(wx.Frame):
             self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
         elif self.proj.compile_options["parser"] == "structured":
             self.frame_1_menubar.Check(MENU_PARSERMODE_STRUCTURED, True)
+        elif self.proj.compile_options["parser"] == "nltk":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_NLTK, True)
         elif self.proj.compile_options["parser"] == "ltl":
             self.frame_1_menubar.Check(MENU_PARSERMODE_LTL, True)
 
@@ -943,6 +948,8 @@ class SpecEditorFrame(wx.Frame):
             self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
         elif self.proj.compile_options["parser"] == "structured":
             self.frame_1_menubar.Check(MENU_PARSERMODE_STRUCTURED, True)
+        elif self.proj.compile_options["parser"] == "nltk":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_NLTK, True)
         elif self.proj.compile_options["parser"] == "ltl":
             self.frame_1_menubar.Check(MENU_PARSERMODE_LTL, True)
     
@@ -1641,6 +1648,8 @@ class SpecEditorFrame(wx.Frame):
             self.proj.compile_options["parser"] = "slurp"
         elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_STRUCTURED):
             self.proj.compile_options["parser"] = "structured"
+        elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_NLTK):
+            self.proj.compile_options["parser"] = "nltk"
         elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_LTL):
             self.proj.compile_options["parser"] = "ltl"
         self.dirty = True

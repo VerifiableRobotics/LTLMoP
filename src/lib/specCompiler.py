@@ -279,6 +279,27 @@ class SpecCompiler(object):
             LTLspec_env = spec["EnvInit"] + spec["EnvTrans"] + spec["EnvGoals"]
             LTLspec_sys = spec["SysInit"] + spec["SysTrans"] + spec["SysGoals"]
 
+        elif self.proj.compile_options["parser"] == "nltk":
+            import parseSpec
+
+            regionList = [x.name for x in self.proj.rfi.regions]
+
+            logging.debug(text)
+
+            spec, traceback, failed, self.LTL2SpecLineNumber = parseSpec.writeSpec(text, sensorList, regionList, robotPropList)
+            self.proj.internal_props = []
+
+            # TODO: support locative props
+
+            for spec_section in [x+y for x in ["Sys", "Env"] for y in ["Init", "Trans", "Goal"]]:
+                spec[spec_section] = self.postprocessLTL(spec[spec_section], sensorList, robotPropList)
+
+            # Abort compilation if there were any errors
+            if failed:
+                return None, None, None
+
+            LTLspec_env = spec["EnvInit"] + spec["EnvTrans"] + spec["EnvGoals"]
+            LTLspec_sys = spec["SysInit"] + spec["SysTrans"] + spec["SysGoals"]
         else:
             logging.error("Parser type '{0}' not currently supported".format(self.proj.compile_options["parser"]))
             return None, None, None
@@ -409,8 +430,8 @@ class SpecCompiler(object):
             # substitute decomposed region names
             for r in self.proj.rfi.regions:
                 if not (r.isObstacle or r.name.lower() == "boundary"):
-                    text = re.sub('\\bs\.' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
-                    text = re.sub('\\be\.' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
+                    text = re.sub('\\b(?:s\.)?' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
+                    text = re.sub('\\b(?:e\.)?' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
 
         if self.proj.compile_options["decompose"]:
             regionList = [x.name for x in self.parser.proj.rfi.regions]
