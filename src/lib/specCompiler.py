@@ -146,7 +146,7 @@ class SpecCompiler(object):
         #regionList = [r.name for r in self.parser.proj.rfi.regions]
         regionList = [r.name for r in self.proj.rfi.regions]
         sensorList = deepcopy(self.proj.enabled_sensors)
-        robotPropList = self.proj.enabled_actuators + self.proj.all_customs
+        robotPropList = self.proj.enabled_actuators
         
         text = self.proj.specText
 
