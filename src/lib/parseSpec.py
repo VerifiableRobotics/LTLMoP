@@ -26,6 +26,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     spec['EnvInit']= ''
     spec['EnvTrans']= ''
     spec['EnvGoals']= ''
+    spec['SysInit']= ''
     spec['SysTrans']= ''
     spec['SysGoals']= ''
 
