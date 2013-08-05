@@ -75,14 +75,14 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     #Generate regular expression to match sentences defining sensor groups
     #Resultant expression is: 'sensor group (\w+) is (?:(sensor1),? ?|(sensor2),? ?|(sensor3),? ?)+'
-    sensorGroupDefPattern = '\s*sensor group (\w+) is (?:('
+    sensorGroupDefPattern = '\s*group (\w+) is (?:('
     sensorGroupDefPattern += '),? ?|('.join(sensorList)
     sensorGroupDefPattern += '),? ?)+'
     r_sensorGroupDef = re.compile(sensorGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining action groups
     #Resultant expression is: 'group (\w+) is (?:(action1),? ?|(action2),? ?|(action3),? ?)+'
-    actionGroupDefPattern = 'group (\w+) is (?:('
+    actionGroupDefPattern = '\s*group (\w+) is (?:('
     actionGroupDefPattern += '),? ?|('.join(robotPropList)
     actionGroupDefPattern += '),? ?)+'
     r_actionGroupDef = re.compile(actionGroupDefPattern)
@@ -208,7 +208,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             
             #Convert formula from prefix FOL to infix LTL and add it to
             # the appropriate section of the specification
-            stringLTL = prefixFOL2InfixLTL(semstring)
+            stringLTL = prefix2infix(semstring)
             spec[syntree.node['SPEC']] += stringLTL + ' & \n'
             linemap[syntree.node['SPEC']].append(lineInd)
             LTL2LineNo[stringLTL] = lineInd
@@ -247,9 +247,9 @@ def parseStay(semstring, regions):
             return 'Iff(Next('+regions[ind]+'),'+regions[ind]+')'
         else:
             return 'And(Iff(Next('+regions[ind]+'),'+regions[ind]+'),'+appendStayClause(ind+1)+')'
-    if semstring.find('$stay') != -1:       
+    if semstring.find('$Stay') != -1:       
         stay = appendStayClause(0)
-        return semstring.replace('$stay',stay)
+        return semstring.replace('$Stay',stay)
     else:
         return semstring
 
@@ -367,56 +367,27 @@ def parseCorresponding(semstring, correlations, allGroups):
         
     return semstring
 
-def prefixFOL2InfixLTL(prefixString):
+def prefix2infix(prefixString):
+    inList = re.split('[(),]+',prefixString)
     
-    #TODO: There must be a better way to do this regex..
-    twoFcnsRE = '\((\w+\(.*\)),(\w+\(.*\))\)'
-    leftFcnRE = '\((\w+\(.*\)),(\w+)\)'
-    rightFcnRE = '\((\w+),(\w+\(.*\))\)'
-    noFcnsRE = '\((\w+),(\w+\(.*\))\)'
-    r_and = re.compile('And'+twoFcnsRE+'|And'+leftFcnRE+'|And'+rightFcnRE+'|And'+noFcnsRE)
-    r_or = re.compile('Or'+twoFcnsRE+'|Or'+leftFcnRE+'|Or'+rightFcnRE+'|Or'+noFcnsRE)
-    r_not = re.compile('Not\((.*)\)')
-    r_next = re.compile('Next\((.*)\)')
-    r_globally = re.compile('Glob\((.*)\)')
-    r_globallyFinally = re.compile('GlobFin\((.*)\)')
-    r_imp = re.compile('Imp'+twoFcnsRE+'|Imp'+leftFcnRE+'|Imp'+rightFcnRE+'|Imp'+noFcnsRE)
-    r_iff= re.compile('Iff'+twoFcnsRE+'|Iff'+leftFcnRE+'|Iff'+rightFcnRE+'|Iff'+noFcnsRE)
-    
-    def parsePrefix(prefixString):
-        m_and = r_and.match(prefixString)
-        if m_and:
-            arg1 = filter(lambda x: x != None, m_and.groups())[0]
-            arg2 = filter(lambda x: x != None, m_and.groups())[1]
-            return '(' + parsePrefix(arg1) + ' & ' + parsePrefix(arg2) + ')'
-        m_or = r_or.match(prefixString)
-        if m_or:
-            arg1 = filter(lambda x: x != None, m_or.groups())[0]
-            arg2 = filter(lambda x: x != None, m_or.groups())[1]
-            return '(' + parsePrefix(arg1) + ' | ' + parsePrefix(arg2) + ')'
-        m_not = r_not.match(prefixString)
-        if m_not:
-            return '!(' + parsePrefix(m_not.group(1)) + ')'
-        m_next = r_next.match(prefixString)
-        if m_next:
-            return 'next(' + parsePrefix(m_next.group(1)) + ')'
-        m_globally = r_globally.match(prefixString)
-        if m_globally:
-            return '[](' + parsePrefix(m_globally.group(1)) + ')'
-        m_globallyFinally = r_globallyFinally.match(prefixString)
-        if m_globallyFinally:
-            return '[]<>(' + parsePrefix(m_globallyFinally.group(1)) + ')'
-        m_imp = r_imp.match(prefixString)
-        if m_imp:
-            arg1 = filter(lambda x: x != None, m_imp.groups())[0]
-            arg2 = filter(lambda x: x != None, m_imp.groups())[1]
-            return '(' + parsePrefix(arg1) + ' -> ' + parsePrefix(arg2) + ')'
-        m_iff = r_iff.match(prefixString)
-        if m_iff:
-            arg1 = filter(lambda x: x != None, m_iff.groups())[0]
-            arg2 = filter(lambda x: x != None, m_iff.groups())[1]
-            return '(' + parsePrefix(arg1) + ' <-> ' + parsePrefix(arg2) + ')'
+    def opReduce(inList, index):
+        if inList[index] == 'And':
+            return '(' + opReduce(inList, index + 1) + ' & ' + opReduce(inList, index + 2) + ')'
+        elif inList[index] == 'Or':
+            return '(' + opReduce(inList, index + 1) + ' | ' + opReduce(inList, index + 2) + ')'
+        elif inList[index] == 'Imp':
+            return '(' + opReduce(inList, index + 1) + ' -> ' + opReduce(inList, index + 2) + ')'
+        elif inList[index] == 'Iff':
+            return '(' + opReduce(inList, index + 1) + ' <-> ' + opReduce(inList, index + 2) + ')'
+        elif inList[index] == 'Not':
+            return '!(' + opReduce(inList, index + 1) + ')'
+        elif inList[index] == 'Next':
+            return 'next(' + opReduce(inList, index + 1) + ')'
+        elif inList[index] == 'Glob':
+            return '[](' + opReduce(inList, index + 1) + ')'
+        elif inList[index] == 'GlobFin':
+            return '[]<>(' + opReduce(inList, index + 1) + ')'
         else:
-            return prefixString
+            return inList[index]
     
-    return parsePrefix(prefixString)
+    return opReduce(inList, 0)
