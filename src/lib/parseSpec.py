@@ -46,7 +46,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     correlations = {}
     
     #Open CFG file
-    grammarFile = open('structuredEnglish.fcfg')
+    # TODO MAKE INDEP of path
+    grammarFile = open('lib/structuredEnglish.fcfg')
     grammarText = grammarFile.read()
     
     #Add production rules for region names to our grammar string
