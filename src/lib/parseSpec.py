@@ -43,6 +43,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     #Initialize dictionaries mapping group names to lists of groups
     regionGroups = {}
     sensorGroups = {}
+    actionGroups = {}
     allGroups = {}
     
     #Initialize dictionary mapping propositions to sets of 'corresponding' propositions
@@ -78,7 +79,14 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     sensorGroupDefPattern += '),? ?|('.join(sensorList)
     sensorGroupDefPattern += '),? ?)+'
     r_sensorGroupDef = re.compile(sensorGroupDefPattern, re.I)
-
+    
+    #Generate regular expression to match sentences defining action groups
+    #Resultant expression is: 'group (\w+) is (?:(action1),? ?|(action2),? ?|(action3),? ?)+'
+    actionGroupDefPattern = 'group (\w+) is (?:('
+    actionGroupDefPattern += '),? ?|('.join(robotPropList)
+    actionGroupDefPattern += '),? ?)+'
+    r_actionGroupDef = re.compile(actionGroupDefPattern)
+    
     #Generate regular expression to match sentences defining correlations
     correlationDefPattern = '(?:(' + '),? ?|('.join(sensorList+regionList+robotPropList) + '),? ?)+'
     correlationDefPattern = correlationDefPattern + ' correspond to ' + correlationDefPattern 
@@ -135,6 +143,20 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
             
+        #Examine input line to find any action group definitions
+        m_actionGroupDef = r_actionGroupDef.match(line)
+        if m_actionGroupDef:
+            #Add semantics of group to our grammar string
+            groupName = m_actionGroupDef.groups()[0]
+            grammarText += '\nACTIONGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\''
+            #Add specified sensors to out dictionary of sensor groups
+            actionGroups[groupName] = filter(lambda x: x != None, m_actionGroupDef.groups()[1:])
+            allGroups[groupName] = actionGroups[groupName]
+            print 'Action groups updated: ' + str(actionGroups)
+            #Re-compile grammar
+            grammar = nltk.grammar.parse_fcfg(grammarText)
+            continue
+            
         #Examine input line to find any correlation definitions
         m_correlationDef = r_correlationDef.match(line)
         if m_correlationDef:
@@ -174,9 +196,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             semstring = parseCorresponding(semstring, correlations, allGroups)
             #Expand 'stay' phrases
             semstring = parseStay(semstring, regionList)
-            #Expand region groups, 'any' and 'all'
-            semstring = parseGroupAny(semstring, regionGroups, sensorGroups)
-            semstring = parseGroupAll(semstring, regionGroups)
+            #Expand groups, 'each', 'any', and 'all'
+            semstring = parseGroupEach(semstring, allGroups)
+            semstring = parseGroupAny(semstring, allGroups)
+            semstring = parseGroupAll(semstring, allGroups)
             #Expand memory propositions
             semstring = parseMemory(semstring)
             semstring = parseToggle(semstring)
@@ -186,7 +209,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #Convert formula from prefix FOL to infix LTL and add it to
             # the appropriate section of the specification
             stringLTL = prefixFOL2InfixLTL(semstring)
-            spec[syntree.node['SPEC']] += stringLTL + '&'
+            spec[syntree.node['SPEC']] += stringLTL + ' & \n'
             linemap[syntree.node['SPEC']].append(lineInd)
             LTL2LineNo[stringLTL] = lineInd
             
@@ -203,7 +226,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     if spec['EnvTrans'] == '':
         spec['EnvTrans'] = '[](TRUE) & \n'
     if spec['EnvGoals'] == '':
-        spec['EnvGoals'] = '[]<>(TRUE)'
+        spec['EnvGoals'] = '[]<>(TRUE) \n'
     else:
         # remove last &
         spec['EnvGoals'] = re.sub('& \n$','\n',spec['EnvGoals'])
@@ -230,35 +253,45 @@ def parseStay(semstring, regions):
     else:
         return semstring
 
-def parseGroupAll(semstring, regionGroups):
-    def appendAllClause(semstring, ind, groupRegions):
-        if ind == len(groupRegions) - 1:
-            return re.sub('\$All\(\w+\)',groupRegions[ind],semstring)
+def parseGroupAll(semstring, allGroups):
+    def appendAllClause(semstring, ind, groupItems):
+        if ind == len(groupItems) - 1:
+            return re.sub('\$All\(\w+\)',groupItems[ind],semstring)
         else:
-            return 'And('+re.sub('\$All\(\w+\)',groupRegions[ind],semstring)+','+appendAllClause(semstring, ind+1, groupRegions)+')'
+            return 'And('+re.sub('\$All\(\w+\)',groupItems[ind],semstring)+','+appendAllClause(semstring, ind+1, groupItems)+')'
     while semstring.find('$All') != -1:
         groupName = re.search('\$All\((\w+)\)',semstring).groups()[0]
-        if groupName in regionGroups:
-            groupItems = regionGroups[groupName]
-        elif groupName in sensorGroups:
-            groupItems = sensorGroups[groupName]
-        semstring = appendAllClause(semstring, 0, groupItems)
+        if groupName in allGroups:
+            semstring = appendAllClause(semstring, 0, allGroups[groupName])
+        else:
+            print('Error: Could not resolve group '+groupName)
     return semstring
     
-def parseGroupAny(semstring, regionGroups, sensorGroups):
-    def appendAnyClause(ind, groupRegions):
-        if ind == len(groupRegions) - 1:
-            return groupRegions[ind]
+def parseGroupAny(semstring, allGroups):
+    def appendAnyClause(ind, groupItems):
+        if ind == len(groupItems) - 1:
+            return groupItems[ind]
         else:
-            return 'Or('+groupRegions[ind]+','+appendAnyClause(ind+1, groupRegions)+')'
+            return 'Or('+groupItems[ind]+','+appendAnyClause(ind+1, groupItems)+')'
     while semstring.find('$Any') != -1:
         groupName = re.search('\$Any\((\w+)\)',semstring).groups()[0]
-        if groupName in regionGroups:
-            groupItems = regionGroups[groupName]
-        elif groupName in sensorGroups:
-            groupItems = sensorGroups[groupName]
-        anyClause = appendAnyClause(0, groupItems)
-        semstring = re.sub('\$Any\('+groupName+'\)', anyClause, semstring)
+        if groupName in allGroups:
+            anyClause = appendAnyClause(0, allGroups[groupName])
+            semstring = re.sub('\$Any\('+groupName+'\)', anyClause, semstring)
+        else:
+            print('Error: Could not resolve group '+groupName)
+    return semstring
+    
+def parseGroupEach(semstring, allGroups):
+    while semstring.find('$Each') != -1:
+        groupName = re.search('\$Each\((\w+)\)',semstring).group(1)
+        if groupName in allGroups:
+            newSentences = []
+            for groupItem in allGroups[groupName]:
+                newSentences.append(re.sub('\$Each\('+groupName+'\)',groupItem,semstring))
+            semstring = 'And('+',And('.join(newSentences)+')'*(len(newSentences)-1)
+        else:
+            print('Error: Could not resolve group '+groupName)
     return semstring
         
 def parseMemory(semstring):
@@ -293,7 +326,6 @@ def parseToggle(semstring):
     
 def parseCorresponding(semstring, correlations, allGroups):
     if semstring.find('$Corr') != -1:
-        print semstring
         m_Any = re.search('\$Any\((\w+)\)',semstring)
         m_Each = re.search('\$Each\((\w+)\)',semstring)
         m_Corr = re.search('\$Corr\((\w+)\)',semstring)
@@ -310,8 +342,6 @@ def parseCorresponding(semstring, correlations, allGroups):
             print('Error: \'corresponding\' must be be preceded by an \'any\' or \'each\' quantifier')
             failed = True
             return ''
-        print 'indexGroupName: '+indexGroupName
-        print 'indexPhrase: '+indexPhrase
         indexGroup = allGroups[indexGroupName]
         #Iterate over items in indexGroup, replacing each 'corresponding' with the 
         # intersection of items correlated with indexItem and items in the relevant group
@@ -321,10 +351,8 @@ def parseCorresponding(semstring, correlations, allGroups):
                 print('Error: no correlation found for item \'' + indexItem + '\' in group \'' + indexGroupName + '\'')
                 return ''
             for valueGroupName in m_Corr.groups():
-                print 'Looking for '+valueGroupName+' corresponding to '+indexItem
                 valueGroup = allGroups[valueGroupName]
                 for corrItem in correlations[indexItem]:
-                    print 'Check if '+corrItem+' is in '+valueGroupName
                     if corrItem in valueGroup:
                         newSentences.append(semstring.replace(indexPhrase,indexItem).replace('$Corr('+valueGroupName+')',corrItem))
                         break
@@ -337,8 +365,7 @@ def parseCorresponding(semstring, correlations, allGroups):
         else:
             semstring = 'And(' + ',And('.join(newSentences[0:-1]) + ',' + newSentences[-1] + ')'*(len(newSentences)-1)
         
-        print semstring
-        return semstring
+    return semstring
 
 def prefixFOL2InfixLTL(prefixString):
     

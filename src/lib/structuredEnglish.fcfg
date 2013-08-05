@@ -111,6 +111,7 @@ REGION[SEM=<?q(?g)>] -> ANY[SEM=?q] GROUP[SEM=?g] | ALL[SEM=?q] GROUP[SEM=?g] | 
 PHI_ACT[SEM=?ph] -> ACTION[SEM=?ph]
 PHI_ACT[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ACT[SEM=?ph]
 PHI_ACT[SEM=<?lc(?p1,?p2)>] -> PHI_ACT[SEM=?p1] LC[SEM=?lc] PHI_ACT[SEM=?p2]
+PHI_ACT[SEM=<?q(?g)>] -> ANY[SEM=?q] ACTIONGROUP[SEM=?g] | ALL[SEM=?q] ACTIONGROUP[SEM=?g] | CORR[SEM=?q] ACTIONGROUP[SEM=?g] | EACH[SEM=?q] ACTIONGROUP[SEM=?g]
 
 # Robot propositions, composed of any valid proposition except sensor propositions 
 PHI_ROB[SEM=?ph] -> REGION[SEM=?ph]
@@ -136,6 +137,7 @@ ALWAYS[SEM=<\x.Glob(x)>] -> 'always' | 'always' 'do' | 'do'
 ANDSTAY[SEM=<$stay>] -> 'and' 'stay' | 'and' 'stay' 'there'
 ANY[SEM=<\x.$Any(x)>] -> 'any'
 CORR[SEM=<\x.$Corr(x)>] -> 'corresponding' | 'the' 'corresponding'
+EACH[SEM=<\x.$Each(x)>] -> 'each'
 ENV[SEM=<\x.x>] -> 'environment' | 'env'
 FALSE[SEM=<FALSE>] -> 'false'
 GOTO[SEM=<\x.GlobFin(x)>] -> 'go' 'to'
