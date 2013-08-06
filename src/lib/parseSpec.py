@@ -102,6 +102,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     for line in text.split("\n"):
         
         line = line.lower()
+        print line
         lineInd += 1
 
         #If it is an empty line, ignore it
@@ -125,7 +126,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #Add specified regions to our dictionary of region groups
             regionGroups[groupName] = filter(lambda x: x != None, m_groupDef.groups()[1:])
             allGroups[groupName] = regionGroups[groupName]
-            print 'Groups updated: ' + str(regionGroups)
+            print '\tGroups updated: ' + str(regionGroups)
             #Re-compile grammar
             grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
@@ -139,7 +140,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #Add specified sensors to out dictionary of sensor groups
             sensorGroups[groupName] = filter(lambda x: x != None, m_sensorGroupDef.groups()[1:])
             allGroups[groupName] = sensorGroups[groupName]
-            print 'Sensor groups updated: ' + str(sensorGroups)
+            print '\tSensor groups updated: ' + str(sensorGroups)
             #Re-compile grammar
             grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
@@ -153,7 +154,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #Add specified sensors to out dictionary of sensor groups
             actionGroups[groupName] = filter(lambda x: x != None, m_actionGroupDef.groups()[1:])
             allGroups[groupName] = actionGroups[groupName]
-            print 'Action groups updated: ' + str(actionGroups)
+            print '\tAction groups updated: ' + str(actionGroups)
             #Re-compile grammar
             grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
@@ -179,7 +180,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     correlations[keyItems[ind]].append(valueItems[ind])
                 else:
                     correlations[keyItems[ind]] = [valueItems[ind]]
-                print 'Correlations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
+                print '\tCorrelations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
             continue
         
         #Parse input line using grammar; the result here is a collection
@@ -198,7 +199,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             if semstring in formulaeFound:
                 continue
             nTrees += 1
-            
+            print '\t' + semstring
             #Expand 'corresponding' phrases
             semstring = parseCorresponding(semstring, correlations, allGroups)
             #Expand 'stay' phrases
@@ -212,10 +213,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             semstring = parseToggle(semstring)
             
             formulaeFound.append(semstring)
-            
             #Convert formula from prefix FOL to infix LTL and add it to
             # the appropriate section of the specification
             stringLTL = prefix2infix(semstring)
+            print '\t' + stringLTL
             spec[syntree.node['SPEC']] += stringLTL + ' & \n'
             linemap[syntree.node['SPEC']].append(lineInd)
             LTL2LineNo[stringLTL] = lineInd
@@ -376,25 +377,36 @@ def parseCorresponding(semstring, correlations, allGroups):
 
 def prefix2infix(prefixString):
     inList = re.split('[(),]+',prefixString)
-    
     def opReduce(inList, index):
         if inList[index] == 'And':
-            return '(' + opReduce(inList, index + 1) + ' & ' + opReduce(inList, index + 2) + ')'
+            arg1, lastIndex1 = opReduce(inList, index + 1)
+            arg2, lastIndex2 = opReduce(inList, lastIndex1 + 1)
+            return '(' + arg1 + ' & ' + arg2 + ')', lastIndex2
         elif inList[index] == 'Or':
-            return '(' + opReduce(inList, index + 1) + ' | ' + opReduce(inList, index + 2) + ')'
+            arg1, lastIndex1 = opReduce(inList, index + 1)
+            arg2, lastIndex2 = opReduce(inList, lastIndex1 + 1)
+            return '(' + arg1 + ' | ' + arg2 + ')', lastIndex2
         elif inList[index] == 'Imp':
-            return '(' + opReduce(inList, index + 1) + ' -> ' + opReduce(inList, index + 2) + ')'
+            arg1, lastIndex1 = opReduce(inList, index + 1)
+            arg2, lastIndex2 = opReduce(inList, lastIndex1 + 1)
+            return '(' + arg1 + ' -> ' + arg2 + ')', lastIndex2
         elif inList[index] == 'Iff':
-            return '(' + opReduce(inList, index + 1) + ' <-> ' + opReduce(inList, index + 2) + ')'
+            arg1, lastIndex1 = opReduce(inList, index + 1)
+            arg2, lastIndex2 = opReduce(inList, lastIndex1 + 1)
+            return '(' + arg1 + ' <-> ' + arg2 + ')', lastIndex2
         elif inList[index] == 'Not':
-            return '!(' + opReduce(inList, index + 1) + ')'
+            arg, lastIndex = opReduce(inList, index + 1)
+            return '!(' + arg + ')', lastIndex
         elif inList[index] == 'Next':
-            return 'next(' + opReduce(inList, index + 1) + ')'
+            arg, lastIndex = opReduce(inList, index + 1)
+            return 'next(' + arg + ')', lastIndex
         elif inList[index] == 'Glob':
-            return '[](' + opReduce(inList, index + 1) + ')'
+            arg, lastIndex = opReduce(inList, index + 1)
+            return '[](' + arg + ')', lastIndex
         elif inList[index] == 'GlobFin':
-            return '[]<>(' + opReduce(inList, index + 1) + ')'
+            arg, lastIndex = opReduce(inList, index + 1)
+            return '[]<>(' + arg + ')', lastIndex
         else:
-            return inList[index]
+            return inList[index], index
     
-    return opReduce(inList, 0)
+    return opReduce(inList, 0)[0]
