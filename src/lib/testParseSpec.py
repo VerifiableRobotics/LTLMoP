@@ -7,7 +7,7 @@ actions = ['pickup_letter','deliver_letter','knock']
 sensors = ['letter_kressgazit','letter_campbell','letter_classroom','door_closed','person']
 auxProps = ['carrying_letter_kressgazit','carrying_letter_campbell','carrying_letter_classroom','delivering']
 
-sent = """# Init
+spec = """# Init
 
 # Groups
 Group Office is Office_KressGazit, Office_Campbell, Classroom
@@ -35,8 +35,9 @@ If you are in any Office and you are sensing Door_Closed and you are activating 
 If you are activating Delivering and you are in any Office and you are sensing Person then do Deliver_Letter
 """
 
+sent = spec.split('\n')
 
-[spec,linemap,failed,LTL2LineNo] = parseSpec.writeSpec(sent, sensors, regions, actions+auxProps)
+[spec,linemap,failed,LTL2LineNo] = parseSpec.writeSpec('\n'.join(sent[0:10])+'\n'.join(sent[11:12]), sensors, regions, actions+auxProps)
 
 for formula in spec.values():
     print formula
