@@ -39,6 +39,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     linemap['SysGoals']= []
     
     LTL2LineNo = {}
+
+    allProps = sensorList + regionList + robotPropList
     
     #Initialize dictionaries mapping group names to lists of groups
     regionGroups = {}
@@ -88,8 +90,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     r_actionGroupDef = re.compile(actionGroupDefPattern)
     
     #Generate regular expression to match sentences defining correlations
-    correlationDefPattern = '(?:(' + '),? ?|('.join(sensorList+regionList+robotPropList) + '),? ?)+'
-    correlationDefPattern = correlationDefPattern + ' correspond to ' + correlationDefPattern 
+    correlationDefPattern = '((?:[_\w]+,? )+)correspond to((?:,? [_\w]+)+)'
     r_correlationDef = re.compile(correlationDefPattern)
     
     #Generate NLTK feature grammar object from grammar string
@@ -160,19 +161,25 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         #Examine input line to find any correlation definitions
         m_correlationDef = r_correlationDef.match(line)
         if m_correlationDef:
-            items = filter(lambda x: x != None, m_correlationDef.groups())
-            if len(items) % 2 != 0:
+            keyItems = filter(lambda x: x != '', re.split(' |, |,', m_correlationDef.group(1)))
+            valueItems = filter(lambda x: x != '', re.split(' |, |,', m_correlationDef.group(2)))
+            if len(keyItems) != len(valueItems):
                 print 'Error: Correlations must be made in pairs!'
                 failed = True
                 continue
+            for prop in keyItems + valueItems:
+                if prop not in allProps:
+                    print('Error: Could not resolve proposition \'' + prop + '\'')
+                    failed = True
+                    continue
             #Add specified correlation(s) to dictionary of correlations
-            nPairs = len(items)/2
+            nPairs = len(keyItems)
             for ind in range(0,nPairs):
-                if items[ind] in correlations:
-                    correlations[items[ind]].append(items[ind+nPairs])
+                if keyItems[ind] in correlations:
+                    correlations[keyItems[ind]].append(valueItems[ind])
                 else:
-                    correlations[items[ind]] = [items[ind+nPairs]]
-                print 'Correlations updated: '+items[ind]+' corresponds to '+items[ind+nPairs]
+                    correlations[keyItems[ind]] = [valueItems[ind]]
+                print 'Correlations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
             continue
         
         #Parse input line using grammar; the result here is a collection
