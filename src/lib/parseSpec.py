@@ -87,37 +87,35 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     actionGroupDefPattern = '\s*group (\w+) is (?:('
     actionGroupDefPattern += '),? ?|('.join(robotPropList)
     actionGroupDefPattern += '),? ?)+'
-    r_actionGroupDef = re.compile(actionGroupDefPattern)
+    r_actionGroupDef = re.compile(actionGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining correlations
     correlationDefPattern = '((?:[_\w]+,? )+)correspond to((?:,? [_\w]+)+)'
-    r_correlationDef = re.compile(correlationDefPattern)
+    r_correlationDef = re.compile(correlationDefPattern, re.I)
     
-    #Generate NLTK feature grammar object from grammar string
-    grammar = nltk.grammar.parse_fcfg(grammarText)
-    
-    lineInd = 0
-    
-    #Iterate over the lines in the file
-    for line in text.split("\n"):
-        
-        line = line.lower()
-        print line
-        lineInd += 1
+    #Begin parsing input text
+    textLines = text.split("\n")
+    linesToParse = []
+    allLines = range(len(textLines))
+
+    #Scan lines for definitions and update grammar
+    for lineInd in allLines:
+
+        line = textLines[lineInd].lower()
 
         #If it is an empty line, ignore it
         if re.search('^(\s*)$',line):
             continue
-            
+        
         #If the sentence is a comment, ignore it
         if re.search('^\s*#',line):
             continue
-
+        
         #If there is a newline at the end, remove it
         if re.search('\n$',line):
             line = re.sub('\n$','',line)
         
-        #Examine input line to find any region group definitons
+        #Find any region group definitons
         m_groupDef = r_groupDef.match(line)
         if m_groupDef:
             #Add semantics of group to our grammar string
@@ -127,11 +125,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             regionGroups[groupName] = filter(lambda x: x != None, m_groupDef.groups()[1:])
             allGroups[groupName] = regionGroups[groupName]
             print '\tGroups updated: ' + str(regionGroups)
-            #Re-compile grammar
-            grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
-        
-        #Examine input line to find any sensor group definitions
+
+        #Find any sensor group definitions
         m_sensorGroupDef = r_sensorGroupDef.match(line)
         if m_sensorGroupDef:
             #Add semantics of group to our grammar string
@@ -141,11 +137,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             sensorGroups[groupName] = filter(lambda x: x != None, m_sensorGroupDef.groups()[1:])
             allGroups[groupName] = sensorGroups[groupName]
             print '\tSensor groups updated: ' + str(sensorGroups)
-            #Re-compile grammar
-            grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
-            
-        #Examine input line to find any action group definitions
+
+        #Find any action group definitions
         m_actionGroupDef = r_actionGroupDef.match(line)
         if m_actionGroupDef:
             #Add semantics of group to our grammar string
@@ -158,8 +152,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #Re-compile grammar
             grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
-            
-        #Examine input line to find any correlation definitions
+
+        #Find any correlation definitions
         m_correlationDef = r_correlationDef.match(line)
         if m_correlationDef:
             keyItems = filter(lambda x: x != '', re.split(' |, |,', m_correlationDef.group(1)))
@@ -182,6 +176,18 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     correlations[keyItems[ind]] = [valueItems[ind]]
                 print '\tCorrelations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
             continue
+
+        #If sentence doesn't match any of these, we can parse it with the grammar
+        linesToParse.append(lineInd)
+
+    #Generate NLTK feature grammar object from grammar string
+    grammar = nltk.grammar.parse_fcfg(grammarText)
+    
+    #Iterate over the lines in the file
+    for lineNo in linesToParse:
+        
+        line = textLines[lineNo].lower()
+        print line
         
         #Parse input line using grammar; the result here is a collection
         # of pairs of syntax trees and semantic representations in a
@@ -218,8 +224,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             stringLTL = prefix2infix(semstring)
             print '\t' + stringLTL
             spec[syntree.node['SPEC']] += stringLTL + ' & \n'
-            linemap[syntree.node['SPEC']].append(lineInd)
-            LTL2LineNo[stringLTL] = lineInd
+            linemap[syntree.node['SPEC']].append(lineNo)
+            LTL2LineNo[stringLTL] = lineNo
             
             break #For now we'll only look at the first result
             #TODO: Need to display and resolve ambiguity in the future
@@ -276,15 +282,11 @@ def parseGroupAll(semstring, allGroups):
     return semstring
     
 def parseGroupAny(semstring, allGroups):
-    def appendAnyClause(ind, groupItems):
-        if ind == len(groupItems) - 1:
-            return groupItems[ind]
-        else:
-            return 'Or('+groupItems[ind]+','+appendAnyClause(ind+1, groupItems)+')'
     while semstring.find('$Any') != -1:
         groupName = re.search('\$Any\((\w+)\)',semstring).groups()[0]
         if groupName in allGroups:
-            anyClause = appendAnyClause(0, allGroups[groupName])
+            group = allGroups[groupName]
+            anyClause = 'Or(' + ',Or('.join(group[0:-1]) + ',' + group[-1] + ')'*(len(group)-1)
             semstring = re.sub('\$Any\('+groupName+'\)', anyClause, semstring)
         else:
             print('Error: Could not resolve group '+groupName)
