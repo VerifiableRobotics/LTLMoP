@@ -126,9 +126,9 @@ class motionControlHandler:
             self.timeStep = 5
             self.velocity  = 0.05
         elif self.system == 5:
-            self.radius = 0.15
-            self.step_size  = 0.2      #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
-            self.timeStep = 5
+            self.radius = 0.30
+            self.step_size  = 0.6 #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
+            self.timeStep = 10
             self.velocity  = 0.05
 
 
