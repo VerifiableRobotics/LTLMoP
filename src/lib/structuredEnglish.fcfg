@@ -37,10 +37,10 @@ SAFETY[SPEC=SysTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=SysTrans,SEM=?s]
 
 LIVENESS[SPEC=EnvGoals,SEM=<GlobFin(?ph)>,PROP=?ph] -> INFDO PHI_ENV[SEM=?ph]
 LIVENESS[SPEC=SysGoals,SEM=<GlobFin(?ph)>,PROP=?ph] -> INFDO PHI_ROB[SEM=?ph]
-LIVENESS[SPEC=SysGoals,SEM=<?lc(GlobFin(?ph1),GlobFin(?ph2))>] -> INFDO PHI_ROB[SEM=?ph1] LC[SEM=?lc] PHI_ROB[SEM=?ph2]
-LIVENESS[SPEC=SysGoals,SEM=<And(GlobFin(?ph),Glob(Imp(?ph,?s)))>] -> GOTO PHI_ROB[SEM=?ph] ANDSTAY[SEM=?s]
-LIVENESS[SPEC=EnvGoals,SEM=<GlobFin(?s)>] -> CONDITIONAL[SPEC=EnvGoals,SEM=?s]
-LIVENESS[SPEC=SysGoals,SEM=<GlobFin(?s)>] -> CONDITIONAL[SPEC=SysGoals,SEM=?s]
+LIVENESS[SPEC=SysGoals,SEM=<?lc(GlobFin(?ph1),GlobFin(?ph2))>,PROP=<?lc(?ph1,?ph2)>] -> INFDO PHI_ROB[SEM=?ph1] LC[SEM=?lc] PHI_ROB[SEM=?ph2]
+LIVENESS[SPEC=SysGoals,SEM=<And(GlobFin(?ph),Glob(Imp(?ph,?s)))>,PROP=<And(?ph,Imp(?ph,?s))>] -> GOTO PHI_ROB[SEM=?ph] ANDSTAY[SEM=?s]
+LIVENESS[SPEC=EnvGoals,SEM=<GlobFin(?s)>,PROP=?s] -> CONDITIONAL[SPEC=EnvGoals,SEM=?s]
+LIVENESS[SPEC=SysGoals,SEM=<GlobFin(?s)>,PROP=?s] -> CONDITIONAL[SPEC=SysGoals,SEM=?s]
 
 # Conditional formulae
 ######################
