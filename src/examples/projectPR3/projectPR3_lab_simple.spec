@@ -5,14 +5,17 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-isOpen, 1
+knock, 1
 
 CompileOptions:
-convexify: True
+convexify: False
 parser: structured
-fastslow: False
+fastslow: True
 decompose: True
 use_region_bit_encoding: True
+
+CurrentConfigName:
+ProjectPR3_lab
 
 Customs: # List of custom propositions
 
@@ -26,17 +29,19 @@ door_closed, 1
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-hallway = p6, p7, p8, p9, p10
+hallway = p2
 office = p1
 others = 
-doorstep = p5
+doorstep = p3
 
 Spec: # Specification in structured English
-robot starts in hallway
+robot starts in hallway with false
+env starts with false
 
-do isOpen if and only if you are not sensing door_closed
+#isOpen is set on (not door_closed) and reset on (door_closed and doorstep)
 
-if you are in doorstep and you are sensing door_closed then stay there
+if you were in doorstep and you are sensing door_closed then do not office
+if you were in doorstep and you are sensing door_closed then do knock
 
 infinitely often not door_closed
 
