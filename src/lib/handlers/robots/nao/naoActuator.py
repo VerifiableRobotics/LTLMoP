@@ -9,6 +9,10 @@ Control predefined Nao motion besides walking
 
 import time
 import threading
+import almath
+import math
+import time
+from naoqi import ALProxy
 
 class naoActuatorHandler:
     def __init__(self, proj, shared_data):
@@ -62,7 +66,7 @@ class naoActuatorHandler:
                 number = start
                 time.sleep(0.1)
 
-    def receivePackage(self,landmarkSize, camera):
+    def receivePackage(self,landmarkSize, camera, actuatorVal, initial=False):
         """
         Use Nao's left hand to track a package(bar code) and grab it if head tapped
 
@@ -75,8 +79,9 @@ class naoActuatorHandler:
             currentCamera = "CameraTop"
         else:
             currentCamera = "CameraBottom"
+        saw_landmark = False
 
-        DEBUG_FLG = True
+        DEBUG_FLG = False
         elbowX = 0.1
         elbowY = 0.1
         elbowZ = 0.1
@@ -86,13 +91,19 @@ class naoActuatorHandler:
                 self.motionProxy = self.naoInitHandler.createProxy('ALMotion')
             if self.memoryProxy is None:
                 self.memoryProxy = self.naoInitHandler.createProxy('ALMemory')
-            if self.ldmProxy == None:
+            if self.ldmProxy is None:
                 self.ldmProxy = self.naoInitHandler.createProxy('ALLandMarkDetection')
                 # Subscribe to LandmarkDetected event from ALLandMarkDetection proxy.
+                subs = [x[0] for x in self.ldmProxy.getSubscribersInfo()]
+                # Close any previous subscriptions that might have been hanging open
+                if "getLandmark" in subs:
+                    self.ldmProxy.unsubscribe("getLandmark")
                 self.ldmProxy.subscribe("getLandmark")
+            if self.behaviorProxy is None:
+                self.behaviorProxy = self.naoInitHandler.createProxy('ALBehaviorManager')
 
 
-        else:
+        elif actuatorVal== True:
             effector   = "LArm"
             space      = 0
             axisMask   = almath.AXIS_MASK_VEL    # just control position
@@ -123,6 +134,7 @@ class naoActuatorHandler:
                 # Check whether we got a valid output.
                 if(markData and isinstance(markData, list) and len(markData) >= 2):
                     # We detected naomarks !
+                    saw_landmark = True
                     # Retrieve landmark center position in radians.
                     wzCamera = markData[1][0][0][1]
                     wyCamera = markData[1][0][0][2]
@@ -133,7 +145,6 @@ class naoActuatorHandler:
                     # Compute distance to landmark.
                     distanceFromCameraToLandmark = landmarkTheoreticalSize / ( 2 * math.tan( angularSize / 2))
 
-                    self.motionProxy = ALProxy("ALMotion", robotIP, PORT)
 
                     # Get current camera position in NAO space.
                     transform = self.motionProxy.getTransform(currentCamera, space, True)
@@ -202,11 +213,15 @@ class naoActuatorHandler:
                     #self.motionProxy.openHand('LHand')
                     self.motionProxy.positionInterpolation(effector, space, targetPos,axisMask, times, isAbsolute)
                     #self.motionProxy.setPosition(effector, space, targetPos,0.2,axisMask)
-                    if bool(self.memoryProxy.getData('FrontTactilTouched',0)):
-                        self.behaviorProxy.runBehavior('grab')
+                if bool(self.memoryProxy.getData('FrontTactilTouched',0)) and saw_landmark:
+                    self.behaviorProxy.runBehavior('grab')
                     break
 
-        self.ldmProxy.unsubscribe("getLandmark")
+        # Subscribe to LandmarkDetected event from ALLandMarkDetection proxy.
+        subs = [x[0] for x in self.ldmProxy.getSubscribersInfo()]
+        # Close any previous subscriptions that might have been hanging open
+        if "getLandmark" in subs:
+            self.ldmProxy.unsubscribe("getLandmark")
 
 
     def countOutLoud(self, start, skip, period, actuatorVal, initial=False):
