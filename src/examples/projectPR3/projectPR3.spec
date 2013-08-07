@@ -5,7 +5,7 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
-isOpen, 1
+isOpen, 0
 
 CompileOptions:
 convexify: True
@@ -37,7 +37,7 @@ others =
 Spec: # Specification in structured English
 if you are not sensing door_closed then visit r2 and stay there
 
-do isOpen if and only if you are not sensing door_closed
+#do isOpen if and only if you are not sensing door_closed
 
 if you are sensing door_closed or you were sensing door_closed then stay there
 
