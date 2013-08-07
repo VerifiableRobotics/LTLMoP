@@ -37,7 +37,7 @@ If you are activating Delivering and you are in any Office and you are sensing P
 
 sent = spec.split('\n')
 
-[spec,linemap,failed,LTL2LineNo] = parseSpec.writeSpec('\n'.join(sent[0:10])+'\n'.join(sent[11:12]), sensors, regions, actions+auxProps)
+[spec,linemap,failed,LTL2LineNo] = parseSpec.writeSpec('\n'.join(sent[0:10])+'\n'+'\n'.join(sent[17:18]), sensors, regions, actions+auxProps)
 
 for formula in spec.values():
     print formula

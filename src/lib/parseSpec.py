@@ -214,15 +214,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             semstring = parseGroupEach(semstring, allGroups)
             semstring = parseGroupAny(semstring, allGroups)
             semstring = parseGroupAll(semstring, allGroups)
-            #Expand memory propositions
-            semstring = parseMemory(semstring)
-            semstring = parseToggle(semstring)
             
             formulaeFound.append(semstring)
             #Convert formula from prefix FOL to infix LTL and add it to
             # the appropriate section of the specification
             stringLTL = prefix2infix(semstring)
-            print '\t' + stringLTL
             spec[syntree.node['SPEC']] += stringLTL + ' & \n'
             linemap[syntree.node['SPEC']].append(lineNo)
             LTL2LineNo[stringLTL] = lineNo
@@ -299,46 +295,16 @@ def parseGroupEach(semstring, allGroups):
             newSentences = []
             for groupItem in allGroups[groupName]:
                 newSentences.append(re.sub('\$Each\('+groupName+'\)',groupItem,semstring))
-            semstring = 'And('+',And('.join(newSentences)+')'*(len(newSentences)-1)
+            semstring = 'And('+',And('.join(newSentences[0:-1])+','+newSentences[-1]+')'*(len(newSentences)-1)
         else:
             print('Error: Could not resolve group '+groupName)
-    return semstring
-        
-def parseMemory(semstring):
-    if semstring.find('$Mem') != -1:
-        m_Mem = re.search('\$Mem\((.*),(.*),(.*)\)',semstring)
-        phi_m = m_Mem.groups()[0]
-        phi_s = m_Mem.groups()[1]
-        phi_r = m_Mem.groups()[2]
-        setClause = 'Glob(Imp(And('+phi_s+',Not('+phi_r+')),Next('+phi_m+')))'
-        resetClause = 'Glob(Imp('+phi_r+',Not(Next('+phi_m+'))))'
-        holdOnClause = 'Glob(Imp(And('+phi_m+',Not('+phi_r+')),Next('+phi_m+')))'
-        holdOffClause = 'Glob(Imp(And(Not('+phi_m+'),Not('+phi_s+')),Not(Next('+phi_m+'))))'
-        if phi_r == 'false':
-            #Generate memory statement with no reset
-            semstring = 'And('+setClause+','+holdOnClause+')'
-        else:
-            #Generate memory statement with reset
-            semstring = 'And('+setClause+',And('+resetClause+',And('+holdOnClause+','+holdOffClause+')))'
-    return semstring
-    
-def parseToggle(semstring):
-    if semstring.find('$Tog') != -1:
-        m_Tog = re.search('\$Tog\((.*),(.*)\)',semstring)
-        phi_m = m_Tog.groups()[0]
-        phi_t = m_Tog.groups()[1]
-        turnOffClause = 'Glob(Imp(And('+phi_m+','+phi_t+'),Not(Next('+phi_m+'))))'
-        turnOnClause = 'Glob(Imp(And(Not('+phi_m+'),'+phi_t+'),Next('+phi_m+')))'
-        holdOnClause = 'Glob(Imp(And('+phi_m+',Not('+phi_t+')),Next('+phi_m+')))'
-        holdOffClause = 'Glob(Imp(And(Not('+phi_m+'),Not('+phi_t+')),Not(Next('+phi_m+'))))'
-        semstring = 'And('+turnOnClause+',And('+turnOffClause+',And('+holdOnClause+','+holdOffClause+')))'
     return semstring
     
 def parseCorresponding(semstring, correlations, allGroups):
     if semstring.find('$Corr') != -1:
         m_Any = re.search('\$Any\((\w+)\)',semstring)
         m_Each = re.search('\$Each\((\w+)\)',semstring)
-        m_Corr = re.search('\$Corr\((\w+)\)',semstring)
+        corrGroups = re.findall('\$Corr\((\w+)\)',semstring)
         indexGroupName = ''
         indexGroup = []
         indexPhrase = ''
@@ -360,12 +326,15 @@ def parseCorresponding(semstring, correlations, allGroups):
             if indexItem not in correlations:
                 print('Error: no correlation found for item \'' + indexItem + '\' in group \'' + indexGroupName + '\'')
                 return ''
-            for valueGroupName in m_Corr.groups():
+            sent = semstring.replace(indexPhrase,indexItem)
+            for valueGroupName in corrGroups:
                 valueGroup = allGroups[valueGroupName]
-                for corrItem in correlations[indexItem]:
-                    if corrItem in valueGroup:
-                        newSentences.append(semstring.replace(indexPhrase,indexItem).replace('$Corr('+valueGroupName+')',corrItem))
-                        break
+                isect = [val for val in correlations[indexItem] if val in valueGroup]
+                if len(isect) != 1:
+                    print('Error: Items being quantified must correspond to exactly one item from \'corresponding\' groups')
+                else:
+                    sent = sent.replace('$Corr('+valueGroupName+')',isect[0])
+            newSentences.append(sent)
         if len(newSentences) == 0:
             print 'Error: cannot resolve correlations in \'' + semstring + '\''
             return ''
