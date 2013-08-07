@@ -14,7 +14,7 @@ from numpy import matrix
 import ltlmopMsg_pb2
 import sys
 from google.protobuf.message import DecodeError
-
+import logging
 
 
 class initHandler:
@@ -77,6 +77,7 @@ class _CSharpCommunicator:
         print 'Connecting to CSharp...'
         self.TCPSock.connect(self.addFrom)
         print 'Done.'
+        
         ltlmop_msg = ltlmopMsg_pb2.PythonRequestMsg()
         ltlmop_msg.id=1
         ltlmop_msg.robot = self.RobotType
@@ -112,6 +113,20 @@ class _CSharpCommunicator:
         response = self.sendMessage(ltlmop_msg)
         self.updateSensorStatus(response)
         
+    def _receivePacket(self):
+        msg = self._receiveBytes(4) # 32-bit length field = 4 bytes
+        length = unpack("!1L", msg)[0] 
+        
+        return self._receiveBytes(length)
+        
+    def _receiveBytes(self, msglen):
+        msg = ''
+        while len(msg) < msglen:
+            chunk = self.TCPSock.recv(msglen-len(msg))
+            if chunk == '':
+                raise RuntimeError("socket connection broken")
+            msg = msg + chunk
+        return msg    
         
     def sendMessage(self,message):
         """
@@ -124,20 +139,30 @@ class _CSharpCommunicator:
         message.ResendRequest = False
         result = ""
         numOfAttempts = 0
+        logging.debug("Sending message with ID={}...".format(message.id))
+        # TODO: threadlock?
+        
+        temp_serialized = message.SerializeToString()
+        sent_str = pack('!I',len(temp_serialized))+temp_serialized
+        self.TCPSock.send(sent_str)
+                
         while ((not success) and (numOfAttempts<20)):
             numOfAttempts = numOfAttempts +1
             try:
-                temp_serialized = message.SerializeToString()
-                sent_str = pack('!I',len(temp_serialized))+temp_serialized
-                self.TCPSock.send(sent_str)
-                response = self.TCPSock.recv(self.buffer)
-                #print 'msg size!!!!',len(response)
+                tic = time.time()
+                response = self._receivePacket()
+                toc = time.time()
+                logging.debug("Received response packet in {}ms".format(1000*(toc-tic)))
+
                 result = self.parseResponse(response)
+                
+                logging.debug("size: {} bytes, id: {}".format(len(response), result.id))
+                
                 success = True
             except Exception as e:
-                print e
-                message.ResendRequest = True
-                print 'GOT ERROR DOING IT AGAIN!!!!',message.id
+                logging.warning(str(e))
+                #message.ResendRequest = True
+                logging.warning("Failed to receive message.")
         return result
             
     
@@ -154,21 +179,23 @@ class _CSharpCommunicator:
             return csharp_response.FromString(encryptedMsg)
         else:
             return csharp_response
+            
     def updateSensorStatus(self,msg):
         self.LIDAR = []
         self.ARTAG = []
         self.BUSY_EXPLORE = False
-             
+        logging.debug(msg)     
         for s in msg.sensors:
             if (s.type==ltlmopMsg_pb2.PythonRequestMsg.LIDAR):
                 # we have lidar update
                 self.LIDAR = s.data
             if (s.type==ltlmopMsg_pb2.PythonRequestMsg.ARTAG):
                 self.ARTAG = s.data # this is all the ARTag IDs we got
-
-        self.pose=msg.pose
-        #if(self.pose!=None):
-        #    print 'got some pose!',self.pose.x,self.pose.y
+        
+        if msg.id == 13 and msg.pose is not None:
+            self.pose = msg.pose
+            logging.debug('got some pose! {} {} {}'.format(self.pose.x, self.pose.y, self.pose.yaw))
+            
         self.BUSY_EXPLORE = msg.actuator.status==ltlmopMsg_pb2.PythonRequestMsg.RESP_BUSY;
         
                

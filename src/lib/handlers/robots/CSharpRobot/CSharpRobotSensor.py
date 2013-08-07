@@ -163,7 +163,7 @@ class sensorHandler:
                 points = map(self.proj.coordmap_map2lab,r.getPoints())
                 holes = [map(proj.coordmap_map2lab, r.getPoints(hole_id=i)) for i in xrange(len(r.holeList))]
                 #print 'name',r.name,len(r.pointArray)
-                print 'region direction',r.name,Polygon.Polygon(r.pointArray).orientation()
+                #print 'region direction',r.name,Polygon.Polygon(r.pointArray).orientation()
                 if Polygon.Polygon(r.pointArray).orientation()==1:
                     for p in points:
                         new_p = ltlmop_msg.Point()
@@ -182,7 +182,7 @@ class sensorHandler:
                     new_h.y = h[1]
                     new_r.holes.extend([new_h])
                 new_r.name = r.name
-                print '*****',r.name
+                #print '*****',r.name
                 ltlmop_msg.map.r.extend([new_r])# add all the map/external faces to the message
             ltlmop_msg.map.type = PythonRequestMsg.REGIONUPDATE
             
@@ -207,12 +207,12 @@ class sensorHandler:
         # after that, ignores the C# map updates, uses the previous map, and returns True or False, depending on whether a door would be closed or open, respectively.
         else:
             ltlmop_msg = PythonRequestMsg()
-            ltlmop_msg.id = 7           # What does this ID mean?
+            #ltlmop_msg.id = 7           # What does this ID mean?
             sensor = ltlmop_msg.Sensor()
             sensor.type = PythonRequestMsg.OPENDOOR
             ltlmop_msg.sensor=PythonRequestMsg.OPENDOOR
             ltlmop_msg.sensors.extend([sensor])
-            response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
+            #response = self.CSharpCommunicator.sendMessage(ltlmop_msg)
             #print "!!!!!!!!!!!! This is the first ltlmop_msg:", response
             
             ltlmop_msg.id = 75          # this is for when we don't have a new map to send
@@ -270,7 +270,7 @@ class sensorHandler:
                 points = map(self.proj.coordmap_map2lab,r.getPoints())
                 holes = [map(proj.coordmap_map2lab, r.getPoints(hole_id=i)) for i in xrange(len(r.holeList))]
                 #print 'name',r.name,len(r.pointArray)
-                print 'region direction',r.name,Polygon.Polygon(r.pointArray).orientation()
+                #print 'region direction',r.name,Polygon.Polygon(r.pointArray).orientation()
                 if Polygon.Polygon(r.pointArray).orientation()==1:
                     for p in points:
                         new_p = ltlmop_msg.Point()
@@ -289,7 +289,7 @@ class sensorHandler:
                     new_h.y = h[1]
                     new_r.holes.extend([new_h])
                 new_r.name = r.name
-                print '*****',r.name
+                #print '*****',r.name
                 ltlmop_msg.map.r.extend([new_r])# add all the map/external faces to the message
             ltlmop_msg.map.type = PythonRequestMsg.REGIONUPDATE
             
