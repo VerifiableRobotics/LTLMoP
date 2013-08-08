@@ -58,6 +58,7 @@ class _CSharpCommunicator:
         # Communication parameters
         self.addFrom = (self.IPAddress,self.commPort)
         self.TCPSock = socket(AF_INET,SOCK_STREAM)
+        self.TCPSock.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
         self.TCPSock.settimeout(1)
         self.RobotType = robotType
         self.responseStr = ""
