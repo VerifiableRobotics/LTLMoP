@@ -9,6 +9,10 @@ import os, sys, time
 import subprocess
 import compileall
 import catUtils
+import urllib
+import zipfile
+import shutil
+import re, glob
 
 # TODO: use distutils?
 
@@ -57,8 +61,32 @@ jtlv_dir = os.path.join(src_dir, "etc", "jtlv")
 runProgramWithLiveOutput(jtlv_dir, os.path.join(jtlv_dir, "build.sh"), shell=True)
 
 print "\n>>> Checkout out submodules...\n"
-runProgramWithLiveOutput(root_dir, "git", "submodule init".split(), shell=False)
-runProgramWithLiveOutput(root_dir, "git", "submodule update".split(), shell=False)
+slurp_dir = os.path.join(src_dir, "etc", "SLURP")
+
+isgitrepo = os.path.exists(os.path.join(root_dir, ".git"))
+if isgitrepo:
+    runProgramWithLiveOutput(root_dir, "git", "submodule init".split(), shell=False)
+    runProgramWithLiveOutput(root_dir, "git", "submodule update".split(), shell=False)
+else:
+    # Manually download submodules zipballs (warning: this method cannot track actual submodule references,
+    # so will always fetch the tip of master
+
+    print "-> Downloading archive..."
+    urllib.urlretrieve("https://github.com/PennNLP/SLURP/archive/master.zip", os.path.join(slurp_dir, "master.zip"))
+
+    print "-> Unzipping archive..."
+    with zipfile.ZipFile(os.path.join(slurp_dir, "master.zip")) as slurp_zip:
+        slurp_zip.extractall(slurp_dir)
+
+    # The zipfile contains an extra directory level, which we need to get rid of:
+    for fn in glob.iglob(os.path.join(slurp_dir, "SLURP-master", "*")):
+        try:
+            shutil.move(fn, slurp_dir)
+        except shutil.Error as e:
+            print "Warning: {}".format(e)
+
+    shutil.rmtree(os.path.join(slurp_dir, "SLURP-master"), ignore_errors=True)
+    os.remove(os.path.join(slurp_dir, "master.zip"))
  
 print "\n>>> Setting up SLURP parsing system...\n"
 print "Note: This step involves downloading a large file, and is optional."
@@ -72,7 +100,6 @@ while skip_slurp is None:
         skip_slurp = False
 
 if not skip_slurp:
-    slurp_dir = os.path.join(src_dir, "etc", "SLURP")
     runProgramWithLiveOutput(slurp_dir, "python", ["-u", os.path.join(slurp_dir, "download.py")], shell=False)
 
 print "\n>>> Done!\n"
