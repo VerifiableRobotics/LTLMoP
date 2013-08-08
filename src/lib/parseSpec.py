@@ -124,7 +124,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #Add specified regions to our dictionary of region groups
             regionGroups[groupName] = filter(lambda x: x != None, m_groupDef.groups()[1:])
             allGroups[groupName] = regionGroups[groupName]
-            print '\tGroups updated: ' + str(regionGroups)
+            #print '\tGroups updated: ' + str(regionGroups)
             continue
 
         #Find any sensor group definitions
@@ -136,7 +136,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #Add specified sensors to out dictionary of sensor groups
             sensorGroups[groupName] = filter(lambda x: x != None, m_sensorGroupDef.groups()[1:])
             allGroups[groupName] = sensorGroups[groupName]
-            print '\tSensor groups updated: ' + str(sensorGroups)
+            #print '\tSensor groups updated: ' + str(sensorGroups)
             continue
 
         #Find any action group definitions
@@ -148,7 +148,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #Add specified sensors to out dictionary of sensor groups
             actionGroups[groupName] = filter(lambda x: x != None, m_actionGroupDef.groups()[1:])
             allGroups[groupName] = actionGroups[groupName]
-            print '\tAction groups updated: ' + str(actionGroups)
+            #print '\tAction groups updated: ' + str(actionGroups)
             #Re-compile grammar
             grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
@@ -159,7 +159,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             keyItems = filter(lambda x: x != '', re.split(' |, |,', m_correlationDef.group(1)))
             valueItems = filter(lambda x: x != '', re.split(' |, |,', m_correlationDef.group(2)))
             if len(keyItems) != len(valueItems):
-                print 'Error: Correlations must be made in pairs!'
+                print('Error: Correlations must be made in pairs!')
                 failed = True
                 continue
             for prop in keyItems + valueItems:
@@ -174,7 +174,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     correlations[keyItems[ind]].append(valueItems[ind])
                 else:
                     correlations[keyItems[ind]] = [valueItems[ind]]
-                print '\tCorrelations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
+                #print '\tCorrelations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
             continue
 
         #If sentence doesn't match any of these, we can parse it with the grammar
@@ -187,7 +187,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     for lineNo in linesToParse:
         
         line = textLines[lineNo].lower()
-        print line
+        #print line
         
         #Parse input line using grammar; the result here is a collection
         # of pairs of syntax trees and semantic representations in a
@@ -204,8 +204,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # produce the same LTL formula, so skip them
             if semstring in formulaeFound:
                 continue
+            formulaeFound.append(semstring)
             nTrees += 1
-            print '\t' + semstring
+            #print '\t' + semstring
+            #Expand initial conditions
+            semstring = parseInit(semstring, sensorList, robotPropList)
             #Expand 'corresponding' phrases
             semstring = parseCorresponding(semstring, correlations, allGroups)
             #Expand 'stay' phrases
@@ -215,7 +218,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             semstring = parseGroupAny(semstring, allGroups)
             semstring = parseGroupAll(semstring, allGroups)
             
-            formulaeFound.append(semstring)
             #Convert formula from prefix FOL to infix LTL and add it to
             # the appropriate section of the specification
             stringLTL = prefix2infix(semstring)
@@ -227,7 +229,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #TODO: Need to display and resolve ambiguity in the future
         
         if nTrees == 0:
-            print 'Error: No valid parse found for: ' + line
+            print('Error: No valid parse found for: ' + line)
             failed = True
     
     #Set all empty subformulas to TRUE, and removing last & in 'EnvGoals' and 'SysGoals'
@@ -251,6 +253,17 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         
     return spec,linemap,failed,LTL2LineNo
             
+def parseInit(semstring, sensorList, robotPropList):
+    if semstring.find('$EnvStart') != -1:
+        prefix = '!' if semstring.find('$EnvStart(FALSE)') != -1 else ''
+        semstring = 'And(' + prefix + (',And(' + prefix).join(sensorList[0:-1]) + ',' + prefix + sensorList[-1] + ')'*(len(sensorList) - 1)
+    elif semstring.find('$RobStart') != -1:
+        prefix = '!' if semstring.find('$RobStart(FALSE)') != -1 else ''
+        propsToInit = [val for val in robotPropList if not re.search(val,semstring, re.I)]
+        initString = 'And(' + prefix + (',And(' + prefix).join(propsToInit[0:-1]) + ',' + propsToInit[-1] + ')'*(len(propsToInit) - 1)
+        semstring = re.sub('\$RobStart\(\w+\)',initString,semstring)
+    return semstring
+
 def parseStay(semstring, regions):
     def appendStayClause(ind):
         if ind == len(regions) - 1:

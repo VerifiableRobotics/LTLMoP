@@ -21,8 +21,11 @@ S[SPEC=?sp,SEM=?s] -> MEMORY[SPEC=?sp,SEM=?s]
 ############################
 
 INIT[SPEC=EnvInit,SEM=?ph] -> ENV STARTWITH PHI_ENV[SEM=?ph]
+INIT[SPEC=EnvInit,SEM=<$EnvStart(?tf)>] -> ENV STARTWITH FALSE[SEM=?tf] | ENV STARTWITH TRUE[SEM=?tf]
 INIT[SPEC=SysInit,SEM=?ph] -> ROB STARTWITH PHI_ACT[SEM=?ph] | ROB STARTIN PHI_REG[SEM=?ph]
 INIT[SPEC=SysInit,SEM=<And(?ph1,?ph2)>] -> ROB STARTIN PHI_REG[SEM=?ph1] WITH PHI_ACT[SEM=?ph2]
+INIT[SPEC=SysInit,SEM=<And(?ph,$RobStart(?tf))>] -> ROB STARTIN PHI_REG[SEM=?ph] WITH FALSE[SEM=?tf] | ROB STARTIN PHI_REG[SEM=?ph] WITH TRUE[SEM=?tf]
+INIT[SPEC=SysInit,SEM=<$RobStart(?tf)>] -> Rob STARTWITH FALSE[SEM=?tf] | ROB STARTWITH TRUE[SEM=?tf]
 
 # Safety formulae
 #################
