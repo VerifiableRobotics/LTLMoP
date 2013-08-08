@@ -12,6 +12,7 @@ import urllib2, json
 import subprocess, socket
 import base64
 from catUtils import patrickSays
+import gitUtils
 
 def openInBrowser(url):
     if sys.platform in ['win32', 'cygwin']:
@@ -91,51 +92,7 @@ def githubAPICall(path, data=None, method=None):
     return response
 
 if __name__ == "__main__":
-    # If on Windows, use Git Bash for the shell
-    if sys.platform in ['win32', 'cygwin']:
-        # TODO: Is there a better way to determine whether we're in bash or not?
-        cmd = subprocess.Popen(["ls"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
-
-        # Wait for subprocess to finish
-        while cmd.returncode is None:
-            cmd.poll()
-            time.sleep(0.01)
-
-        if cmd.returncode != 0:
-            print "Trying to use Git Bash..."
-
-            bash_path = None
-            for ev in ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]:
-                if ev not in os.environ: continue
-
-                bp = os.path.join(os.environ[ev], 'Git', 'bin', 'bash.exe')
-
-                if os.path.exists(bp):
-                    bash_path = bp
-                    break
-
-            if bash_path is None:
-                print "Couldn't find Git Bash.  Please install Git for Windows."
-                print "(See http://code.google.com/p/msysgit/)"
-                print
-                print "Press [Enter] to quit..."
-                raw_input()
-                sys.exit(1)
-
-            print "Found Git Bash at %s" % bash_path
-
-            cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", 'python "%s"' % (os.path.abspath(__file__))])
-
-            # Wait for subprocess to finish
-            try:
-                while cmd.returncode is None:
-                    cmd.poll()
-                    time.sleep(0.01)
-            except KeyboardInterrupt:
-                cmd.kill()
-
-            sys.exit(0)
-
+    gitUtils.ensureGitBash(__file__)
 
     patrickSays("Hi! I'm a harmless cat who's going to help you out with Git.")
 
