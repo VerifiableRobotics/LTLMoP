@@ -18,7 +18,7 @@ decompose: True
 use_region_bit_encoding: True
 
 CurrentConfigName:
-basic
+ProjectPR3_lab
 
 Customs: # List of custom propositions
 Carrying_Letter_KressGazit
@@ -38,10 +38,10 @@ Person, 1
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-Mail_Room = p6
 hallway = p2
 r1 = p1
 Office_KressGazit = p5
+Mail_Room = p6
 others = 
 
 Spec: # Specification in structured English

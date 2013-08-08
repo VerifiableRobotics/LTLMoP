@@ -14,6 +14,55 @@ b
 Regions: # Stored as JSON string
 [
     {
+        "name": "r1", 
+        "color": [
+            255, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "height": 0, 
+        "points": [
+            [
+                2.0, 
+                5.0
+            ], 
+            [
+                43.0, 
+                5.0
+            ], 
+            [
+                48.0, 
+                85.0
+            ], 
+            [
+                141.0, 
+                87.0
+            ], 
+            [
+                184.0, 
+                0.0
+            ], 
+            [
+                188.0, 
+                115.0
+            ], 
+            [
+                0.0, 
+                113.0
+            ]
+        ], 
+        "position": [
+            196.0, 
+            558.0
+        ], 
+        "type": "poly", 
+        "size": [
+            188.0, 
+            115.0
+        ]
+    }, 
+    {
         "name": "boundary", 
         "color": [
             255, 
@@ -83,59 +132,6 @@ Regions: # Stored as JSON string
         ]
     }, 
     {
-        "name": "r1", 
-        "color": [
-            255, 
-            255, 
-            0
-        ], 
-        "holeList": [], 
-        "height": 0, 
-        "points": [
-            [
-                43.0, 
-                5.0
-            ], 
-            [
-                2.0, 
-                5.0
-            ], 
-            [
-                0, 
-                113
-            ], 
-            [
-                188, 
-                115
-            ], 
-            [
-                184.0, 
-                0.0
-            ], 
-            [
-                140.0, 
-                2.0
-            ], 
-            [
-                141.0, 
-                87.0
-            ], 
-            [
-                48.0, 
-                85.0
-            ]
-        ], 
-        "position": [
-            196.0, 
-            558.0
-        ], 
-        "type": "poly", 
-        "size": [
-            188.0, 
-            115.0
-        ]
-    }, 
-    {
         "name": "Mail_Room", 
         "color": [
             0, 
@@ -147,29 +143,29 @@ Regions: # Stored as JSON string
         "points": [
             [
                 0.0, 
-                3.0
+                5.0
             ], 
             [
-                97.0, 
+                141.0, 
                 0.0
             ], 
             [
                 98.0, 
-                85.0
+                87.0
             ], 
             [
                 5.0, 
-                83.0
+                85.0
             ]
         ], 
         "position": [
             239.0, 
-            560.0
+            558.0
         ], 
         "type": "poly", 
         "size": [
-            98.0, 
-            85.0
+            141.0, 
+            87.0
         ]
     }, 
     {
@@ -197,10 +193,6 @@ Regions: # Stored as JSON string
             [
                 182.0, 
                 547.0
-            ], 
-            [
-                138.0, 
-                549.0
             ], 
             [
                 41.0, 
@@ -363,9 +355,9 @@ Regions: # Stored as JSON string
 ]
 
 Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
-r1	Mail_Room	337.0	645.0	244.0	643.0	239.0	563.0	244.0	643.0	337.0	645.0	336.0	560.0
-r1	hallway	336.0	560.0	380.0	558.0	198.0	563.0	239.0	563.0
-Mail_Room	hallway	239.0	563.0	336.0	560.0
+r1	Mail_Room	337.0	645.0	244.0	643.0	337.0	645.0	380.0	558.0	239.0	563.0	244.0	643.0
+r1	hallway	198.0	563.0	239.0	563.0
+Mail_Room	hallway	239.0	563.0	380.0	558.0
 hallway	b2	283.0	216.0	283.0	250.0	283.0	216.0	199.0	216.0
 hallway	b	200.0	382.0	284.0	382.0	284.0	382.0	284.0	350.0
 hallway	Office_KressGazit	283.0	250.0	284.0	350.0
