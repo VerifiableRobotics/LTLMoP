@@ -75,7 +75,7 @@ class _CSharpCommunicator:
          """
         import regions
         # establishes connection between LTLMoP and C#
-        print 'Connecting to CSharp...'
+        print 'Establishing connection with the C# side...'
         self.TCPSock.connect(self.addFrom)
         print 'Done.'
         
@@ -85,7 +85,7 @@ class _CSharpCommunicator:
         self.responseStr = self.sendMessage(ltlmop_msg)
         time.sleep(1)
         # if we get a parsable acknowledgement, we are good to go!
-        print "CSharp Ack: ",self.responseStr.id
+        print "C# Acknowledgement: ",self.responseStr.id
         self.responseStr = ""
 
     def stop(self):
@@ -105,9 +105,9 @@ class _CSharpCommunicator:
         self.pose_handler = self.proj.h_instance['pose']
         pose = self.pose_handler.getPose()
         ltlmop_msg = ltlmopMsg_pb2.PythonRequestMsg()
-        ltlmop_msg.id=2
-        ltlmop_msg.vel.v = direction[0]
-        ltlmop_msg.vel.omega = direction[1]
+        ltlmop_msg.id = 2
+        ltlmop_msg.vel.v     = direction[0]     # This can be either lin_velocity or a waypoint's x coordinate.
+        ltlmop_msg.vel.omega = direction[1]     # This can be either ang_velocity or a waypoint's y coordinate.
         ltlmop_msg.pose.x = pose[0]
         ltlmop_msg.pose.y = pose[1]
         ltlmop_msg.pose.yaw = pose[2]
