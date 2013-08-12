@@ -291,7 +291,7 @@ class SpecCompiler(object):
 
             # TODO: support locative props
 
-            for spec_section in [x+y for x in ["Sys", "Env"] for y in ["Init", "Trans", "Goal"]]:
+            for spec_section in [x+y for x in ["Sys", "Env"] for y in ["Init", "Trans", "Goals"]]:
                 spec[spec_section] = self.postprocessLTL(spec[spec_section], sensorList, robotPropList)
 
             # Abort compilation if there were any errors

@@ -17,7 +17,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         the list of sensor propositions, the list containing
         the region names and the list of robot propositions (other than regions). 
     '''
-    
+
     #Begin optimistically
     failed = False
     
@@ -53,7 +53,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     #Open CFG file
     # TODO MAKE INDEP of path
-    grammarFile = open('structuredEnglish.fcfg')
+    grammarFile = open('lib/structuredEnglish.fcfg','rb')
     grammarText = grammarFile.read()
     
     #Add production rules for region names to our grammar string
@@ -70,31 +70,31 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     #Generate regular expression to match sentences defining region groups
     #Resultant expression is: 'group (\w+) is (?:(region1),? ?|(region2),? ?|(region3),? ?)+'
-    groupDefPattern = '\s*group (\w+) is (?:('
+    groupDefPattern = r'\s*group (\w+) is (?:('
     groupDefPattern += '),? ?|('.join(regionList)
     groupDefPattern += '),? ?)+'
     r_groupDef = re.compile(groupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining sensor groups
     #Resultant expression is: 'sensor group (\w+) is (?:(sensor1),? ?|(sensor2),? ?|(sensor3),? ?)+'
-    sensorGroupDefPattern = '\s*group (\w+) is (?:('
+    sensorGroupDefPattern = r'\s*group (\w+) is (?:('
     sensorGroupDefPattern += '),? ?|('.join(sensorList)
     sensorGroupDefPattern += '),? ?)+'
     r_sensorGroupDef = re.compile(sensorGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining action groups
     #Resultant expression is: 'group (\w+) is (?:(action1),? ?|(action2),? ?|(action3),? ?)+'
-    actionGroupDefPattern = '\s*group (\w+) is (?:('
+    actionGroupDefPattern = r'\s*group (\w+) is (?:('
     actionGroupDefPattern += '),? ?|('.join(robotPropList)
     actionGroupDefPattern += '),? ?)+'
     r_actionGroupDef = re.compile(actionGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining correlations
-    correlationDefPattern = '((?:[_\w]+,? )+)correspond to((?:,? [_\w]+)+)'
+    correlationDefPattern = r'((?:[_\w]+,? )+)correspond to((?:,? [_\w]+)+)'
     r_correlationDef = re.compile(correlationDefPattern, re.I)
     
     #Begin parsing input text
-    textLines = text.split("\n")
+    textLines = text.split('\n')
     linesToParse = []
     allLines = range(len(textLines))
 
@@ -104,11 +104,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         line = textLines[lineInd].lower()
 
         #If it is an empty line, ignore it
-        if re.search('^(\s*)$',line):
+        if re.search(r'^(\s*)$',line):
             continue
         
         #If the sentence is a comment, ignore it
-        if re.search('^\s*#',line):
+        if re.search(r'^\s*#',line):
             continue
         
         #If there is a newline at the end, remove it
@@ -149,8 +149,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             actionGroups[groupName] = filter(lambda x: x != None, m_actionGroupDef.groups()[1:])
             allGroups[groupName] = actionGroups[groupName]
             #print '\tAction groups updated: ' + str(actionGroups)
-            #Re-compile grammar
-            grammar = nltk.grammar.parse_fcfg(grammarText)
             continue
 
         #Find any correlation definitions
@@ -181,8 +179,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         linesToParse.append(lineInd)
 
     #Generate NLTK feature grammar object from grammar string
-    grammar = nltk.grammar.parse_fcfg(grammarText)
-    
+    grammar = nltk.grammar.parse_fcfg(grammarText.encode('ASCII','ignore'))
+
     #Iterate over the lines in the file
     for lineNo in linesToParse:
         
@@ -192,7 +190,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         #Parse input line using grammar; the result here is a collection
         # of pairs of syntax trees and semantic representations in a
         # prefix first-order-logic syntax
-        result = nltk.sem.batch_interpret([line], grammar, u'SEM', 2)[0]
+        result = nltk.sem.batch_interpret([line], grammar, 'SEM', 2)[0]
         
         nTrees = 0;
         formulaeFound = []
@@ -261,7 +259,7 @@ def parseInit(semstring, sensorList, robotPropList):
         prefix = '!' if semstring.find('$RobStart(FALSE)') != -1 else ''
         propsToInit = [val for val in robotPropList if not re.search(val,semstring, re.I)]
         initString = 'And(' + prefix + (',And(' + prefix).join(propsToInit[0:-1]) + ',' + propsToInit[-1] + ')'*(len(propsToInit) - 1)
-        semstring = re.sub('\$RobStart\(\w+\)',initString,semstring)
+        semstring = re.sub(r'\$RobStart\(\w+\)',initString,semstring)
     return semstring
 
 def parseStay(semstring, regions):
@@ -279,11 +277,11 @@ def parseStay(semstring, regions):
 def parseGroupAll(semstring, allGroups):
     def appendAllClause(semstring, ind, groupItems):
         if ind == len(groupItems) - 1:
-            return re.sub('\$All\(\w+\)',groupItems[ind],semstring)
+            return re.sub(r'\$All\(\w+\)',groupItems[ind],semstring)
         else:
-            return 'And('+re.sub('\$All\(\w+\)',groupItems[ind],semstring)+','+appendAllClause(semstring, ind+1, groupItems)+')'
+            return 'And('+re.sub(r'\$All\(\w+\)',groupItems[ind],semstring)+','+appendAllClause(semstring, ind+1, groupItems)+')'
     while semstring.find('$All') != -1:
-        groupName = re.search('\$All\((\w+)\)',semstring).groups()[0]
+        groupName = re.search(r'\$All\((\w+)\)',semstring).groups()[0]
         if groupName in allGroups:
             semstring = appendAllClause(semstring, 0, allGroups[groupName])
         else:
@@ -292,22 +290,22 @@ def parseGroupAll(semstring, allGroups):
     
 def parseGroupAny(semstring, allGroups):
     while semstring.find('$Any') != -1:
-        groupName = re.search('\$Any\((\w+)\)',semstring).groups()[0]
+        groupName = re.search(r'\$Any\((\w+)\)',semstring).groups()[0]
         if groupName in allGroups:
             group = allGroups[groupName]
             anyClause = 'Or(' + ',Or('.join(group[0:-1]) + ',' + group[-1] + ')'*(len(group)-1)
-            semstring = re.sub('\$Any\('+groupName+'\)', anyClause, semstring)
+            semstring = re.sub(r'\$Any\('+groupName+'\)', anyClause, semstring)
         else:
             print('Error: Could not resolve group '+groupName)
     return semstring
     
 def parseGroupEach(semstring, allGroups):
     while semstring.find('$Each') != -1:
-        groupName = re.search('\$Each\((\w+)\)',semstring).group(1)
+        groupName = re.search(r'\$Each\((\w+)\)',semstring).group(1)
         if groupName in allGroups:
             newSentences = []
             for groupItem in allGroups[groupName]:
-                newSentences.append(re.sub('\$Each\('+groupName+'\)',groupItem,semstring))
+                newSentences.append(re.sub(r'\$Each\('+groupName+'\)',groupItem,semstring))
             semstring = 'And('+',And('.join(newSentences[0:-1])+','+newSentences[-1]+')'*(len(newSentences)-1)
         else:
             print('Error: Could not resolve group '+groupName)
@@ -315,9 +313,9 @@ def parseGroupEach(semstring, allGroups):
     
 def parseCorresponding(semstring, correlations, allGroups):
     if semstring.find('$Corr') != -1:
-        m_Any = re.search('\$Any\((\w+)\)',semstring)
-        m_Each = re.search('\$Each\((\w+)\)',semstring)
-        corrGroups = re.findall('\$Corr\((\w+)\)',semstring)
+        m_Any = re.search(r'\$Any\((\w+)\)',semstring)
+        m_Each = re.search(r'\$Each\((\w+)\)',semstring)
+        corrGroups = re.findall(r'\$Corr\((\w+)\)',semstring)
         indexGroupName = ''
         indexGroup = []
         indexPhrase = ''
