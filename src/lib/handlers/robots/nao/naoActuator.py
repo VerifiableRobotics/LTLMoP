@@ -118,6 +118,9 @@ class naoActuatorHandler:
             targetPos  = [dx, dy, dz, dwx, dwy, dwz]
             times      = [2.0] # seconds
 
+            self.motionProxy.stiffnessInterpolation('LArm',1.0,1.0)
+            self.motionProxy.stiffnessInterpolation('HeadYaw',1.0,1.0)
+            self.motionProxy.stiffnessInterpolation('HeadPitch',1.0,1.0)
             self.motionProxy.openHand('LHand')
             self.motionProxy.positionInterpolation(effector, space, targetPos,axisMask, times, isAbsolute)
 
@@ -223,6 +226,9 @@ class naoActuatorHandler:
         if "getLandmark" in subs:
             self.ldmProxy.unsubscribe("getLandmark")
 
+        self.motionProxy.stiffnessInterpolation('LArm',0.0,1.0)
+        self.motionProxy.stiffnessInterpolation('HeadYaw',0.0,1.0)
+        self.motionProxy.stiffnessInterpolation('HeadPitch',0.0,1.0)
 
     def countOutLoud(self, start, skip, period, actuatorVal, initial=False):
         if initial:
