@@ -1,0 +1,394 @@
+# This is a region definition file for the LTLMoP toolkit.
+# Format details are described at the beginning of each section below.
+# Note that all values are separated by *tabs*.
+
+Background: # Relative path of background image file
+UpsonFloorPlan.png
+
+CalibrationPoints: # Vertices to use for map calibration: (vertex_region_name, vertex_index)
+
+Obstacles: # Names of regions to treat as obstacles
+Wall2
+Wall1
+
+Regions: # Stored as JSON string
+[
+    {
+        "name": "boundary", 
+        "color": [
+            255, 
+            0, 
+            0
+        ], 
+        "holeList": [], 
+        "height": 0, 
+        "points": [
+            [
+                2.0, 
+                2.0
+            ], 
+            [
+                1484.0, 
+                0.0
+            ], 
+            [
+                1484.0, 
+                154.0
+            ], 
+            [
+                1464.0, 
+                244.0
+            ], 
+            [
+                1468.0, 
+                577.0
+            ], 
+            [
+                2.0, 
+                581.0
+            ], 
+            [
+                0.0, 
+                251.0
+            ], 
+            [
+                1.0, 
+                162.0
+            ]
+        ], 
+        "position": [
+            344.0, 
+            172.0
+        ], 
+        "type": "poly", 
+        "size": [
+            1484.0, 
+            581.0
+        ]
+    }, 
+    {
+        "name": "Wall2", 
+        "color": [
+            192, 
+            192, 
+            192
+        ], 
+        "holeList": [], 
+        "height": 0, 
+        "points": [
+            [
+                0.0, 
+                35.0
+            ], 
+            [
+                882.0, 
+                30.0
+            ], 
+            [
+                886.0, 
+                0.0
+            ], 
+            [
+                886.0, 
+                43.0
+            ], 
+            [
+                921.0, 
+                43.0
+            ], 
+            [
+                921.0, 
+                0.0
+            ], 
+            [
+                924.0, 
+                29.0
+            ], 
+            [
+                1060.0, 
+                29.0
+            ], 
+            [
+                1065.0, 
+                1.0
+            ], 
+            [
+                1065.0, 
+                44.0
+            ], 
+            [
+                1100.0, 
+                44.0
+            ], 
+            [
+                1100.0, 
+                1.0
+            ], 
+            [
+                1105.0, 
+                30.0
+            ], 
+            [
+                1464.0, 
+                28.0
+            ], 
+            [
+                1468.0, 
+                361.0
+            ], 
+            [
+                2.0, 
+                365.0
+            ]
+        ], 
+        "position": [
+            344.0, 
+            388.0
+        ], 
+        "type": "poly", 
+        "size": [
+            1468.0, 
+            365.0
+        ]
+    }, 
+    {
+        "name": "Wall1", 
+        "color": [
+            192, 
+            192, 
+            192
+        ], 
+        "holeList": [], 
+        "height": 0, 
+        "points": [
+            [
+                0.0, 
+                162.0
+            ], 
+            [
+                313.0, 
+                162.0
+            ], 
+            [
+                317.0, 
+                187.0
+            ], 
+            [
+                317.0, 
+                144.0
+            ], 
+            [
+                352.0, 
+                144.0
+            ], 
+            [
+                352.0, 
+                187.0
+            ], 
+            [
+                368.0, 
+                187.0
+            ], 
+            [
+                368.0, 
+                144.0
+            ], 
+            [
+                403.0, 
+                144.0
+            ], 
+            [
+                403.0, 
+                187.0
+            ], 
+            [
+                403.0, 
+                187.0
+            ], 
+            [
+                403.0, 
+                187.0
+            ], 
+            [
+                407.0, 
+                160.0
+            ], 
+            [
+                1483.0, 
+                154.0
+            ], 
+            [
+                1483.0, 
+                0.0
+            ], 
+            [
+                1.0, 
+                2.0
+            ]
+        ], 
+        "position": [
+            345.0, 
+            172.0
+        ], 
+        "type": "poly", 
+        "size": [
+            1483.0, 
+            187.0
+        ]
+    }, 
+    {
+        "name": "Mail_Room", 
+        "color": [
+            128, 
+            255, 
+            0
+        ], 
+        "holeList": [], 
+        "height": 0, 
+        "points": [
+            [
+                0.0, 
+                0.0
+            ], 
+            [
+                35.0, 
+                0.0
+            ], 
+            [
+                35.0, 
+                43.0
+            ], 
+            [
+                0.0, 
+                43.0
+            ]
+        ], 
+        "position": [
+            1409.0, 
+            389.0
+        ], 
+        "type": "poly", 
+        "size": [
+            35.0, 
+            43.0
+        ]
+    }, 
+    {
+        "name": "Classroom", 
+        "color": [
+            0, 
+            128, 
+            255
+        ], 
+        "holeList": [], 
+        "height": 0, 
+        "points": [
+            [
+                0.0, 
+                0.0
+            ], 
+            [
+                35.0, 
+                0.0
+            ], 
+            [
+                35.0, 
+                43.0
+            ], 
+            [
+                0.0, 
+                43.0
+            ]
+        ], 
+        "position": [
+            1230.0, 
+            388.0
+        ], 
+        "type": "poly", 
+        "size": [
+            35.0, 
+            43.0
+        ]
+    }, 
+    {
+        "name": "Office_KressGazit", 
+        "color": [
+            0, 
+            128, 
+            255
+        ], 
+        "holeList": [], 
+        "height": 0, 
+        "points": [
+            [
+                0.0, 
+                0.0
+            ], 
+            [
+                35.0, 
+                0.0
+            ], 
+            [
+                35.0, 
+                43.0
+            ], 
+            [
+                0.0, 
+                43.0
+            ]
+        ], 
+        "position": [
+            713.0, 
+            316.0
+        ], 
+        "type": "poly", 
+        "size": [
+            35.0, 
+            43.0
+        ]
+    }, 
+    {
+        "name": "Office_Campbell", 
+        "color": [
+            0, 
+            128, 
+            255
+        ], 
+        "holeList": [], 
+        "height": 0, 
+        "points": [
+            [
+                0.0, 
+                0.0
+            ], 
+            [
+                35.0, 
+                0.0
+            ], 
+            [
+                35.0, 
+                43.0
+            ], 
+            [
+                0.0, 
+                43.0
+            ]
+        ], 
+        "position": [
+            662.0, 
+            316.0
+        ], 
+        "type": "poly", 
+        "size": [
+            35.0, 
+            43.0
+        ]
+    }
+]
+
+Transitions: # Region 1 Name, Region 2 Name, Bidirectional transition faces (face1_x1, face1_y1, face1_x2, face1_y2, face2_x1, ...)
+Wall2	Mail_Room	1409.0	389.0	1409.0	432.0	1409.0	432.0	1444.0	432.0	1444.0	389.0	1444.0	432.0
+Wall2	Classroom	1230.0	388.0	1230.0	431.0	1230.0	431.0	1265.0	431.0	1265.0	388.0	1265.0	431.0
+Wall1	Office_KressGazit	713.0	316.0	713.0	359.0	748.0	316.0	713.0	316.0	748.0	359.0	748.0	316.0
+Wall1	Office_Campbell	662.0	316.0	662.0	359.0	662.0	316.0	697.0	316.0	697.0	316.0	697.0	359.0
+
