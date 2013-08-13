@@ -40,6 +40,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     LTL2LineNo = {}
 
+    sensorList = [sensor.lower() for sensor in sensorList]
+    regionList = [region.lower() for region in regionList]
+    robotPropList = [robotProp.lower() for robotProp in robotPropList]
+
     allProps = sensorList + regionList + robotPropList
     
     #Initialize dictionaries mapping group names to lists of groups
