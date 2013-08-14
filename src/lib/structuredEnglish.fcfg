@@ -25,7 +25,7 @@ INIT[SPEC=EnvInit,SEM=<$EnvStart(?tf)>] -> ENV STARTWITH FALSE[SEM=?tf] | ENV ST
 INIT[SPEC=SysInit,SEM=?ph] -> ROB STARTWITH PHI_ACT[SEM=?ph] | ROB STARTIN PHI_REG[SEM=?ph]
 INIT[SPEC=SysInit,SEM=<And(?ph1,?ph2)>] -> ROB STARTIN PHI_REG[SEM=?ph1] WITH PHI_ACT[SEM=?ph2]
 INIT[SPEC=SysInit,SEM=<And(?ph,$RobStart(?tf))>] -> ROB STARTIN PHI_REG[SEM=?ph] WITH FALSE[SEM=?tf] | ROB STARTIN PHI_REG[SEM=?ph] WITH TRUE[SEM=?tf]
-INIT[SPEC=SysInit,SEM=<$RobStart(?tf)>] -> Rob STARTWITH FALSE[SEM=?tf] | ROB STARTWITH TRUE[SEM=?tf]
+INIT[SPEC=SysInit,SEM=<$RobStart(?tf)>] -> ROB STARTWITH FALSE[SEM=?tf] | ROB STARTWITH TRUE[SEM=?tf]
 
 # Safety formulae
 #################
@@ -34,6 +34,7 @@ SAFETY[SPEC=EnvTrans,SEM=<Glob(?ph)>,PROP=?ph] -> ALWAYS PHI_ENV[SEM=?ph]
 SAFETY[SPEC=SysTrans,SEM=<Glob(?ph)>,PROP=?ph] -> ALWAYS PHI_ROB[SEM=?ph]
 SAFETY[SPEC=EnvTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=EnvTrans,SEM=?s]
 SAFETY[SPEC=SysTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=SysTrans,SEM=?s]
+SAFETY[SPEC=SysTrans,SEM=<Glob(?s)>,PROP=?s] -> STAY[SEM=?s]
 
 # Liveness formulae
 ###################
@@ -60,7 +61,7 @@ CONDITIONAL[SPEC=?sp,SEM=<Imp(Not(?cond),?p)>] -> REQUIREMENT[SPEC=?sp,SEM=?req,
 CONDITIONAL[SPEC=?sp,SEM=<Iff(?cond,?p)>] -> REQUIREMENT[SPEC=?sp,SEM=?req,PROP=?p] IFF IC[SEM=?cond]
 
 # Requirements can be either a safety sentence or a liveness sentence
-REQUIREMENT[SPEC=?sp,SEM=?req,PROP=?p] -> SAFETY[SPEC=?sp,SEM=?req,PROP=?p] | LIVENESS[SPEC=?sp,SEM=?req,PROP=?p]
+REQUIREMENT[SPEC=?sp,SEM=?req,PROP=<Next(?p)>] -> SAFETY[SPEC=?sp,SEM=?req,PROP=?p] | LIVENESS[SPEC=?sp,SEM=?req,PROP=?p]
 
 # Conditions are independent clauses (IC) made up of either a noun phrase (NP) and verb phrase (VP)
 # or two ICs conjoined by a logical connective
@@ -167,6 +168,7 @@ SENSE[TEN=past,PER=third] -> 'sensed'
 SENSING[SEM=<\x.x>] -> 'sensing'
 STARTWITH[SEM=<\x.x>] -> 'starts' 'with' | 'start' 'with'
 STARTIN[SEM=<\x.x>] -> 'starts' 'in' | 'start' 'in'
+STAY[SEM=<$Stay>] -> 'stay' 'there'
 THEN[SEM=<\x.x>] -> 'then'
 TOGGLEON[SEM=<\x y.And(Glob(Imp(And(x,y),Not(Next(x)))),And(Glob(Imp(And(Not(x),y),Next(m))),And(Glob(Imp(And(x,Not(y)),Next(x))),Glob(Imp(And(Not(x),Not(y)),Not(Next(x)))))))>] -> 'is' 'toggled' 'on'
 TRUE[SEM=<TRUE>] -> 'true'
