@@ -1289,7 +1289,7 @@ def replaceRegionName(formula,bitEncode,regionList):
             # it is written this way to prevent partial word replacements (as with the .replace method)
             #tempFormula = re.sub('\s+'+prop, ' '+bitEncode['current'][ind],tempFormula) # if following a space
             #tempFormula = re.sub('\('+prop, '('+bitEncode['current'][ind],tempFormula) # if in ()
-            tempFormula = re.sub('\\bs\.'+prop+'\\b', bitEncode['current'][ind],tempFormula)
+            tempFormula = re.sub('\\bs\.'+prop+'\\b', bitEncode['current'][ind],tempFormula, flags=re.I)
 
             #tempFormula = tempFormula.replace(prop, bitEncode['current'][ind])
     
@@ -1299,7 +1299,7 @@ def replaceRegionName(formula,bitEncode,regionList):
             ind = regionList.index(prop)
             # replace every occurrence of the proposition with the bit encoding
             # it is written this way to prevent partial word replacements (as with the .replace method)
-            tempFormula = re.sub('\\be\.'+prop+'\\b', bitEncode['env'][ind],tempFormula)
+            tempFormula = re.sub('\\be\.'+prop+'\\b', bitEncode['env'][ind],tempFormula, flags=re.I)
     
     LTLsubformula = tempFormula 
 

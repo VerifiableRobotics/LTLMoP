@@ -430,14 +430,14 @@ class SpecCompiler(object):
             # substitute decomposed region names
             for r in self.proj.rfi.regions:
                 if not (r.isObstacle or r.name.lower() == "boundary"):
-                    text = re.sub('\\b(?:s\.)?' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
-                    text = re.sub('\\b(?:e\.)?' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
+                    text = re.sub('\\b(?:s\.)?' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text, flags=re.I)
+                    text = re.sub('\\b(?:e\.)?' + r.name + '\\b', "("+' | '.join(["e."+x for x in self.parser.proj.regionMapping[r.name]])+")", text, flags=re.I)
 
         # Ensure that propositions have the proper prefix
         for s in sensorList:
-            text = re.sub('\\b(?:e\.)?' + s + '\\b', "e.{}".format(s), text)
+            text = re.sub('\\b(?:e\.)?' + s + '\\b', "e.{}".format(s), text, flags=re.I)
         for a in robotPropList:
-            text = re.sub('\\b(?:s\.)?' + a + '\\b', "s.{}".format(a), text)
+            text = re.sub('\\b(?:s\.)?' + a + '\\b', "s.{}".format(a), text, flags=re.I)
 
         if self.proj.compile_options["decompose"]:
             regionList = [x.name for x in self.parser.proj.rfi.regions]
