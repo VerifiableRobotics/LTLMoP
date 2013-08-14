@@ -219,10 +219,16 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             semstring = parseGroupEach(semstring, allGroups)
             semstring = parseGroupAny(semstring, allGroups)
             semstring = parseGroupAll(semstring, allGroups)
-            
+            #Liveness sentences should not contain 'next'
+            if syntree.node['SPEC'] == 'SysGoals' or syntree.node['SPEC'] == 'EnvGoals':
+                semstring = semstring.replace('Next','')
+
+            #TODO: In environment safeties, all robot propositions must be PAST TENSE
+
             #Convert formula from prefix FOL to infix LTL and add it to
             # the appropriate section of the specification
             stringLTL = prefix2infix(semstring)
+            
             spec[syntree.node['SPEC']] += stringLTL + ' & \n'
             linemap[syntree.node['SPEC']].append(lineNo)
             LTL2LineNo[stringLTL] = lineNo
@@ -262,7 +268,7 @@ def parseInit(semstring, sensorList, robotPropList):
     elif semstring.find('$RobStart') != -1:
         prefix = '!' if semstring.find('$RobStart(FALSE)') != -1 else ''
         propsToInit = [val for val in robotPropList if not re.search(val,semstring, re.I)]
-        initString = 'And(' + prefix + (',And(' + prefix).join(propsToInit[0:-1]) + ',' + propsToInit[-1] + ')'*(len(propsToInit) - 1)
+        initString = 'And(' + prefix + (',And(' + prefix).join(propsToInit[0:-1]) + ',' + prefix + propsToInit[-1] + ')'*(len(propsToInit) - 1)
         semstring = re.sub(r'\$RobStart\(\w+\)',initString,semstring)
     return semstring
 
