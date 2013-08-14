@@ -22,7 +22,7 @@ from threading import RLock
 import numpy
 import logging
 
-from fiducial_msgs.msg import FiducialScanStamped
+
 
 
 class sensorHandler(object):
@@ -61,37 +61,8 @@ class sensorHandler(object):
             # that will be deleted at an imminent boundary
             current_region = self._last_region
 
-            # We accumulate here because we want to persist objects within a region
-            for fid in msg.scan.fiducials:
-                # Keep a dict of all the fiducials we know about
-                self._id_fiducials[fid.id] = fid
 
-                # Check if the fid is in the current region
-                if self._fid_in_region(fid, current_region):
-                    if fid.id not in self._currently_sensed:
-                        print "{}: Adding {!r} to sensed items.".format(self._name, fid.id)
-                    self._currently_sensed.add(fid.id)
 
-                    if fid.id not in self._disabled_items:
-                        # Tell the simulation GUI to show this fiducial on the map
-                        position = fid.pose.position
-                        raw_pose = numpy.array([position.x, position.y, position.z])
-                        pose = self._proj.coordmap_lab2map(raw_pose)
-                        self._proj.executor.postEvent("FID", [fid.id, pose[0], pose[1]])
-
-    def _fid_in_region(self, fid, current_region):
-        """Return whether a fiducial is in the current region."""
-        position = fid.pose.position
-        raw_pose = numpy.array([position.x, position.y, position.z])
-        pose = self._proj.coordmap_lab2map(raw_pose)
-        fid_regions = [region for region in self._proj.rfi.regions if
-                       region.name.lower() != "boundary" and region.objectContainsPoint(*pose)]
-        if fid_regions:
-            fid_region = fid_regions[0].name
-            return fid_region == current_region
-        else:
-            # Hopefully, we should not hit this case
-            return False
 
     def get_sensor(self, sensor_name, initial=False):
         """Report whether we currently see a fiducial of the requested type.

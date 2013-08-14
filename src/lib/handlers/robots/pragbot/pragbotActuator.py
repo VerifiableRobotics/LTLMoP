@@ -1,8 +1,4 @@
 """LTLMoP motion handler for the JR platform."""
-from geometry_msgs.msg import Pose
-from robot_actions.msg import SweepAreaAction, SweepAreaGoal, DriveToAction, DriveToGoal
-from actionlib_msgs.msg import GoalStatus
-
 import sys
 import time
 
@@ -42,20 +38,17 @@ class gumboActuatorHandler(object):
         if actuatorVal:
             print "{}: Activating sweep.".format(self._name)
             print "Searching the {}...".format(self._pose_handler.get_location())
-            self._sweep_goal = SweepAreaGoal()
             self._sweep_goal.timeout = 0.0  # Never timeout
             self._sweep_goal.wall_dist = SWEEP_WALL_DISTANCE
-            self._sweep_goal.pattern = SweepAreaGoal.PATTERN_WALL_FOLLOW
-            self._sweep_goal.args.append(SweepAreaGoal.ARG_RIGHT)
 
             # Set up a lexically enclosed callback for setting the _done sensor
             def _complete_sweep(goal_status, goal_result):  # pylint: disable=W0613
                 """Set sweep_done sensor when sweep is complete."""
-                if goal_status == GoalStatus.SUCCEEDED:
+                if goal_status == True:
                     print "{}: Sweep succeeded.".format(self._name)
                     print "Search Complete"
                     self._sensor_handler.set_action_done("sweep", True)
-                elif goal_status == GoalStatus.PREEMPTED:
+                elif goal_status == False:
                     print "{}: Sweep cancelled before completion.".format(self._name)
                 else:
                     print "{}: Sweep failed with status {!r}.".format(self._name, goal_status)
@@ -89,16 +82,14 @@ class gumboActuatorHandler(object):
                 return False
 
             # Move the robot to the bomb
-            self._defuse_goal = DriveToGoal()
             bomb_position = bomb.pose.position
-            self._defuse_goal.target_pose = Pose(position=bomb_position)
 
             self.executor.postEvent("MESSAGE", "Defusing...")
 
             # Sneakily define a lexically enclosed callback
             def _complete_defuse(goal_status, goal_result):  # pylint: disable=W0613
                 """Wait until bomb is defused and then remove it from the sensors."""
-                if goal_status == GoalStatus.SUCCEEDED:
+                if goal_status == True:
                     # After the robot reaches the bomb, defuse the
                     # bomb by waiting and then make it go away.
                     print "{}: Defusing bomb...".format(self._name)
@@ -106,7 +97,7 @@ class gumboActuatorHandler(object):
                     print "{}: Bomb defusing complete.".format(self._name)
                     self.executor.postEvent("MESSAGE", "Successfully defused.")
                     self._sensor_handler.disable_item(bomb)
-                elif goal_status == GoalStatus.PREEMPTED:
+                elif goal_status == False:
                     print "{}: Defuse cancelled before completion.".format(self._name)
                 else:
                     print "{}: Defuse failed with status {!r}.".format(self._name, goal_status)
