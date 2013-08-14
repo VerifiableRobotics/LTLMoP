@@ -3,15 +3,10 @@
 from threading import Lock
 
 import numpy
-import time, logging
 
 
 class poseHandler:
     """Report the robot's current pose."""
-
-    NODE_NAME = 'pose_controller'
-    POSE_TOPIC = 'pose_publisher/pose'
-    LOCATION_TOPIC = 'location'
 
     def __init__(self, proj, shared_data):  # pylint: disable=W0613
         """
@@ -29,11 +24,8 @@ class poseHandler:
         self._location = None
         self._location_lock = Lock()
 
-
-        # Wait for first location message
-        logging.debug("Waiting for first location message...")
-        while not self._location:
-            time.sleep(0.1)
+        # Put in some fake position
+        self._location = "Nowhere"
 
     def getPose(self, cached=True):  # pylint: disable=W0613
         """Return the last reported pose.
@@ -44,13 +36,12 @@ class poseHandler:
         with self._pose_lock:
             return self._pose
 
-
     def get_location(self):
         """Return the room the robot is currently in."""
         with self._location_lock:
             return self._location
 
-    def set_location(self, msg):
+    def set_location(self, location):
         """Set the location of the robot."""
         with self._location_lock:
-            self._location = msg.data
+            self._location = location
