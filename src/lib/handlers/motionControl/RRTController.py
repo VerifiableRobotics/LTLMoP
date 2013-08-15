@@ -35,7 +35,7 @@ except:
     import_matplotlib = False
 
 class motionControlHandler:
-    def __init__(self, proj, shared_data,robot_type,max_angle_goal,max_angle_overlap,plotting):
+    def __init__(self, proj, shared_data,robot_type,max_angle_goal,max_angle_overlap,plotting,do_pathfollowing,target_threshold):
         """
         Rapidly-Exploring Random Trees alogorithm motion planning controller
 
@@ -43,15 +43,21 @@ class motionControlHandler:
         max_angle_goal (float): The biggest difference in angle between the new node and the goal point that is acceptable. If it is bigger than the max_angle, the new node will not be connected to the goal point. The value should be within 0 to 6.28 = 2*pi. Default set to 6.28 = 2*pi (default=6.28)
         max_angle_overlap (float): difference in angle allowed for two nodes overlapping each other. If you don't want any node overlapping with each other, put in 2*pi = 6.28. Default set to 1.57 = pi/2 (default=1.57)
         plotting (bool): Check the box to enable plotting. Uncheck to disable plotting (default=True)
+        do_pathfollowing (bool):  If True, this motion controller will take care of pathfollowing internally.  If False, waypoints will be passed directly to the locomotionControlHandler. (default=True)
+        target_threshold (float): Distance from target point at which we start pursuing the next point in the path, in multiples of robot radius (default=1.5)
         """
 
         self.system_print       = False       # for debugging. print on GUI ( a bunch of stuffs)
         self.finish_print       = False       # set to 1 to print the original finished E and V before trimming the tree
         self.orientation_print  = False        # show the orientation information of the robot
+        self.do_pathfollowing = do_pathfollowing
+        self.TARGET_THRESHOLD = target_threshold
 
         # Get references to handlers we'll need to communicate with
         self.drive_handler = proj.h_instance['drive']
         self.pose_handler = proj.h_instance['pose']
+        self.locomotion_handler = proj.h_instance['locomotionCommand']
+
 
         # Get information about regions
         self.proj              = proj
@@ -126,9 +132,9 @@ class motionControlHandler:
             self.timeStep = 5
             self.velocity  = 0.05
         elif self.system == 5:
-            self.radius = 0.15
-            self.step_size  = 0.2      #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
-            self.timeStep = 5
+            self.radius = 0.30
+            self.step_size  = 0.6 #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
+            self.timeStep = 10
             self.velocity  = 0.05
 
 
@@ -248,14 +254,26 @@ class motionControlHandler:
             #print s
             """
 
-        # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
-        self.Velocity = self.getVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E)
-        #self.Node = self.getNode([pose[0], pose[1]], self.RRT_V,self.RRT_E)
-        self.previous_next_reg = next_reg
+        if self.do_pathfollowing:
+            # Run algorithm to find a velocity vector (global frame) to take the robot to the next region
+            self.Velocity = self.getVelocity([pose[0], pose[1]], self.RRT_V,self.RRT_E)
+            #self.Node = self.getNode([pose[0], pose[1]], self.RRT_V,self.RRT_E)
 
-        # Pass this desired velocity on to the drive handler
-        self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0], pose[2])
-        #self.drive_handler.setVelocity(self.Node[0,0], self.Node[1,0], pose[2])
+            # Pass this desired velocity on to the drive handler
+            self.drive_handler.setVelocity(self.Velocity[0,0], self.Velocity[1,0], pose[2])
+            #self.drive_handler.setVelocity(self.Node[0,0], self.Node[1,0], pose[2])
+        else:
+            tp = self.getTargetPoint(self.RRT_V,self.RRT_E)
+            self.locomotion_handler.sendTargetPoint(tp)
+        
+        dis_cur = self.getDistanceToTargetPoint([pose[0], pose[1]], self.RRT_V,self.RRT_E)
+
+        if norm(dis_cur) < self.TARGET_THRESHOLD*self.radius:  # If we're near the target point
+            if not self.getTargetPointIndex(self.RRT_E) == shape(self.RRT_V)[1]-1:  # if not last point (?)
+                self.E_current_column += 1   # go to next point
+                
+        self.previous_next_reg = next_reg
+    
         RobotPoly = Polygon.Shapes.Circle(self.radius,(pose[0],pose[1]))
 
         # check if robot is inside the current region
@@ -289,7 +307,20 @@ class motionControlHandler:
         regionPoints = [(pt[0],pt[1]) for pt in pointArray]
         formedPolygon= Polygon.Polygon(regionPoints)
         return formedPolygon
+    
+    def getTargetPointIndex(self, E):
+        return E[1,self.E_current_column]        # index of the current heading point on the tree
 
+    def getTargetPoint(self, V, E):
+        tp_index = self.getTargetPointIndex(E)
+        return vstack((V[1, tp_index], V[2, tp_index]))
+    
+    def getDistanceToTargetPoint(self, p, V, E):
+        pose     = mat(p).T
+        # get distance between current position and the next point
+        dis_cur  = self.getTargetPoint(V, E) - pose
+        return dis_cur
+        
     def getVelocity(self,p, V, E, last=False):
         """
         This function calculates the velocity for the robot with RRT.
@@ -300,19 +331,7 @@ class motionControlHandler:
             last = True, if the current region is the last region
                  = False, if the current region is NOT the last region
         """
-
-        pose     = mat(p).T
-
-        #dis_cur = distance between current position and the next point
-        dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- pose
-
-        heading = E[1,self.E_current_column]        # index of the current heading point on the tree
-        if norm(dis_cur) < 1.5*self.radius:         # go to next point
-            if not heading == shape(V)[1]-1:
-                self.E_current_column = self.E_current_column + 1
-                dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- pose
-            #else:
-            #    dis_cur  = vstack((V[1,E[1,self.E_current_column]],V[2,E[1,self.E_current_column]]))- vstack((V[1,E[0,self.E_current_column]],V[2,E[0,self.E_current_column]]))
+        dis_cur = self.getDistanceToTargetPoint(p, V, E)
 
         Vel = zeros([2,1])
         Vel[0:2,0] = dis_cur/norm(dis_cur)*0.5                    #TUNE THE SPEED LATER

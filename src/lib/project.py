@@ -331,6 +331,7 @@ class Project:
         for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
             if prop in self.enabled_sensors:
                 for code in codes:
+                    print prop, code
                     eval(code, {'self':self,'initial':True})
 
         # Figure out our initially true outputs
