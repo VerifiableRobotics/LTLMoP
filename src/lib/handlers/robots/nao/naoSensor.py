@@ -5,6 +5,10 @@ naoSensors.py - Sensor handler for the Aldebaran Nao
 ====================================================
 """
 
+import threading
+import time
+import logging
+
 class naoSensorHandler:
     def __init__(self, proj, shared_data):
         self.naoInitHandler = shared_data['NAO_INIT_HANDLER']
@@ -18,6 +22,13 @@ class naoSensorHandler:
         self.sttProxy = None
         self.ldmProxy = None
 
+        self.face_detection_thread = None
+        self.face_detection_running = False
+
+    def _stop(self):
+        if self.face_detection_thread:
+            self.face_detection_running = False
+            self.face_detection_thread.join()
     ###################################
     ### Available sensor functions: ###
     ###################################
@@ -129,28 +140,47 @@ class naoSensorHandler:
             return False
 
 
-    def seePerson(self, initial=False):
+    def _faceDetectionWithDelay(self,hold_time):
+        while self.face_detection_running:
+            face_data = self.memProxy.getData("FaceDetected",0)
+            if face_data != []:
+                self.seenFaceRecently = True
+                self.last_detection_time = time.time()
+            if self.seenFaceRecently and (time.time()-self.last_detection_time >= hold_time):
+                self.seenFaceRecently = False
+
+    def seePerson(self, hold_time, initial=False):
         """
         Use Nao's face recognition to detect a person's face in the field of view.
+
+        hold_time (float): amount of time that sensor will stay true after last falling edge (default=1.0,min=0.1,max=5.0)
         """
 
+        # TODO: if hold_time is zero, don't bother making a timer
         if initial:
             ### Initialize face tracking
-
             if self.faceProxy is None:
                 self.faceProxy = self.naoInitHandler.createProxy('ALFaceDetection')
 
-                subs = [x[0] for x in self.faceProxy.getSubscribersInfo()]
-                # Close any previous subscriptions that might have been hanging open
-                if "ltlmop_sensorhandler" in subs:
-                    self.faceProxy.unsubscribe("ltlmop_sensorhandler")
-                self.faceProxy.subscribe("ltlmop_sensorhandler")
+            if self.memProxy is None:
+                self.memProxy = self.naoInitHandler.createProxy('ALMemory')
 
-                return True
+            subs = [x[0] for x in self.faceProxy.getSubscribersInfo()]
+            # Close any previous subscriptions that might have been hanging open
+            if "ltlmop_sensorhandler" in subs:
+                self.faceProxy.unsubscribe("ltlmop_sensorhandler")
+            self.faceProxy.subscribe("ltlmop_sensorhandler")
+
+            self.seenFaceRecently = False
+            self.face_detection_thread = threading.Thread(target=self._faceDetectionWithDelay, args=(hold_time,))
+            self.face_detection_running = True
+            self.face_detection_thread.start()
+
+            return True
+
         else:
-            # Check face detection state
-            face_data = self.memProxy.getData("FaceDetected",0)
-            return (face_data != [])
+            logging.debug("Did I see a face? {}".format(self.seenFaceRecently))
+            return self.seenFaceRecently            
 
     def headTapped(self, initial=False):
         """
