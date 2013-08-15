@@ -23,8 +23,6 @@ import numpy
 import logging
 
 
-
-
 class sensorHandler(object):
     """Report the robot's current sensor status."""
 
@@ -37,7 +35,6 @@ class sensorHandler(object):
         """
 
         self._name = type(self).__name__
-
 
         # Store reference to proj and pose handler
         self._pose_handler = proj.h_instance['pose']
@@ -60,9 +57,6 @@ class sensorHandler(object):
             # out-of-date. If we query a fresh location, we might just add fids
             # that will be deleted at an imminent boundary
             current_region = self._last_region
-
-
-
 
     def get_sensor(self, sensor_name, initial=False):
         """Report whether we currently see a fiducial of the requested type.

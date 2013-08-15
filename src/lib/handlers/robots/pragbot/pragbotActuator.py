@@ -44,11 +44,11 @@ class gumboActuatorHandler(object):
             # Set up a lexically enclosed callback for setting the _done sensor
             def _complete_sweep(goal_status, goal_result):  # pylint: disable=W0613
                 """Set sweep_done sensor when sweep is complete."""
-                if goal_status == True:
+                if goal_status is True:
                     print "{}: Sweep succeeded.".format(self._name)
                     print "Search Complete"
                     self._sensor_handler.set_action_done("sweep", True)
-                elif goal_status == False:
+                elif goal_status is False:
                     print "{}: Sweep cancelled before completion.".format(self._name)
                 else:
                     print "{}: Sweep failed with status {!r}.".format(self._name, goal_status)
@@ -89,7 +89,7 @@ class gumboActuatorHandler(object):
             # Sneakily define a lexically enclosed callback
             def _complete_defuse(goal_status, goal_result):  # pylint: disable=W0613
                 """Wait until bomb is defused and then remove it from the sensors."""
-                if goal_status == True:
+                if goal_status is True:
                     # After the robot reaches the bomb, defuse the
                     # bomb by waiting and then make it go away.
                     print "{}: Defusing bomb...".format(self._name)
@@ -97,14 +97,14 @@ class gumboActuatorHandler(object):
                     print "{}: Bomb defusing complete.".format(self._name)
                     self.executor.postEvent("MESSAGE", "Successfully defused.")
                     self._sensor_handler.disable_item(bomb)
-                elif goal_status == False:
+                elif goal_status is False:
                     print "{}: Defuse cancelled before completion.".format(self._name)
                 else:
                     print "{}: Defuse failed with status {!r}.".format(self._name, goal_status)
 
             self._defuse_client.send_goal(self._defuse_goal, done_cb=_complete_defuse)
             print "{}: Moving to bomb at ({}, {}).".format(self._name, bomb_position.x,
-                                                          bomb_position.y)
+                                                           bomb_position.y)
             return True
         else:
             print "{}: Deactivating defuse.".format(self._name)

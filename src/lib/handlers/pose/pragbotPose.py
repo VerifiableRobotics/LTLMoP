@@ -7,14 +7,12 @@ import numpy
 
 class poseHandler:
     """Report the robot's current pose."""
-
     def __init__(self, proj, shared_data):  # pylint: disable=W0613
         """
         init_node (bool): create separate ROS node (default: False)
         """
 
         self._name = type(self).__name__
-
 
         # Initialize pose and lock
         self._pose = numpy.array([0, 0, 0])
@@ -30,7 +28,7 @@ class poseHandler:
     def getPose(self, cached=True):  # pylint: disable=W0613
         """Return the last reported pose.
 
-        The optional second argument is required by LTLMoP but we 
+        The optional second argument is required by LTLMoP but we
         ignore it.
         """
         with self._pose_lock:

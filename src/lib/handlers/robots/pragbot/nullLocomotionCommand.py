@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
+
 class nullLocomotionCommandHandler:
     def __init__(self, proj, shared_data):
-	pass
-        
+        pass
+
     def sendCommand(self, cmd):
-	pass
-                       
+        pass
