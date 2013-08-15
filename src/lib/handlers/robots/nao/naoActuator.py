@@ -110,7 +110,7 @@ class naoActuatorHandler:
             isAbsolute = True
 
             dx         =  +0.15      # translation axis X (meters)
-            dy         =  +0.2      # translation axis Y (meters)
+            dy         =  +0.03      # translation axis Y (meters)
             dz         =  +0.10      # translation axis Z (meters)
             dwx        =  0.00      # rotation axis X (radians)
             dwy        =  0.00      # rotation axis Y (radians)
@@ -133,7 +133,6 @@ class naoActuatorHandler:
                 time.sleep(0.05)
                 markData = self.memoryProxy.getData("LandmarkDetected")
 
-                print "*****"
                 # Check whether we got a valid output.
                 if(markData and isinstance(markData, list) and len(markData) >= 2):
                     # We detected naomarks !
@@ -188,7 +187,7 @@ class naoActuatorHandler:
                         newZ = z-elbowZ
 
                         dist = math.sqrt(math.pow(newX,2)+math.pow(newY,2)+math.pow(newZ,2))
-                        mul = dist/0.1
+                        mul = dist/0.13
                         newX = newX/mul
                         newY = newY/mul
                         newY = newY/mul
@@ -202,7 +201,7 @@ class naoActuatorHandler:
                         newZ = z-elbowZ
 
                         dist = math.sqrt(math.pow(newX,2)+math.pow(newY,2)+math.pow(newZ,2))
-                        mul = dist/0.2
+                        mul = dist/0.23
                         newX = newX/mul
                         newY = newY/mul
                         newY = newY/mul
