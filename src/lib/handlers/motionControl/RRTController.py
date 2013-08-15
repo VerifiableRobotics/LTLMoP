@@ -133,7 +133,7 @@ class motionControlHandler:
             self.velocity  = 0.05
         elif self.system == 5:
             self.radius = 0.30
-            self.step_size  = 0.6 #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
+            self.step_size  = 1.8 #set the step_size for points be 1/5 of the norm  ORIGINAL = 0.4
             self.timeStep = 10
             self.velocity  = 0.05
 
@@ -752,7 +752,7 @@ class motionControlHandler:
                         else:
                             plt.plot(BoundPolyPoints[:,0],BoundPolyPoints[:,1],string,linewidth=w)
                             plt.plot([BoundPolyPoints[-1,0],BoundPolyPoints[0,0]],[BoundPolyPoints[-1,1],BoundPolyPoints[0,1]],string,linewidth=w)
-                            plt.figure(1).canvas.draw()
+                            #plt.figure(1).canvas.draw()
 
     def data_gen(self):
         #self.ax.cla()
