@@ -15,7 +15,7 @@ decompose: True
 use_region_bit_encoding: True
 
 CurrentConfigName:
-ProjectPR3_new
+ProjectPR3_debug
 
 Customs: # List of custom propositions
 
@@ -35,9 +35,11 @@ r2 = p1
 others = 
 
 Spec: # Specification in structured English
-if you are not sensing door_closed then visit r2 and stay there
+#if you are not sensing door_closed then visit r2 and stay there
 
+visit r1
+visit r2
 #do isOpen if and only if you are not sensing door_closed
 
-if you are sensing door_closed or you were sensing door_closed then stay there
+#if you are sensing door_closed or you were sensing door_closed then stay there
 
