@@ -12,7 +12,7 @@ Return_Letter, 1
 
 CompileOptions:
 convexify: False
-parser: structured
+parser: nltk
 fastslow: False
 decompose: True
 use_region_bit_encoding: True
@@ -40,9 +40,9 @@ Person, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 Classroom = p7
 Mail_Room = p6
-Office_KressGazit = p4
 others = p1
 Office_Campbell = p5
+Office_KressGazit = p4
 
 Spec: # Specification in structured English
 # Init
