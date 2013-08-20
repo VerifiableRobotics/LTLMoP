@@ -18,7 +18,7 @@ decompose: True
 use_region_bit_encoding: True
 
 CurrentConfigName:
-basic
+ProjectPR3_upson
 
 Customs: # List of custom propositions
 Carrying_Letter_KressGazit
@@ -44,13 +44,13 @@ Person, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 Classroom = p7
 Mail_Room = p6
-Office_KressGazit = p4
 others = p1
 Office_Campbell = p5
+Office_KressGazit = p4
 
 Spec: # Specification in structured English
 # Init
-Robot starts in Mail_Room with false
+Robot starts with false
 Environment starts with false
 
 # Groups
