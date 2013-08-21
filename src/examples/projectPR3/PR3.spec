@@ -44,9 +44,9 @@ Person, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 Classroom = p7
 Mail_Room = p6
+Office_KressGazit = p4
 others = p1
 Office_Campbell = p5
-Office_KressGazit = p4
 
 Spec: # Specification in structured English
 # Init
