@@ -44,9 +44,9 @@ Person, 1
 RegionMapping: # Mapping between region names and their decomposed counterparts
 Classroom = p7
 Mail_Room = p6
-Office_KressGazit = p4
 others = p1
 Office_Campbell = p5
+Office_KressGazit = p4
 
 Spec: # Specification in structured English
 # Init
@@ -60,7 +60,7 @@ Group Carry_Letter is Carrying_Letter_KressGazit, Carrying_Letter_Campbell, Carr
 
 # Correspondance mapping
 Carrying_Letter_Campbell, Carrying_Letter_KressGazit, Carrying_Letter_Classroom correspond to Letter_Campbell, Letter_KressGazit, Letter_Classroom
-Carrying_Letter_Campbell, Carrying_Letter_kressGazit, Carrying_Letter_Classroom correspond to Office_Campbell, Office_KressGazit, Classroom
+Carrying_Letter_Campbell, Carrying_Letter_KressGazit, Carrying_Letter_Classroom correspond to Office_Campbell, Office_KressGazit, Classroom
 
 # Set/Reset the indicator for whether or not the robot is carrying a Letter
 Each Carry_Letter is set on Pickup_Letter and the corresponding Letter and reset on Deliver_Letter or Return_Letter
@@ -81,5 +81,5 @@ Do Pickup_Letter if and only if you are in Mail_Room and sensing any Letter
 # Deliver any Letters to their appropriate Offices, if someone is there to take the Letter
 If you are activating any Carry_Letter and activating Delivering then go to the corresponding Office
 Do Knock if and only if you are activating any Carry_Letter and Delivering and you are in any Office and sensing Door_Closed
-Do Deliver_Letter if and only if you were activating any Carry_Letter and were in any Office and were sensing Person
+Do Deliver_Letter if and only if you are activating any Carry_Letter and are in any Office and are sensing Person
 
