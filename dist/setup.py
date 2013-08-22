@@ -41,6 +41,17 @@ def runProgramWithLiveOutput(wd, program, args=None, shell=False):
         p.poll()
 
 if __name__ == "__main__":
+    # Make sure we are not running on a network drive on Windows
+    if os.path.abspath(__file__).startswith(r"\\"):
+        print "ERROR: Sorry, this script cannot be run from a network drive."
+        #             ... (because windows UNC paths seem to break things)
+        print "Please move the LTLMoP folder to a local disk and run this script again."
+        print "(You can then move it back later.)" 
+        print
+        print "Press any key to quit..."
+        raw_input()
+        sys.exit(2)
+
     gitUtils.ensureGitBash(__file__)
 
     # Check python version
