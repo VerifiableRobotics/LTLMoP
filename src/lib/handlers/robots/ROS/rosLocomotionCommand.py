@@ -33,6 +33,8 @@ class locomotionCommandHandler:
 		twist=Twist()
 		#Positive x is forward on robots in Gazebo
 		twist.linear.x=cmd[0]*4
+		#Positive z is upward on robots in Gazebo
+		twist.linear.z=cmd[2]*4
 		#Angluar z is yaw or rotation in the xy plane
 		twist.angular.z=cmd[1]*1.5
 		try:

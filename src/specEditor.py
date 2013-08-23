@@ -11,8 +11,10 @@
 
 import re, sys, os, subprocess
 import wx, wx.richtext, wx.stc
+import numpy
 
 sys.path.append("lib")
+sys.path.append(os.path.join("lib","cores"))
 
 from regions import *
 import fileMethods
@@ -20,13 +22,143 @@ import project
 import fsa
 import mapRenderer
 from specCompiler import SpecCompiler
+from parseEnglishToLTL import writeSpec
+
 from copy import deepcopy
 import threading, time
+
 
 ######################### WARNING! ############################
 #         DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.         #
 #   The .wxg file is located in the etc/wxglade/ directory.   #
 ###############################################################
+
+class AnalysisResultsDialog(wx.Dialog):
+    def __init__(self, parent, *args, **kwds):
+        # begin wxGlade: AnalysisResultsDialog.__init__
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.THICK_FRAME
+        wx.Dialog.__init__(self, *args, **kwds)
+        self.label_3 = wx.StaticText(self, wx.ID_ANY, "Analysis Output:")
+        self.text_ctrl_summary = wx.richtext.RichTextCtrl(self, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.button_refine = wx.Button(self, wx.ID_ANY, "Refine analysis")
+        self.label_traceback = wx.StaticText(self, wx.ID_ANY, "SLURP Traceback:")
+        self.tree_ctrl_traceback = wx.TreeCtrl(self, wx.ID_ANY, style=wx.TR_HAS_BUTTONS | wx.TR_NO_LINES | wx.TR_FULL_ROW_HIGHLIGHT | wx.TR_HIDE_ROOT | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
+        self.button_1 = wx.Button(self, wx.ID_CLOSE, "")
+
+        self.__set_properties()
+        self.__do_layout()
+
+        self.Bind(wx.EVT_BUTTON, self.onClickRefineAnalysis, self.button_refine)
+        self.Bind(wx.EVT_BUTTON, self.onButtonClose, self.button_1)
+        # end wxGlade
+
+        self.parent = parent
+        self.statements = {}
+        self.statements["env"] = []
+        self.statements["sys"] = []
+
+    def __set_properties(self):
+        # begin wxGlade: AnalysisResultsDialog.__set_properties
+        self.SetTitle("Analysis Results")
+        self.SetSize((562, 602))
+        self.label_traceback.Hide()
+        self.tree_ctrl_traceback.Hide()
+        # end wxGlade
+
+    def __do_layout(self):
+        # begin wxGlade: AnalysisResultsDialog.__do_layout
+        sizer_11 = wx.BoxSizer(wx.VERTICAL)
+        sizer_16 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_11.Add(self.label_3, 0, wx.ALL, 5)
+        sizer_11.Add(self.text_ctrl_summary, 1, wx.ALL | wx.EXPAND, 5)
+        sizer_11.Add(self.button_refine, 0, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_11.Add(self.label_traceback, 0, wx.ALL, 5)
+        sizer_11.Add(self.tree_ctrl_traceback, 3, wx.ALL | wx.EXPAND, 5)
+        sizer_16.Add((20, 20), 1, wx.EXPAND, 0)
+        sizer_16.Add(self.button_1, 0, wx.ALL | wx.EXPAND, 5)
+        sizer_11.Add(sizer_16, 0, wx.EXPAND, 0)
+        self.SetSizer(sizer_11)
+        self.Layout()
+        # end wxGlade
+
+    def populateTree(self, gentree):
+        # Create the root
+        self.statements["env"] = []
+        self.statements["sys"] = []
+        self.tree_ctrl_traceback.DeleteAllItems()
+        root_node = self.tree_ctrl_traceback.AddRoot("Root")
+
+        # Build the traceback tree
+        for user_input, command_tree in gentree.items():
+            # Add a node for each input line
+            input_node = self.tree_ctrl_traceback.AppendItem(root_node, user_input)
+            # Then fill in the tree for each command it generates
+            for command, spec_chunks in command_tree.items():
+                # Add a node fot the  command
+                command_node = self.tree_ctrl_traceback.AppendItem(input_node, command)
+                # Fill in the explanation and lines for each list of lines created
+                for spec_chunk in spec_chunks:
+                    explanation_node = \
+                        self.tree_ctrl_traceback.AppendItem(command_node, spec_chunk.explanation)
+                    for stmt, highlight in zip(spec_chunk.lines, spec_chunk.highlights):
+                        stmt_node = self.tree_ctrl_traceback.AppendItem(explanation_node, stmt)
+                        if spec_chunk.issys():
+                            self.statements["sys"].append((stmt, stmt_node))
+                        else:
+                            self.statements["env"].append((stmt, stmt_node))
+
+                        if highlight:
+                            if "[]<>" in stmt:
+                                # Goals colored differently than other statements
+                                self.tree_ctrl_traceback.SetItemBackgroundColour(stmt_node, "#FA58D0") # pale pink
+                            else:
+                                self.tree_ctrl_traceback.SetItemBackgroundColour(stmt_node, "#FE9A2E") # pale orange
+                            # Expand the relevant nodes
+                            self.tree_ctrl_traceback.Expand(input_node)
+                            self.tree_ctrl_traceback.Expand(command_node)
+                            self.tree_ctrl_traceback.Expand(explanation_node)
+                            self.tree_ctrl_traceback.Expand(stmt_node)
+
+        self.Layout()
+
+
+    def markFragments(self, agent, section, jx=None):
+        jx_this = -1 # debug output is 0-indexed
+
+        for f,obj in self.statements[agent]:
+            if "[]<>" in f: 
+                ftype = "goals"
+                jx_this += 1
+            elif "[]" in f:
+                ftype = "trans"
+            else:
+                ftype = "init"
+
+            if ftype == section:
+                if section == "goals" and jx_this == jx:
+                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FA58D0") # pale pink
+                elif section != "goals":
+                    self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FE9A2E") # pale orange
+                self.tree_ctrl_traceback.Expand(obj)
+                
+    def appendLog(self, text, color="BLACK"):
+        self.text_ctrl_summary.BeginTextColour(color)
+        self.text_ctrl_summary.WriteText(text)
+        self.text_ctrl_summary.EndTextColour()
+        self.text_ctrl_summary.ShowPosition(self.text_ctrl_summary.GetLastPosition())
+        wx.Yield() # Ensure update
+                
+    def onButtonClose(self, event): # wxGlade: AnalysisResultsDialog.<event_handler>
+        self.Hide()
+        event.Skip()
+
+    def onClickRefineAnalysis(self, event):  # wxGlade: AnalysisResultsDialog.<event_handler>
+        self.parent.refineAnalysis()
+        event.Skip()
+
+# end of class AnalysisResultsDialog
+
+
 
 class AsynchronousProcessThread(threading.Thread):
     def __init__(self, cmd, callback, logFunction, *args, **kwds):
@@ -68,7 +200,10 @@ class AsynchronousProcessThread(threading.Thread):
 
         # Start the process
         try:
-            self.process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
+            if self.logFunction is not None:
+                self.process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False, bufsize=-1)
+            else:
+                self.process = subprocess.Popen(self.cmd, bufsize=-1)
         except err_types as (errno, strerror):
             print "ERROR: " + strerror
             self.startComplete.set()
@@ -83,13 +218,10 @@ class AsynchronousProcessThread(threading.Thread):
             if not self.running:
                 return
 
-            output = self.process.stdout.readline() # Blocking :(
-
             # Output to either a RichTextCtrl or the console
             if self.logFunction is not None:
+                output = self.process.stdout.readline() # Blocking :(
                 wx.CallAfter(self.logFunction, "\t"+output, "BLACK")
-            else:
-                print output,
 
             # Check the status of the process
             self.process.poll()
@@ -111,7 +243,7 @@ class MapDialog(wx.Dialog):
         # begin wxGlade: MapDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
-        self.panel_2 = wx.ScrolledWindow(self, -1, style=wx.TAB_TRAVERSAL)
+        self.panel_2 = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
 
         self.__set_properties()
         self.__do_layout()
@@ -162,13 +294,12 @@ class SpecEditorFrame(wx.Frame):
     The main application window!
     """
 
-    # TODO: syntax highlighting with the StyledTextCtrl?
 
     def __init__(self, *args, **kwds):
         # begin wxGlade: SpecEditorFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-
+        
         # Menu Bar
         self.frame_1_menubar = wx.MenuBar()
         global MENU_IMPORT_REGION; MENU_IMPORT_REGION = wx.NewId()
@@ -176,6 +307,11 @@ class SpecEditorFrame(wx.Frame):
         global MENU_COMPILECONFIG; MENU_COMPILECONFIG = wx.NewId()
         global MENU_CONVEXIFY; MENU_CONVEXIFY = wx.NewId()
         global MENU_FASTSLOW; MENU_FASTSLOW = wx.NewId()
+        global MENU_BITVECTOR; MENU_BITVECTOR = wx.NewId()
+        global MENU_PARSERMODE; MENU_PARSERMODE = wx.NewId()
+        global MENU_PARSERMODE_SLURP; MENU_PARSERMODE_SLURP = wx.NewId()
+        global MENU_PARSERMODE_STRUCTURED; MENU_PARSERMODE_STRUCTURED = wx.NewId()
+        global MENU_PARSERMODE_LTL; MENU_PARSERMODE_LTL = wx.NewId()
         global MENU_SIMULATE; MENU_SIMULATE = wx.NewId()
         global MENU_SIMCONFIG; MENU_SIMCONFIG = wx.NewId()
         global MENU_ANALYZE; MENU_ANALYZE = wx.NewId()
@@ -203,6 +339,12 @@ class SpecEditorFrame(wx.Frame):
         wxglade_tmp_menu_sub = wx.Menu()
         wxglade_tmp_menu_sub.Append(MENU_CONVEXIFY, "Decompose workspace into convex regions", "", wx.ITEM_CHECK)
         wxglade_tmp_menu_sub.Append(MENU_FASTSLOW, "Enable \"fast-slow\" synthesis", "", wx.ITEM_CHECK)
+        wxglade_tmp_menu_sub.Append(MENU_BITVECTOR, "Use bit-vector region encoding", "", wx.ITEM_CHECK)
+        wxglade_tmp_menu_sub_sub = wx.Menu()
+        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_SLURP, "SLURP (NL)", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_STRUCTURED, "Structured English", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_LTL, "LTL", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub.AppendMenu(MENU_PARSERMODE, "Parser mode", wxglade_tmp_menu_sub_sub, "")
         wxglade_tmp_menu.AppendMenu(MENU_COMPILECONFIG, "Compilation options", wxglade_tmp_menu_sub, "")
         wxglade_tmp_menu.AppendSeparator()
         wxglade_tmp_menu.Append(MENU_SIMULATE, "&Simulate\tF6", "", wx.ITEM_NORMAL)
@@ -218,36 +360,37 @@ class SpecEditorFrame(wx.Frame):
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Help")
         self.SetMenuBar(self.frame_1_menubar)
         # Menu Bar end
-        self.window_1 = wx.SplitterWindow(self, -1, style=wx.SP_3D | wx.SP_BORDER | wx.SP_LIVE_UPDATE)
-        self.window_1_pane_1 = wx.Panel(self.window_1, -1)
-        self.panel_1 = wx.ScrolledWindow(self.window_1_pane_1, -1, style=wx.TAB_TRAVERSAL)
-        self.label_1 = wx.StaticText(self.panel_1, -1, "Regions:")
-        self.list_box_regions = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
-        self.button_map = wx.Button(self.panel_1, -1, "Select from Map...")
-        self.button_edit_regions = wx.Button(self.panel_1, -1, "Edit Regions...")
-        self.label_1_copy = wx.StaticText(self.panel_1, -1, "Sensors:")
-        self.list_box_sensors = wx.CheckListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
+        self.window_1 = wx.SplitterWindow(self, wx.ID_ANY, style=wx.SP_3D | wx.SP_BORDER | wx.SP_LIVE_UPDATE)
+        self.window_1_pane_1 = wx.Panel(self.window_1, wx.ID_ANY)
+        self.panel_1 = wx.ScrolledWindow(self.window_1_pane_1, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
+        self.label_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Regions:")
+        self.list_box_regions = wx.ListBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.LB_SINGLE)
+        self.button_map = wx.Button(self.panel_1, wx.ID_ANY, "Select from Map...")
+        self.button_edit_regions = wx.Button(self.panel_1, wx.ID_ANY, "Edit Regions...")
+        self.label_1_copy = wx.StaticText(self.panel_1, wx.ID_ANY, "Sensors:")
+        self.list_box_sensors = wx.CheckListBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.LB_SINGLE)
         self.button_sensor_add = wx.Button(self.panel_1, wx.ID_ADD, "")
         self.button_sensor_remove = wx.Button(self.panel_1, wx.ID_REMOVE, "")
-        self.label_1_copy_1 = wx.StaticText(self.panel_1, -1, "Actions:")
-        self.list_box_actions = wx.CheckListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
+        self.label_1_copy_1 = wx.StaticText(self.panel_1, wx.ID_ANY, "Actions:")
+        self.list_box_actions = wx.CheckListBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.LB_SINGLE)
         self.button_actuator_add = wx.Button(self.panel_1, wx.ID_ADD, "")
         self.button_actuator_remove = wx.Button(self.panel_1, wx.ID_REMOVE, "")
-        self.label_1_copy_2 = wx.StaticText(self.panel_1, -1, "Custom Propositions:")
-        self.list_box_customs = wx.ListBox(self.panel_1, -1, choices=[], style=wx.LB_SINGLE)
+        self.label_1_copy_2 = wx.StaticText(self.panel_1, wx.ID_ANY, "Custom Propositions:")
+        self.list_box_customs = wx.ListBox(self.panel_1, wx.ID_ANY, choices=[], style=wx.LB_SINGLE)
         self.button_custom_add = wx.Button(self.panel_1, wx.ID_ADD, "")
         self.button_custom_remove = wx.Button(self.panel_1, wx.ID_REMOVE, "")
-        self.window_1_pane_2 = wx.Panel(self.window_1, -1)
-        self.notebook_1 = wx.Notebook(self.window_1_pane_2, -1, style=0)
-        self.notebook_1_pane_1 = wx.Panel(self.notebook_1, -1)
-        self.text_ctrl_log = wx.richtext.RichTextCtrl(self.notebook_1_pane_1, -1, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
-        self.notebook_1_pane_2 = wx.Panel(self.notebook_1, -1)
-        self.text_ctrl_LTL = wx.TextCtrl(self.notebook_1_pane_2, -1, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
-        self.notebook_1_pane_3 = wx.Panel(self.notebook_1, -1)
-        self.label_locphrases = wx.StaticText(self.notebook_1_pane_3, -1, "Active locative phrases:")
-        self.list_box_locphrases = wx.ListBox(self.notebook_1_pane_3, -1, choices=[], style=wx.LB_ALWAYS_SB)
-        self.checkbox_regionlabel = wx.CheckBox(self.notebook_1_pane_3, -1, "Show region names")
-        self.panel_locmap = wx.Panel(self.notebook_1_pane_3, -1, style=wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE)
+        self.window_1_pane_2 = wx.Panel(self.window_1, wx.ID_ANY)
+        self.notebook_1 = wx.Notebook(self.window_1_pane_2, wx.ID_ANY, style=0)
+        self.notebook_1_pane_1 = wx.Panel(self.notebook_1, wx.ID_ANY)
+        self.text_ctrl_log = wx.richtext.RichTextCtrl(self.notebook_1_pane_1, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.notebook_1_pane_2 = wx.Panel(self.notebook_1, wx.ID_ANY)
+        self.text_ctrl_LTL = wx.TextCtrl(self.notebook_1_pane_2, wx.ID_ANY, "", style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.notebook_1_pane_3 = wx.Panel(self.notebook_1, wx.ID_ANY)
+        self.label_locphrases = wx.StaticText(self.notebook_1_pane_3, wx.ID_ANY, "Active locative phrases:")
+        self.list_box_locphrases = wx.ListBox(self.notebook_1_pane_3, wx.ID_ANY, choices=[], style=wx.LB_ALWAYS_SB)
+        self.checkbox_regionlabel = wx.CheckBox(self.notebook_1_pane_3, wx.ID_ANY, "Show region names")
+        self.checkbox_regionlabelbits = wx.CheckBox(self.notebook_1_pane_3, wx.ID_ANY, "Include bit-vector representations")
+        self.panel_locmap = wx.Panel(self.notebook_1_pane_3, wx.ID_ANY, style=wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE)
 
         self.__set_properties()
         self.__do_layout()
@@ -267,6 +410,10 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuCompile, id=MENU_COMPILE)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_CONVEXIFY)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_FASTSLOW)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_BITVECTOR)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_SLURP)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_STRUCTURED)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_LTL)
         self.Bind(wx.EVT_MENU, self.onMenuSimulate, id=MENU_SIMULATE)
         self.Bind(wx.EVT_MENU, self.onMenuConfigSim, id=MENU_SIMCONFIG)
         self.Bind(wx.EVT_MENU, self.onMenuAnalyze, id=MENU_ANALYZE)
@@ -286,7 +433,8 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onPropAdd, self.button_custom_add)
         self.Bind(wx.EVT_BUTTON, self.onPropRemove, self.button_custom_remove)
         self.Bind(wx.EVT_LISTBOX, self.onLocPhraseSelect, self.list_box_locphrases)
-        self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelToggle, self.checkbox_regionlabel)
+        self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelStyleChange, self.checkbox_regionlabel)
+        self.Bind(wx.EVT_CHECKBOX, self.onRegionLabelStyleChange, self.checkbox_regionlabelbits)
         # end wxGlade
 
         # Listen for checkbox toggles
@@ -318,6 +466,10 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_STRING, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Colour(200, 200, 0))
 
+        self.text_ctrl_spec.SetMouseDwellTime(500)
+        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLSTART, self.onMouseDwellStart)
+        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLEND, self.onMouseDwellEnd)
+
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
 
         #self.text_ctrl_spec.SetEOLMode(wx.stc.STC_EOL_LF)
@@ -345,9 +497,27 @@ class SpecEditorFrame(wx.Frame):
         #if sys.argv[-1] != "-dontbreak":
         #    os.system("taskkill /im python.exe /f & " + " ".join(sys.argv) + " -dontbreak")
 
+    def onMouseDwellStart(self, event):
+        pos = event.GetPosition()
+        line = self.text_ctrl_spec.LineFromPosition(pos) # 0-indexed
+
+        if pos == -1:
+            return
+        
+        if self.response is not None:
+            self.text_ctrl_spec.CallTipShow( pos, "Response: {}".format(self.response[line]))
+
+    def onMouseDwellEnd(self, event):
+        if self.text_ctrl_spec.CallTipActive():
+            self.text_ctrl_spec.CallTipCancel()
+
     def initializeNewSpec(self):
         # Initialize values
         self.mapDialog = None
+        self.analysisDialog = None
+        self.tracebackTree = None
+        self.to_highlight = None
+        self.response = None
         self.proj = project.Project()
         self.decomposedRFI = None
 
@@ -368,7 +538,14 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
         self.text_ctrl_log.Clear()
         self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
+        self.frame_1_menubar.Check(MENU_BITVECTOR, self.proj.compile_options["use_region_bit_encoding"])
         self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
+        if self.proj.compile_options["parser"] == "slurp":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
+        elif self.proj.compile_options["parser"] == "structured":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_STRUCTURED, True)
+        elif self.proj.compile_options["parser"] == "ltl":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_LTL, True)
 
         self.SetTitle("Specification Editor - Untitled")
 
@@ -411,7 +588,7 @@ class SpecEditorFrame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
         self.SetTitle("Specification Editor - Untitled")
-        self.SetSize((900, 700))
+        self.SetSize((929, 700))
         self.button_map.Enable(False)
         self.list_box_sensors.SetMinSize((123, 75))
         self.button_sensor_remove.Enable(False)
@@ -474,6 +651,7 @@ class SpecEditorFrame(wx.Frame):
         sizer_15.Add(self.list_box_locphrases, 1, wx.EXPAND, 0)
         sizer_15.Add((20, 20), 0, 0, 0)
         sizer_15.Add(self.checkbox_regionlabel, 0, wx.EXPAND, 0)
+        sizer_15.Add(self.checkbox_regionlabelbits, 0, wx.LEFT | wx.EXPAND, 20)
         sizer_15.Add((20, 20), 0, 0, 0)
         sizer_14.Add(sizer_15, 1, wx.EXPAND, 0)
         sizer_14.Add((5, 20), 0, 0, 0)
@@ -484,7 +662,7 @@ class SpecEditorFrame(wx.Frame):
         self.notebook_1.AddPage(self.notebook_1_pane_3, "Workspace Decomposition")
         sizer_2.Add(self.notebook_1, 1, wx.EXPAND, 0)
         self.window_1_pane_2.SetSizer(sizer_2)
-        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 453)
+        self.window_1.SplitHorizontally(self.window_1_pane_1, self.window_1_pane_2, 425)
         sizer_1.Add(self.window_1, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         self.Layout()
@@ -494,6 +672,8 @@ class SpecEditorFrame(wx.Frame):
         # Make it so that the log window doesn't change height when the window is resized
         # NOTE: May not work on older versions of wxWidgets
         self.window_1.SetSashGravity(1.0)
+
+        self.window_1.SetMinimumPaneSize(100)
 
     def drawLocMap(self, event):
         """ Respond to a request to redraw the contents of the decomposed map
@@ -508,7 +688,7 @@ class SpecEditorFrame(wx.Frame):
         # TODO: Advise the user that the decomposed map may be inaccurate if
         #  mtime(spec)>mtime(aut) or spectext is dirty
 
-        mapRenderer.drawMap(self.panel_locmap, self.decomposedRFI, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList)
+        mapRenderer.drawMap(self.panel_locmap, self.decomposedRFI, scaleToFit=True, drawLabels=self.checkbox_regionlabel.GetValue(), highlightList=highlightList, showBits=self.checkbox_regionlabelbits.GetValue())
 
     def onPropositionDblClick(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -545,6 +725,9 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_PARSEERROR)
 
+        # Stop showing response tooltips, too
+        self.response = None
+
         self.proj.specText = self.text_ctrl_spec.GetText()
 
         self.dirty = True
@@ -572,7 +755,7 @@ class SpecEditorFrame(wx.Frame):
 
         # Try loading the file
         if not rfi.readFile(filename):
-            wx.MessageBox("Cannot open region file %s" % (fileName), "Error",
+            wx.MessageBox("Cannot open region file %s" % (filename), "Error",
                         style = wx.OK | wx.ICON_ERROR)
             self.rfi = None
             return
@@ -689,6 +872,10 @@ class SpecEditorFrame(wx.Frame):
     def openFile(self, filename):
         proj = project.Project()
 
+        # If necessary, try appending ".spec"
+        if not os.path.exists(filename):
+            filename = os.path.splitext(filename)[0] + ".spec"
+
         if not proj.loadProject(filename):
             wx.MessageBox("Cannot open specification file %s" % (filename), "Error",
                         style = wx.OK | wx.ICON_ERROR)
@@ -748,8 +935,16 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.EmptyUndoBuffer()
 
         # Set compilation option checkboxes
+        self.frame_1_menubar.Check(MENU_BITVECTOR, self.proj.compile_options["use_region_bit_encoding"])
         self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
         self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
+
+        if self.proj.compile_options["parser"] == "slurp":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
+        elif self.proj.compile_options["parser"] == "structured":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_STRUCTURED, True)
+        elif self.proj.compile_options["parser"] == "ltl":
+            self.frame_1_menubar.Check(MENU_PARSERMODE_LTL, True)
     
         self.dirty = False
 
@@ -848,7 +1043,7 @@ class SpecEditorFrame(wx.Frame):
             return
 
         # Check that there's a boundary region
-        if self.proj.rfi.indexOfRegionWithName("boundary") < 0:
+        if self.proj.compile_options["decompose"] and self.proj.rfi.indexOfRegionWithName("boundary") < 0:
             wx.MessageBox("Please define a boundary region before compiling.\n(Just add a region named 'boundary' in RegionEditor.)", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -868,29 +1063,43 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = redir
         sys.stderr = redir
 
-        self.appendLog("Parsing locative prepositions...\n", "BLUE")
+        self.appendLog("Decomposing map into convex regions...\n", "BLUE")
 
         compiler._decompose()
         self.proj = compiler.proj
         self.decomposedRFI = compiler.parser.proj.rfi
 
         # Update workspace decomposition listbox
-        self.list_box_locphrases.Set(self.proj.regionMapping.keys())
-        self.list_box_locphrases.Select(0)
+        if self.proj.regionMapping is not None:
+            self.list_box_locphrases.Set(self.proj.regionMapping.keys())
+            self.list_box_locphrases.Select(0)
 
-        self.appendLog("Creating SMV file...\n", "BLUE")
+        self.appendLog("Creating LTL...\n", "BLUE")
 
-        compiler._writeSMVFile()
+        spec, self.tracebackTree, self.response = compiler._writeLTLFile()
+        
+        # Add any auto-generated propositions to the list
+        # TODO: what about removing old ones?
+        for p in compiler.proj.internal_props:
+            if p not in self.list_box_customs.GetItems():
+                self.list_box_customs.AppendAndEnsureVisible(p)
 
-        self.appendLog("Creating LTL file...\n", "BLUE")
+        # Add any auto-generated sensor propositions to the list
+        for s in compiler.proj.enabled_sensors:
+            if s not in self.list_box_sensors.GetItems():
+                self.list_box_sensors.Insert(s,0)
+                self.list_box_sensors.Check(0)
 
-        self.traceback = compiler._writeLTLFile()
 
-        if self.traceback is None:
+        if self.tracebackTree is None:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             self.appendLog("ERROR: Aborting compilation due to syntax error.\n", "RED")
             return
+
+        self.appendLog("Creating SMV file...\n", "BLUE")
+
+        compiler._writeSMVFile()
 
         # Load in LTL file to the LTL tab
         if os.path.exists(self.proj.getFilenamePrefix()+".ltl"):
@@ -906,7 +1115,12 @@ class SpecEditorFrame(wx.Frame):
 
         print "\n"
 
-        self.appendLog("\t"+output.replace("\n", "\n\t"))
+        badInit = ""
+        for line in output.split('\n'):
+            if "For example" in line:
+                badInit = line.split('\t')[-1].strip()
+                
+        self.appendLog("\t"+output.replace("\n", "\n\t"))        
 
         if self.proj.compile_options['fastslow']:
             if realizableFS:
@@ -921,10 +1135,15 @@ class SpecEditorFrame(wx.Frame):
             else:
                 self.appendLog("ERROR: Specification was unsynthesizable (unrealizable/unsatisfiable) for instantaneous actions.\n", "RED")
 
+        # Check for trivial aut
+        if realizable or realizableFS:
+            if not compiler._autIsNonTrivial():
+                self.appendLog("\tWARNING: Automaton is trivial.  Further analysis is recommended.\n", "RED")
+
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-        return compiler
+        return compiler, badInit
 
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_log.BeginTextColour(color)
@@ -937,6 +1156,11 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuSimulate(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """ Run the simulation with current experiment configuration. """
+
+        if not self.proj.compile_options["use_region_bit_encoding"]:
+            wx.MessageBox("Execution requires bit-vector region encoding.\nPlease enable it and recompile.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
 
         # TODO: or check mtime
         if self.dirty:
@@ -1077,6 +1301,14 @@ class SpecEditorFrame(wx.Frame):
 
         aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
         aut.writeDot(self.proj.getFilenamePrefix()+".dot")
+        
+        
+    def _exportSMVFile(self):              
+        aut.writeSMV(self.proj.getFilenamePrefix()+"MC.smv")
+        
+        
+
+        
 
     def onMenuViewAut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         if not os.path.isfile(self.proj.getFilenamePrefix()+".aut"):
@@ -1123,57 +1355,171 @@ class SpecEditorFrame(wx.Frame):
                       style = wx.OK | wx.ICON_INFORMATION)
         #event.Skip()
 
-    def onRegionLabelToggle(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        self.panel_locmap.Refresh()
-        event.Skip()
-
     def onLocPhraseSelect(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         self.panel_locmap.Refresh()
         event.Skip()
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         #TODO: check to see if we need to recompile
-        compiler = self.onMenuCompile(event, with_safety_aut=False)
+        self.compiler, self.badInit = self.onMenuCompile(event, with_safety_aut=False)
+
+        # instantiate if necessary
+        if self.analysisDialog is None:
+            self.analysisDialog = AnalysisResultsDialog(self, self)
+
+        # Clear dialog to make way for new info
+        self.analysisDialog.text_ctrl_summary.Clear()
+
+        # Populate tree based on traceback data
+
+        if self.proj.compile_options["parser"] == "slurp":
+            self.analysisDialog.label_traceback.Show()
+            self.analysisDialog.tree_ctrl_traceback.Show()
+            if self.tracebackTree is not None:
+                self.analysisDialog.populateTree(self.tracebackTree) 
+
+            self.analysisDialog.tree_ctrl_traceback.ExpandAll()
+        else:
+            self.analysisDialog.label_traceback.Hide()
+            self.analysisDialog.tree_ctrl_traceback.Hide()
+        
+        self.appendLog("Running analysis...\n","BLUE")
 
         # Redirect all output to the log
-        redir = RedirectText(self,self.text_ctrl_log)
-
+        redir = RedirectText(self, self.text_ctrl_log)
         sys.stdout = redir
         sys.stderr = redir
-
-        self.appendLog("Running analysis...\n", "BLUE")
-
-        (realizable, nonTrivial, to_highlight, output) = compiler._analyze()
-
-        self.appendLog(output, "BLACK")
-
-        if realizable:
-            if nonTrivial:
-                self.appendLog("Synthesized automaton is non-trivial.\n", "GREEN")
-            else:
-                self.appendLog("Synthesized automaton is trivial.\n", "RED")
-
-        for h_item in to_highlight:
-            tb_key = h_item[0].title() + h_item[1].title()
-
-            if h_item[1] == "goals":
-                self.text_ctrl_spec.MarkerAdd(self.traceback[tb_key][h_item[2]]-1, MARKER_LIVE)           
-            else:
-                for l in self.traceback[tb_key]:
-                    if h_item[1] == "init":
-                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
-                    elif h_item[1] == "trans":
-                        self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
-                    
-
+        (realizable, self.unsat, nonTrivial, self.to_highlight, output) = self.compiler._analyze()
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+
+        # Remove lines about garbage collection from the output and remove extraenous lines
+        output_lines = [line for line in output.split('\n') if line.strip() and
+                        "Garbage collection" not in line and
+                        "Resizing node table" not in line]
+
+        if realizable:
+            # Strip trailing \n from output so it doesn't scroll past it
+            self.analysisDialog.appendLog('\n'.join(output_lines), "BLACK")
+            if nonTrivial:
+                self.analysisDialog.appendLog("\nSynthesized automaton is non-trivial.", "BLACK")
+            else:
+                self.analysisDialog.appendLog("\nSynthesized automaton is trivial.", "RED")
+        else:
+            self.analysisDialog.appendLog(output.rstrip(), "RED")
+        self.analysisDialog.appendLog('\n')
+                
+        #highlight guilty sentences
+        #special treatment for goals: we already know which one to highlight                
+        if self.proj.compile_options["parser"] == "structured":
+            for h_item in self.to_highlight:
+                tb_key = h_item[0].title() + h_item[1].title()
+                if h_item[1] == "goals":
+                    self.text_ctrl_spec.MarkerAdd(self.tracebackTree[tb_key][h_item[2]]-1, MARKER_LIVE)
+        elif self.proj.compile_options["parser"] == "slurp":
+            for frag in self.to_highlight:
+                self.analysisDialog.markFragments(*frag)
+        else:
+            print "Fragment marking not yet supported for this parser type"
+
+        self.analysisDialog.Show()
+
+        self.appendLog("Initial analysis complete.\n\n", "BLUE")
+
+        if (not realizable or not nonTrivial) and self.unsat:
+            self.appendLog("Further analysis is possible.\n", "BLUE")
+            self.analysisDialog.button_refine.Enable(True)
+            self.analysisDialog.button_refine.SetLabel("Refine analysis...")
+            self.analysisDialog.Layout()
+        else:
+            self.appendLog("No further analysis needed.\n", "BLUE")
+            self.analysisDialog.button_refine.Enable(False)
+            self.analysisDialog.button_refine.SetLabel("No further analysis available.")
+            self.analysisDialog.Layout()
+                
+    def refineAnalysis(self): 
+        self.appendLog("Please wait; refining analysis...\n", "BLUE")
+    
+        guilty = self.compiler._coreFinding(self.to_highlight, self.unsat, self.badInit)
+    
+        self.highlightCores(guilty, self.compiler)
+
+        self.appendLog("Final analysis complete.\n", "BLUE")
+
+        self.analysisDialog.button_refine.Enable(False)
+        self.analysisDialog.button_refine.SetLabel("No further analysis available.")
+        self.analysisDialog.Layout()
+
+    def highlightCores(self, guilty, compiler):
+        if self.proj.compile_options["parser"] == "structured":
+            print guilty
+            if guilty is not None:
+                #look up the line number corresponding to each guilty LTL formula
+                for k,v in compiler.LTL2SpecLineNumber.iteritems():
+                    newCs = k.replace("\t","\n").split('\n')
+                    if not set(guilty).isdisjoint(newCs):
+                        #for now, just highlight with the colour originally used for initial conditions
+                        self.highlight(v, 'init')
+        else:
+            guilty_clean = []
+            for ltl_frag in guilty:
+                canonical_ltl_frag = ltl_frag.lstrip().rstrip("\n\t &")
+                try:
+                    guilty_clean.append(compiler.reversemapping[canonical_ltl_frag])
+                except KeyError:
+                    if "[]" not in canonical_ltl_frag:
+                        # Special case: we were given an initial condition that wasn't explicitly created by the user
+                        # This means it came from the GROne code, so let's just highlight all initial conditions
+                        # TODO: we ought to be able to narrow this down more
+                        guilty_clean.extend([v for k,v in compiler.reversemapping.iteritems() if "[]" not in v])
+                    else:
+                        print "WARNING: LTL fragment {!r} not found in spec->LTL mapping".format(canonical_ltl_frag)
+                    
+            print guilty_clean
+            # Add SLURP to path for import
+            p = os.path.dirname(os.path.abspath(__file__))
+            sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
+            from ltlbroom.specgeneration import explain_conflict
+            msg, highlight_tree = explain_conflict(guilty_clean, self.tracebackTree)
+            # Reprocess the traceback tree
+            self.analysisDialog.populateTree(highlight_tree)
+            self.analysisDialog.appendLog(msg)
+    
+    def highlight(self, l, type):
+        if type == "init":
+           self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
+        elif type == "trans":
+           self.text_ctrl_spec.MarkerAdd(l-1, MARKER_SAFE)
+
 
     def onMenuMopsy(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Opens the counterstrategy visualization interfacs ("Mopsy")
 
+        if not self.proj.compile_options["use_region_bit_encoding"]:
+            wx.MessageBox("Mopsy currently requires bit-vector region encoding.\nPlease enable it and recompile.", "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
         # TODO: check for failed compilation before allowing this
-        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec"])
+        if self.to_highlight is None:
+            wx.MessageBox("Please run analysis before trying to run Mopsy.", "Analysis required",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+        desired_jx = None
+        for frag in self.to_highlight:
+            if frag[0] == 'sys' and frag[1] == 'goals':
+                desired_jx = frag[2]
+                break
+
+        if desired_jx is None: 
+            wx.MessageBox("No goal was found to be involved in unrealizability.\nThere is no need to run Mopsy.", "Mopsy irrelevant",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+
+        print "Calling mopsy with desired_jx={}...".format(desired_jx)
+
+        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec", str(desired_jx)])
 
     def onPropAdd(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -1290,7 +1636,23 @@ class SpecEditorFrame(wx.Frame):
     def onMenuSetCompileOptions(self, event):  # wxGlade: SpecEditorFrame.<event_handler>
         self.proj.compile_options["convexify"] = self.frame_1_menubar.IsChecked(MENU_CONVEXIFY)
         self.proj.compile_options["fastslow"] = self.frame_1_menubar.IsChecked(MENU_FASTSLOW)
+        self.proj.compile_options["use_region_bit_encoding"] = self.frame_1_menubar.IsChecked(MENU_BITVECTOR)
+        if self.frame_1_menubar.IsChecked(MENU_PARSERMODE_SLURP):
+            self.proj.compile_options["parser"] = "slurp"
+        elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_STRUCTURED):
+            self.proj.compile_options["parser"] = "structured"
+        elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_LTL):
+            self.proj.compile_options["parser"] = "ltl"
         self.dirty = True
+
+    def onRegionLabelStyleChange(self, event):  # wxGlade: SpecEditorFrame.<event_handler>
+        if self.checkbox_regionlabel.GetValue():
+            self.checkbox_regionlabelbits.Enable(True)
+        else:
+            self.checkbox_regionlabelbits.Enable(False)
+
+        self.panel_locmap.Refresh()
+        event.Skip()
 
 # end of class SpecEditorFrame
 

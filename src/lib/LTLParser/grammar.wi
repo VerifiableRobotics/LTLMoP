@@ -1,0 +1,39 @@
+# This LTL grammar uses the following operator precedence
+# (taken from the GOAL sytems):
+# High
+#  Unary operators (~, X, F, G)
+#  Temporal Binary Operators (U, W)
+#  /\
+#  \/
+#  XOR
+#  ->
+#  <->
+# Low
+#
+# Slight reinterpretation: The unary operators have the same precedence
+
+Biimplication: Implication | Biimplication BiimplicationOperator Implication;
+Implication: Xor | Implication ImplicationOperator Xor;
+Xor: Disjunction | Xor XorOperator Disjunction;
+Disjunction: Conjunction | Disjunction DisjunctionOperator Conjunction;
+Conjunction: BinaryTemporalFormula | Conjunction ConjunctionOperator BinaryTemporalFormula;
+BinaryTemporalFormula: UnaryFormula | BinaryTemporalFormula BinaryTemporalOperator UnaryFormula;
+UnaryFormula: AtomicFormula | UnaryTemporalOperator UnaryFormula;
+AtomicFormula: "FALSE" | "TRUE" | Brackets | Assignment;
+Brackets: '(' Biimplication ')' ;
+
+BinaryTemporalOperator: UntilOperator | WeakUntilOperator;
+UntilOperator: 'U';
+WeakUntilOperator: 'W';
+ImplicationOperator: '-' '-' '>' | '-' '>';
+BiimplicationOperator: '<' '-' '-' '>' | '<' '-' '>' | '=';
+DisjunctionOperator: '+' | '\\' '/' | '|' | '|' '|' ;
+ConjunctionOperator: '*' | '/' '\\' | '&' | '&' '&' ;
+XorOperator: '^';
+UnaryTemporalOperator: FinallyOperator | NextOperator | GloballyOperator | NotOperator;
+FinallyOperator: '<' '>';
+NextOperator: "next";
+GloballyOperator: '[' ']' ;
+NotOperator: '!' | '~';
+Assignment: id ;
+

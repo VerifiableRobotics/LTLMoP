@@ -1,3 +1,4 @@
+import edu.wis.jtlv.env.module.ModuleBDDField;
 import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDVarSet;
 import net.sf.javabdd.BDD.BDDIterator;
@@ -110,7 +111,7 @@ public class GROneMain {
 		}
 		
 
-		g = new GROneGame(env,sys);
+		g = new GROneGame(env,sys,false);
 		long t3 = (System.currentTimeMillis() - time);
 		System.out.println("Games time: " + t3);
 
@@ -127,19 +128,22 @@ public class GROneMain {
 			//return;
 		}
 
-		// ** Analysis calls
-
-		String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
-		GROneDebug.analyze(env,sys);
+		
 
 		///////////////////////////////////////////////
 		//Check that every initial system state is winning for every initial environment state
 		all_init = g.getSysPlayer().initial().and(g.getEnvPlayer().initial());
 		counter_exmple = g.envWinningStates().and(all_init);
+        BDDVarSet all_vars = sys.moduleUnprimeVars().union(env.moduleUnprimeVars());
 		if (!counter_exmple.isZero()) {
 			System.out.println("Specification is unsynthesizable even assuming instantaneous actions...");
-			System.out.println("The env player can win from states:");
-			System.out.println("\t" + counter_exmple);
+			System.out.println("The env player can win from " + (int)counter_exmple.satCount(all_vars) + " of " + (int)all_init.satCount(all_vars) +" initial state(s).");
+            String counter_state = counter_exmple.satOne().toString();
+            counter_state = counter_state.replaceAll("and", "&");
+            counter_state = counter_state.replaceAll("[()]", "");
+            counter_state = counter_state.replaceAll("main\\.([\\w.]+)=0", "!$1");
+            counter_state = counter_state.replaceAll("main\\.([\\w.]+)=1", "$1");
+			System.out.println("\tFor example: \t" + counter_state);
 
 
 
@@ -185,13 +189,24 @@ public class GROneMain {
 		System.out.println("-----------------------------------------");
 		PrintStream orig_out = System.out;
 		System.setOut(new PrintStream(new File(out_filename))); // writing the output to a file
-		g.printWinningStrategy(all_init);
+		boolean falsifyEnv = g.printWinningStrategy(all_init);
 		System.setOut(orig_out); // restore STDOUT
 		System.out.print("-----------------------------------------\n");
 		long t2 = (System.currentTimeMillis() - time);
-		System.out.println("Strategy time: " + t2);
+		System.out.println("Strategy time: " + t2);	
+		if (falsifyEnv) {
+			System.out.println("Environment liveness falsified"); 
+		}
 		System.out.println("===== Done ==============================");
+		
+		// ** Analysis calls
+
+				String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
+				GROneDebug.analyze(env,sys);
+				
 		System.exit(0);
+		
+		
 	
 	}
 }

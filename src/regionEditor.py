@@ -891,8 +891,8 @@ class DrawingFrame(wx.Frame):
             obj = self.rfi.regions[i]
 
             # If this region is concave, indicate this with hatching
-            doHighlight = (obj.name.lower() != "boundary" and obj.getDirection() == dir_CONCAVE)
-
+            #doHighlight = (obj.name.lower() != "boundary" and obj.getDirection() == dir_CONCAVE)
+            doHighlight = False
             isSelected = (obj in self.selection)
             obj.draw(dc, pdc, isSelected, highlight=doHighlight, deemphasize=obj.isObstacle)
     
@@ -907,6 +907,9 @@ class DrawingFrame(wx.Frame):
                     labelText = "(%s)" % obj.name
                 else:
                     labelText = obj.name
+
+                if obj.height != 0:
+                    labelText += " [h={}]".format(obj.height)
 
                 textWidth, textHeight = dc.GetTextExtent(labelText)
                 
@@ -1497,7 +1500,7 @@ class DrawingFrame(wx.Frame):
 
         self.selection = []
 
-        if self.rfi.background != "None":	
+        if self.rfi.background != "None":        
             self.doSetBackground()
 
         # Convert from Regions to DrawableRegions
@@ -1944,7 +1947,17 @@ class EditRegionDialog(wx.Dialog):
         line3sizer = wx.BoxSizer(wx.HORIZONTAL)
         line3sizer.Add(self.checkbox_obstacle, 0, gap, 5)
 
-        #### line 4
+        ##### line 4
+
+        self.label4 = wx.StaticText(self, -1, "Height:")
+        self.textCtrl2 = wx.TextCtrl(self, -1, "")
+        self.textCtrl2.SetSize(wx.Size(-1, lineHeight * 1))
+
+        line4sizer = wx.BoxSizer(wx.HORIZONTAL)
+        line4sizer.Add(self.label4, 0, gap, 5)
+        line4sizer.Add(self.textCtrl2, 0, gap, 5)
+
+        #### line 5
 
         self.okButton     = wx.Button(self, wx.ID_OK,     "OK")
         self.okButton.SetDefault()
@@ -1961,6 +1974,7 @@ class EditRegionDialog(wx.Dialog):
         #sizer.Add((10, 10)) # Spacer.
         sizer.Add(line2sizer, 1, gap | wx.ALIGN_CENTRE,       5)
         sizer.Add(line3sizer, 1, gap | wx.ALIGN_CENTRE,       5)
+        sizer.Add(line4sizer, 1, gap | wx.EXPAND,       5)
         #sizer.Add((10, 10)) # Spacer.
         sizer.Add(btnSizer,      0, gap | wx.ALIGN_CENTRE, 5)
         sizer.Add((10, 10)) # Spacer.
@@ -1977,6 +1991,7 @@ class EditRegionDialog(wx.Dialog):
         """
         self.textCtrl.SetValue(obj.name)
         self.textCtrl.SetSelection(0, len(obj.name))
+        self.textCtrl2.SetValue(str(obj.height))
         self.colorPicker.SetColour(wx.Colour(*obj.color))
         self.checkbox_obstacle.SetValue(obj.isObstacle)
 
@@ -1986,6 +2001,7 @@ class EditRegionDialog(wx.Dialog):
         obj.name = self.textCtrl.GetValue()
         obj.color = Color(*self.colorPicker.GetColour())
         obj.isObstacle = self.checkbox_obstacle.GetValue()
+        obj.height = float(self.textCtrl2.GetValue())
 
 #----------------------------------------------------------------------------
 

@@ -12,7 +12,10 @@ extinguish, 0
 
 CompileOptions:
 convexify: True
+parser: structured
 fastslow: False
+decompose: True
+use_region_bit_encoding: True
 
 Customs: # List of custom propositions
 carrying_item
@@ -30,11 +33,11 @@ hazardous_item, 1
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
 living = p4
-porch = p3
 deck = p7
-others = 
+porch = p3
 dining = p6
 bedroom = p8
+others = 
 kitchen = p5
 
 Spec: # Specification in structured English
@@ -45,9 +48,9 @@ Spec: # Specification in structured English
 ##############################################
 
 ##System safety unsatisfiable -- single step
-#Env starts with false
-#Robot starts in deck
-#Always porch
+Env starts with false
+Robot starts in deck
+Always porch
 
 ##Environment safety unsatisfiable -- single step
 #Env starts with false

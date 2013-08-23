@@ -1,76 +1,25 @@
 # This is a specification definition file for the LTLMoP toolkit.
 # Format details are described at the beginning of each section below.
-# Note that all values are separated by *tabs*.
-
-
-======== EXPERIMENT CONFIG 0 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.0261035853648,-7.95199990273,-0.0273457932695,6.04682222037
-
-InitialRegion: # Initial region number
-3
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-nao_grocery_stage.lab
-
-Name: # Name of the experiment
-playerstage
-
-RobotFile: # Relative path of robot description file
-nao_grocery_stage.robot
-
-
-======== EXPERIMENT CONFIG 1 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-1.0,0.0,1.0,0.0
-
-InitialRegion: # Initial region number
-0
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-.lab
-
-Name: # Name of the experiment
-Default
-
-RobotFile: # Relative path of robot description file
-.robot
-
-
-======== EXPERIMENT CONFIG 2 ========
-
-Calibration: # Coordinate transformation between map and experiment: XScale, XOffset, YScale, YOffset
-0.00977732365244,-2.91751793427,-0.0100856770167,3.00816673781
-
-InitialRegion: # Initial region number
-4
-
-InitialTruths: # List of initially true propositions
-
-Lab: # Lab configuration file
-nao_grocery.lab
-
-Name: # Name of the experiment
-ASL
-
-RobotFile: # Relative path of robot description file
-nao_grocery.robot
 
 
 ======== SETTINGS ========
 
-Actions: # List of actions and their state (enabled = 1, disabled = 0)
-look_leftright,1
-call_manager,1
-sit_down,1
-say_impossible,1
-say_spill,1
+Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+look_leftright, 1
+call_manager, 1
+sit_down, 1
+say_impossible, 1
+say_spill, 1
+
+CompileOptions:
+convexify: True
+parser: structured
+fastslow: False
+decompose: True
+use_region_bit_encoding: True
+
+CurrentConfigName:
+basicSim
 
 Customs: # List of custom propositions
 spill_top
@@ -79,29 +28,25 @@ spill_bottom
 RegionFile: # Relative path of region description file
 grocery.regions
 
-Sensors: # List of sensors and their state (enabled = 1, disabled = 0)
-see_spill,1
-see_missingitem,1
-head_tapped,1
-
-currentExperimentName:
-ASL
+Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
+see_spill, 1
+see_missingitem, 1
+head_tapped, 1
 
 
 ======== SPECIFICATION ========
 
-RegionMapping:
+RegionMapping: # Mapping between region names and their decomposed counterparts
+r4 = p9
+office = p13
+between$r3$and$r4$ = p14
+r3 = p10
+between$r1$and$r2$ = p15
+r2 = p11
+others = p1, p2, p3, p4, p5
+r1 = p12
 
-r4=p9
-between$r1$and$r2$=p15
-r2=p11
-r3=p10
-between$r3$and$r4$=p14
-office=p13
-others=p1,p2,p3,p4,p5
-r1=p12
-
-Spec: # Specification in simple English
+Spec: # Specification in structured English
 group Corners is r1, r2, r3, r4
 robot starts in any Corner with false
 
@@ -135,5 +80,4 @@ do sit_down if and only if you are activating spill_top and spill_bottom
 if you are activating sit_down then stay there
 
 do say_spill if and only if start of spill_top and you are not activating say_impossible or start of spill_bottom and you are not activating say_impossible
-
 

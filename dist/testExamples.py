@@ -5,7 +5,7 @@ Checks that all examples load and synthesize successfully.
 import unittest
 import glob
 import sys, os
-sys.path.append(os.path.join("..","src","lib"))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","lib"))
 import specCompiler
 
 
@@ -18,9 +18,18 @@ class TestExample(unittest.TestCase):
         title_str = "#### Testing project '{0}' ####".format(self.spec_filename)
 
         print
+
+        if sys.platform not in ['win32', 'cygwin']:
+            print "\033[41m"  # red background color
+
         print "#"*len(title_str)
         print title_str
-        print "#"*len(title_str)
+        print "#"*len(title_str),
+
+        if sys.platform not in ['win32', 'cygwin']:
+            print "\033[0m"   # end coloring
+
+        print
 
         c = specCompiler.SpecCompiler(self.spec_filename)
         c_out = c.compile()
@@ -29,7 +38,17 @@ class TestExample(unittest.TestCase):
         realizable, realizableFS, output = c_out
 
         print output
-        self.assertTrue(realizable, msg="Specification was unrealizable")
+
+        expectedToBeUnrealizable = ("unsynth" in self.spec_filename) or \
+                                   ("unreal" in self.spec_filename) or \
+                                   ("unsat" in self.spec_filename)
+
+        if expectedToBeUnrealizable:
+            self.assertFalse(realizable, msg="Specification was realizable but we did not expect this")
+        else:
+            self.assertTrue(realizable, msg="Specification was unrealizable")
+        # TODO: test analysis/cores
+        # TODO: test config files
 
         #self.assertEqual(function_to_test(self.input), self.output)
 
@@ -40,7 +59,12 @@ def getTester(spec_filename):
     
 def suite():
     suite = unittest.TestSuite()
-    suite.addTests(getTester(fname) for fname in glob.iglob(os.path.join("..","src","examples","*","*.spec")))
+    for fname in glob.iglob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","examples","*","*.spec")):
+        # Skip any files untracked by git
+        if os.system("git ls-files \"{}\" --error-unmatch".format(fname)) != 0:
+            print ">>> Skipping untracked specification: {}".format(fname)
+            continue
+        suite.addTest(getTester(fname))
     return suite
 
 if __name__ == '__main__':

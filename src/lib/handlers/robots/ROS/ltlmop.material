@@ -7,7 +7,6 @@ material Gazebo/LTLMoP
             texture_unit
             {
                 texture ltlmop_map.png
-				rotate 90
             }
         }
     }

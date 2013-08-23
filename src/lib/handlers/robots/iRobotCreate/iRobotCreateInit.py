@@ -21,7 +21,7 @@ class initHandler:
         Initialization handler for iRobotCreate robot
         
         listenIP (string): the ip address of the device that is currently running LTLMoP (default="0.0.0.0")
-        broadCastIP (string): The ip address of the iRobotCreate. Not sure? Log on to the Create router and checkout the ip address! (default='192.168.1.120')
+        broadCastIP (string): The ip address of the iRobotCreate. Not sure? Log on to the Create router and checkout the ip address! (default="192.168.1.120")
         createPort (int): BeagleBoard's port for transferring commands directly to iCreate (default=8865)
         beaglePort (int): BeagleBoard's control port (default=8866)
         artagPort (int): BeagleBoard's port for streaming artags (default=8844)

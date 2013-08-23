@@ -10,11 +10,24 @@
 
 # TODO: Document better
 
+def get_ltlmop_root():
+    # Climb the tree to find out where we are
+    p = os.path.abspath(__file__)
+    t = ""
+    while t != "src":
+        (p, t) = os.path.split(p)
+        if p == "" or p == "/":
+            print "I have no idea where I am; this is ridiculous"
+            return None
+
+    return os.path.join(p, "src")
+
 import os, sys
 import fileMethods, regions
 from numpy import *
 import handlerSubsystem
 import inspect
+import logging
 
 class Project:
     """
@@ -34,6 +47,7 @@ class Project:
         self.all_actuators = []
         self.enabled_actuators = []
         self.all_customs = []
+        self.internal_props = []
         self.currentConfig = None
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
 
@@ -41,7 +55,10 @@ class Project:
 
         # Compilation options (with defaults)
         self.compile_options = {"convexify": True,  # Decompose workspace into convex regions
-                                "fastslow": False}  # Enable "fast-slow" synthesis algorithm
+                                "fastslow": False,  # Enable "fast-slow" synthesis algorithm
+                                "decompose": True,  # Create regions for free space and region overlaps (required for Locative Preposition support)
+                                "use_region_bit_encoding": True, # Use a vector of "bitX" propositions to represent regions, for efficiency
+                                "parser": "structured"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
 
         # Climb the tree to find out where we are
         p = os.path.abspath(__file__)
@@ -52,7 +69,7 @@ class Project:
                 print "I have no idea where I am; this is ridiculous"
                 return None
 
-        self.ltlmop_root = os.path.join(p, "src")
+        self.ltlmop_root = get_ltlmop_root()
 
     def setSilent(self, silent):
         self.silent = silent
@@ -63,17 +80,17 @@ class Project:
         """
 
         if self.spec_data is None:
-            if not self.silent: print "ERROR: Cannot load region mapping data before loading a spec file"
+            logging.error("Cannot load region mapping data before loading a spec file")
             return None
 
         try:
             mapping_data = self.spec_data['SPECIFICATION']['RegionMapping']
         except KeyError:
-            if not self.silent: print "WARNING: Region mapping data undefined"
+            logging.warning("Region mapping data undefined")
             return None
 
         if len(mapping_data) == 0:
-            if not self.silent: print "WARNING: Region mapping data is empty"
+            logging.warning("Region mapping data is empty")
             return None
 
         regionMapping = {}
@@ -96,20 +113,20 @@ class Project:
             try:
                 regf_name = os.path.join(self.project_root, self.spec_data['SETTINGS']['RegionFile'][0])
             except (IndexError, KeyError):
-                if not self.silent: print "WARNING: Region file undefined"
+                logging.warning("Region file undefined")
                 return None
 
-        if not self.silent: print "Loading region file %s..." % regf_name
+        logging.info("Loading region file %s..." % regf_name)
         rfi = regions.RegionFileInterface()
 
         if not rfi.readFile(regf_name):
             if not self.silent:
-                print "ERROR: Could not load region file %s!"  % regf_name
+                logging.error("Could not load region file %s!"  % regf_name)
                 if decomposed:
-                    print "Are you sure you compiled your specification?"
+                    logging.error("Are you sure you compiled your specification?")
             return None
 
-        if not self.silent: print "  -> Found definitions for %d regions." % len(rfi.regions)
+        logging.info("Found definitions for %d regions." % len(rfi.regions))
 
         return rfi
 
@@ -123,14 +140,14 @@ class Project:
 
         r = self.currentConfig.getRobotByName(self.currentConfig.main_robot)
         if r.calibrationMatrix is None:
-            if not self.silent: print "WARNING: Main robot has no calibration data.  Using identity matrix."
+            logging.warning("Main robot has no calibration data.  Using identity matrix.")
             T = eye(3)
         else:
             T = r.calibrationMatrix
 
         # Check for singular matrix
         if abs(linalg.det(T)) < finfo(float).eps:
-            if not self.silent: print "WARNING: Singular calibration matrix.  Ignoring, and using identity matrix."
+            logging.warning("Singular calibration matrix.  Ignoring, and using identity matrix.")
             T = eye(3)
 
         #### Create the coordmap functions
@@ -146,17 +163,17 @@ class Project:
 
 
         ### Load in the specification file
-        if not self.silent: print "Loading specification file %s..." % spec_file
+        logging.info("Loading specification file %s..." % spec_file)
         spec_data = fileMethods.readFromFile(spec_file)
 
         if spec_data is None:
-            if not self.silent: print "WARNING: Failed to load specification file"
+            logging.warning("Failed to load specification file")
             return None
 
         try:
             self.specText = '\n'.join(spec_data['SPECIFICATION']['Spec'])
         except KeyError:
-            if not self.silent: print "WARNING: Specification text undefined"
+            logging.warning("Specification text undefined")
 
         if 'CompileOptions' in spec_data['SETTINGS']:
             for l in spec_data['SETTINGS']['CompileOptions']:
@@ -164,7 +181,11 @@ class Project:
                     continue
 
                 k,v = l.split(":", 1)
-                self.compile_options[k.strip().lower()] = (v.strip().lower() in ['true', 't', '1'])
+                if k.strip().lower() == "parser":
+                    self.compile_options[k.strip().lower()] = v.strip().lower()
+                else:
+                    # convert to boolean if not a parser type
+                    self.compile_options[k.strip().lower()] = (v.strip().lower() in ['true', 't', '1'])
 
         return spec_data
 
@@ -216,21 +237,20 @@ class Project:
         """
 
         self.hsub = handlerSubsystem.HandlerSubsystem(self)
-        self.hsub.setSilent(self.silent)
         self.hsub.loadAllConfigFiles()
 
         if name is None:
             try:
                 name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
             except (KeyError, IndexError):
-                if not self.silent: print "WARNING: No experiment configuration defined"
+                logging.warning("No experiment configuration defined")
                 return None
 
         for c in self.hsub.configs:
             if c.name.lower() == name.lower():
                 return c
 
-        if not self.silent: print "WARNING: Default experiment configuration of name '%s' could not be found in configs/ directory." % name
+        logging.warning("Default experiment configuration of name '%s' could not be found in configs/ directory." % name)
 
         return None
 
@@ -300,9 +320,29 @@ class Project:
             all_handler_types = ['init','pose','locomotionCommand','drive','motionControl','sensor','actuator']
 
         if self.currentConfig is None:
-            print "ERROR: Could not import handlers because no simulation configuration is defined."
+            logging.error("Could not import handlers because no simulation configuration is defined.")
             return
 
         self.hsub.importHandlers(self.currentConfig, all_handler_types)
 
-        if not self.silent: print "(POSE) Initial pose: " + str(self.h_instance['pose'].getPose())
+        logging.info("Initializing sensor/actuator methods...")
+
+        # initialize all sensor and actuators
+        for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
+            if prop in self.enabled_sensors:
+                for code in codes:
+                    eval(code, {'self':self,'initial':True})
+
+        # Figure out our initially true outputs
+        init_outputs = []
+        for prop in self.currentConfig.initial_truths:
+            if prop not in self.enabled_sensors:
+                init_outputs.append(prop)
+
+        for prop,codes in self.actuator_handler['initializing_handler'].iteritems():
+            if prop in self.enabled_actuators:
+                new_val = prop in init_outputs
+                for code in codes:
+                    eval(code, {'self':self,'initial':True,'new_val':new_val})
+
+        logging.debug("(POSE) Initial pose: " + str(self.h_instance['pose'].getPose()))

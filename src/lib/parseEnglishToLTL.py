@@ -9,6 +9,7 @@
 import re
 import copy
 import numpy
+import math
 
 #nextify = lambda x: " next(%s) " % x
 
@@ -57,6 +58,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     spec['EnvInit']= ''
     spec['EnvTrans']= ''
     spec['EnvGoals']= ''
+    spec['SysInit']= ''
     spec['SysTrans']= ''
     spec['SysGoals']= ''
 
@@ -68,6 +70,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     linemap['SysInit']= []    
     linemap['SysTrans']= []
     linemap['SysGoals']= []
+    
+    LTL2LineNo = {}
 
     RegionGroups = {}
 
@@ -82,16 +86,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     currBitEnc = bitEncode['current']
     nextBitEnc = bitEncode['next']
 
-    # Setting the system initial formula to allow only valid
-    #  region encoding. This may be redundent if an initial region is
-    #  specified, but it is here to ensure the system cannot start from
-    #  an invalid encoding
-    spec['SysInit']= '\t\t\t( ' + currBitEnc[0] + ' \n'
-    for regionInd in range(1,len(regionList)):
-        spec['SysInit'] = spec['SysInit'] + '\t\t\t\t | ' + currBitEnc[regionInd] + '\n'
-    spec['SysInit'] = spec['SysInit'] + '\t\t\t) & \n'
-    
-
     # Regular expressions to help us out
     EnvInitRE = re.compile('^(environment|env) starts with',re.IGNORECASE)
     SysInitRE = re.compile('^(robot |you |)starts?',re.IGNORECASE)
@@ -102,16 +96,22 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     LivenessRE = re.compile('^\s*(go to|visit|infinitely often do|infinitely often sense|infinitely often)',re.IGNORECASE)
     SafetyRE = re.compile('^\s*(always|always do |do|always sense|sense)',re.IGNORECASE)
     StayRE = re.compile('(stay there|stay)',re.IGNORECASE)
+    AtLeastOnceRE = re.compile('(at least once)',re.IGNORECASE)
+    AfterEachTimeRE = re.compile('after each time (?P<cond>.+),(?P<req>.+)(?:at least once)?',re.IGNORECASE)
     EventRE = re.compile('(?P<prop>[\w\.]+) is set on (?P<setEvent>.+) and reset on (?P<resetEvent>.+)',re.IGNORECASE)
     ToggleRE = re.compile('(?P<prop>[\w\.]+) is toggled (when|on) (?P<toggleEvent>.+)',re.IGNORECASE)
     RegionGroupingRE = re.compile('group (?P<groupName>[\w]+) (is|are) (?P<regions>.+)',re.IGNORECASE)
     QuantifierRE = re.compile('\\b(?P<quantifier>all|any)\s+(?P<groupName>\w+)',re.IGNORECASE)
 
 
+    internal_props = []
+
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
-    StayFormula = createStayFormula(numBits)
+    StayFormula = createStayFormula(regionList)
 
     lineInd = 0
+    
+
 
     # iterate over the lines in the file
     for line in text.split("\n"):
@@ -133,7 +133,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         line = line.replace('\B.\B',' ') # Leave periods that are in the middle of words.
 
         # remove commas except for in region group definitions which need them for the list
-        if not RegionGroupingRE.search(line):
+        # and AET statements which use it as a delimiter
+        if not (RegionGroupingRE.search(line) or AfterEachTimeRE.search(line)):
             line = line.replace(',',' ')
 
         # Check for the presence of a region quantifier
@@ -216,6 +217,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             spec['EnvInit']= spec['EnvInit'] + LTLsubformula
             linemap['EnvInit'].append(lineInd)
             
+            LTL2LineNo[replaceRegionName(LTLsubformula,bitEncode,regionList)] = lineInd
+            
         # If the sentence describes the initial state of the robot
         elif SysInitRE.search(line):
             # remove the first words     
@@ -258,10 +261,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 LTLRegSubformula = LTLRegSubformula.replace("QUANTIFIER_PLACEHOLDER", quant_and_string['current'])
 
             spec['SysInit']= spec['SysInit'] + LTLRegSubformula + LTLActSubformula
-            linemap['SysInit'].append(lineInd)
-
-
-                
+            linemap['SysInit'].append(lineInd)            
+            LTL2LineNo[replaceRegionName(LTLRegSubformula + LTLActSubformula,bitEncode,regionList)] = lineInd    
 
         # If the sentence is a conditional 
         elif IfThenRE.search(line) or UnlessRE.search(line) or IffRE.search(line) :
@@ -341,6 +342,66 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
                     spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
                     linemap[CondFormulaInfo['type']].append(lineInd)
+                    LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
+
+                # check for "at least once" condition
+                elif AtLeastOnceRE.search(Requirement):
+                    # remove the 'at least once'      
+                    Requirement = Requirement.replace(' at least once','')
+
+                    # parse the liveness requirement
+                    ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
+                    if ReqFormulaInfo['formula'] == '': failed = True
+
+                    # If not SysGoals, then it is an error
+                    if not ReqFormulaInfo['type']=='SysGoals':
+                        print 'ERROR(15): Could not parse the sentence in line '+ str(lineInd)+' :'
+                        print line
+                        print 'because the requirement is not system liveness'
+                        failed = True
+                        continue
+
+                    if CondType == "IFF":
+                        print 'ERROR(15): Could not parse the sentence in line '+ str(lineInd)+' :'
+                        print line
+                        print 'because IFF cannot be used with "at least once"'
+                        failed = True
+                        continue
+
+                    ### example ###
+                    # "if s then visit r1 and a at least once"
+                    # ... becomes ...
+                    # []<>(s->m_r1_a)
+                    # [](next(m_r1_a) <-> (m_r1_a | (next(r1) & next(a))))
+                    
+                    regCond = ReqFormulaInfo['formula'].replace('\t\t\t []<>','')
+                    regCond = regCond.replace('& \n','')
+
+                    if QuantifierFlag == "ANY":
+                        print "not implemented yet"
+                        failed = True
+                    elif QuantifierFlag == "ALL":
+                        iterate_over = RegionGroups[quant_group]
+                    else:
+                        iterate_over = ["total hack"]
+
+                    memPropNames = []
+                    for r in iterate_over:
+                        tmp_req = regCond.replace("next(QUANTIFIER_PLACEHOLDER)", nextify(r))
+                        tmp_req = tmp_req.replace("QUANTIFIER_PLACEHOLDER", r)
+                        
+                        internal_props.append("m" + re.sub("(e|s)\.", "", re.sub("\s+","_",tmp_req.replace("&","").replace("(","").replace(")",""))).rstrip("_"))
+                        memPropNames.append("s."+internal_props[-1])
+
+                        condStayFormula = {}
+                        condStayFormula['formula'] = '\t\t\t [](next({0}) <-> ({0} | ({1}))) & \n'.format(memPropNames[-1], nextify(tmp_req))
+                        condStayFormula['type'] = 'SysTrans'
+
+                        spec[condStayFormula['type']] = spec[condStayFormula['type']] + condStayFormula['formula']
+                        linemap[condStayFormula['type']].append(lineInd)
+                        LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
+
+                    ReqFormulaInfo['formula'] = '\t\t\t []<>(' + ' & '.join(memPropNames) + ') & \n'
                 else:
                     # parse requirement normally
                     ReqFormulaInfo = parseLiveness(Requirement,sensorList,allRobotProp,lineInd)
@@ -386,6 +447,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 if CondFormulaInfo['formula'] == '': failed = True
                 spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
                 linemap[CondFormulaInfo['type']].append(lineInd)
+                LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
             elif QuantifierFlag == "ALL":
                 for r in RegionGroups[quant_group]:
                     tmp_req = copy.deepcopy(ReqFormulaInfo)
@@ -396,12 +458,52 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     if CondFormulaInfo['formula'] == '': failed = True
                     spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
                     linemap[CondFormulaInfo['type']].append(lineInd)
+                    LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
             else:
                 # Parse the condition and add it to the requirement
                 CondFormulaInfo = parseConditional(Condition,ReqFormulaInfo,CondType,sensorList,allRobotProp,lineInd)
                 if CondFormulaInfo['formula'] == '': failed = True
                 spec[CondFormulaInfo['type']] = spec[CondFormulaInfo['type']] + CondFormulaInfo['formula']
                 linemap[CondFormulaInfo['type']].append(lineInd)
+                LTL2LineNo[replaceRegionName(CondFormulaInfo['formula'],bitEncode,regionList)] = lineInd
+                
+        # An "after each time" implicit memory statement
+        elif AfterEachTimeRE.search(line):
+            AfterEachTimeParts = AfterEachTimeRE.search(line) 
+
+            # Extract the 2 pieces (condition and requirement)  
+            Condition = AfterEachTimeParts.group('cond')
+            Requirement = AfterEachTimeParts.group('req')
+    
+            if QuantifierFlag == "ANY" or QuantifierFlag == "ALL":
+                print 'ERROR(6): Quantifiers not yet supported inside "After each time" statements, line '+ str(lineInd)+'\n'
+                failed = True
+                continue
+
+            # Figure out what the requirement is and parse it
+            # FIXME: This doesn't really fit nicely into the category of either liveness or safety;
+            # it's semantically closest to a bare LTL <>
+            if not LivenessRE.search(Requirement):
+                print 'ERROR(13): Could not parse the sentence in line '+ str(lineInd)
+                print 'because only livenesses are currently supported for "After each time"'
+                failed = True
+                continue
+
+            # remove first words
+            Requirement = LivenessRE.sub(' ',Requirement)
+
+            AETFormula_Safety, AETFormula_Goal, mem_prop = parseAfterEachTime(Condition, Requirement, sensorList, allRobotProp, lineInd, StayFormula)
+            if AETFormula_Safety == '': failed = True
+
+            spec["SysTrans"] += AETFormula_Safety
+            linemap["SysTrans"].append(lineInd)
+            LTL2LineNo[replaceRegionName(AETFormula_Safety,bitEncode,regionList)] = lineInd
+
+            spec["SysGoals"] += AETFormula_Goal
+            linemap["SysGoals"].append(lineInd)
+            LTL2LineNo[replaceRegionName(AETFormula_Goal,bitEncode,regionList)] = lineInd
+
+            internal_props.append(mem_prop)
 
         # An event definition
         elif EventRE.search(line):
@@ -426,6 +528,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
             linemap['SysTrans'].append(lineInd)
+            LTL2LineNo[replaceRegionName(EventFormula,bitEncode,regionList)] = lineInd
 
 
         # A toggle event definition
@@ -449,6 +552,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             spec['SysTrans'] = spec['SysTrans'] + EventFormula
             linemap['SysTrans'].append(lineInd)
+            LTL2LineNo[replaceRegionName(EventFormula,bitEncode,regionList)] = lineInd
 
         # A 'Go to and stay there' requirement
         elif LivenessRE.search(line) and StayRE.search(line):
@@ -480,7 +584,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # Add the liveness ('go to') to the spec
             spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
             linemap[formulaInfo['type']].append(lineInd)
-
+            LTL2LineNo[replaceRegionName(formulaInfo['formula'],bitEncode,regionList)] = lineInd
 
             # add the 'stay there' as a condition (if R then stay there)
             regCond = formulaInfo['formula'].replace('\t\t\t []<>','')
@@ -489,6 +593,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
             spec['SysTrans'] = spec['SysTrans'] + condStayFormula
             linemap['SysTrans'].append(lineInd)
+            LTL2LineNo[replaceRegionName(condStayFormula,bitEncode,regionList)] = lineInd
 
 
 
@@ -516,6 +621,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             else:
                 spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
                 linemap[formulaInfo['type']].append(lineInd)
+           
+            
+            LTL2LineNo[replaceRegionName(formulaInfo['formula'],bitEncode,regionList)] = lineInd
+
 
         # A safety requirement
         elif SafetyRE.search(line):
@@ -544,6 +653,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             else:
                 spec[formulaInfo['type']] = spec[formulaInfo['type']] + formulaInfo['formula']
                 linemap[formulaInfo['type']].append(lineInd)
+            
+            LTL2LineNo[replaceRegionName(formulaInfo['formula'],bitEncode,regionList)] = lineInd
+
 
             
         # Cannot parse
@@ -581,11 +693,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         if QuantifierFlag is not None:
             allRobotProp.remove("QUANTIFIER_PLACEHOLDER")
 
-    # replace all region names with the bit encoding
-    for key in spec:
-        spec[key] = replaceRegionName(spec[key],bitEncode,regionList)
-        
-    
     # Setting all empty subformulas to TRUE, and removing last & in 'EnvGoals' and 'SysGoals'
     if spec['EnvInit'] == '':
         spec['EnvInit'] = '\t\t\tTRUE & \n'
@@ -622,7 +729,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     for prop in sensorList + robotPropList:
         if prop in specstr:
             continue
-	else:
+        else:
             unusedProp = unusedProp + [prop]
     # if there are unused propositions, print out a warning
     if unusedProp:
@@ -633,7 +740,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         print 'They should be removed from the proposition lists\n'
     
 
-    return spec,linemap,failed
+    return spec,linemap,failed,LTL2LineNo,internal_props
 
 
 def parseInit(sentence,PropList,lineInd):
@@ -770,11 +877,12 @@ def parseLiveness(sentence,sensorList,allRobotProp,lineInd):
 
         if (prop in sensorList and formulaInfo['type'] == 'SysGoals') or \
            (prop in allRobotProp and formulaInfo['type'] == 'EnvGoals'):
-            print 'ERROR(5): Could not parse the sentence in line '+ str(lineInd)+' containing:'
-            print sentence
-            print 'because both environment and robot propositions are used \n'
-            formulaInfo['type'] = 'EnvGoals' # arbitrary
-            return formulaInfo
+            #print 'ERROR(5): Could not parse the sentence in line '+ str(lineInd)+' containing:'
+            #print sentence
+            #print 'because both environment and robot propositions are used \n'
+            #formulaInfo['type'] = 'EnvGoals' # arbitrary
+            #return formulaInfo
+            pass
 
         if prop in sensorList and formulaInfo['type'] == '':
             formulaInfo['type'] = 'EnvGoals'
@@ -1006,6 +1114,40 @@ def parseCond(condition,sensorList,allRobotProp,ReqType,lineInd):
 
     return LTLsubformula
 
+def parseAfterEachTime(Cond, Requirement, sensorProp, allRobotProp, lineInd, StayFormula):
+    # Getting the subformula encoding the condition
+    Cond = parseCond(Cond,sensorProp,allRobotProp,"SysGoals",lineInd)
+    if Cond == '':
+        # If could not parse the condition, return
+        print 'ERROR(6): Could not parse the condition in line '+ str(lineInd)+'\n'
+        return '', '', ''
+
+    # parse the liveness requirement
+    ReqFormulaInfo = parseLiveness(Requirement,sensorProp,allRobotProp,lineInd)
+    if ReqFormulaInfo['formula'] == '': failed = True
+
+    # If not SysGoals, then it is an error
+    if not ReqFormulaInfo['type']=='SysGoals':
+        print 'ERROR(6): Only system "After each time" statements are currently supported: line '+ str(lineInd)+'\n'
+        return '', '', ''
+
+    Req = ReqFormulaInfo['formula'].replace('\t\t\t []<>','')
+    Req = Req.rstrip().rstrip("&")
+
+
+    mem_prop = "m_" + re.sub("(e|s)\.", "", re.sub("\s+","_",(Cond+" without "+Req).replace("&","").replace("(","").replace(")",""))).rstrip("_")
+
+    # Everything seems to be OK, lets write the formulas
+    MemoryFormula = '\t\t\t ([]( next(s.' + mem_prop + ') <-> ( (' + nextify(Cond) + ' | s.' + mem_prop + ' ) & !(' + nextify(Req) + '))) ) & \n'    
+    GoalFormula = '\t\t\t ([]<>((s.' + mem_prop + ') -> (' + Req + ')) ) & \n'    
+    
+    # For instantaneous reactivity
+    ReactivityFormula = '\t\t\t ([]( (!s.' + mem_prop + ' & next(s.' + mem_prop + ')) -> (' + StayFormula + ' ) ) ) & \n'    
+    
+    return MemoryFormula + ReactivityFormula, GoalFormula, mem_prop
+    
+
+
 def parseToggle(EventProp,ToggleEvent,sensorProp,RobotProp,lineInd):
     ''' This function creates the LTL formulas encoding when a proposition's value should toggle (T->F, F->T).
         It takes the proposition, the boolean formula defining the toggle event, the propositions
@@ -1129,8 +1271,9 @@ def replaceRegionName(formula,bitEncode,regionList):
     tempFormula = formula[:]
     
     # first replace all 'next' region names with the next encoding
-    for nextProp in re.findall('(next\(\w+\))',tempFormula):
-        prop = nextProp.replace('next(','')
+    for nextProp in re.findall('(next\(s\.\w+\)|next\(\(s\.\w+\)\))',tempFormula):
+        prop = nextProp.replace('next((s.','')
+        prop = prop.replace('next(s.','')
         prop = prop.replace(')','')
 
         if prop in regionList:
@@ -1139,34 +1282,44 @@ def replaceRegionName(formula,bitEncode,regionList):
             # 'replace' is fine here because we are replacing next(region) and that cannot be a partial name
                
     # replace all leftover region names with the current encoding
-    for prop in re.findall('(\w+)',tempFormula):
+    for prop in re.findall('s\.(\w+)',tempFormula):
         if prop in regionList:
             ind = regionList.index(prop)
             # replace every occurrence of the proposition with the bit encoding
             # it is written this way to prevent partial word replacements (as with the .replace method)
             #tempFormula = re.sub('\s+'+prop, ' '+bitEncode['current'][ind],tempFormula) # if following a space
             #tempFormula = re.sub('\('+prop, '('+bitEncode['current'][ind],tempFormula) # if in ()
-            tempFormula = re.sub('\\b'+prop+'\\b', bitEncode['current'][ind],tempFormula)
+            tempFormula = re.sub('\\bs\.'+prop+'\\b', bitEncode['current'][ind],tempFormula)
 
             #tempFormula = tempFormula.replace(prop, bitEncode['current'][ind])
+    
+    # Handle region sensor names
+    for prop in re.findall('e\.(\w+)',tempFormula):
+        if prop in regionList:
+            ind = regionList.index(prop)
+            # replace every occurrence of the proposition with the bit encoding
+            # it is written this way to prevent partial word replacements (as with the .replace method)
+            tempFormula = re.sub('\\be\.'+prop+'\\b', bitEncode['env'][ind],tempFormula)
     
     LTLsubformula = tempFormula 
 
     return LTLsubformula
 
-def createStayFormula(numBits):
-    ''' This function replaces the region names with the appropriate bit encoding.
-    '''
-    tempFormula = '( (next(s.bit0) <-> s.bit0) '
-    
-    for bitNum in range(1,numBits):
+def createStayFormula(regionNames, use_bits=True):
+    if use_bits:
+        numBits = int(math.ceil(math.log(len(regionNames),2)))
+        tempFormula = '( (next(s.bit0) <-> s.bit0) '
+        
+        for bitNum in range(1,numBits):
 
-        # Encoding the string
-        tempFormula = tempFormula + '& (next(s.bit'+ str(bitNum) +') <-> s.bit'+ str(bitNum) +') ' 
-    
-    StayFormula = tempFormula + ')'
+            # Encoding the string
+            tempFormula = tempFormula + '& (next(s.bit'+ str(bitNum) +') <-> s.bit'+ str(bitNum) +') ' 
+        
+        StayFormula = tempFormula + ')'
 
-    return StayFormula
+        return StayFormula
+    else:
+        return "({})".format(" & ".join(["(s.{0} <-> next(s.{0}))".format(rn) for rn in regionNames]))
 
 
 def bitEncoding(numRegions,numBits):
@@ -1178,35 +1331,42 @@ def bitEncoding(numRegions,numBits):
     # initializing the dictionary
     bitEncode = {}
 
-    # create an encoding of the regions, both current and next
+    # create an encoding of the regions, current and next for sys and current for env
     currBitEnc = []
     nextBitEnc = []
+    envBitEnc = []
     for num in range(numRegions):
         binary = numpy.binary_repr(num) # regions encoding start with 0
         # Adding zeros
         bitString = '0'*(numBits-len(binary)) + binary
 
         # Encoding the string
+        envTempString = '('
         currTempString = '('
         nextTempString = '('
         for bitNum in range(numBits):
             if bitNum>0:
+                envTempString = envTempString + ' & '
                 currTempString = currTempString + ' & '
                 nextTempString = nextTempString + ' & '
             if bitString[bitNum]=='1':
+                envTempString = envTempString + 'e.sbit' + str(bitNum)
                 currTempString = currTempString + 's.bit' + str(bitNum)
                 nextTempString = nextTempString + 'next(s.bit' + str(bitNum) + ')'
             if bitString[bitNum]=='0':
+                envTempString = envTempString + '!e.sbit' + str(bitNum)
                 currTempString = currTempString + '!s.bit' + str(bitNum)
                 nextTempString = nextTempString + '!next(s.bit' + str(bitNum) + ')'
 
+        envTempString = envTempString + ')'
         currTempString = currTempString + ')'
         nextTempString = nextTempString + ')'
-       
+        
+        envBitEnc.append(envTempString)
         currBitEnc.append(currTempString)
         nextBitEnc.append(nextTempString)
 
-
+    bitEncode['env'] = envBitEnc
     bitEncode['current'] = currBitEnc
     bitEncode['next'] = nextBitEnc
 

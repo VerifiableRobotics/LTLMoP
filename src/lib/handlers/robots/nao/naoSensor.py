@@ -46,7 +46,7 @@ class naoSensorHandler:
         else:
             val = self.memProxy.getData("LandmarkDetected",0)
 
-            if(val and isinstance(val, list) and len(val) == 2):
+            if(val and isinstance(val, list) and len(val) == 5):
                 # We detected naomarks !
                 # For each mark, we can read its shape info and ID.
 

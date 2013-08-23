@@ -1,3 +1,7 @@
 [submodule "src/etc/slugs"]
 	path = src/etc/slugs
 	url = git://github.com/LTLMoP/slugs.git
+
+[submodule "src/etc/SLURP"]
+	path = src/etc/SLURP
+	url = https://github.com/PennNLP/SLURP.git

@@ -30,56 +30,65 @@ class parseLP:
         self.proj.setSilent(True)
         self.proj.loadProject(spec_file)
         
-        # Look for a defined boundary region, and set it aside if available
-        self.boundaryRegion = None
-        for region in self.proj.rfi.regions:
-            if region.name.lower() == 'boundary':
-                self.boundaryRegion = region
-                self.proj.rfi.regions.remove(region)
-                break
-    
-        # TODO: If not defined, use the minimum bounding polygon by default
-        if self.boundaryRegion is None:
-            print "ERROR: You need to define a boundary region (just create a region named 'boundary' in RegionEditor)"
-            return
-
-        # turn list of string into one string
-        spec = "\n".join([line for line in self.proj.spec_data['SPECIFICATION']['Spec'] if not line.startswith("#")])
+        if self.proj.compile_options['decompose']:
+            # we will do the decomposition
+            # Look for a defined boundary region, and set it aside if available
+            self.boundaryRegion = None
+            for region in self.proj.rfi.regions:
+                if region.name.lower() == 'boundary':
+                    self.boundaryRegion = region
+                    self.proj.rfi.regions.remove(region)
+                    break
         
-        # get all regions that need to find "region near"
-        # the items in the list are tuple with region name and distance from the region boundary, default value is 50
-        for m in re.finditer(r'near (?P<rA>\w+)', spec):
-            if m.group("rA") not in self.regionNear:
-                self.regionNear.append((m.group("rA"),50))
-                
-        # find "within distance from a region" is just special case of find "region near"
-        for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', spec):
-            if m.group("rA") not in self.regionNear:
-                self.regionNear.append((m.group("rA"),int(m.group("dist"))))
-                
-        # get all regions that need to find "region between"
-        # the items in the list are tuple with two region names       
-        for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', spec):
-            if (m.group("rA"),m.group("rB")) not in self.regionBetween and (m.group("rB"),m.group("rA")) not in self.regionBetween:
-                self.regionBetween.append((m.group("rA"),m.group("rB")))
+            # TODO: If not defined, use the minimum bounding polygon by default
+            if self.boundaryRegion is None:
+                print "ERROR: You need to define a boundary region (just create a region named 'boundary' in RegionEditor)"
+                return
+
+            # turn list of string into one string
+            spec = "\n".join([line for line in self.proj.spec_data['SPECIFICATION']['Spec'] if not line.startswith("#")])
             
-        # generate new regions
-        self.generateNewRegion()
-        # break the overlapped regions into seperated parts
-        self.checkOverLapping()
-        # remove small regions
-        self.removeSmallRegions()
-        
-        # decompose any regions with holes or are concave
-        if self.proj.compile_options['convexify']:
-            self.decomp()
-
-        # store the regionMapping data to project file
-        self.proj.regionMapping = self.newPolysMap
-        # save the regions into new region file
-        fileName = self.proj.getFilenamePrefix()+'_decomposed.regions'
-        self.saveRegions(fileName)
-        
+            # get all regions that need to find "region near"
+            # the items in the list are tuple with region name and distance from the region boundary, default value is 50
+            for m in re.finditer(r'near (?P<rA>\w+)', spec):
+                if m.group("rA") not in self.regionNear:
+                    self.regionNear.append((m.group("rA"),50))
+                    
+            # find "within distance from a region" is just special case of find "region near"
+            for m in re.finditer(r'within (?P<dist>\d+) (from|of) (?P<rA>\w+)', spec):
+                if m.group("rA") not in self.regionNear:
+                    self.regionNear.append((m.group("rA"),int(m.group("dist"))))
+                    
+            # get all regions that need to find "region between"
+            # the items in the list are tuple with two region names       
+            for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', spec):
+                if (m.group("rA"),m.group("rB")) not in self.regionBetween and (m.group("rB"),m.group("rA")) not in self.regionBetween:
+                    self.regionBetween.append((m.group("rA"),m.group("rB")))
+                
+            # generate new regions
+            self.generateNewRegion()
+            # break the overlapped regions into seperated parts
+            self.checkOverLapping()
+            # remove small regions
+            self.removeSmallRegions()
+            
+            # decompose any regions with holes or are concave
+            if self.proj.compile_options['convexify']:
+                self.decomp()
+            # store the regionMapping data to project file
+            self.proj.regionMapping = self.newPolysMap
+            # save the regions into new region file
+            fileName = self.proj.getFilenamePrefix()+'_decomposed.regions'
+            self.saveRegions(fileName)
+        else:
+            # if decompose option is disabled, we skip the following step but keep the mapping
+            self.newPolysMap = {} # {"nameOfRegion":a list holds name of portion}
+            for region in self.proj.rfi.regions:
+                self.newPolysMap[region.name] = [region.name]
+            # store the regionMapping data to project file
+            self.proj.regionMapping = self.newPolysMap
+            fileName = self.proj.getFilenamePrefix()+'_decomposed.regions'
+            self.proj.rfi.writeFile(fileName)
 
         
     def generateNewRegion(self):
@@ -197,7 +206,8 @@ class parseLP:
             # break the polygon into sub-polygons
             newPoly = Polygon.Polygon(polygon[0][overlapPtIndex[0]:overlapPtIndex[1]])
             polyWithoutOverlapNode.extend(self.decomposeWithOverlappingPoint(newPoly))
-            polyWithoutOverlapNode.extend(self.decomposeWithOverlappingPoint(polygon-newPoly))
+            reducedPoly = Polygon.Polygon(decomposition.removeDuplicatePoints((polygon-newPoly)[0]))
+            polyWithoutOverlapNode.extend(self.decomposeWithOverlappingPoint(reducedPoly))
         else:
             # no overlap point is found
             return [polygon]

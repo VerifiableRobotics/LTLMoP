@@ -1,55 +1,45 @@
 #!/usr/bin/env python
 """
 =================================================
-differentialDrive.py - Differential Drive Handler
+rosDrive.py - Differential Drive Handler
 =================================================
 
 Converts a desired global velocity vector into translational and rotational rates for a differential-drive robot,
 using feedback linearization.
 """
 
-import math
-from geometry_msgs.msg import Twist
-#from gazebo.srv import *
+from math import sin, cos
 
 class driveHandler:
-	def __init__(self, proj, shared_data):
-		try:
-			self.loco = proj.h_instance['locomotionCommand']
-			self.coordmap = proj.coordmap_lab2map
-		except NameError:
-			print "(DRIVE) Locomotion Command Handler not found."
-			exit(-1)
+    def __init__(self, proj, shared_data,d=0.6):
+        """
+        Initialization method of differential drive handler.
 
-	def setVelocity(self, x, y, theta=0):
-		#print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
-		twist = Twist()
-		self.turning = False
-		# Feedback linearization code:
-		d = 0.3 # Distance from front axle to point we are abstracting to [m]
-		vx= x
-		vy= y
-		w = (1/d)*(-math.sin(theta)*vx + math.cos(theta)*vy)
-		v = math.cos(theta)*vx + math.sin(theta)*vy
+        d (float): Distance from front axle to point we are abstracting to [m] (default=0.6,max=0.8,min=0.2)
+        """   
 
-		twist.linear.x=v
-		twist.angular.z=w
-		#the following is not my code and is bad, but is here for backup
-		'''try:
-			#if  (not self.turning and abs(w) > math.pi/w):
-			if  abs(w) > math.pi/w:
-				#self.turning = True
-				#print "not turning"
-				#if (self.turning):
-				twist.angular.z = -5 * cmp(v,0) 
-				#print "turning"  
-			else:
-				twist.linear.x = v 
-				twist.linear.y = w 
-		except: 
-			twist.linear.x = v
-			twist.linear.y = w'''
-		try:
-			self.loco.sendCommand(twist)
-		except:
-			print 'Problem sending twist command to loco'
+        try:
+            self.loco = proj.h_instance['locomotionCommand']
+            self.coordmap = proj.coordmap_lab2map
+        except NameError:
+            print "(DRIVE) Locomotion Command Handler not found."
+            exit(-1)
+
+        self.d = d
+    def setVelocity(self, x, y, theta=0, z = 0):
+        #print "VEL:%f,%f" % tuple(self.coordmap([x, y]))
+
+        # Feedback linearization code:
+        #d = 0.125 # Distance from front axle to point we are abstracting to [m]
+        #d = 0.6 # Distance from front axle to point we are abstracting to [m]
+        #vx = 0.09*X[0,0]
+        #vy = 0.09*X[1,0]
+        # ^^ Changed the scaling because it was getting stuck - too high of a velocity ? - Hadas 20/12/07
+        vx = 0.29*x
+        vy = 0.29*y
+        vz = 0.29*z
+        w = (1/self.d)*(-sin(theta)*vx + cos(theta)*vy)
+        v = cos(theta)*vx + sin(theta)*vy
+
+        self.loco.sendCommand([v,w,vz])
+

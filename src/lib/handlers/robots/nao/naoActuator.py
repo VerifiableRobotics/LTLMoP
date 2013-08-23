@@ -107,7 +107,7 @@ class naoActuatorHandler:
 
         startBehaviorName (string): name of behavior to run when prop goes from False to True
         endBehaviorName (string): name of [optional] behavior to run when prop goes from True to False (default="")
-        repeat (bool): choose whether to continuously repeat the startBehavior as long as prop is true [asynchronously] (default=False)
+        repeat (bool): choose whether to continuously repeat the startBehavior as long as prop is true [asynchronously] (default=false)
         repeat_period (float): period with which to repeat the action, if `repeat` is True.  Must be longer than the action length.
         """
 
