@@ -8,6 +8,7 @@
 """
 
 import re
+import os
 import copy
 import nltk
 
@@ -56,7 +57,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     correlations = {}
     
     #Open CFG file
-    # TODO MAKE INDEP of path
+    #TODO: Make path independent
     grammarFile = open('lib/structuredEnglish.fcfg','rb')
     grammarText = grammarFile.read()
     
@@ -105,7 +106,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     #Scan lines for definitions and update grammar
     for lineInd in allLines:
 
+        #Make line lowercase
         line = textLines[lineInd].lower()
+
+        #Put exactly one space before and after parentheses
+        line = re.sub(r'\s*?(\(|\))\s*?',r' \1 ',line)
 
         #If it is an empty line, ignore it
         if re.search(r'^(\s*)$',line):
