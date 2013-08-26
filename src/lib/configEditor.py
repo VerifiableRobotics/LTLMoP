@@ -944,19 +944,22 @@ class addRobotDialog(wx.Dialog):
 
     def _populateHandlerCombos(self):
         # Populate based on current robot type
-        for htype in self.robot.handlers.keys():
-            self.handler_combos[htype].Clear()
+        for handler_type_class in ht.getAllHandlerTypeClass():
+            self.handler_combos[handler_type_class].Clear()
 
-            if htype in self.proj.hsub.handler_parser.handler_robotSpecific_type: 
+            # Load handlers under this robot
+            if handler_type_class in self.proj.hsub.handler_configs[self.robot.r_type]:
                 # HACK: temporary fix for hsub returning empty handlers when loading fails
-                hnames = [h.name for h in self.proj.hsub.handler_dic[htype][self.robot.r_type] if h.name != '']
+                hnames = [h.name for h in self.proj.hsub.handler_configs[self.robot.r_type][handler_type_class] if h.name != ""]
                 for i, hn in enumerate(hnames):
-                    self.handler_combos[htype].Insert(hn, i)
-            else:
+                    self.handler_combos[handler_type_class].Insert(hn, i)
+
+            # Load handlers under shared folder
+            if handler_type_class in self.proj.hsub.handler_configs['share']:
                 # HACK: temporary fix for hsub returning empty handlers when loading fails
-                hnames = [h.name for h in self.proj.hsub.handler_dic[htype] if h.name != '']
+                hnames = [h.name for h in self.proj.hsub.handler_configs['share'][handler_type_class] if h.name != ""]
                 for i, hn in enumerate(hnames):
-                    self.handler_combos[htype].Insert(hn, i)
+                    self.handler_combos[handler_type_class].Insert(hn, i)
 
     def __set_properties(self):
         # begin wxGlade: addRobotDialog.__set_properties
