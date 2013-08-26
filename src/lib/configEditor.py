@@ -1006,19 +1006,20 @@ class addRobotDialog(wx.Dialog):
         self.text_ctrl_robotname.SetValue(self.robot.name)
         self._populateHandlerCombos()
 
-        for htype, h in self.robot.handlers.iteritems():
-            # select the appropriate handler
+        for handler_type_class, handler_configs in self.robot.handlers.iteritems():
+            # for each handler type, a robot can have multiple options, select any one that is successfully loaded
             # TODO: what should the correct behavior be if it doesn't exist in the list of handlers already?
-            if h is not None:
-                self.handler_combos[htype].SetStringSelection(h.name)
-            else:   
-                self.handler_combos[htype].SetValue("")
+            self.handler_combos[handler_type_class].SetValue("")
+            for handler_config in handler_configs:
+                if handler_config is not None:
+                    self.handler_combos[handler_type_class].SetStringSelection(handler_config.name)
+                    break
 
             # Disable the "Configure" button if there are no parameters (with an exception for pose)
-            if h is None or (len(h.getMethodByName("__init__").para) == 0 and h.type != "pose"):
-                self.handler_buttons[htype].Enable(False)
+            if handler_config is None or (len(handler_config.getMethodByName("__init__").para) == 0 and handler_config.h_type != "pose"):
+                self.handler_buttons[handler_type_class].Enable(False)
             else:
-                self.handler_buttons[htype].Enable(True)
+                self.handler_buttons[handler_type_class].Enable(True)
 
     def onClickConfigure(self, event):
         src = event.GetEventObject()
