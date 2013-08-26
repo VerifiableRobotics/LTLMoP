@@ -34,6 +34,13 @@ class poseHandler:
         with self._pose_lock:
             return self._pose
 
+    def getRegion(self):
+        """Return the last reported region.
+
+        This is a convenience wrapper to match LTLMoP naming conventions.
+        """
+        return self.get_location()
+
     def get_location(self):
         """Return the room the robot is currently in."""
         with self._location_lock:

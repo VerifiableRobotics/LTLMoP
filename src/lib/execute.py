@@ -66,6 +66,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
         self.proj = project.Project() # this is the project that we are currently using to execute
         self.aut = None
+        self.just_topo = None
 
         # Choose a timer func with maximum accuracy for given platform
         if sys.platform in ['win32', 'cygwin']:
@@ -119,13 +120,14 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         if rfi is None:
             rfi = self.proj.rfi
 
-        pose = self.proj.coordmap_lab2map(self.proj.h_instance['pose'].getPose())
-
-        region = next((i for i, r in enumerate(rfi.regions) if r.name.lower() != "boundary" and \
-                        r.objectContainsPoint(*pose)), None)
- 
-        if region is None:
-            logging.warning("Pose of {} not inside any region!".format(pose))
+        if not self.just_topo:
+            pose = self.proj.coordmap_lab2map(self.proj.h_instance['pose'].getPose())
+            region = next((i for i, r in enumerate(rfi.regions) if r.name.lower() != "boundary" and \
+                            r.objectContainsPoint(*pose)), None)
+            if region is None:
+                logging.warning("Pose of {} not inside any region!".format(pose))
+        else:
+            region = self.proj.h_instance['pose'].getRegion()
 
         return region
 
@@ -219,10 +221,13 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             #self.proj.importHandlers(['motionControl'])
             pass
 
+        # Figure out whether we're in justtopo
+        self.just_topo = not self.proj.rfi.regions[0].pointArray
+
         # Emit initial pose
         pose = self.proj.h_instance['pose'].getPose()
-        self.postEvent("POSE", tuple(map(int, self.proj.coordmap_lab2map(pose[0:2])) + [float(pose[2])]))
-
+        if not self.just_topo:
+            self.postEvent("POSE", tuple(map(int, self.proj.coordmap_lab2map(pose[0:2])) + [float(pose[2])]))
 
         self.postEvent("READY")
 
