@@ -139,4 +139,4 @@ def getAllHandlerTypeName():
     """
     Return a list of handler type name in string
     """
-    return handler_type_mapping.keys()
+    return [h_type for h_type in handler_type_mapping.keys() if type(h_type) is str]
