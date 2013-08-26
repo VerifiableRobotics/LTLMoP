@@ -31,5 +31,5 @@ Somewhere = Somewhere
 Nowhere = Nowhere
 
 Spec: # Specification in structured English
-Visit Nowhere
+Visit Somewhere
 
