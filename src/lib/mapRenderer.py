@@ -154,6 +154,10 @@ def drawMap(target, rfi, scaleToFit=True, drawLabels=LABELS_ALL, highlightList=[
         print "ERROR: Can't draw a map without loading some regions first"
         return
 
+    # Don't draw anything if the regions are not physical (TODO: rather, if we are using a .topo file)
+    if not rfi.regions[0].pointArray:
+        return 1
+    
     # Upgrade from Regions to DrawableRegions, if necessary
     # TODO: Should really only be necessary once
     for i, region in enumerate(rfi.regions):
