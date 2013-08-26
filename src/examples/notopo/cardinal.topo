@@ -1,0 +1,7 @@
+{ "region_names": ["center", "north", "south", "east", "west", "extra_east"],
+  "adjacencies": [["center", "north"],
+                  ["center", "south"],
+                  ["center", "east"],
+                  ["center", "west"],
+                  ["east", "extra_east"]]
+}
