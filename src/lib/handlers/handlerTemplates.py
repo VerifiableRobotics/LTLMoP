@@ -134,3 +134,9 @@ def getHandlerTypeName(h_class, short_name = True):
         return handler_type_mapping[h_class] + ('Handler' if not short_name else '')
     except KeyError:
         raise KeyError("Invalid handler type")
+
+def getAllHandlerTypeName():
+    """
+    Return a list of handler type name in string
+    """
+    return handler_type_mapping.keys()
