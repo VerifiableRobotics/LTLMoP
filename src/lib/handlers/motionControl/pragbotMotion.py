@@ -10,7 +10,7 @@ class motionControlHandler(object):
         self._next_region = None
         self._regions = proj.rfi.regions
         self._handlers = proj.h_instance
-        self._proxy = proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData
+        self._proxy = proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData["proxy"]
         self._controller = MotionController(self._proxy)
 
     def gotoRegion(self, current_region, next_region):
