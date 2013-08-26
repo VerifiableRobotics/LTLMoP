@@ -1,0 +1,3 @@
+{ "region_names": ["Nowhere", "Somewhere"],
+  "adjacencies": [["Nowhere", "Somewhere"]]
+}
