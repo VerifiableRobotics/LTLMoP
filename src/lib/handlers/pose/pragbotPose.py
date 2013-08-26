@@ -19,11 +19,8 @@ class poseHandler:
         self._pose_lock = Lock()
 
         # Initialize location and lock
-        self._location = None
-        self._location_lock = Lock()
-
-        # Put in some fake position
         self._location = "Nowhere"
+        self._location_lock = Lock()
 
     def getPose(self, cached=True):  # pylint: disable=W0613
         """Return the last reported pose.
