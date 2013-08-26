@@ -4,17 +4,14 @@
 class MotionController(object):
     """Send movement messages to the robot controller."""
 
-    NODE_NAME = 'motion_controller'
 
-    def __init__(self):
-        self._name = type(self).__name__
-
-        # Get a client for driving
-        self._drive_goal = None
+    def __init__(self, proxy):
+        self._proxy = proxy
 
     def stop(self):
-        """Attempt to stop motion."""
-        # If there's no active goal, there's nothing to be done
-        if self._drive_goal:
-            self._drive_goal = None
-            print "{}: Cancelled robot drive goal.".format(self._name)
+        """Send message to pragbot_client to stop robot"""
+        self._proxy.receiveHandlerMessages("Stop")
+
+    def go_region(self, region):
+        """Send message to pragbot_client to send robot to region"""
+        self._proxy.receiveHandlerMessages("Move", region)

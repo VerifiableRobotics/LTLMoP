@@ -1,19 +1,17 @@
 """LTLMoP motion handler for the JR platform."""
 
+from pragbotMotionController import MotionController
 
 class motionControlHandler(object):
     """Send drive commands using MotionController."""
 
     def __init__(self, proj, shared_data):  # pylint: disable=W0613
-        """
-        init_node (bool): create separate ROS node (default: False)
-        """
-
         self._name = type(self).__name__
         self._next_region = None
         self._regions = proj.rfi.regions
         self._handlers = proj.h_instance
         self._proxy = proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData
+        self._controller = MotionController(self._proxy)
 
     def gotoRegion(self, current_region, next_region):
         """Try to drive to next_region, return whether we have arrived."""
@@ -51,7 +49,7 @@ class motionControlHandler(object):
                 print "{}: Moving from {!r} to {!r}.".format(
                     self._name, current_region, next_region)
                 self._next_region = next_region
-                self._proxy.receiveHandlerMessages("Move", next_region)
+                self._controller.go_region(next_region)
                 print
                 return False
 
@@ -59,7 +57,7 @@ class motionControlHandler(object):
         """Stop motion."""
         # Controller's stop will print a message if we are actually stopping.
         self._next_region = None
-        # TODO Send message over proxy to stop robot
+        self._controller.stop()
 
     def _at_destination(self):
         """Return whether we have reached our destination."""

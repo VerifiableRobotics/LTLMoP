@@ -29,10 +29,7 @@ class sensorHandler(object):
     NODE_NAME = 'sensor_controller'
     SENSOR_TOPIC = 'fiducial_scan'
 
-    def __init__(self, proj, shared_data, init_node=False):  # pylint: disable=W0613
-        """
-        init_node (bool): create separate ROS node (default: False)
-        """
+    def __init__(self, proj, shared_data):  # pylint: disable=W0613
 
         self._name = type(self).__name__
 
