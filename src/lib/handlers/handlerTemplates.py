@@ -140,3 +140,9 @@ def getAllHandlerTypeName():
     Return a list of handler type name in string
     """
     return [h_type for h_type in handler_type_mapping.keys() if type(h_type) is str]
+
+def getAllHandlerTypeClass():
+    """
+    Return a list of handler type class
+    """
+    return [h_type for h_type in handler_type_mapping.keys() if type(h_type) is not str]
