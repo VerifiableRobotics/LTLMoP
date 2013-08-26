@@ -127,7 +127,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             if region is None:
                 logging.warning("Pose of {} not inside any region!".format(pose))
         else:
-            region = self.proj.h_instance['pose'].getRegion()
+            region_name = self.proj.h_instance['pose'].getRegion()
+            print region_name
+            region = next((i for i, r in enumerate(rfi.regions) if r.name.lower() != "boundary" and \
+                            r.name == region_name))
 
         return region
 
