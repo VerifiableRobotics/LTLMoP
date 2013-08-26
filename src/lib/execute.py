@@ -64,7 +64,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         Create a new execution context object
         """
 
-        self.proj = project.Project() # this is the project that we are currently using to execute
+        self.proj = project.Project()  # this is the project that we are currently using to execute
         self.aut = None
         self.just_topo = None
 
@@ -83,11 +83,8 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
     def postEvent(self, eventType, eventData=None):
         """ Send a notice that an event occurred, if anyone wants it """
-        
+        self.externalEventTargetRegistered.wait()
         with self.postEventLock:
-            if self.externalEventTarget is None:
-                return
-
             try:
                 self.externalEventTarget.handleEvent(eventType, eventData)
             except socket.error as e:
@@ -130,7 +127,9 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             region_name = self.proj.h_instance['pose'].getRegion()
             print region_name
             region = next((i for i, r in enumerate(rfi.regions) if r.name.lower() != "boundary" and \
-                            r.name == region_name))
+                            r.name == region_name), None)
+            if region is None:
+                logging.warning("Pose handler region {} not inside any region!".format(region_name))
 
         return region
 
@@ -144,10 +143,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             logging.info("Terminating {} handler...".format(htype))
             if htype in self.proj.h_instance:
                 if isinstance(self.proj.h_instance[htype], dict):
-                    handlers = [v for k,v in self.proj.h_instance[htype].iteritems()]
+                    handlers = [v for k, v in self.proj.h_instance[htype].iteritems()]
                 else:
                     handlers = [self.proj.h_instance[htype]]
-            
+
                 for h in handlers:
                     if hasattr(h, "_stop"):
                         logging.debug("Calling _stop() on {}".format(h.__class__.__name__))
@@ -162,7 +161,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
     def pause(self):
         """ pause execution of the automaton """
         self.runFSA.clear()
-        time.sleep(0.1) # Wait for FSA to stop
+        time.sleep(0.1)  # Wait for FSA to stop
         self.postEvent("PAUSE")
 
     def resume(self):
@@ -185,10 +184,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         self.externalEventTarget = xmlrpclib.ServerProxy(address, allow_none=True)
 
         # Redirect all output to the log
-        #redir = RedirectText(self.externalEventTarget.handleEvent)
+        # redir = RedirectText(self.externalEventTarget.handleEvent)
 
-        #sys.stdout = redir
-        #sys.stderr = redir
+        # sys.stdout = redir
+        # sys.stderr = redir
 
         self.externalEventTargetRegistered.set()
 
@@ -220,8 +219,8 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             logging.info("Importing handler functions...")
             self.proj.importHandlers()
         else:
-            #print "Reloading motion control handler..."
-            #self.proj.importHandlers(['motionControl'])
+            # print "Reloading motion control handler..."
+            # self.proj.importHandlers(['motionControl'])
             pass
 
         # Figure out whether we're in justtopo
@@ -242,11 +241,11 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         new_aut = self.loadAutFile(aut_file)
 
         if firstRun:
-            ### Wait for the initial start command
+            # ## Wait for the initial start command
             logging.info("Ready.  Press [Start] to begin...")
             self.runFSA.wait()
 
-        ### Figure out where we should start from
+        # ## Figure out where we should start from
 
         init_region = self._getCurrentRegionFromPose()
         if init_region is None:
@@ -255,7 +254,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
         logging.info("Starting from initial region: " + self.proj.rfi.regions[init_region].name)
 
-        ### Have the FSA find a valid initial state
+        # ## Have the FSA find a valid initial state
 
         if firstRun or self.aut is None:
             # Figure out our initially true outputs
@@ -267,9 +266,9 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             init_state = new_aut.chooseInitialState(init_region, init_outputs)
         else:
             # Figure out our initially true outputs
-            init_outputs = [k for k,v in self.aut.current_outputs.iteritems() if int(v) == 1]
+            init_outputs = [k for k, v in self.aut.current_outputs.iteritems() if int(v) == 1]
 
-            init_state = new_aut.chooseInitialState(init_region, init_outputs)#, goal=prev_z)
+            init_state = new_aut.chooseInitialState(init_region, init_outputs)  # , goal=prev_z)
 
         if init_state is None:
             logging.error("No suitable initial state found; unable to execute. Quitting...")
@@ -280,7 +279,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         self.aut = new_aut
 
     def run(self):
-        ### Get everything moving
+        # ## Get everything moving
         # Rate limiting is approximately 20Hz
         avg_freq = 20
         last_gui_update_time = 0
@@ -292,7 +291,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
                 try:
                     self.proj.h_instance['motionControl'].stop()
                 except AttributeError:
-                    self.proj.h_instance['drive'].setVelocity(0,0)
+                    self.proj.h_instance['drive'].setVelocity(0, 0)
 
                 # wait for either the FSA to unpause or for termination
                 while (not self.runFSA.wait(0.1)) and self.alive.isSet():
@@ -301,7 +300,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             # Exit immediately if we're quitting
             if not self.alive.isSet():
                 break
-            
+
             self.prev_outputs = deepcopy(self.aut.current_outputs)
             self.prev_z = self.aut.current_state.rank
 
@@ -309,7 +308,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             self.aut.runIteration()
             toc = self.timer_func()
 
-            #self.checkForInternalFlags()
+            # self.checkForInternalFlags()
 
             # Rate limiting of execution and GUI update
             while (toc - tic) < 0.05:
@@ -319,7 +318,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             # Update GUI
             # If rate limiting is disabled in the future add in rate limiting here for the GUI:
             # if show_gui and (timer_func() - last_gui_update_time > 0.05)
-            avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic) # IIR filter
+            avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic)  # IIR filter
             self.postEvent("FREQ", int(math.ceil(avg_freq)))
             pose = self.proj.h_instance['pose'].getPose(cached=True)
             self.postEvent("POSE", tuple(map(int, self.proj.coordmap_lab2map(pose[0:2])) + [float(pose[2])]))
@@ -330,10 +329,10 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
     # This function is necessary to prevent xmlrpcserver from catching
     # exceptions and eating the tracebacks
-    def _dispatch(self, method, args): 
-        try: 
-            return getattr(self, method)(*args) 
-        except: 
+    def _dispatch(self, method, args):
+        try:
+            return getattr(self, method)(*args)
+        except:
             traceback.print_exc()
             raise
 
@@ -369,14 +368,14 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
                 break
     else:
         xmlrpc_server = SimpleXMLRPCServer(("127.0.0.1", listen_port), logRequests=False, allow_none=True)
-    
+
     # Create the execution context object
     e = LTLMoPExecutor()
 
     # Register functions with the XML-RPC server
     xmlrpc_server.register_instance(e)
 
-    # Kick off the XML-RPC server thread    
+    # Kick off the XML-RPC server thread
     XMLRPCServerThread = threading.Thread(target=xmlrpc_server.serve_forever)
     XMLRPCServerThread.daemon = True
     XMLRPCServerThread.start()
@@ -394,7 +393,7 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
 
     if spec_file is not None:
         # Tell executor to load spec & aut
-        #if aut_file is None:
+        # if aut_file is None:
         #    aut_file = spec_file.rpartition('.')[0] + ".aut"
         e.initialize(spec_file, aut_file, firstRun=True)
 
@@ -410,7 +409,7 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
 ### Command-line argument parsing ###
 
 if __name__ == "__main__":
-    ### Check command-line arguments
+    # ## Check command-line arguments
 
     aut_file = None
     spec_file = None
@@ -420,7 +419,7 @@ if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hnp:a:s:", ["help", "no-gui", "xmlrpc-listen-port=", "aut-file=", "spec-file="])
     except getopt.GetoptError:
-        logging.exception("Bad arguments") 
+        logging.exception("Bad arguments")
         usage(sys.argv[0])
         sys.exit(2)
 
