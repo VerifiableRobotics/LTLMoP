@@ -11,6 +11,7 @@ from numpy import *
 import subprocess
 import socket
 
+import lib.handlers.handlerTemplates as ht
 # begin wxGlade: extracode
 # end wxGlade
 
@@ -431,7 +432,7 @@ class handlerConfigDialog(wx.Dialog):
             self.Bind(wx.EVT_BUTTON, self._onClickCalibrate, button_calibrate)
 
             # If this robot has a pre-defined calibration matrix, don't allow for calibration
-            if self.proj.hsub.getRobotByType(self.robot.type).calibrationMatrix is not None:
+            if self.proj.hsub.getRobotByType(self.robot.r_type).calibrationMatrix is not None:
                 button_calibrate.SetLabel("Calibration is pre-defined by simulator.")
                 button_calibrate.Enable(False)
 
@@ -737,7 +738,7 @@ class simSetupDialog(wx.Dialog):
     def onSimNameEdit(self, event): # wxGlade: simSetupDialog.<event_handler>
         pos = self.list_box_experiment_name.GetSelection()
         self.list_box_experiment_name.GetClientData(pos).name = event.GetString()
-        pathName = os.path.dirname(self.list_box_experiment_name.GetClientData(pos).fileName)
+        pathName = os.path.dirname(self.list_box_experiment_name.GetClientData(pos).file_name)
         self.list_box_experiment_name.GetClientData(pos).fileName = os.path.join(pathName,event.GetString().replace(' ','_'))
         self.list_box_experiment_name.SetString(pos, event.GetString())
         event.Skip()
@@ -916,22 +917,17 @@ class addRobotDialog(wx.Dialog):
         self.handler_combos = {}
         self.handler_buttons = {}
 
-        for htype, hlabel in [("init", "Initialization"),
-                              ("pose", "Pose"),
-                              ("sensor", "Sensor"),
-                              ("actuator", "Actuator"),
-                              ("motionControl", "Motion control"),
-                              ("drive", "Drive"),
-                              ("locomotionCommand", "Locomotion command")]:
+        for handler_type_name in  ht.getAllHandlerTypeName():
+            handler_type_class = ht.getHandlerTypeClass(handler_type_name)
 
-            self.handler_labels[htype] = wx.StaticText(self, -1, "%s handler:" % hlabel)
-            self.handler_combos[htype] = wx.ComboBox(self, -1, choices=[], style=wx.CB_DROPDOWN)
-            self.handler_buttons[htype] = wx.Button(self, -1, "Configure...")
-            self.sizer_9.Add(self.handler_labels[htype], 0, wx.ALL|wx.ALIGN_RIGHT, 0)
-            self.sizer_9.Add(self.handler_combos[htype], 1, wx.ALL|wx.EXPAND, 0)
-            self.sizer_9.Add(self.handler_buttons[htype], 0, wx.ALL, 0)
-            self.Bind(wx.EVT_BUTTON, self.onClickConfigure, self.handler_buttons[htype])
-            self.Bind(wx.EVT_COMBOBOX, self.onChangeHandler, self.handler_combos[htype])
+            self.handler_labels[handler_type_class] = wx.StaticText(self, -1, "%s handler:" % handler_type_name)
+            self.handler_combos[handler_type_class] = wx.ComboBox(self, -1, choices=[], style=wx.CB_DROPDOWN)
+            self.handler_buttons[handler_type_class] = wx.Button(self, -1, "Configure...")
+            self.sizer_9.Add(self.handler_labels[handler_type_class], 0, wx.ALL|wx.ALIGN_RIGHT, 0)
+            self.sizer_9.Add(self.handler_combos[handler_type_class], 1, wx.ALL|wx.EXPAND, 0)
+            self.sizer_9.Add(self.handler_buttons[handler_type_class], 0, wx.ALL, 0)
+            self.Bind(wx.EVT_BUTTON, self.onClickConfigure, self.handler_buttons[handler_type_class])
+            self.Bind(wx.EVT_COMBOBOX, self.onChangeHandler, self.handler_combos[handler_type_class])
 
         self.Layout()
         
@@ -941,9 +937,9 @@ class addRobotDialog(wx.Dialog):
         # Set up the list of robot types
         self.combo_box_robottype.Clear()
 
-        for r in self.proj.hsub.robots:
-            self.combo_box_robottype.Append(r.type)
-            if r.type == self.robot.type:
+        for r in self.proj.hsub.robot_configs:
+            self.combo_box_robottype.Append(r.r_type)
+            if r.r_type == self.robot.r_type:
                 self.combo_box_robottype.SetStringSelection(r)
 
     def _populateHandlerCombos(self):
@@ -953,7 +949,7 @@ class addRobotDialog(wx.Dialog):
 
             if htype in self.proj.hsub.handler_parser.handler_robotSpecific_type: 
                 # HACK: temporary fix for hsub returning empty handlers when loading fails
-                hnames = [h.name for h in self.proj.hsub.handler_dic[htype][self.robot.type] if h.name != '']
+                hnames = [h.name for h in self.proj.hsub.handler_dic[htype][self.robot.r_type] if h.name != '']
                 for i, hn in enumerate(hnames):
                     self.handler_combos[htype].Insert(hn, i)
             else:
@@ -1003,7 +999,7 @@ class addRobotDialog(wx.Dialog):
         self.robot = robot
         if original:
             self.original_robot = deepcopy(robot)
-        self.combo_box_robottype.SetStringSelection(self.robot.type)
+        self.combo_box_robottype.SetStringSelection(self.robot.r_type)
         self.text_ctrl_robotname.SetValue(self.robot.name)
         self._populateHandlerCombos()
 
@@ -1055,12 +1051,12 @@ class addRobotDialog(wx.Dialog):
 
                 # If this handler has default values from the selected robot file, use them
                 # TODO: this will erase any previous config settings...
-                default_robot = self.proj.hsub.getRobotByType(self.robot.type)
+                default_robot = self.proj.hsub.getRobotByType(self.robot.r_type)
                 if default_robot.handlers[htype].name == hname:
                     hobj = default_robot.handlers[htype]
                 else:
                     # Otherwise, just grab the plain handler
-                    rname = self.robot.type
+                    rname = self.robot.r_type
                     hobj = self.proj.hsub.getHandler(htype, hname, rname)
 
                 self.robot.handlers[htype] = hobj
@@ -1174,7 +1170,7 @@ class propMappingDialog(wx.Dialog):
         # Set up the list of robots
 
         for i, r in enumerate(self.robots):
-            self.list_box_robots.Insert("%s (%s)" % (r.name, r.type), i, r)
+            self.list_box_robots.Insert("%s (%s)" % (r.name, r.r_type), i, r)
 
         self.list_box_robots.Append("(Simulated)")
         self.list_box_robots.SetSelection(0)
