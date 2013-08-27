@@ -22,6 +22,9 @@ class poseHandler:
         self._location = "Nowhere"
         self._location_lock = Lock()
 
+        # Get server proxy from shared data
+        self._proxy = proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData()["proxy"]
+
     def getPose(self, cached=True):  # pylint: disable=W0613
         """Return the last reported pose.
 
@@ -41,9 +44,8 @@ class poseHandler:
     def get_location(self):
         """Return the room the robot is currently in."""
         with self._location_lock:
-            return self._location
+            return self._proxy.receiveHandlerMessages("Location")
 
     def set_location(self, location):
         """Set the location of the robot."""
-        with self._location_lock:
-            self._location = location
+        pass
