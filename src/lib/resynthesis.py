@@ -5,6 +5,8 @@ import fsa
 import logging
 from LTLParser.LTLFormula import LTLFormula, LTLFormulaType
 from createJTLVinput import createLTLfile
+from parseEnglishToLTL import bitEncoding
+import math
 import specCompiler
 import sys, os
 
@@ -16,6 +18,14 @@ class ExecutorResynthesisExtensions:
     def getCurrentStateAsLTL(self, include_env=False):
         """ Return a boolean formula (as a string) capturing the current discrete state of the system (and, optionally, the environment as well) """
 
+        # For now, only constrain pose (based on PoseHandler)
+        current_region_idx = self._getCurrentRegionFromPose()
+        # TODO: support non-bitvec
+        numBits = int(math.ceil(math.log(len(self.proj.rfi.regions), 2)))
+        current_region_LTL = bitEncoding(len(self.proj.rfi.regions), numBits)['current'][current_region_idx]
+
+        return current_region_LTL
+        
         if self.aut:
             # If we have current state in the automaton, use it (since it can capture
             # state of internal propositions).
