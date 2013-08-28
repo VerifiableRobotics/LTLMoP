@@ -67,6 +67,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         self.proj = project.Project()  # this is the project that we are currently using to execute
         self.aut = None
         self.just_topo = None
+        self.additional_args = None
 
         # Choose a timer func with maximum accuracy for given platform
         if sys.platform in ['win32', 'cygwin']:
@@ -352,7 +353,7 @@ class RedirectText:
 # Main function, run when called from command-line #
 ####################################################
 
-def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False):
+def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False, additional_args=None):
     logging.info("Hello. Let's do this!")
 
     # Create the XML-RPC server
@@ -371,6 +372,9 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
 
     # Create the execution context object
     e = LTLMoPExecutor()
+    # Stash away additional args
+    e.additional_args = additional_args
+
 
     # Register functions with the XML-RPC server
     xmlrpc_server.register_instance(e)
