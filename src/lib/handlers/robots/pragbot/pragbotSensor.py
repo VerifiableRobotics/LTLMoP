@@ -29,21 +29,26 @@ class sensorHandler(object):
         self._fake_sensed = set()
         self._sensor_lock = RLock()
 
-        self._last_region = self._pose_handler.get_location()  # keep track of region we were in when last polled
+        # Keep track of region we were in when last polled
+        self._last_region = None
 
     def _set_sensors(self, msg):
         """Reads current sensor status from the robot."""
         pass
-
 
     def get_sensor(self, sensor_name, initial=False):
         """Report whether we currently see a fiducial of the requested type.
 
         sensor_name (string): The type of the fiducial to query.
         """
-        current_region = self._pose_handler.get_location()
-        with self._sensor_lock:
-            return self._proxy.receiveHandlerMessages(sensor_name, current_region)
+        if initial:
+            # Set the last region to wherever we are now
+            self._last_region = self._pose_handler.get_location()
+            return True
+        else:
+            current_region = self._pose_handler.get_location()
+            with self._sensor_lock:
+                return self._proxy.receiveHandlerMessages(sensor_name, current_region)
 
     def disable_item(self, item):
         pass
