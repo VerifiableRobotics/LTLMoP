@@ -178,6 +178,10 @@ class SpecCompiler(object):
             LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, results, responses, traceback = \
                 _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList, region_tags)
 
+            if not (LTLspec_env or LTLspec_sys):
+                # Fail as there's nothing to do
+                return None, None, responses
+
             oldspec_env = LTLspec_env
             oldspec_sys = LTLspec_sys
  
