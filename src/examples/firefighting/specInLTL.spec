@@ -14,7 +14,7 @@ CompileOptions:
 convexify: False
 parser: ltl
 fastslow: False
-decompose: False
+decompose: True
 use_region_bit_encoding: False
 
 CurrentConfigName:
@@ -35,12 +35,13 @@ hazardous_item, 1
 ======== SPECIFICATION ========
 
 RegionMapping: # Mapping between region names and their decomposed counterparts
-living = living
-deck = deck
-porch = porch
-dining = dining
-bedroom = bedroom
-kitchen = kitchen
+living = p4
+deck = p7
+porch = p3
+dining = p6
+bedroom = p8
+others = 
+kitchen = p5
 
 Spec: # Specification in structured English
 --
