@@ -60,11 +60,14 @@ CONDITIONAL[SPEC=?sp,SEM=<Iff(?cond,?p)>] -> CONSEQUENT[SPEC=?sp,SEM=?req,PROP=?
 
 # Requirements can be either a safety sentence or a liveness sentence
 CONSEQUENT[SPEC=?sp,SEM=?req,PROP=<Next(?p)>] -> SAFETY[SPEC=?sp,SEM=?req,PROP=?p] | LIVENESS[SPEC=?sp,SEM=?req,PROP=?p]
+CONSEQUENT[SPEC=?sp,SEM=<?lc(?req1,?req2)>,PROP=<Next(?lc(?p1,?p2))>] -> LIVENESS[SPEC=?sp,SEM=?req1,PROP=?p1] LC[SEM=?lc] LIVENESS[SEM=?req2,PROP=?p2] | SAFETY[SPEC=?sp,SEM=?req1,PROP=?p1] LC[SEM=?lc] SAFETY[SEM=?req1,PROP=?p2]
 
 # Conditions are independent clauses (IC) made up of either a noun phrase (NP) and verb phrase (VP)
 # or two ICs conjoined by a logical connective
 IC[SEM=?vp] -> NP[PER=?per] VP[PER=?per,SEM=?vp]
 IC[SEM=<?lc(?ic1,?ic2)>] -> IC[SEM=?ic1] LC[SEM=?lc] IC[SEM=?ic2]
+
+#TODO: Allow proposition change conditions, but not in livenesses, and only on propositions that match the sentence spec
 
 # Valid noun phrases are limited to identifiers of the robot
 NP[PER=?per] -> ROB[PER=?per]
