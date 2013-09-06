@@ -387,6 +387,7 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
     logging.info("Waiting for XML-RPC server to shut down...")
     xmlrpc_server.shutdown()
     XMLRPCServerThread.join()
+    logging.info("XML-RPC server shutdown complete.  Goodbye.")
 
 
 ### Command-line argument parsing ###
