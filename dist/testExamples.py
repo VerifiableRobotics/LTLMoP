@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Checks that all examples load and synthesize successfully.
 """

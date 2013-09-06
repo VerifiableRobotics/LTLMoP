@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """
 A moderately labyrinthine script to help LTLMoP developers
 set their computer up for working with LTLMoP on GitHub.
