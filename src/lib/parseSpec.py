@@ -129,7 +129,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         if m_groupDef:
             #Add semantics of group to our grammar string
             groupName = m_groupDef.groups()[0]
-            grammarText += '\nGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\''
+            #We want to recognize the group name with or without a trailing 's'
+            grammarText += '\nGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified regions to our dictionary of region groups
             regionGroups[groupName] = filter(lambda x: x != None, m_groupDef.groups()[1:])
             allGroups[groupName] = regionGroups[groupName]
@@ -141,7 +142,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         if m_sensorGroupDef:
             #Add semantics of group to our grammar string
             groupName = m_sensorGroupDef.groups()[0]
-            grammarText += '\nSENSORGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\''
+            #We want to recognize the group name with or without a trailing 's'
+            grammarText += '\nSENSORGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified sensors to out dictionary of sensor groups
             sensorGroups[groupName] = filter(lambda x: x != None, m_sensorGroupDef.groups()[1:])
             allGroups[groupName] = sensorGroups[groupName]
@@ -153,7 +155,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         if m_actionGroupDef:
             #Add semantics of group to our grammar string
             groupName = m_actionGroupDef.groups()[0]
-            grammarText += '\nACTIONGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\''
+            #We want to recognize the group name with or without a trailing 's'
+            grammarText += '\nACTIONGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified sensors to out dictionary of sensor groups
             actionGroups[groupName] = filter(lambda x: x != None, m_actionGroupDef.groups()[1:])
             allGroups[groupName] = actionGroups[groupName]
