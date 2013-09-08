@@ -41,5 +41,6 @@ kitchen = p5
 
 Spec: # Specification in structured English
 --
-[]<>(porch | living)
+[]<>(deck)
+[]<>(living)
 
