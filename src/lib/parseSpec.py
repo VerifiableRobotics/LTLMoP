@@ -77,21 +77,21 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     #Resultant expression is: 'group (\w+) is (?:(region1),? ?|(region2),? ?|(region3),? ?)+'
     groupDefPattern = r'\s*group (\w+) is (?:('
     groupDefPattern += '),? ?|('.join(regionList)
-    groupDefPattern += '),? ?)+'
+    groupDefPattern += '),? ?|empty)+'
     r_groupDef = re.compile(groupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining sensor groups
     #Resultant expression is: 'sensor group (\w+) is (?:(sensor1),? ?|(sensor2),? ?|(sensor3),? ?)+'
     sensorGroupDefPattern = r'\s*group (\w+) is (?:('
     sensorGroupDefPattern += '),? ?|('.join(sensorList)
-    sensorGroupDefPattern += '),? ?)+'
+    sensorGroupDefPattern += '),? ?|empty)+'
     r_sensorGroupDef = re.compile(sensorGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining action groups
     #Resultant expression is: 'group (\w+) is (?:(action1),? ?|(action2),? ?|(action3),? ?)+'
     actionGroupDefPattern = r'\s*group (\w+) is (?:('
     actionGroupDefPattern += '),? ?|('.join(robotPropList)
-    actionGroupDefPattern += '),? ?)+'
+    actionGroupDefPattern += '),? ?|empty)+'
     r_actionGroupDef = re.compile(actionGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining correlations
@@ -105,6 +105,13 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
     #Scan lines for definitions and update grammar
     for lineInd in allLines:
+        #If it is an empty line, ignore it
+        if re.search(r'^(\s*)$',textLines[lineInd]):
+            continue
+        
+        #If the sentence is a comment, ignore it
+        if re.search(r'^\s*#',textLines[lineInd]):
+            continue
 
         #Make line lowercase
         line = textLines[lineInd].lower()
@@ -112,14 +119,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         #Put exactly one space before and after parentheses
         line = re.sub(r'\s*?(\(|\))\s*?',r' \1 ',line)
 
-        #If it is an empty line, ignore it
-        if re.search(r'^(\s*)$',line):
-            continue
-        
-        #If the sentence is a comment, ignore it
-        if re.search(r'^\s*#',line):
-            continue
-        
         #If there is a newline at the end, remove it
         if re.search('\n$',line):
             line = re.sub('\n$','',line)
@@ -132,10 +131,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #We want to recognize the group name with or without a trailing 's'
             grammarText += '\nGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified regions to our dictionary of region groups
-            regionGroups[groupName] = filter(lambda x: x != None, m_groupDef.groups()[1:])
+            regionGroups[groupName] = filter(lambda x: x != None and x != 'empty', m_groupDef.groups()[1:])
             allGroups[groupName] = regionGroups[groupName]
             #print '\tGroups updated: ' + str(regionGroups)
-            continue
 
         #Find any sensor group definitions
         m_sensorGroupDef = r_sensorGroupDef.match(line)
@@ -145,10 +143,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #We want to recognize the group name with or without a trailing 's'
             grammarText += '\nSENSORGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified sensors to out dictionary of sensor groups
-            sensorGroups[groupName] = filter(lambda x: x != None, m_sensorGroupDef.groups()[1:])
+            sensorGroups[groupName] = filter(lambda x: x != None and x != 'empty', m_sensorGroupDef.groups()[1:])
             allGroups[groupName] = sensorGroups[groupName]
             #print '\tSensor groups updated: ' + str(sensorGroups)
-            continue
 
         #Find any action group definitions
         m_actionGroupDef = r_actionGroupDef.match(line)
@@ -158,10 +155,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #We want to recognize the group name with or without a trailing 's'
             grammarText += '\nACTIONGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified sensors to out dictionary of sensor groups
-            actionGroups[groupName] = filter(lambda x: x != None, m_actionGroupDef.groups()[1:])
+            actionGroups[groupName] = filter(lambda x: x != None and x != 'empty', m_actionGroupDef.groups()[1:])
             allGroups[groupName] = actionGroups[groupName]
             #print '\tAction groups updated: ' + str(actionGroups)
-            continue
+
+        if m_groupDef or m_sensorGroupDef or m_actionGroupDef: continue
 
         #Find any correlation definitions
         m_correlationDef = r_correlationDef.match(line)
@@ -301,6 +299,7 @@ def parseGroupAll(semstring, allGroups):
     while semstring.find('$All') != -1:
         groupName = re.search(r'\$All\((\w+)\)',semstring).groups()[0]
         if groupName in allGroups:
+            if len(allGroups[groupName]) == 0: return ''
             semstring = appendAllClause(semstring, 0, allGroups[groupName])
         else:
             print('Error: Could not resolve group '+groupName)
@@ -310,6 +309,7 @@ def parseGroupAny(semstring, allGroups):
     while semstring.find('$Any') != -1:
         groupName = re.search(r'\$Any\((\w+)\)',semstring).groups()[0]
         if groupName in allGroups:
+            if len(allGroups[groupName]) == 0: return ''
             group = allGroups[groupName]
             anyClause = 'Or(' + ',Or('.join(group[0:-1]) + ',' + group[-1] + ')'*(len(group)-1)
             semstring = re.sub(r'\$Any\('+groupName+'\)', anyClause, semstring)
@@ -321,6 +321,7 @@ def parseGroupEach(semstring, allGroups):
     while semstring.find('$Each') != -1:
         groupName = re.search(r'\$Each\((\w+)\)',semstring).group(1)
         if groupName in allGroups:
+            if len(allGroups[groupName]) == 0: return ''
             newSentences = []
             for groupItem in allGroups[groupName]:
                 newSentences.append(re.sub(r'\$Each\('+groupName+'\)',groupItem,semstring))
@@ -364,10 +365,12 @@ def parseCorresponding(semstring, correlations, allGroups):
                 else:
                     sent = sent.replace('$Corr('+valueGroupName+')',isect[0])
             newSentences.append(sent)
-        if len(newSentences) == 0:
+        if len(newSentences) != len(indexGroup):
             print 'Error: cannot resolve correlations in \'' + semstring + '\''
             return ''
         #Build conjunction out of all generated sentences
+        if len(newSentences) == 0:
+            semstring = ''
         if len(newSentences) == 1:
             semstring = newSentences[0]
         else:
