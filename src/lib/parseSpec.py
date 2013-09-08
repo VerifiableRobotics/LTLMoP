@@ -95,7 +95,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     r_actionGroupDef = re.compile(actionGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining correlations
-    correlationDefPattern = r'((?:[_\w]+,? )+)correspond to((?:,? [_\w]+)+)'
+    correlationDefPattern = r'((?:[_\w]+,? )+)correspond(?:s)? to((?:,? [_\w]+)+)'
     r_correlationDef = re.compile(correlationDefPattern, re.I)
     
     #Begin parsing input text
@@ -170,6 +170,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 print('Error: Correlations must be made in pairs!')
                 failed = True
                 continue
+            if len(keyItems) == 1 and keyItems[0] in allGroups and valueItems[0] in allGroups:
+                #We're defining a group-to-group correspondence now
+                keyItems = allGroups[keyItems[0]]
+                valueItems = allGroups[valueItems[0]]
             for prop in keyItems + valueItems:
                 if prop not in allProps:
                     print('Error: Could not resolve proposition \'' + prop + '\'')
@@ -182,7 +186,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                     correlations[keyItems[ind]].append(valueItems[ind])
                 else:
                     correlations[keyItems[ind]] = [valueItems[ind]]
-                #print '\tCorrelations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
+                print '\tCorrelations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
             continue
 
         #If sentence doesn't match any of these, we can parse it with the grammar
