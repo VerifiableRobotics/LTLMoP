@@ -10,6 +10,7 @@ import re
 import copy
 import numpy
 import math
+import functools
 
 #nextify = lambda x: " next(%s) " % x
 
@@ -75,9 +76,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
     RegionGroups = {}
 
-    # List of all robot prpositions
-    allRobotProp = regionList + robotPropList
-
     # Define the number of bits needed to encode the regions
     numBits = int(numpy.ceil(numpy.log2(len(regionList))))
 
@@ -103,8 +101,20 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     RegionGroupingRE = re.compile('group (?P<groupName>[\w]+) (is|are) (?P<regions>.+)',re.IGNORECASE)
     QuantifierRE = re.compile('\\b(?P<quantifier>all|any)\s+(?P<groupName>\w+)',re.IGNORECASE)
 
-
     internal_props = []
+    EditGroupRE = re.compile('(?P<operation>add to|remove from)\s+(?P<groupName>\w+)', re.IGNORECASE)
+    def create_edit_prop(internal_props, m):
+        prop_name = "_"+m.group('operation').replace(" ", "_")+ "_" + m.group('groupName')
+        if prop_name not in internal_props:
+            internal_props.append(prop_name)
+        return "do s." + prop_name
+    text = EditGroupRE.sub(functools.partial(create_edit_prop, internal_props), text)
+
+    robotPropList += map(lambda p: "s."+p, internal_props)
+
+    # List of all robot propositions
+    allRobotProp = regionList + robotPropList
+
 
     # Creating the 'Stay' formula - it is a constant formula given the number of bits.
     StayFormula = createStayFormula(regionList)
