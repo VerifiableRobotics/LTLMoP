@@ -18,8 +18,12 @@ Group letter is Letter_KressGazit, Letter_Campbell, Letter_Classroom
 Group Carry_letter is Carrying_Letter_KressGazit, Carrying_Letter_Campbell, Carrying_Letter_Classroom
 
 # Correspondance mapping
-Carrying_Letter_Campbell, Carrying_Letter_KressGazit, Carrying_Letter_Classroom correspond to Letter_Campbell, Letter_KressGazit, Letter_Classroom
-Carrying_Letter_Campbell, Carrying_Letter_KressGazit, Carrying_Letter_Classroom correspond to Office_Campbell, Office_KressGazit, Classroom
+#Carrying_Letter_Campbell, Carrying_Letter_KressGazit, Carrying_Letter_Classroom correspond to Letter_Campbell, Letter_KressGazit, Letter_Classroom
+#Carrying_Letter_Campbell, Carrying_Letter_KressGazit, Carrying_Letter_Classroom correspond to Office_Campbell, Office_KressGazit, Classroom
+Carry_letter corresponds to letter
+Carry_letter corresponds to office
+
+If you are activating any carry_letter and sensing the corresponding letter then go to the corresponding office
 
 # Set/Reset the indicator for whether or not the robot is carrying a letter
 Each carry_letter is set on Pickup_Letter and the corresponding letter and reset on deliver_letter or return_letter
