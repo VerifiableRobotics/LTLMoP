@@ -146,11 +146,11 @@ class Automaton:
         if state is None:
             state = self.current_state
 
-        for key, output_val in state.outputs.iteritems():
+        for key in sorted(state.outputs.keys()):
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', key): continue
 
-            new_val = (output_val == "1")
+            new_val = (state.outputs[key] == "1")
 
             if key not in self.current_outputs or new_val != self.current_outputs[key]:
                 # The state of this output proposition has changed!
