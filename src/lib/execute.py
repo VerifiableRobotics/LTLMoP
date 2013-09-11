@@ -291,14 +291,11 @@ class LTLMoPExecutor(ExecutorResynthesisExtensions, object):
             if not self.alive.isSet():
                 break
             
-            self.prev_outputs = deepcopy(self.aut.current_outputs)
             self.prev_z = self.aut.current_state.rank
 
             tic = self.timer_func()
             self.aut.runIteration()
             toc = self.timer_func()
-
-            #self.checkForInternalFlags()
 
             # Rate limiting of execution and GUI update
             while (toc - tic) < 0.05:

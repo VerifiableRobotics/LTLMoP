@@ -7,23 +7,41 @@ from LTLParser.LTLFormula import LTLFormula, LTLFormulaType
 from createJTLVinput import createLTLfile
 import specCompiler
 
-class ExecutorResynthesisExtensions:
+class ExecutorResynthesisExtensions(object):
     """ Extensions to Executor to allow for specification rewriting and resynthesis.
         This class is not meant to be instantiated. """
 
+    def __init__(self):
+        super(ExecutorResynthesisExtensions, self).__init__()
+        logging.info("Initializing resynthesis extensions...")
 
-    def getCurrentStateAsLTL(self, include_env=False):
-        """ Return a boolean formula (as a string) capturing the current discrete state of the system (and, optionally, the environment as well) """
+        # `next_proj` will store the temporary project we modify leading up to resynthesis
+        self.next_proj = None
 
-        if self.aut:
-            # If we have current state in the automaton, use it (since it can capture
-            # state of internal propositions).
-            return fsa.stateToLTL(self.aut.current_state, include_env=include_env)
-        else:
-            # If we have no automaton yet, determine our state manually
-            # TODO: support env
-            # TODO: look at self.proj.currentConfig.initial_truths and pose
-            return ""
+        # `needs_resynthesis` is an internal flag controlled by a resynthesis actuator handler
+        # We don't call resynthesis code directly from the handler because we need to ensure
+        # that it is only called after completion of all other actuators when transitioning to
+        # a state that triggers resynthesis
+        self.needs_resynthesis = False
+
+
+        ####################################################################################
+        # HACK: Wrap the fsa runIteration function to check for internal flags at each step.
+        # (Alternatively, this could be done with handler mapping manipulations or we could
+        # put conditional code inside executor but this is least intrusive for now)
+        ####################################################################################
+
+        # We need to assign the functions to variables to make the
+        # following closure work properly
+        original_fsa_runiteration = fsa.Automaton.runIteration
+        check_flags_func = self._checkForNewInternalFlags
+        def runIterationWithResynthesisChecks(self, *args, **kwds):
+            """ Check for internal flags after every FSA runIteration() call """
+            original_fsa_runiteration(self, *args, **kwds)
+            check_flags_func()
+
+        # Update the FSA function to point to our new one
+        fsa.Automaton.runIteration = runIterationWithResynthesisChecks
 
 
     def _duplicateProject(self, proj, n=itertools.count(1)):
@@ -135,6 +153,20 @@ class ExecutorResynthesisExtensions:
         return True
         
         # TODO: reload from file less often
+    def getCurrentStateAsLTL(self, include_env=False):
+        """ Return a boolean formula (as a string) capturing the current discrete state of 
+            the system (and, optionally, the environment as well) """
+
+        if self.aut:
+            # If we have current state in the automaton, use it (since it can capture
+            # state of internal propositions).
+            return fsa.stateToLTL(self.aut.current_state, include_env=include_env)
+        else:
+            # If we have no automaton yet, determine our state manually
+            # NOTE: This is only relevant for dialogue-based specifications
+            # TODO: Support env
+            # TODO: Look at self.proj.currentConfig.initial_truths and pose
+            return ""
 
 
 
