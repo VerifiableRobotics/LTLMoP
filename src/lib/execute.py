@@ -53,7 +53,7 @@ def usage(script_name):
                               -s FILE, --spec-file FILE:
                                   Load experiment configuration from FILE """ % script_name)
 
-class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
+class LTLMoPExecutor(ExecutorResynthesisExtensions, object):
     """
     This is the main execution object, which combines the synthesized discrete automaton
     with a set of handlers (as specified in a .config file) to create and run a hybrid controller
@@ -63,6 +63,8 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         """
         Create a new execution context object
         """
+
+        super(LTLMoPExecutor, self).__init__()
 
         self.proj = project.Project() # this is the project that we are currently using to execute
         self.aut = None
