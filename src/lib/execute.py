@@ -209,6 +209,9 @@ class LTLMoPExecutor(ExecutorResynthesisExtensions, object):
             logging.error("Please create one by going to [Run] > [Configure Simulation...] in SpecEditor and then try again.")
             sys.exit(2)
 
+        # HACK: give the proj a reference to executor
+        self.proj.executor = self
+
         # Import the relevant handlers
         if firstRun:
             logging.info("Importing handler functions...")
