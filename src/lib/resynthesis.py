@@ -43,6 +43,154 @@ class ExecutorResynthesisExtensions(object):
         # Update the FSA function to point to our new one
         fsa.Automaton.runIteration = runIterationWithResynthesisChecks
 
+    def _checkForNewInternalFlags(self):
+        """ Detect whether any "internal flags" (i.e. propositions beginning with an underscore)
+            have become true in the last timestep, or resynthesis is pending; if so, perform an
+            action based on this. """
+
+        ### Look for rising, underscore-prefixed propositions ###
+
+        # NOTE: This needs to be done /before/ resynthesis to ensure we are using the fully
+        #       rewritten specification at resynthesis time
+
+        # Check the current state of the automaton
+        currently_true_props = set((p for p, v in self.aut.current_outputs.iteritems() if int(v) == 1))
+
+        # Flags can't go true in the first time-step
+        if not hasattr(self.aut, "previously_true_props"):
+            self.aut.previously_true_props = currently_true_props
+            return
+
+        # Look for rising, underscore-prefixed propositions and process them
+        rising_propositions = currently_true_props - self.aut.previously_true_props
+        for p in rising_propositions:
+            if p.startswith("_"):
+                self._processInternalFlag(p)
+
+        self.aut.previously_true_props = currently_true_props
+
+        ### See if the resynthesis actuator handler has let us know we need to resynth ###
+
+        if self.needs_resynthesis:
+            if self.next_proj is not None:
+                self.resynthesizeFromProject(self.next_proj)
+            else:
+                logging.error("Resynthesis was triggered before any spec rewrites.  Skipping.")
+
+            # Clear the resynthesis flag
+            self.needs_resynthesis = False
+
+    def _processInternalFlag(self, flag_name):
+        """ Respond appropriately to an "internal flag" proposition having been triggered.
+            Note that this is only called on rising edges. """
+
+        #################################################
+        ### Check for group modification propositions ###
+        #################################################
+
+        # Use a regex on the proposition name to figure out what we should do
+        m = re.match(r"_(?P<action>add_to|remove_from)_(?P<groupName>\w+)", \
+                     flag_name, re.IGNORECASE)
+
+        # We currently only handle this one type of flag, so there's nothing to do
+        # if it doesn't match
+        if m is None:
+            return
+
+        # Create next_proj if we haven't yet
+        # This is what we'll be working on, and then eventually resynthesizing from
+        if self.next_proj is None:
+            self.next_proj = self._duplicateProject(self.proj)
+
+        # We've been told to add or remove something from a group, but we need to figure
+        # out exactly what that /something/ is (the "referent").  In some cases, this could probably
+        # be resolved automatically using certain heuristics, but for now we will explicitly
+        # ask the user what to do.
+
+        # Keep asking the user until they give a non-empty response
+        response = ""
+        while response.strip() == "":
+            response = self.queryUser("What should I add to the group {!r}?".format(m.group("groupName")))
+
+        # Cast the referent to a set (there may be more than one in the case of new region detection)
+        # FIXME: If correspondences are based on index, we need to be doing list operations not set
+        #        operations here and in _updateSpecGroup()
+        referents = set([response])
+
+        logging.debug("Resolved referents to {}.".format(referents))
+
+        if m.group('action').lower() == "add_to":
+            logging.info("Added item(s) %s to group %s.", ", ".join(referents), m.group('groupName'))
+
+            # Rewrite the group definition in the specification text
+            self._updateSpecGroup(m.group('groupName'), 'add', referents)
+
+            # Get a list of region propositions
+            region_names = [r.name for r in self.proj.rfi.regions]
+            if self.proj.compile_options["decompose"]: # :((((
+                region_names += [r.name for r in self.proj.rfiold.regions]
+
+            # Add any new propositions to the project's proposition lists
+            for ref in referents:
+                if ref in self.next_proj.enabled_sensors + region_names:
+                    # This prop already exists; don't need to add it.
+                    continue
+
+                # Assume all new user-added props are sensors for now.
+                logging.debug("Adding new sensor proposition {!r}".format(ref))
+                self.next_proj.enabled_sensors.append(ref)
+                self.next_proj.all_sensors.append(ref)
+
+            # TODO: update correlated groups (magically?)
+            # TODO: add correlated group props (also magic?)
+
+        elif m.group('action').lower() == "remove_from":
+            # TODO: Removal from groups has not been tested and is likely not to work correctly
+
+            # Rewrite the group definition in the specification text
+            logging.info("Removed item(s) %s from group %s.", ", ".join(referents), m.group('groupName'))
+            self._updateSpecGroup(m.group('groupName'), 'remove', referents)
+
+    def _updateSpecGroup(self, group_name, operator, operand):
+        """ Rewrite the text of the specification in `self.next_proj` by modifying proposition
+            group `group_name` with operator `operator` (e.g. "add"/"remove") and
+            operand `operand` (a set of propositions) """
+
+        # Make a regex for finding the group definition in the spec
+        PropositionGroupingRE = re.compile(r"^group\s+%s\s+(is|are)\s+(?P<propositions>.+)\n" % group_name, \
+                                      re.IGNORECASE|re.MULTILINE)
+
+        # Define a function for modifying the list of propositions in-place
+        def gen_replacement_text(group_name, operand, m):
+            """ Given a group name, modification operand, and match object from
+                PropositionGroupingRE, return a new group definition line with an appropriately
+                updated list of propositions."""
+
+            # Figure out what propositions are already there
+            propositions = set(re.split(r"\s*,\s*", m.group('propositions')))
+
+            # Remove the "empty" placeholder if it exists
+            propositions -= set(["empty"])
+
+            # Perform the operation on the set of propositions
+            if operator == "add":
+                propositions = propositions | operand
+            elif operator == "remove":
+                propositions = propositions - operand
+            else:
+                logging.error("Unknown group modification operator {!r}".format(operator))
+
+            # Re-add the "empty" placeholder if the result of the operation is now empty
+            if not propositions:
+                propositions = ['empty']
+
+            # Create a new group definition line
+            new_group_definition = "group %s is %s\n" % (group_name, ", ".join(propositions))
+
+            return new_group_definition
+
+        self.next_proj.specText = PropositionGroupingRE.sub(lambda m: gen_replacement_text(group_name, operand, m), \
+                                                            self.next_proj.specText)
 
     def _duplicateProject(self, proj, n=itertools.count(1)):
         """ Creates a copy of a proj, and creates an accompanying spec file with an 
