@@ -105,6 +105,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     EditGroupRE = re.compile('(?P<operation>add to|remove from)\s+(?P<groupName>\w+)', re.IGNORECASE)
     def create_edit_prop(internal_props, m):
         prop_name = "_"+m.group('operation').replace(" ", "_")+ "_" + m.group('groupName')
+        prop_name = prop_name.lower()  # normalize case
         if prop_name not in internal_props:
             internal_props.append(prop_name)
         return "do s." + prop_name
