@@ -9,6 +9,7 @@ Does nothing more than print the actuator name and state; for testing purposes.
 
 import subprocess, os, time, socket
 import sys
+import logging
 
 class actuatorHandler:
     def __init__(self, proj, shared_data):
@@ -24,6 +25,24 @@ class actuatorHandler:
             except IOError:
                 # Probably already closed by user
                 pass
+
+    def triggerResynthesis(self, actuatorVal, initial):
+        """ Tell the executor to pause, resynthesize, and then resume. """
+        # TODO: Move this to a separate shared handler
+
+        # Only trigger on rising edges
+        if not initial and int(actuatorVal) == 1:
+            if self.proj.executor.needs_resynthesis:
+                # We are in the middle of loading a new aut after resynthesis;
+                # don't trigger in this case.
+                return
+
+            logging.debug("Resynthesis handler triggered")
+
+            # We can't rely on being the last actuator that is called
+            # for this state, so let's set a flag and let executor-resynthesis
+            # handle things from here
+            self.proj.executor.needs_resynthesis = True
 
     def setActuator(self, name, actuatorVal,initial):
         """
