@@ -13,6 +13,7 @@ import math, re, sys, random, os, subprocess, time
 from regions import *
 import numpy
 import fileMethods
+import logging
 
 
 def stateToLTL(state, use_next=False, include_env=True, swap_io=False):
@@ -474,7 +475,16 @@ class Automaton:
         
 
         # Write the transitions with the input labels (only inputs that are true)
+
+    def getSensorStates(self):
+        # Take a snapshot of our current sensor readings
+        # This is so we don't risk the readings changing in the middle of our state search
+        sensor_state = {}
+        for sensor in self.sensors:
+            sensor_state[sensor] = eval(self.sensor_handler[sensor], {'self':self,'initial':False})
     
+        return sensor_state
+
     def findTransitionableStates(self, initial=False):
         """
         Returns a list of states that we could conceivably transition to, given
@@ -492,11 +502,7 @@ class Automaton:
         else:
             state_list = self.current_state.transitions
 
-        # Take a snapshot of our current sensor readings
-        # This is so we don't risk the readings changing in the middle of our state search
-        sensor_state = {}
-        for sensor in self.sensors:
-            sensor_state[sensor] = eval(self.sensor_handler[sensor], {'self':self,'initial':False})
+        sensor_state = self.getSensorStates()
 
         for state in state_list:
             okay = True
@@ -545,6 +551,8 @@ class Automaton:
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', output): continue
             self.current_outputs[output] = (output in init_outputs)
+
+        logging.debug("Looking for initial state with env = {} and sys = {}".format(self.getSensorStates(), self.current_outputs))
 
         candidates = self.findTransitionableStates(initial=True)
 
