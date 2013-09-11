@@ -219,6 +219,8 @@ class LTLMoPExecutor(ExecutorResynthesisExtensions, object):
         else:
             #print "Reloading motion control handler..."
             #self.proj.importHandlers(['motionControl'])
+            logging.info("Reinitializing sensor/actuator handlers...")
+            self.proj.importHandlers([])
             pass
 
         # We are done initializing at this point if there is no aut file yet
