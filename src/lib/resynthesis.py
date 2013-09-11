@@ -197,67 +197,77 @@ class ExecutorResynthesisExtensions(object):
                                                             self.next_proj.specText)
 
     def _duplicateProject(self, proj, n=itertools.count(1)):
-        """ Creates a copy of a proj, and creates an accompanying spec file with an 
-            auto-incremented counter in the name.  (Not overwriting is mostly for debugging.)"""
+        """ Creates a copy of a proj, and creates an accompanying spec file with an
+            auto-incremented counter in the name."""
 
-        # reload from file instead of deepcopy because hsub stuff can include uncopyable thread locks, etc
+        # reload from file instead of deepcopy because hsub stuff can
+        # include uncopyable thread locks, etc
+        # TODO: fix this ^
         new_proj = project.Project()
         new_proj.setSilent(True)
-        new_proj.loadProject(self.proj.getFilenamePrefix() + ".spec")
+        new_proj.loadProject(proj.getFilenamePrefix() + ".spec")
 
         # copy hsub references manually
         new_proj.hsub = proj.hsub
         new_proj.hsub.proj = new_proj # oh my god, guys
         new_proj.h_instance = proj.h_instance
-        
+        new_proj.rfiold = proj.rfiold
+
         new_proj.sensor_handler = proj.sensor_handler
         new_proj.actuator_handler = proj.actuator_handler
 
         # Choose a name by incrementing the stepX suffix
-        # Note: old files from previous executions will be overwritten
-        base_name = self.proj.getFilenamePrefix().rsplit('.',1)[0] # without the modifier
+        # NOTE: old files from previous executions will be overwritten
+
+        # Take the current proj name and remove any "stepX" part
+        base_name = self.proj.getFilenamePrefix().rsplit('.', 1)[0]
+
+        # Add a new "stepX" part
         newSpecName = "%s.step%d.spec" % (base_name, n.next())
 
+        # Save the file
         new_proj.writeSpecFile(newSpecName)
 
-        logging.info("Wrote new spec file: %s" % newSpecName)
-        
+        logging.info("Created new spec file: %s", newSpecName)
+
         return new_proj
 
     def _setSpecificationInitialConditionsToCurrent(self, proj):
-        """ Remove any existing initial conditions from the guarantees portion of the LTL specification
-            and replace them with the current state of the system.
+        """ Remove any existing initial conditions from the guarantees portion of the
+            LTL specification and replace them with the current state of the system.
 
-            Propositions that don't exist in both old and new specifications are ignored in the process."""
+            TODO: Propositions that don't exist in both old and new specifications are
+            ignored in the process?"""
 
         # TODO: support doing this at the language level too?
         # TODO: what if state changes during resynthesis? should we be less restrictive?
 
-        # parse the spec so we can manipulate it
+        # Parse the LTL file in so we can manipulate it
         ltl_filename = proj.getFilenamePrefix() + ".ltl"
         assumptions, guarantees = LTLFormula.fromLTLFile(ltl_filename)
 
-        # TODO: do we need to remove too? what about env?
-        # add in current system state to make strategy smaller
-        ltl_current_state = self.getCurrentStateAsLTL() # TODO: constrain to props in new spec
-        gc = guarantees.getConjuncts()
+        # Get a conjunct expressing the current state
+        ltl_current_state = self.getCurrentStateAsLTL() # TODO: Constrain to props in new spec
+        logging.debug("Constraining new initial conditions to: " + ltl_current_state)
 
+        # TODO: Do we need to remove pre-exisiting constraints too? What about env?
+        # Add in current system state to make strategy smaller
+        gc = guarantees.getConjuncts()
         if ltl_current_state != "":
             gc.append(LTLFormula.fromString(ltl_current_state))
 
-        # write the file back
+        # Write the file back
         createLTLfile(ltl_filename, assumptions, gc)
 
-    def resynthesizeFromNewSpecification(self, spec_text):
+    def resynthesizeFromProject(self, new_proj):
+        """ Given a new project `new_proj`, pause execution, synthesize this new project,
+            swap it in for the old project, and then resume execution. """
+
+        # TODO: reload from file less often
+
         self.pause()
 
-        self.postEvent("INFO", "Starting resynthesis...")
-
-        # Copy the current project
-        new_proj = self._duplicateProject(self.proj)
-
-        # Overwrite the specification text
-        new_proj.specText = spec_text
+        self.postEvent("INFO", "Starting resynthesis. Please wait...")
 
         # Save the file
         new_proj.writeSpecFile()
@@ -283,15 +293,16 @@ class ExecutorResynthesisExtensions(object):
         (realizable, realizableFS, output) = c._synthesize()
         logging.debug(output)
 
+        # Check if synthesis succeeded
         if not (realizable or realizableFS):
             logging.error("Specification for resynthesis was unsynthesizable!")
+            self.postEvent("INFO", "ERROR: Resynthesis failed.  Please check the terminal log for more information.")
             self.pause()
             return False
 
         logging.info("New automaton has been created.")
 
         # Load in the new strategy
-
         self.proj = new_proj
 
         logging.info("Reinitializing execution...")
@@ -300,11 +311,26 @@ class ExecutorResynthesisExtensions(object):
         aut_file = self.proj.getFilenamePrefix() + ".aut"
         self.initialize(spec_file, aut_file, firstRun=False)
 
+        # Clear next_proj again
+        self.next_proj = None
+
+        self.postEvent("INFO", "Resynthesis complete.  Resuming execution.")
         self.resume()
 
         return True
+
+    def resynthesizeFromNewSpecification(self, spec_text):
+        """ Given a text string of a new specification, resynthesize with a copy of the current
+            project after swapping in the next `spec_text` for the previous specification. """
+
+        # Copy the current project
+        new_proj = self._duplicateProject(self.proj)
+
+        # Overwrite the specification text
+        new_proj.specText = spec_text
         
-        # TODO: reload from file less often
+        return resynthesizeFromProject(new_proj)
+
     def getCurrentStateAsLTL(self, include_env=False):
         """ Return a boolean formula (as a string) capturing the current discrete state of 
             the system (and, optionally, the environment as well) """
