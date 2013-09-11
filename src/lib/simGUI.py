@@ -21,6 +21,7 @@ import copy
 import xmlrpclib
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 import random
+import logging
 
 # begin wxGlade: extracode
 # end wxGlade
@@ -166,6 +167,8 @@ class SimGUI_Frame(wx.Frame):
             wx.CallAfter(self.loadSpecFile, eventData)
         elif eventType == "REGIONS":
             wx.CallAfter(self.loadRegionFile, eventData)
+        elif eventType == "QUERY_USER":
+            wx.CallAfter(self.queryUser, eventData)
         elif eventData.startswith("Output proposition"):
             if self.checkbox_statusLog_propChange.GetValue():
                 wx.CallAfter(self.appendLog, eventData + "\n", color="GREEN") 
@@ -301,6 +304,10 @@ class SimGUI_Frame(wx.Frame):
         
         if event is not None:
             event.Skip()
+
+    def queryUser(self, question):
+        answer = wx.GetTextFromUser(question, "User input needed", "")
+        self.executorProxy.processUserQueryResponse(answer)
 
     def appendLog(self, text, color="BLACK"):
         # for printing everything on the log

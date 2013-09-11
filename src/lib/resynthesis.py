@@ -6,6 +6,7 @@ import logging
 from LTLParser.LTLFormula import LTLFormula, LTLFormulaType
 from createJTLVinput import createLTLfile
 import specCompiler
+import threading
 
 class ExecutorResynthesisExtensions(object):
     """ Extensions to Executor to allow for specification rewriting and resynthesis.
@@ -24,6 +25,9 @@ class ExecutorResynthesisExtensions(object):
         # a state that triggers resynthesis
         self.needs_resynthesis = False
 
+        # Internal variables for receiving asynchronous user query responses
+        self.user_query_response = ""
+        self.received_user_query_response = threading.Event()
 
         ####################################################################################
         # HACK: Wrap the fsa runIteration function to check for internal flags at each step.
@@ -316,6 +320,27 @@ class ExecutorResynthesisExtensions(object):
             # TODO: Look at self.proj.currentConfig.initial_truths and pose
             return ""
 
+    def queryUser(self, question):
+        """ Ask the user for an input. """
+        # FIXME: This will have problems if a second query is issued before the first terminates
 
+        # Delegate the query to whatever user interface is attached to execute (e.g. SimGUI)
+        self.received_user_query_response.clear()
+        self.postEvent("QUERY_USER", question)
 
+        # Block until we receive a response
+        # WARNING: The controller will be unresponsive during this period.
+        self.received_user_query_response.wait()
 
+        return self.user_query_response
+
+    def processUserQueryResponse(self, answer):
+        """ Callback function to receive a response to a user query. """
+
+        logging.debug("Got user query response {!r}".format(answer))
+
+        # Save the response
+        self.user_query_response = answer
+
+        # Let anyone waiting for the response know that it is ready
+        self.received_user_query_response.set()
