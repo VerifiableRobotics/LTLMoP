@@ -61,18 +61,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     grammarFile = open('lib/structuredEnglish.fcfg','rb')
     grammarText = grammarFile.read()
     
-    #Add production rules for region names to our grammar string
-    for region in regionList:
-        grammarText += '\nREGION[SEM=<'+region+'>] -> \''+region+'\''
-    
-    #Add production rules for action names to our grammar string
-    for action in robotPropList:
-        grammarText += '\nACTION[SEM=<'+action+'>] -> \''+action+'\''
-    
-    #Add production rules for sensor names to our grammar string
-    for sensor in sensorList:
-        grammarText += '\nSENSOR[SEM=<'+sensor+'>] -> \''+sensor+'\''
-    
     #Generate regular expression to match sentences defining region groups
     #Resultant expression is: 'group (?P<name>\w+) is (?P<items>(?:region1,? ?|region2,? ?|region3,? ?|empty)+)'
     groupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>(?:'
@@ -97,6 +85,10 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     #Generate regular expression to match sentences defining correlations
     correlationDefPattern = r'((?:[_\w]+,? )+)correspond(?:s)? to((?:,? [_\w]+)+)'
     r_correlationDef = re.compile(correlationDefPattern, re.I)
+
+    #Generate regular expression to match group operation sentences
+    groupOpPattern = r'(?P<operation>add to|remove from)\s+group\s+(?P<groupName>\w+)'
+    r_groupOp = re.compile(groupOpPattern, re.I)
     
     #Begin parsing input text
     textLines = text.split('\n')
@@ -189,8 +181,30 @@ def writeSpec(text, sensorList, regionList, robotPropList):
                 #print '\tCorrelations updated: ' + keyItems[ind] + ' corresponds to ' + valueItems[ind]
             continue
 
+        #Find any group operations but still add line for parsing
+        m_groupOp = r_groupOp.search(line)
+        while m_groupOp:
+            propName = "_"+m_groupOp.group('operation').replace(' ','_')+'_'+m_groupOp.group('groupName')
+            if propName not in robotPropList:
+                robotPropList.append(propName.lower())
+            line = r_groupOp.sub('do '+propName, line)
+            textLines[lineInd] = line
+            m_groupOp = r_groupOp.search(line)
+
         #If sentence doesn't match any of these, we can parse it with the grammar
         linesToParse.append(lineInd)
+
+    #Add production rules for region names to our grammar string
+    for region in regionList:
+        grammarText += '\nREGION[SEM=<'+region+'>] -> \''+region+'\''
+    
+    #Add production rules for action names to our grammar string
+    for action in robotPropList:
+        grammarText += '\nACTION[SEM=<'+action+'>] -> \''+action+'\''
+    
+    #Add production rules for sensor names to our grammar string
+    for sensor in sensorList:
+        grammarText += '\nSENSOR[SEM=<'+sensor+'>] -> \''+sensor+'\''
 
     #Generate NLTK feature grammar object from grammar string
     grammar = nltk.grammar.parse_fcfg(grammarText.encode('ASCII','ignore'))

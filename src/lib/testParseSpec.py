@@ -25,6 +25,8 @@ Carry_letter corresponds to office
 
 If you are activating any carry_letter and sensing the corresponding letter then go to the corresponding office
 
+add to group office
+
 # Set/Reset the indicator for whether or not the robot is carrying a letter
 Each carry_letter is set on Pickup_Letter and the corresponding letter and reset on deliver_letter or return_letter
 
