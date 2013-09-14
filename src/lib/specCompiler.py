@@ -286,8 +286,9 @@ class SpecCompiler(object):
 
             logging.debug(text)
 
-            spec, traceback, failed, self.LTL2SpecLineNumber = parseSpec.writeSpec(text, sensorList, regionList, robotPropList)
-            self.proj.internal_props = []
+            spec, traceback, failed, self.LTL2SpecLineNumber, self.proj.internal_props = parseSpec.writeSpec(text, sensorList, regionList, robotPropList)
+
+            robotPropList.extend(self.proj.internal_props)
 
             # TODO: support locative props
 

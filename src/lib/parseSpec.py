@@ -41,6 +41,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     LTL2LineNo = {}
 
+    internal_props = []
+
     sensorList = [sensor.lower() for sensor in sensorList]
     regionList = [region.lower() for region in regionList]
     robotPropList = [robotProp.lower() for robotProp in robotPropList]
@@ -187,6 +189,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             propName = "_"+m_groupOp.group('operation').replace(' ','_')+'_'+m_groupOp.group('groupName')
             if propName not in robotPropList:
                 robotPropList.append(propName.lower())
+                internal_props.append(propName.lower())
             line = r_groupOp.sub('do '+propName, line)
             textLines[lineInd] = line
             m_groupOp = r_groupOp.search(line)
@@ -283,7 +286,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         # remove last &
         spec['SysGoals'] = re.sub('& \n$','\n',spec['SysGoals'])
         
-    return spec,linemap,failed,LTL2LineNo
+    return spec,linemap,failed,LTL2LineNo,internal_props
             
 def parseInit(semstring, sensorList, robotPropList):
     if semstring.find('$EnvStart') != -1:
