@@ -116,10 +116,8 @@ class ExecutorResynthesisExtensions(object):
         while response.strip() == "":
             response = self.queryUser("What should I add to the group {!r}?".format(m.group("groupName")))
 
-        # Cast the referent to a set (there may be more than one in the case of new region detection)
-        # FIXME: If correspondences are based on index, we need to be doing list operations not set
-        #        operations here and in _updateSpecGroup()
-        referents = set([response])
+        # Cast the referent to a list (there may be more than one in the case of new region detection)
+        referents = [response]
 
         logging.debug("Resolved referents to {}.".format(referents))
 
@@ -158,7 +156,7 @@ class ExecutorResynthesisExtensions(object):
     def _updateSpecGroup(self, group_name, operator, operand):
         """ Rewrite the text of the specification in `self.next_proj` by modifying proposition
             group `group_name` with operator `operator` (e.g. "add"/"remove") and
-            operand `operand` (a set of propositions) """
+            operand `operand` (a list of propositions) """
 
         # Make a regex for finding the group definition in the spec
         PropositionGroupingRE = re.compile(r"^group\s+%s\s+(is|are)\s+(?P<propositions>.+)\n" % group_name, \
@@ -171,22 +169,22 @@ class ExecutorResynthesisExtensions(object):
                 updated list of propositions."""
 
             # Figure out what propositions are already there
-            propositions = set(re.split(r"\s*,\s*", m.group('propositions')))
+            propositions = re.split(r"\s*,\s*", m.group('propositions'))
 
             # Remove the "empty" placeholder if it exists
-            propositions -= set(["empty"])
+            propositions = [p for p in propositions if p != "empty"]
 
-            # Perform the operation on the set of propositions
+            # Perform the operation on the list of propositions
             if operator == "add":
-                propositions = propositions | operand
+                propositions.extend(operand)
             elif operator == "remove":
-                propositions = propositions - operand
+                propositions = [p for p in propositions if p not in operand]
             else:
                 logging.error("Unknown group modification operator {!r}".format(operator))
 
             # Re-add the "empty" placeholder if the result of the operation is now empty
             if not propositions:
-                propositions = ['empty']
+                propositions = ["empty"]
 
             # Create a new group definition line
             new_group_definition = "group %s is %s\n" % (group_name, ", ".join(propositions))
