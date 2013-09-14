@@ -282,7 +282,7 @@ class SpecCompiler(object):
         elif self.proj.compile_options["parser"] == "nltk":
             import parseSpec
 
-            regionList = [x.name for x in self.proj.rfi.regions]
+            regionList = [x.name for x in self.proj.rfi.regions if x.name != "boundary" and not x.isObstacle]
 
             logging.debug(text)
 
