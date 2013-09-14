@@ -307,7 +307,9 @@ def parseStay(semstring, regions):
             return 'And(Iff(Next('+regions[ind]+'),'+regions[ind]+'),'+appendStayClause(ind+1)+')'
     if semstring.find('$Stay') != -1:       
         stay = appendStayClause(0)
-        return semstring.replace('$Stay',stay)
+        #return semstring.replace('$Stay',stay)
+        # Just insert the "STAY_THERE" macro to be dealt with by specCompiler
+        return semstring.replace('Next($Stay)', "STAY_THERE")
     else:
         return semstring
 
