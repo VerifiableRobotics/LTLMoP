@@ -8,13 +8,12 @@ sensors = ['door_closed','person']
 auxProps = ['carrying_letter_kressgazit','carrying_letter_campbell','carrying_letter_classroom','delivering','locked_office','empty_office']
 
 specText = """
-Group emptyGroup is empty
-Group oneItemGroup is radio
+Group faces is empty
+Group greetings is empty
 
-visit each emptyGroup
-always do any oneItemGroup
+faces correspond to greetings
 
-if you are sensing person then add to group emptyGroup and add to group oneItemGroup
+do the corresponding greeting if and only if you are sensing each face
 """
 
 sent = specText.split('\n')

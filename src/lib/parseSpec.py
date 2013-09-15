@@ -60,7 +60,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     #Open CFG file
     #TODO: Make path independent
-    grammarFile = open('structuredEnglish.fcfg','rb')
+    grammarFile = open('lib/structuredEnglish.fcfg','rb')
     grammarText = grammarFile.read()
     
     #Generate regular expression to match sentences defining region groups
@@ -397,7 +397,7 @@ def parseCorresponding(semstring, correlations, allGroups):
         #Build conjunction out of all generated sentences
         if len(newSentences) == 0:
             semstring = ''
-        if len(newSentences) == 1:
+        elif len(newSentences) == 1:
             semstring = newSentences[0]
         else:
             semstring = 'And(' + ',And('.join(newSentences[0:-1]) + ',' + newSentences[-1] + ')'*(len(newSentences)-1)
