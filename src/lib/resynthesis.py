@@ -172,7 +172,7 @@ class ExecutorResynthesisExtensions(object):
                 if new_prop_name not in self.next_proj.enabled_actuators + self.next_proj.all_customs + region_names:
                     self.next_proj.enabled_actuators.append(new_prop_name)
                     self.next_proj.all_actuators.append(new_prop_name)
-                    logging.debug("Adding new actuator proposition {!r}".format(ref))
+                    logging.debug("Adding new actuator proposition {!r}".format(new_prop_name))
 
         elif m.group('action').lower() == "remove_from":
             # TODO: Removal from groups has not been tested and is likely not to work correctly
