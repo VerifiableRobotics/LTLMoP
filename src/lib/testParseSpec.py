@@ -24,6 +24,8 @@ Letters correspond to Offices
 #environment starts with false
 
 #### Spec-rewriting and resynthesis mechanics ####
+If you are in any offices then do not resynthesize
+
 
 # This is only triggered if we see a letter we haven't ever seen before
 If you are sensing newLetter then add to group Letters and resynthesize
