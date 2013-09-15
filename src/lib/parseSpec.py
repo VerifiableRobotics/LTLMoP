@@ -60,7 +60,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     #Open CFG file
     #TODO: Make path independent
-    grammarFile = open('lib/structuredEnglish.fcfg','rb')
+    grammarFile = open('structuredEnglish.fcfg','rb')
     grammarText = grammarFile.read()
     
     #Generate regular expression to match sentences defining region groups
@@ -187,10 +187,11 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         m_groupOp = r_groupOp.search(line)
         while m_groupOp:
             propName = "_"+m_groupOp.group('operation').replace(' ','_')+'_'+m_groupOp.group('groupName')
+            print 'propName: '+propName
             if propName not in robotPropList:
                 robotPropList.append(propName.lower())
                 internal_props.append(propName.lower())
-            line = r_groupOp.sub('do '+propName, line)
+            line = re.sub(m_groupOp.group(0),'do '+propName, line)
             textLines[lineInd] = line
             m_groupOp = r_groupOp.search(line)
 
@@ -333,6 +334,7 @@ def parseGroupAny(semstring, allGroups):
         groupName = re.search(r'\$Any\((\w+)\)',semstring).groups()[0]
         if groupName in allGroups:
             if len(allGroups[groupName]) == 0: return ''
+            if len(allGroups[groupName]) == 1: return re.sub(r'\$Any\('+groupName+'\)',allGroups[groupName][0],semstring)
             group = allGroups[groupName]
             anyClause = 'Or(' + ',Or('.join(group[0:-1]) + ',' + group[-1] + ')'*(len(group)-1)
             semstring = re.sub(r'\$Any\('+groupName+'\)', anyClause, semstring)
@@ -345,6 +347,7 @@ def parseGroupEach(semstring, allGroups):
         groupName = re.search(r'\$Each\((\w+)\)',semstring).group(1)
         if groupName in allGroups:
             if len(allGroups[groupName]) == 0: return ''
+            if len(allGroups[groupName]) == 1: return re.sub(r'\$Each\('+groupName+'\)', allGroups[groupName][0], semstring)
             newSentences = []
             for groupItem in allGroups[groupName]:
                 newSentences.append(re.sub(r'\$Each\('+groupName+'\)',groupItem,semstring))
