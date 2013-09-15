@@ -33,6 +33,7 @@ SAFETY[SPEC=SysTrans,SEM=<Glob(?ph)>,PROP=?ph] -> ALWAYS PHI_ROB[SEM=?ph]
 SAFETY[SPEC=EnvTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=EnvTrans,SEM=?s]
 SAFETY[SPEC=SysTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=SysTrans,SEM=?s]
 SAFETY[SPEC=SysTrans,SEM=<Glob(?s)>,PROP=?s] -> STAY[SEM=?s]
+SAFETY[SPEC=?s,SEM=<Glob(?lc(?ph1,?ph2))>,PROP=<?lc(?ph1,?ph2)>] -> SAFETY[SPEC=?s,SEM=?ph1] LC[SEM=?lc] SAFETY[SPEC=?s,SEM=?ph2]
 
 # Liveness formulae
 ###################
