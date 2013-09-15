@@ -111,10 +111,7 @@ class ExecutorResynthesisExtensions(object):
         # be resolved automatically using certain heuristics, but for now we will explicitly
         # ask the user what to do.
 
-        # Keep asking the user until they give a non-empty response
-        response = ""
-        while response.strip() == "":
-            response = self.queryUser("What should I add to the group {!r}?".format(m.group("groupName")))
+        response = self.queryUser("What should I add to the group {!r}?".format(m.group("groupName")))
 
         # Cast the referent to a list (there may be more than one in the case of new region detection)
         referents = [response]
@@ -344,17 +341,27 @@ class ExecutorResynthesisExtensions(object):
             # TODO: Look at self.proj.currentConfig.initial_truths and pose
             return ""
 
-    def queryUser(self, question):
-        """ Ask the user for an input. """
+    def queryUser(self, question, default_response="", accept_empty_response=False):
+        """ Ask the user for an input, prompting with `question`.  `default_response` will
+            be provided as a recommended response.  If `accept_empty_response` is False,
+            the question will be re-asked until the user provides a non-empty answer.  """
+
         # FIXME: This will have problems if a second query is issued before the first terminates
 
-        # Delegate the query to whatever user interface is attached to execute (e.g. SimGUI)
-        self.received_user_query_response.clear()
-        self.postEvent("QUERY_USER", question)
+        self.user_query_response = None
 
-        # Block until we receive a response
-        # WARNING: The controller will be unresponsive during this period.
-        self.received_user_query_response.wait()
+        # If we aren't accepting empty responses, Keep asking the user until they give a
+        # non-empty response
+        while self.user_query_response is None or \
+              self.user_query_response.strip() == "" and not accept_empty_response:
+
+            # Delegate the query to whatever user interface is attached to execute (e.g. SimGUI)
+            self.received_user_query_response.clear()
+            self.postEvent("QUERY_USER", [question, default_response])
+
+            # Block until we receive a response
+            # WARNING: The controller will be unresponsive during this period.
+            self.received_user_query_response.wait()
 
         return self.user_query_response
 

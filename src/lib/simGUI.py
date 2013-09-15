@@ -168,7 +168,7 @@ class SimGUI_Frame(wx.Frame):
         elif eventType == "REGIONS":
             wx.CallAfter(self.loadRegionFile, eventData)
         elif eventType == "QUERY_USER":
-            wx.CallAfter(self.queryUser, eventData)
+            wx.CallAfter(self.queryUser, eventData[0], eventData[1])
         elif eventData.startswith("Output proposition"):
             if self.checkbox_statusLog_propChange.GetValue():
                 wx.CallAfter(self.appendLog, eventData + "\n", color="GREEN") 
@@ -305,8 +305,8 @@ class SimGUI_Frame(wx.Frame):
         if event is not None:
             event.Skip()
 
-    def queryUser(self, question):
-        answer = wx.GetTextFromUser(question, "User input needed", "")
+    def queryUser(self, question, default_response=""):
+        answer = wx.GetTextFromUser(question, "User input needed", default_response)
         self.executorProxy.processUserQueryResponse(answer)
 
     def appendLog(self, text, color="BLACK"):
