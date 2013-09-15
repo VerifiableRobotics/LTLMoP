@@ -15,6 +15,7 @@ class actuatorHandler:
     def __init__(self, proj, shared_data):
         self.proj = proj
         self.p_gui = None
+        self.actuator_names = []
 
     def _stop(self):
         if self.p_gui is not None:
@@ -52,6 +53,7 @@ class actuatorHandler:
         """
 
         if initial:
+            # Start the GUI window if we haven't already
             if self.p_gui is None:
                 # Prepare to receive initialization signal
                 host = 'localhost'
@@ -82,7 +84,11 @@ class actuatorHandler:
 
                 UDPSock.close()
 
-            self.p_gui.stdin.write(name + ",init\n")
+            # Only initialize a new column for this prop name if we haven't
+            # seen it before (for example, in the case of resynthesis)
+            if name not in self.actuator_names:
+                self.p_gui.stdin.write(name + ",init\n")
+                self.actuator_names.append(name)
         else:
             if actuatorVal:
                 time.sleep(0.1)  # Fake some time lag for the actuator to enable
