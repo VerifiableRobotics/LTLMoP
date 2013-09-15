@@ -2,18 +2,46 @@
 
 import parseSpec
 
-regions = ['mail_room','classroom','office_campbell','office_kressgazit']
-actions = ['radio']
-sensors = ['door_closed','person']
-auxProps = ['carrying_letter_kressgazit','carrying_letter_campbell','carrying_letter_classroom','delivering','locked_office','empty_office']
+regions = ['hallN', 'closet','mailRoom','hallC','lounge','hallW']
+actions = ['resynthesize']
+sensors = ['letter1', 'letter2', 'newletter']
+auxProps = []
 
 specText = """
-Group faces is empty
-Group greetings is empty
+# Letters that we can detect
+Group Letters is empty
 
-faces correspond to greetings
+# Regions that each letter needs to end up in.
+Group Offices is empty
 
-do the corresponding greeting if and only if you are sensing each face
+# Regions to patrol if you are not carrying letters
+Group PatrolRooms is mailRoom, hallW, hallN
+
+# C(letters) = {Destinations}
+Letters correspond to Offices
+
+#robot starts in mailRoom with false
+#environment starts with false
+
+#### Spec-rewriting and resynthesis mechanics ####
+
+# This is only triggered if we see a letter we haven't ever seen before
+If you are sensing newLetter then add to group Letters and resynthesize
+
+#### Letter delivery specification ####
+If you are sensing any Letters then go to the corresponding Office
+
+# No spurious pickups
+#Do pick_up if and only if you are sensing any Letters
+
+# Go back to the mailroom if we have nothing else to do
+If you are not sensing any Letters then visit each PatrolRoom
+
+# Environment assumption: Be nice don't show us letters all the time
+Infinitely often not newLetter
+
+# F/S stuffs
+If you are sensing newLetter then stay there
 """
 
 sent = specText.split('\n')

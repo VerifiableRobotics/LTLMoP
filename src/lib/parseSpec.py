@@ -256,7 +256,8 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             # the appropriate section of the specification
             stringLTL = prefix2infix(semstring)
             
-            spec[syntree.node['SPEC']] += stringLTL + ' & \n'
+            if stringLTL != '':
+                spec[syntree.node['SPEC']] += stringLTL + ' & \n'
             linemap[syntree.node['SPEC']].append(lineNo)
             LTL2LineNo[stringLTL] = lineNo
             
