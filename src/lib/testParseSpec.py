@@ -16,6 +16,9 @@ Environment starts with false
 Group office is Office_KressGazit, Office_Campbell, Classroom
 Group letter is Letter_KressGazit, Letter_Campbell, Letter_Classroom
 Group Carry_letter is Carrying_Letter_KressGazit, Carrying_Letter_Campbell, Carrying_Letter_Classroom
+group future_rooms is empty
+
+visit each future_rooms
 
 # Correspondance mapping
 #Carrying_Letter_Campbell, Carrying_Letter_KressGazit, Carrying_Letter_Classroom correspond to Letter_Campbell, Letter_KressGazit, Letter_Classroom
@@ -53,7 +56,7 @@ Do Deliver_Letter if and only if you are activating Delivering and you are in an
 sent = specText.split('\n')
 
 #[spec,linemap,failed,LTL2LineNo] = parseSpec.writeSpec('\n'.join(sent[0:10])+'\n'+'\n'.join(sent[17:18]), sensors, regions, actions+auxProps)
-[spec,linemap,failed,LTL2LineNo] = parseSpec.writeSpec(specText, sensors, regions, actions+auxProps)
+[spec,linemap,failed,LTL2LineNo,internal_props] = parseSpec.writeSpec(specText, sensors, regions, actions+auxProps)
 
 for formula in spec.values():
     print formula

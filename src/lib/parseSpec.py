@@ -125,7 +125,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #We want to recognize the group name with or without a trailing 's'
             grammarText += '\nGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified regions to our dictionary of region groups
-            regionGroups[groupName] = re.split(r', *', m_groupDef.group('items'))
+            regionGroups[groupName] = filter(lambda x: x!='empty',re.split(r', *', m_groupDef.group('items')))
             allGroups[groupName] = regionGroups[groupName]
             #print '\tGroups updated: ' + str(regionGroups)
 
@@ -137,7 +137,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #We want to recognize the group name with or without a trailing 's'
             grammarText += '\nSENSORGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified sensors to out dictionary of sensor groups
-            sensorGroups[groupName] = re.split(r', *', m_sensorGroupDef.group('items'))
+            sensorGroups[groupName] = filter(lambda x: x!='empty',re.split(r', *', m_sensorGroupDef.group('items')))
             allGroups[groupName] = sensorGroups[groupName]
             #print '\tSensor groups updated: ' + str(sensorGroups)
 
@@ -149,7 +149,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             #We want to recognize the group name with or without a trailing 's'
             grammarText += '\nACTIONGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
             #Add specified sensors to out dictionary of sensor groups
-            actionGroups[groupName] = re.split(r', *', m_actionGroupDef.group('items'))
+            actionGroups[groupName] = filter(lambda x: x!='empty',re.split(r', *', m_actionGroupDef.group('items')))
             allGroups[groupName] = actionGroups[groupName]
             #print '\tAction groups updated: ' + str(actionGroups)
 
