@@ -187,7 +187,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         m_groupOp = r_groupOp.search(line)
         while m_groupOp:
             propName = "_"+m_groupOp.group('operation').replace(' ','_')+'_'+m_groupOp.group('groupName')
-            print 'propName: '+propName
             if propName not in robotPropList:
                 robotPropList.append(propName.lower())
                 internal_props.append(propName.lower())
