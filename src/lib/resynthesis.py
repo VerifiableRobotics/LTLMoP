@@ -84,6 +84,17 @@ class ExecutorResynthesisExtensions(object):
             # Clear the resynthesis flag
             self.needs_resynthesis = False
 
+    def _findGroupsInCorrespondenceWithGroup(self, group_name):
+        """ Return a list of group names to which the group named `group_name` has a correspondence relation. """
+        
+        # TODO: Move this to parser?
+        CorrespondenceDefinitionRE = re.compile(r"^\s*" + group_name + r"\s+corresponds?\s+to\s+(?P<groupB>\w+)", \
+                                                re.MULTILINE | re.IGNORECASE)
+        
+        corresponding_groups = [m.group("groupB") for m in CorrespondenceDefinitionRE.finditer(self.proj.specText)]
+        
+        return corresponding_groups
+
     def _processInternalFlag(self, flag_name):
         """ Respond appropriately to an "internal flag" proposition having been triggered.
             Note that this is only called on rising edges. """
@@ -139,9 +150,29 @@ class ExecutorResynthesisExtensions(object):
                 logging.debug("Adding new sensor proposition {!r}".format(ref))
                 self.next_proj.enabled_sensors.append(ref)
                 self.next_proj.all_sensors.append(ref)
+            
+            # Figure out if there are any corresponding groups which we will also need to update
+            corresponding_groups = self._findGroupsInCorrespondenceWithGroup(m.group('groupName'))
+            logging.debug("Need to also update corresponding groups: {}".format(corresponding_groups))
 
-            # TODO: update correlated groups (magically?)
-            # TODO: add correlated group props (also magic?)
+            # Process each corresponding group
+            for corr_group_name in corresponding_groups:
+                # Suggest a default name
+                new_prop_name_default = corr_group_name + "_" + referents[0]
+
+                # Ask for user input
+                new_prop_name = self.queryUser("Name for new proposition in group {} that corresponds to {}?".format(corr_group_name, referents[0]), \
+                                               default_response=new_prop_name_default)
+
+                # Rewrite the spec
+                self._updateSpecGroup(corr_group_name, 'add', [new_prop_name])
+                logging.info("Added corresponding item %s to group %s.", new_prop_name, corr_group_name)
+
+                # Assume the new prop is either a region or an actuator, and add to actuators if necessary
+                if new_prop_name not in self.next_proj.enabled_actuators + self.next_proj.all_customs + region_names:
+                    self.next_proj.enabled_actuators.append(new_prop_name)
+                    self.next_proj.all_actuators.append(new_prop_name)
+                    logging.debug("Adding new actuator proposition {!r}".format(ref))
 
         elif m.group('action').lower() == "remove_from":
             # TODO: Removal from groups has not been tested and is likely not to work correctly
