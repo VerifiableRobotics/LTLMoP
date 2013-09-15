@@ -60,7 +60,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     
     #Open CFG file
     #TODO: Make path independent
-    grammarFile = open('structuredEnglish.fcfg','rb')
+    grammarFile = open('lib/structuredEnglish.fcfg','rb')
     grammarText = grammarFile.read()
     
     #Generate regular expression to match sentences defining region groups
@@ -187,7 +187,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         m_groupOp = r_groupOp.search(line)
         while m_groupOp:
             propName = "_"+m_groupOp.group('operation').replace(' ','_')+'_'+m_groupOp.group('groupName')
-            print 'propName: '+propName
             if propName not in robotPropList:
                 robotPropList.append(propName.lower())
                 internal_props.append(propName.lower())
