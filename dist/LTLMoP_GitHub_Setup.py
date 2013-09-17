@@ -23,7 +23,7 @@ def openInBrowser(url):
         shell = False
     elif sys.platform == 'darwin':
         cmd = "open"
-        shell = True
+        shell = False
     else:
         print "Sorry, I don't know how to open the default browser on your computer."
         print "You'll need to visit %s on your own :(" % url
