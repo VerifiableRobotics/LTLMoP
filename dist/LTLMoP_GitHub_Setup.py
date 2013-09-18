@@ -11,8 +11,40 @@ import sys, math, os, time
 import urllib2, json
 import subprocess, socket
 import base64
-from catUtils import patrickSays
-import gitUtils
+
+import urllib
+import tempfile
+import os
+
+def downloadDependenciesAndAddToPath():
+    """ A script to download dependencies in case someone downloads just this script
+        to bootstrap a LTLMoP dev installation """
+
+    # FIXME: this will run twice on Windows due to ensureGitBash
+
+    # Make a temporary directory
+    temp_dir = tempfile.mkdtemp(prefix="ltlmop_installer")
+
+    # Download the main setup scripts
+    for filename in ("catUtils.py", "gitUtils.py"):
+        url = "https://github.com/LTLMoP/LTLMoP/raw/development/dist/" + filename
+        print "Fetching {}...".format(url)
+        out_file = os.path.join(temp_dir, filename)
+        urllib.urlretrieve(url, out_file)
+
+    # Add temp dir to path
+    sys.path.insert(0, temp_dir)
+
+try:
+    from catUtils import patrickSays
+    import gitUtils
+except ImportError:
+    # Make sure we have dependencies
+    downloadDependenciesAndAddToPath()
+
+    # Import again
+    from catUtils import patrickSays
+    import gitUtils
 
 def openInBrowser(url):
     if sys.platform in ['win32', 'cygwin']:
