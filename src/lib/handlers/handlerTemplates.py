@@ -8,6 +8,7 @@
 """
 import re
 import logging
+from collections import OrderedDict
 import lib.globalConfig
 
 class Handler(object):
@@ -101,17 +102,17 @@ class LoadingError(Exception):
         Exception.__init__(self, msg)
 
 # a dictionary that maps handler type in str to handler type class object
-handler_type_mapping = {'Init': InitHandler, \
-                        'Pose': PoseHandler, \
-                        'Sensor': SensorHandler, \
-                        'Actuator': ActuatorHandler, \
-                        'Drive': DriveHandler, \
-                        'MotionControl': MotionControlHandler, \
-                        'LocomotionCommand': LocomotionCommandHandler \
-                       }
+handler_type_mapping = OrderedDict([('Init', InitHandler), \
+                        ('Pose', PoseHandler), \
+                        ('MotionControl', MotionControlHandler), \
+                        ('Drive', DriveHandler), \
+                        ('LocomotionCommand', LocomotionCommandHandler), \
+                        ('Sensor', SensorHandler), \
+                        ('Actuator', ActuatorHandler)
+                       ])
 
 # update the dictionary to include bidirectional mapping
-handler_type_mapping.update(dict((v, k) for k, v in handler_type_mapping.iteritems()))
+handler_type_mapping.update(OrderedDict([(v, k) for k, v in handler_type_mapping.iteritems()]))
 
 def getHandlerTypeClass(name):
     """
