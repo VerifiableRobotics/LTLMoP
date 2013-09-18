@@ -487,9 +487,25 @@ class HandlerSubsystem:
                 method_input = methodName+'('+','.join(method_input)+')'
         return method_input
 
+def saveAllConfigFiles(self):
+    # save all config objects
+    savedFileName = []
+    for configObj in self.configs:
+        logging.debug("Saving config file {0}".format(configObj.fileName))
+        if configObj.saveConfig():
+            # successfully saved
+            logging.debug("Config file {0} successfully saved.".format(configObj.fileName))
         else:
+            logging.error("Could not save config file {0}".format(configObj.fileName))
+        savedFileName.append(configObj.fileName)
 
+    # construct a list of config filenames that are not loaded successfully, so that we don't delete them
+    incomplete_list = [c.fileName for c in self.configs_incomplete]
 
+    # remove delected files
+    for configFile in os.listdir(self.config_path):
+        if (os.path.join(self.config_path,configFile) not in savedFileName) or (os.path.join(self.config_path,configFile) not in savedFileName): 
+            os.remove(os.path.join(self.config_path,configFile))
 
 
 if __name__ == '__main__':
