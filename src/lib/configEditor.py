@@ -921,7 +921,7 @@ class addRobotDialog(wx.Dialog):
             handler_type_class = ht.getHandlerTypeClass(handler_type_name)
 
             self.handler_labels[handler_type_class] = wx.StaticText(self, -1, "%s handler:" % handler_type_name)
-            self.handler_combos[handler_type_class] = wx.ComboBox(self, -1, choices=[], style=wx.CB_DROPDOWN)
+            self.handler_combos[handler_type_class] = wx.ComboBox(self, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
             self.handler_buttons[handler_type_class] = wx.Button(self, -1, "Configure...")
             self.sizer_9.Add(self.handler_labels[handler_type_class], 0, wx.ALL|wx.ALIGN_RIGHT, 0)
             self.sizer_9.Add(self.handler_combos[handler_type_class], 1, wx.ALL|wx.EXPAND, 0)
@@ -946,6 +946,7 @@ class addRobotDialog(wx.Dialog):
         # Populate based on current robot type
         for handler_type_class in ht.getAllHandlerTypeClass():
             self.handler_combos[handler_type_class].Clear()
+            self.handler_combos[handler_type_class].SetValue("")
 
             # Load handlers under this robot
             if handler_type_class in self.proj.hsub.handler_configs[self.robot.r_type]:
