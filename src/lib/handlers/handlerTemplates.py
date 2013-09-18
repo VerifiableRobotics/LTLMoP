@@ -153,3 +153,8 @@ def getAllHandlerTypeClass():
     Return a list of handler type class
     """
     return [h_type for h_type in handler_type_mapping.keys() if not isinstance(h_type, basestring)]
+
+if __name__ == '__main__':
+    print getAllHandlerTypeClass()
+    print getAllHandlerTypeName()
+    pass
