@@ -466,9 +466,12 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_STRING, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Colour(200, 200, 0))
 
-        self.text_ctrl_spec.SetMouseDwellTime(500)
-        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLSTART, self.onMouseDwellStart)
-        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLEND, self.onMouseDwellEnd)
+        # Don't enable tooltips on wx2.9.5 on OS X
+        # Temporary workaround for http://trac.wxwidgets.org/ticket/15508
+        if wx.version() != '2.9.5.0 osx-cocoa (classic)':
+            self.text_ctrl_spec.SetMouseDwellTime(500)
+            self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLSTART, self.onMouseDwellStart)
+            self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLEND, self.onMouseDwellEnd)
 
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
 
