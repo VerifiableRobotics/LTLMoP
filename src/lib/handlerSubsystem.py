@@ -215,11 +215,11 @@ class HandlerSubsystem:
         """
         Assume only one robot is loaded per type
         """
-        for r in self.robots:
-            if r.type == t:
+        for r in self.robot_configs:
+            if r.r_type == t:
                 return r
         logging.error("Could not find robot of type '{0}'".format(t))
-        return RobotConfig()
+        return None
 
     def getHandler(self, htype, hname, rname=None):
         if htype in self.handler_parser.handler_robotSpecific_type:
