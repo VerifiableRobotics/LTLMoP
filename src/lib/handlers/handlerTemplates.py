@@ -7,9 +7,13 @@
     ================================================
 """
 import re
+import logging
 import lib.globalConfig
 
 class Handler(object):
+    """
+    A generic handler object
+    """
     def __init__(self, executor, *args, **kwds):
         super(Handler, self).__init__(*args, **kwds)
         self.executor = executor
@@ -47,6 +51,7 @@ class PoseHandler(Handler):
         super(PoseHandler, self).__init__(*args, **kwds)
 
     def getPose(self):
+        """ Return the position of the robot """
         raise NotImplementedError
 
 class SensorHandler(Handler):
@@ -90,6 +95,7 @@ class LocomotionCommandHandler(Handler):
         super(LocomotionCommandHandler, self).__init__(*args, **kwds)
         
 class LoadingError(Exception):
+    """An exception when any handler fails to load """
     def __init__(self, msg):
         # Call the base class constructor with the parameters it needs
         Exception.__init__(self, msg)
