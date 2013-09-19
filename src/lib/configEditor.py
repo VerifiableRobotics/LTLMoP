@@ -1072,13 +1072,15 @@ class addRobotDialog(wx.Dialog):
                 # If this handler has default values from the selected robot file, use them
                 # TODO: this will erase any previous config settings...
                 default_robot = self.proj.hsub.getRobotByType(self.robot.r_type)
-                if default_robot.handlers[htype].name == hname:
+                if htype in default_robot.handlers and \
+                    default_robot.handlers[htype].name == hname:
                     hobj = default_robot.handlers[htype]
                 else:
                     # Otherwise, just grab the plain handler
                     rname = self.robot.r_type
-                    hobj = self.proj.hsub.getHandler(htype, hname, rname)
+                    hobj = self.proj.hsub.getHandlerConfigDefault(rname, htype, hname)
 
+                # TODO: allow multiple handlers per type
                 self.robot.handlers[htype] = hobj
                 
                 break
