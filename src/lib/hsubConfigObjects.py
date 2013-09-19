@@ -656,7 +656,7 @@ class ExperimentConfig(object):
             if r.name == name:
                 return r
         logging.error("Could not find robot of name '{0}' in config '{1}'.".format(name, self.name))
-        return RobotConfig()
+        return None
 
     def fromFile(self, file_path, hsub = None):
         """
@@ -739,7 +739,7 @@ class ExperimentConfig(object):
                 robot_config = RobotConfig()
                 try:
                     robot_config.fromData(data, hsub)
-                except LoadingError, msg:
+                except ht.LoadingError, msg:
                     logging.warning(str(msg) + ' in robot data .')
                     continue
                 except TypeError:
