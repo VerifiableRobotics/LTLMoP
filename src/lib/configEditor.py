@@ -12,6 +12,7 @@ import subprocess
 import socket
 
 import lib.handlers.handlerTemplates as ht
+import lib.globalConfig
 # begin wxGlade: extracode
 # end wxGlade
 
@@ -1009,16 +1010,32 @@ class addRobotDialog(wx.Dialog):
             # for each handler type, a robot can have multiple options, select any one that is successfully loaded
             # TODO: what should the correct behavior be if it doesn't exist in the list of handlers already?
             self.handler_combos[handler_type_class].SetValue("")
-            for handler_config in handler_configs:
-                if handler_config is not None:
-                    self.handler_combos[handler_type_class].SetStringSelection(handler_config.name)
-                    break
 
-            # Disable the "Configure" button if there are no parameters (with an exception for pose)
-            if handler_config is None or (len(handler_config.getMethodByName("__init__").para) == 0 and handler_config.h_type != "pose"):
+            for handler_config in handler_configs:
+                # construct a list of handler config names based on this robot
+                handler_name_list = [getattr(handler_config, 'name', '') for handler_config in \
+                        self.proj.hsub.handler_configs[self.robot.r_type].get(handler_type_class, [])]
+                # populate the list with shared handlers
+                handler_name_list.extend([getattr(handler_config, 'name', '') for handler_config in \
+                        self.proj.hsub.handler_configs['share'].get(handler_type_class, [])])
+
+                if handler_config.name in handler_name_list:
+                    # either this robot or the shared folder has this handler config
+                    self.handler_combos[handler_type_class].SetStringSelection(handler_config.name)
+
+                    # Disable the "Configure" button if there are no parameters (with an exception for pose)
+                    if len(handler_config.getMethodByName("__init__").para) == 0 and \
+                            handler_config.h_type is not ht.PoseHandler:
+                        self.handler_buttons[handler_type_class].Enable(False)
+                    else:
+                        self.handler_buttons[handler_type_class].Enable(True)
+
+                    break
+            if self.handler_combos[handler_type_class].GetStringSelection() == "":
+                # when neither the robot or the share folder has the handler loaded
+                logging.warning('Cannot find and handler config in the options for handler type {!r}'\
+                        .format(handler_type_class))
                 self.handler_buttons[handler_type_class].Enable(False)
-            else:
-                self.handler_buttons[handler_type_class].Enable(True)
 
     def onClickConfigure(self, event):
         src = event.GetEventObject()
