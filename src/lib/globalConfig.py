@@ -50,7 +50,8 @@ def setupLogging(loggerLevel=None):
     h = logging.StreamHandler()
     f = ColorLogFormatter()
     h.setFormatter(f)
-    logger.addHandler(h)
+    if not logger.handlers:
+        logger.addHandler(h)
 
     cfg = ConfigParser.ConfigParser()
 
