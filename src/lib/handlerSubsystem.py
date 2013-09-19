@@ -142,7 +142,8 @@ class HandlerSubsystem:
                 logging.warning("Cannot find handler config with robot type {!r}.".format(r_type))
             elif h_type not in self.handler_configs[r_type].keys():
                 # handler type is not recognized
-                logging.warning("Cannot find handler config with handler type {!r} for robot {!r}." \
+                logging.warning("Cannot find handler config with handler type {!r} for robot {!r}.\n \
+                                It is possible the handler config was not successfully loaded." \
                                 .format(ht.getHandlerTypeName(h_type), r_type))
             else:
                 for handler_config in self.handler_configs[r_type][h_type]:
