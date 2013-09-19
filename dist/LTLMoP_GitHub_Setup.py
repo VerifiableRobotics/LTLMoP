@@ -225,6 +225,8 @@ if __name__ == "__main__":
         print "Come up with a password that you can remember; you'll need to use it"
         print "when committing code to GitHub."
         print
+        print "(Tip: If it asks you where to save the key, you can safely press [Enter] to accept the default location.)"
+        print
 
         # Make the ~/.ssh directory if necessary
         if not os.path.exists(os.path.dirname(pubkey_path)):
