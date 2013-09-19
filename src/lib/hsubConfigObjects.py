@@ -578,7 +578,7 @@ class RobotConfig(object):
                         if handler_config is None: continue
 
                         # TODO: is it necessary to check if self.handlers is a dict
-                        if type(self.handlers) != dict: self.handlers = {}
+                        if not isinstance(self.handlers,dict): self.handlers = {}
 
                         # load all parameter values and overwrite the ones in the __init__ method of default handler config object
                         try:
