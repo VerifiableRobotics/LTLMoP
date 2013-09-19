@@ -950,17 +950,15 @@ class addRobotDialog(wx.Dialog):
 
             # Load handlers under this robot
             if handler_type_class in self.proj.hsub.handler_configs[self.robot.r_type]:
-                # HACK: temporary fix for hsub returning empty handlers when loading fails
-                hnames = [h.name for h in self.proj.hsub.handler_configs[self.robot.r_type][handler_type_class] if h.name != ""]
-                for i, hn in enumerate(hnames):
-                    self.handler_combos[handler_type_class].Insert(hn, i)
+                for i, handler_config in enumerate( \
+                        self.proj.hsub.handler_configs[self.robot.r_type][handler_type_class]):
+                    self.handler_combos[handler_type_class].Insert(handler_config.name, i)
 
             # Load handlers under shared folder
             if handler_type_class in self.proj.hsub.handler_configs['share']:
-                # HACK: temporary fix for hsub returning empty handlers when loading fails
-                hnames = [h.name for h in self.proj.hsub.handler_configs['share'][handler_type_class] if h.name != ""]
-                for i, hn in enumerate(hnames):
-                    self.handler_combos[handler_type_class].Insert(hn, i)
+                for i, handler_config in enumerate( \
+                        self.proj.hsub.handler_configs['share'][handler_type_class]):
+                    self.handler_combos[handler_type_class].Insert(handler_config.name, i)
 
     def __set_properties(self):
         # begin wxGlade: addRobotDialog.__set_properties
