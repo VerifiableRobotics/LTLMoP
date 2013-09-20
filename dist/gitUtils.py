@@ -6,8 +6,8 @@ import os
 def ensureGitBash(script_path):
 	# If on Windows, use Git Bash for the shell
     if sys.platform in ['win32', 'cygwin']:
-        # TODO: Is there a better way to determine whether we're in bash or not?
-        cmd = subprocess.Popen(["ls"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+        # Check if we have access to bash
+        cmd = subprocess.Popen(["bash", "--version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
 
         # Wait for subprocess to finish
         while cmd.returncode is None:
