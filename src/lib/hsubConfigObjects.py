@@ -463,6 +463,25 @@ class RobotConfig(object):
                     strRepr + " -- End of Robot <{0}> -- \n".format(self.name) 
         return reprString
 
+    def getHandlerOfRobot(self, h_type, h_name=''):
+        """Get the handler config object of this robot specified by h_type and h_name
+        h_type is the handler class object specified in lib/handlers/handlerTemplates.py
+        if h_name is empty, then all handler config objects of the given type will be returned"""
+
+        for handler_type, handler_configs in self.handlers.iteritems():
+            if handler_type is h_type:
+                if h_name == '':
+                    return handler_configs
+                else:
+                    for handler_config in handler_configs:
+                        if handler_config.name == h_name:
+                            return handler_config
+        # if cannot find the specified handler, then return None
+        logging.debug('Cannot find the specified handler type {!r} in robot {!r}({}).'\
+                .format(h_type, self.name, self.r_type))
+        return None
+
+
     def fromFile(self, file_path, hsub = None):
         """
         Given a robot file, load the robot info in it
