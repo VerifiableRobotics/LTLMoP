@@ -63,13 +63,13 @@ class HandlerSubsystem:
             logging.warning('No shared handler directory found in {!r}'.format(self.handler_path))
         else:
             handler_folders.extend(self._getSubdirectories(os.path.join(self.handler_path, 'share')))
-            
+
         for folder in handler_folders:
             for handler_file in os.listdir(os.path.join(globalConfig.get_ltlmop_root(), folder)):
                 abs_path = os.path.join(globalConfig.get_ltlmop_root(), folder, handler_file)
 
                 # find all handler files and ignore internal files
-                if not (os.path.isfile(abs_path) and handler_file.endswith('.py') and not handler_file.startswith('_')): 
+                if not (os.path.isfile(abs_path) and handler_file.endswith('.py') and not handler_file.startswith('_')):
                     continue
 
                 module_info = re.split(r"[\\/]", folder)
@@ -270,13 +270,13 @@ class HandlerSubsystem:
                         elif 'actuator' in handlerName.lower():
                             handlerObj = robotObj.handlers['actuator']
                         else:
-                            logging.error("Cannot recognize handler {}".format(handlerName)) 
+                            logging.error("Cannot recognize handler {}".format(handlerName))
                             return
-                        
+
                         break
 
             if handlerObj is None:
-                logging.error("Cannot recognize robot {}".format(robotName)) 
+                logging.error("Cannot recognize robot {}".format(robotName))
                 logging.error("I only know about these robots: {!r}".format([r.name for r in self.robots]))
                 return
 

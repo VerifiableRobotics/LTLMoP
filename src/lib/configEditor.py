@@ -34,7 +34,7 @@ def drawParamConfigPane(target, method, proj):
     for p in method.para:
         #print "name: %s, type: %s, default: %s, value: %s" % (p.name, p.type, p.default, p.value)
         item_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        param_label = wx.StaticText(target, -1, "%s:" % p.name) 
+        param_label = wx.StaticText(target, -1, "%s:" % p.name)
 
         if p.type is None:
             continue
@@ -192,7 +192,7 @@ class regionTagsDialog(wx.Dialog):
 
     def _tags2dialog(self, tags):
         self.tags = tags
-    
+
         # Populate tags and regions
         self.list_box_tags.Set(self.tags.keys())
 
@@ -328,7 +328,7 @@ class handlerConfigDialog(wx.Dialog):
             wx.MessageBox("Please define regions before calibrating.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
-        
+
         # Check that an init handler is selected
         if self.robot.handlers['init'] is None:
             wx.MessageBox("Please choose an Initialization Handler before calibrating.", "Error",
@@ -373,7 +373,7 @@ class handlerConfigDialog(wx.Dialog):
         UDPSock.settimeout(0.1)
         UDPSock.bind(addr)
 
-        while proc.returncode is None: 
+        while proc.returncode is None:
             proc.poll()
             # Wait for and receive a message from the calibration tool
 
@@ -407,7 +407,7 @@ class handlerConfigDialog(wx.Dialog):
         methodObj = handler.getMethodByName('__init__')
 
         drawParamConfigPane(self.panel_configs, methodObj, self.proj)
-        
+
         # Add in calibration configuration pane for pose handler
         if handler.type == "pose":
             # Default to identity matrix
@@ -443,7 +443,7 @@ class handlerConfigDialog(wx.Dialog):
         b = self.GetSizer().GetMinSize()
         self.SetSize((max(a[0],b[0]),a[1]+b[1]))
         self.Refresh()
-        
+
 
     def onClickDefaults(self, event): # wxGlade: handlerConfigDialog.<event_handler>
         print "Event handler `onClickDefaults' not implemented"
@@ -649,7 +649,7 @@ class simSetupDialog(wx.Dialog):
     def doClose(self, event):
         # TODO: Check for dirty?
         self.Destroy()
-    
+
     def _cfg2dialog(self, cfg):
         self.text_ctrl_sim_experiment_name.SetValue(cfg.name)
 
@@ -690,7 +690,7 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: Check for existing untitleds and add a number at the end (steal from reged)
         cfg.name = "Untitled configuration"
-        cfg.fileName = os.path.join(self.proj.hsub.config_parser.config_path,cfg.name.replace(' ','_'))
+        cfg.fileName = os.path.join(self.proj.hsub.config_parser.config_path, cfg.name.replace(' ','_'))
         # since this config is not loaded, we assume it is complete
         self.proj.hsub.configs.append(cfg)
 
@@ -706,7 +706,7 @@ class simSetupDialog(wx.Dialog):
         if fileName == "": return
 
         # import the config file
-        cfg = self.proj.hsub.config_parser.loadConfigFile(fileName)        
+        cfg = self.proj.hsub.config_parser.loadConfigFile(fileName)
         self.proj.hsub.configs.append(cfg)
         self.list_box_experiment_name.Append(cfg.name, cfg)
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
@@ -740,7 +740,7 @@ class simSetupDialog(wx.Dialog):
         pos = self.list_box_experiment_name.GetSelection()
         self.list_box_experiment_name.GetClientData(pos).name = event.GetString()
         pathName = os.path.dirname(self.list_box_experiment_name.GetClientData(pos).file_name)
-        self.list_box_experiment_name.GetClientData(pos).fileName = os.path.join(pathName,event.GetString().replace(' ','_'))
+        self.list_box_experiment_name.GetClientData(pos).fileName = os.path.join(pathName, event.GetString().replace(' ','_'))
         self.list_box_experiment_name.SetString(pos, event.GetString())
         event.Skip()
 
@@ -867,7 +867,7 @@ class simSetupDialog(wx.Dialog):
             return
 
         self._getSelectedExperimentConfig().main_robot = obj.name
-        self._cfg2dialog(self._getSelectedExperimentConfig()) 
+        self._cfg2dialog(self._getSelectedExperimentConfig())
         self.list_box_robots.SetSelection(pos)
         event.Skip()
 
@@ -1063,7 +1063,7 @@ class addRobotDialog(wx.Dialog):
 
     def onChangeHandler(self, event):
         src = event.GetEventObject()
-        
+
         # Figure out which handler was changed
         for htype, b in self.handler_combos.iteritems():
             if src is b:
@@ -1096,10 +1096,6 @@ class addRobotDialog(wx.Dialog):
         if name is None or name == "":
             raise ValueError("Your robot needs a name!")
 
-        # Disallow any reserved names
-        if name in ["share"]:
-            raise ValueError('"{}" is a reserved keyword.  Please choose another name.'.format(name))
-        
         # Replace spaces and non-alphanums with underscores
         name = re.sub(r"\W", "_", name.strip())
 
@@ -1109,7 +1105,7 @@ class addRobotDialog(wx.Dialog):
             raise ValueError('Current configuration already contains a robot with name "{}".\n\nPlease rename.'.format(name))
 
         return name
-        
+
     def onClickOK(self, event): # wxGlade: addRobotDialog.<event_handler>
         # TODO: add in checks for all combo boxes (don't allow null handlers)
 
@@ -1129,7 +1125,7 @@ class addRobotDialog(wx.Dialog):
             
         # Make sure the robot name is OK
         try:
-            self.robot.name = self._normalizeRobotName(self.robot.name) 
+            self.robot.name = self._normalizeRobotName(self.robot.name)
         except ValueError as e:
             wx.MessageBox(e.message, "Error", style = wx.OK | wx.ICON_ERROR)
             event.Skip(False)
@@ -1199,7 +1195,7 @@ class propMappingDialog(wx.Dialog):
 
         # Set up the list of props
         self.list_box_props.Clear()
-        
+
         self.list_box_props.Append("=== Sensors ===")
         #self.list_box_props.SetItemFont(n, wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         #self.list_box_props.SetItemBackgroundColour(n, wx.Color(100,100,100))
@@ -1221,7 +1217,7 @@ class propMappingDialog(wx.Dialog):
 
     def _mapping2dialog(self, mapping):
         self.mapping = mapping
-    
+
         # Set defaults as necessary
         for p in self.proj.all_sensors:
             if p not in mapping or self.mapping[p].strip() == "":
@@ -1325,7 +1321,7 @@ class propMappingDialog(wx.Dialog):
                     # If nothing is selected, just insert
                     start = self.text_ctrl_mapping.GetInsertionPoint()
                     end = start
-                
+
                 self.text_ctrl_mapping.Replace(start, end, method_string)
                 self.text_ctrl_mapping.SetSelection(start, start + len(method_string))
         event.Skip()
@@ -1384,7 +1380,7 @@ class propMappingDialog(wx.Dialog):
             event.Skip()
 
             if event.GetEventType() in [wx.wxEVT_KEY_DOWN, wx.wxEVT_KEY_UP] and \
-               event.GetKeyCode() not in [wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_HOME, wx.WXK_END, 
+               event.GetKeyCode() not in [wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN, wx.WXK_HOME, wx.WXK_END,
                                           wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_RIGHT, wx.WXK_NUMPAD_UP, wx.WXK_NUMPAD_DOWN]:
             #                              wx.WXK_BACK, wx.WXK_DELETE]:
                 return
@@ -1416,8 +1412,8 @@ class propMappingDialog(wx.Dialog):
 
         for m in p.finditer(s):
             if any([i > m.start() and i < m.end() for i in check_pts]):
-                m_local = m 
-                break 
+                m_local = m
+                break
 
         if m_local is None:
             return

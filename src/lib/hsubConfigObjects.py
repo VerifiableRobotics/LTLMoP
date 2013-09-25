@@ -2,7 +2,7 @@
 
 
 """ ================================================
-    hsubConfigObjects.py - Defines necessary config objects for 
+    hsubConfigObjects.py - Defines necessary config objects for
     handlerSubsystem.py
     ================================================
 
@@ -12,7 +12,7 @@
 
 import os, sys, re
 import fileMethods
-import inspect,types
+import inspect, types
 from numpy import *
 from copy import deepcopy
 import ast
@@ -41,21 +41,21 @@ class MethodParameterConfig(object):
         self.max_val = max_val          # the max value allowed for the parameter
         self.min_val = min_val          # the min value allowed for the parameter
         self.value = value              # the value user set for the parameter
-    
+
     def __repr__(self):
         """
         Overwrite string representation function
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','para_type','default','max_val','min_val','value']
+        keyList = ['name', 'para_type', 'default', 'max_val', 'min_val', 'value']
         for key in keyList:
-            strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+            strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:", getattr(self, key, 'NOT DEFINED')))
         reprString = "\n -- Method Parameter <{0}> -- \n".format(self.name) + \
-                    strRepr + " -- End of Method Parameter <{0}> -- \n".format(self.name) 
+                    strRepr + " -- End of Method Parameter <{0}> -- \n".format(self.name)
         return reprString
 
-    def setValue(self,value):
+    def setValue(self, value):
         """
         This function makes sure all parameter are set according to the desired type
         """
@@ -63,43 +63,43 @@ class MethodParameterConfig(object):
         # Change None para_type to empty string to avoid None.lower()
         if self.para_type == None: self.para_type = ""
 
-        if self.para_type.lower() in ['float','double']:
+        if self.para_type.lower() in ['float', 'double']:
             try:
                 self.value = float(value)
             except ValueError:
-                logging.error("Invalid float value: {0} for parameter {1}".format(value,self.name))
-        elif self.para_type.lower() in ['int','integer']:
+                logging.error("Invalid float value: {0} for parameter {1}".format(value, self.name))
+        elif self.para_type.lower() in ['int', 'integer']:
             try:
                 self.value = int(value)
             except ValueError:
-                logging.error("Invalid int value: {0} for parameter {1}".format(value,self.name))
+                logging.error("Invalid int value: {0} for parameter {1}".format(value, self.name))
         elif self.para_type.lower() == 'bool' or self.para_type.lower() == 'boolean':
-            if str(value).lower() in ['1','true','t']:
+            if str(value).lower() in ['1', 'true', 't']:
                 self.value = True
-            elif str(value).lower() in ['0','false','f']:
+            elif str(value).lower() in ['0', 'false', 'f']:
                 self.value = False
         elif self.para_type.lower() == 'region':
             try:
                 self.value = value.strip("'\"")
             except ValueError:
-                logging.error("Invalid region value: {0} for parameter {1}".format(value,self.name))
-        elif self.para_type.lower() in ['str','string']:
+                logging.error("Invalid region value: {0} for parameter {1}".format(value, self.name))
+        elif self.para_type.lower() in ['str', 'string']:
             try:
-                self.value = str(value).strip('\"\'') 
+                self.value = str(value).strip('\"\'')
             except ValueError:
-                logging.error("Invalid string value: {0} for parameter {1}".format(value,self.name))
+                logging.error("Invalid string value: {0} for parameter {1}".format(value, self.name))
         elif self.para_type.lower() == 'choice':
             try:
                 self.value = ast.literal_eval(value)
             except ValueError:
-                logging.error("Invalid choice value: {0} for parameter {1}".format(value,self.name))
+                logging.error("Invalid choice value: {0} for parameter {1}".format(value, self.name))
         elif self.para_type.lower() == 'multichoice':
             try:
                 self.value = ast.literal_eval(value)
             except ValueError:
-                logging.error("Invalid multichoice value: {0} for parameter {1}".format(value,self.name))
+                logging.error("Invalid multichoice value: {0} for parameter {1}".format(value, self.name))
         else:
-            logging.error("Cannot set the value of parameter {0}, because its type {1} cannot be recognized.".format(self.name,self.para_type))
+            logging.error("Cannot set the value of parameter {0}, because its type {1} cannot be recognized.".format(self.name, self.para_type))
 
     def getValue(self):
         return self.value
@@ -120,7 +120,7 @@ class MethodParameterConfig(object):
         method_config: a HandlerMethodConfig object where the parameter exists
         """
         # Regular expressions to help us out
-        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
+        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?', re.IGNORECASE)
         settingRE = re.compile(r"""(?x)
                                    (?P<key>\w+)
                                    \s*=\s*
@@ -138,13 +138,13 @@ class MethodParameterConfig(object):
             try:
                 for k, v in settingRE.findall(m.group('range')):
                     if k.lower() not in ['default', 'min_val', 'max_val', 'options', 'min', 'max']:
-                        logging.warning('Unrecognized setting name "{0}" for parameter "{1}" of method "{2}"'.format(k.lower(), m.group('argName'),method_config.name))
+                        logging.warning('Unrecognized setting name "{0}" for parameter "{1}" of method "{2}"'.format(k.lower(), m.group('argName'), method_config.name))
                         continue
 
                     setattr(self, k.lower(), json.loads(v.lower()))
             except ValueError:
                 # LOG AN ERROR HERE
-                logging.warning('Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'),method_config.name))
+                logging.warning('Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'), method_config.name))
 
             self.resetValue()
 
@@ -174,16 +174,19 @@ class HandlerMethodConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','handler','para']
+        keyList = ['name', 'handler', 'para']
         for key in keyList:
             if key == 'para':
-                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
+                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:", \
+                        ','.join([p.name for p in getattr(self, key, [])])))
             elif key == 'handler':
-                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(getattr(self,key,'NOT DEFINED'),'name','NOT DEFINED')))
+                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:", \
+                        getattr(getattr(self, key, 'NOT DEFINED'), 'name', 'NOT DEFINED')))
             else:
-                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+                strRepr = strRepr + ("{0:12}{1}\n".format("<"+key+">:", \
+                        getattr(self, key, 'NOT DEFINED')))
         reprString = "\n --Handler Method <{0}> -- \n".format(self.name) + \
-                    strRepr + " -- End of Handler Method <{0}> -- \n".format(self.name) 
+                    strRepr + " -- End of Handler Method <{0}> -- \n".format(self.name)
         return reprString
 
 
@@ -222,7 +225,7 @@ class HandlerMethodConfig(object):
         handler_config: instance of HandlerConfig where this HandlerMethodConfig locates
         """
         # Regular expressions to help us out
-        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?',re.IGNORECASE)
+        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?', re.IGNORECASE)
 
         self.name = method.__name__
         self.handler = handler_config
@@ -242,12 +245,12 @@ class HandlerMethodConfig(object):
             for line in doc.split('\n'):
 
                 # If it is an empty line, ignore it
-                if re.search('^(\s*)$',line):
+                if re.search('^(\s*)$', line):
                     continue
 
                 # If there is a newline at the end, remove it
-                if re.search('\n$',line):
-                    line = re.sub('\n$','',line)
+                if re.search('\n$', line):
+                    line = re.sub('\n$', '', line)
 
                 # If the line defines an argument variable
                 if argRE.search(line):
@@ -256,7 +259,7 @@ class HandlerMethodConfig(object):
                         # match the definition of a parameter and a parameter object with their names
                         if para_config.name.lower() == m.group('argName').strip().lower():
                             # update the parameter config
-                            para_config.fromString(line,self)
+                            para_config.fromString(line, self)
 
                 # If the line comments the function
                 else:
@@ -268,7 +271,7 @@ class HandlerMethodConfig(object):
         for para_config in self.para:
             if para_config.desc == "":
                 argToRemove.append(para_config)
-        map(self.para.remove,argToRemove)
+        map(self.para.remove, argToRemove)
 
 class HandlerConfig(object):
     """
@@ -283,7 +286,7 @@ class HandlerConfig(object):
         if self.methods is None:
             self.methods = []
         self.robot_type = robot_type    # type of the robot using this handler for robot specific handlers
-        self.ignore_parameter = ['self','initial','proj','shared_data','actuatorVal']
+        self.ignore_parameter = ['self', 'initial', 'proj', 'shared_data', 'actuatorVal']
                                         # list of name of parameter that should be ignored where parse the handler methods
 
     def __repr__(self):
@@ -292,14 +295,14 @@ class HandlerConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','h_type','methods','robot_type']
+        keyList = ['name', 'h_type', 'methods', 'robot_type']
         for key in keyList:
             if key == 'methods':
-                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",','.join([p.name for p in getattr(self,key,[])])))
+                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:", ','.join([p.name for p in getattr(self, key, [])])))
             else:
-                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:", getattr(self, key, 'NOT DEFINED')))
         reprString = "\n --Handler <{0}> -- \n".format(self.name) + \
-                    strRepr + " -- End of Handler <{0}> -- \n".format(self.name) 
+                    strRepr + " -- End of Handler <{0}> -- \n".format(self.name)
         return reprString
 
     def getMethodByName(self, name):
@@ -309,7 +312,7 @@ class HandlerConfig(object):
         logging.error("Could not find method of name '{0}' in handler '{1}'".format(name, self.name))
         raise ValueError
 
-    def toString(self,forsave = True):
+    def toString(self, forsave = True):
         """
         Return the string representation of the handler object
 
@@ -327,21 +330,21 @@ class HandlerConfig(object):
         for paraObj in initMethodObj.para:
             if paraObj.type.lower() in ['str', 'string', 'region']:
                 if paraObj.value is not None:
-                    method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
+                    method_input.append('%s=%s'%(paraObj.name, '\"'+paraObj.value+'\"'))
             else:
-                method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
+                method_input.append('%s=%s'%(paraObj.name, str(paraObj.value)))
             # change the deliminator of list into ";"
             if forsave and paraObj.type.startswith('listof'):
-                method_input[-1]=method_input[-1].replace(',',';')
+                method_input[-1] = method_input[-1].replace(', ', ';')
 
         if not forsave:
             for para_name in initMethodObj.omitPara:
                 if para_name == 'initial':
-                    method_input.append('%s=%s'%(para_name,'True'))
+                    method_input.append('%s=%s'%(para_name, 'True'))
                 elif para_name == 'proj':
-                    method_input.append('%s=%s'%(para_name,'self.proj'))
+                    method_input.append('%s=%s'%(para_name, 'self.proj'))
                 elif para_name == 'shared_data':
-                    method_input.append('%s=%s'%(para_name,'self.proj.shared_data'))
+                    method_input.append('%s=%s'%(para_name, 'self.proj.shared_data'))
 
         method_input = '('+','.join(method_input)+')'
 
@@ -351,30 +354,30 @@ class HandlerConfig(object):
             string = self.name+method_input
         return string
 
-    def fullPath(self,robotName,configObj):
+    def fullPath(self, robotName, configObj):
         """ Return the full path for this handler object for importing"""
-        if self.getType() in ['init','sensor','actuator','locomotionCommand']:
+        if self.getType() in ['init', 'sensor', 'actuator', 'locomotionCommand']:
             for robotObj in configObj.robots:
                 if robotObj.name == robotName:
                     robotFolder = robotObj.type
                     break
-            if robotName=='share':
-                fileName = '.'.join(['handlers.share',self.name])
+            if robotName =='share':
+                fileName = '.'.join(['handlers.share', self.name])
             else:
-                fileName = '.'.join(['handlers.robots',robotFolder,self.name])
+                fileName = '.'.join(['handlers.robots', robotFolder, self.name])
         else:
-            fileName = '.'.join(['handlers',self.getType(),self.name])
+            fileName = '.'.join(['handlers', self.getType(), self.name])
         return fileName
 
     def getType(self):
         return self.type
-    def setType(self,h_type):
-        self.type=h_type
+    def setType(self, h_type):
+        self.type = h_type
         return self
 
-    def parseHandler(self,handler_module_path,onlyLoadInit=False):
+    def parseHandler(self, handler_module_path, onlyLoadInit=False):
         """
-        Load method info (name,arg...) in the given handler file
+        Load method info (name, arg...) in the given handler file
         If onlyLoadInit is True, only the info of __init__ method will be loaded
         If over_write_h_type is given, then over write the handler type with it
 
@@ -389,7 +392,7 @@ class HandlerConfig(object):
         try:
             handler_module = importlib.import_module(handler_module_path)
         except Exception as e:
-            logging.warning("Failed to import handler {0} : {1}".format(handler_module_name,e))
+            logging.warning("Failed to import handler {0} : {1}".format(handler_module_name, e))
             if not isinstance(e, ImportError):
                 logging.debug(traceback.format_exc())
             raise ImportError
@@ -409,7 +412,7 @@ class HandlerConfig(object):
             logging.warning("Multiple handler classes found in file {}. Randomly choose one to import.".format(handler_module_name))
         handler_class = handler_class[0][1]
         if handler_class.__name__.lower() != handler_module_name.lower():
-            logging.warning("File name: {0} mismatch with class name: {1}.".format(handler_class.__name__,handler_module_name))
+            logging.warning("File name: {0} mismatch with class name: {1}.".format(handler_class.__name__, handler_module_name))
 
         # update the handler name and type info
         # handler name is the name of the file
@@ -418,14 +421,14 @@ class HandlerConfig(object):
         self.h_type = inspect.getmro(handler_class)[1] # direct parent
 
         # get all methods in this handler
-        handler_methods = inspect.getmembers(handler_class,inspect.ismethod)
+        handler_methods = inspect.getmembers(handler_class, inspect.ismethod)
         # parse each method into method object
-        for method_name,method in handler_methods:
+        for method_name, method in handler_methods:
             # only parse the method not start with underscore (exclude __inti__)
             # only parse the __init__ method if required
             if ((not onlyLoadInit and (not str(method_name).startswith('_')) or str(method_name)=='__init__') ):
                 method_config = HandlerMethodConfig(name=method_name)
-                method_config.fromMethod(method,self)
+                method_config.fromMethod(method, self)
                 # add this method into the method list of the handler
                 self.methods.append(method_config)
 
@@ -448,19 +451,19 @@ class RobotConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','r_type','handlers']
+        keyList = ['name', 'r_type', 'handlers']
         for key in keyList:
             if key == 'handlers':
-                handler_configs = getattr(self,key,{})
+                handler_configs = getattr(self, key, {})
                 temp_str_list = []
                 for h_type in handler_configs.keys():
                     temp_str_list.append("{0:13}{1:23}{2}".format('', ht.getHandlerTypeName(h_type) + ':', \
                                                              ','.join([h.name for h in handler_configs[h_type]])))
                 strRepr = strRepr + ("{0}{1}\n".format("<"+key+">:\n", '\n'.join(temp_str_list)))
             else:
-                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+                strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:", getattr(self, key, 'NOT DEFINED')))
         reprString = "\n --Robot <{0}> -- \n".format(self.name) + \
-                    strRepr + " -- End of Robot <{0}> -- \n".format(self.name) 
+                    strRepr + " -- End of Robot <{0}> -- \n".format(self.name)
         return reprString
 
     def getHandlerOfRobot(self, h_type, h_name=''):
@@ -529,14 +532,14 @@ class RobotConfig(object):
         else:
             try:
                 # Convert the string form array to array. Trying not to use eval for security problem
-                mat_str = mat_str.replace("array(","")
-                mat_str = mat_str.replace(")","")
+                mat_str = mat_str.replace("array(", "")
+                mat_str = mat_str.replace(")", "")
                 self.calibration_matrix = array(ast.literal_eval(mat_str))
             except SyntaxError:
                 raise ht.LoadingError("Invalid calibration data found for robot {0}({1})".format(self.name, self.r_type))
 
         # load handler configs
-        for key,val in robot_data.iteritems():
+        for key, val in robot_data.iteritems():
             if key.endswith('Handler'):
                 # find which type of the handler
                 try:
@@ -597,7 +600,7 @@ class RobotConfig(object):
                         if handler_config is None: continue
 
                         # TODO: is it necessary to check if self.handlers is a dict
-                        if not isinstance(self.handlers,dict): self.handlers = {}
+                        if not isinstance(self.handlers, dict): self.handlers = {}
 
                         # load all parameter values and overwrite the ones in the __init__ method of default handler config object
                         try:
@@ -629,7 +632,7 @@ class ExperimentConfig(object):
         self.main_robot = main_robot        # name of robot for moving in this config
         self.region_tags = region_tags      # dictionary mapping tag names to region groups, for quantification
         self.file_name = file_name          # full path filename of the config
-        
+
         # To avoid recursive setting
         if self.robots is None:
             self.robots = []
@@ -643,34 +646,32 @@ class ExperimentConfig(object):
         """
         strRepr = ""
         # Only show the atrributes we are interested in
-        keyList = ['name','robots','main_robot','initial_truths','prop_mapping','file_name']
+        keyList = ['name', 'robots', 'main_robot', 'initial_truths', 'prop_mapping', 'file_name']
         for key in keyList:
-            if key in ['robots','initial_truths']:
-                strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",','.join([getattr(p,'name',p) for p in getattr(self,key,[])])))
+            if key in ['robots', 'initial_truths']:
+                strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:", ','.join([getattr(p, 'name', p) for p in getattr(self, key, [])])))
             elif key == 'prop_mapping':
-                prop_mapping = getattr(self,key,{})
+                prop_mapping = getattr(self, key, {})
                 strRepr = strRepr + "{0}{1}\n".format("<"+key+">:\n", \
-                '\n'.join(["{0:18}{1}".format('',prop+' = ' + prop_mapping[prop]) for prop in prop_mapping.keys()]))
+                '\n'.join(["{0:18}{1}".format('', prop+' = ' + prop_mapping[prop]) for prop in prop_mapping.keys()]))
             else:
-                strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:",getattr(self,key,'NOT DEFINED')))
+                strRepr = strRepr + ("{0:18}{1}\n".format("<"+key+">:", getattr(self, key, 'NOT DEFINED')))
         reprString = "\n --Config <{0}> -- \n".format(self.name) + \
-                    strRepr + " -- End of Config <{0}> -- \n".format(self.name) 
+                    strRepr + " -- End of Config <{0}> -- \n".format(self.name)
         return reprString
         strRepr = []
         # Get all attribute names and values
-        for key,val in self.__dict__.iteritems():
+        for key, val in self.__dict__.iteritems():
             # only show if the value is not none or empty
-            if val: strrepr.append("{0}:{1}".format(key,val))
-        
+            if val: strRepr.append("{0}:{1}".format(key, val))
         # if all attributes have values of None or empty
-        if not strRepr: 
+        if not strRepr:
             reprString = "All attributes have values of None or empty."
         else:
             reprString = "\n".join(strRepr)
-        
         return "Config Object -- \n" + reprString + "\n"
-    
-    def getRobotByName(self, name):
+
+    def getRobotByName(self,  name):
         for r in self.robots:
             if r.name == name:
                 return r
@@ -716,7 +717,7 @@ class ExperimentConfig(object):
             if prop_type.title() + '_Proposition_Mapping' in config_data['General Config']:
                 for mapping in config_data['General Config'][prop_type.title() + '_Proposition_Mapping']:
                     try:
-                        prop, func = [s.strip() for s in mapping.split('=',1)]
+                        prop, func = [s.strip() for s in mapping.split('=', 1)]
                     except IOError:
                         raise ht.LoadingError("Wrong {} mapping -- {!r}".format(prop_type, mapping))
                     else:
@@ -746,7 +747,7 @@ class ExperimentConfig(object):
 
         # load robot configs
         robot_data = []
-        for config_key,config_value in config_data.iteritems():
+        for config_key, config_value in config_data.iteritems():
             if config_key.startswith('Robot'):
                 robot_data.append(config_value)
 
@@ -774,24 +775,24 @@ class ExperimentConfig(object):
 
     def saveConfig(self):
         """
-        Save the config object. 
+        Save the config object.
         Return True for successfully saved, False for not
         """
         # Check if the config object is a complete one, if not then throw warning.
         incomplete_attr = self.checkComplete()
         if incomplete_attr:
-            logging.warning("Attribute {0} of Config {1} is not complete. Save those attributes with default value.".format(incomplete_attr,self.name))
+            logging.warning("Attribute {0} of Config {1} is not complete. Save those attributes with default value.".format(incomplete_attr, self.name))
 
         # the file name is default to be the config name with underscore
         if 'name' in incomplete_attr:
             self.name = 'Untitled configuration'
-        file_name = self.name.replace(' ','_')
+        file_name = self.name.replace(' ', '_')
 
         # Add extension to the name
         file_name = file_name+'.config'
 
         # Add the path to the file name
-        file_name = os.path.join(os.path.dirname(self.file_name),file_name)
+        file_name = os.path.join(os.path.dirname(self.file_name), file_name)
         self.file_name = file_name
 
         data = {'General Config':{'Name':self.name}}
@@ -815,9 +816,9 @@ class ExperimentConfig(object):
         data['General Config']['Initial_Truths'] = self.initial_truths
         data['General Config']['Region_Tags'] = json.dumps(self.region_tags)
 
-        for i,robot in enumerate(self.robots):
+        for i, robot in enumerate(self.robots):
             header = 'Robot'+str(i+1)+' Config'
-            data[header]={}
+            data[header] = {}
             data[header]['RobotName'] = robot.name
             data[header]['Type'] = robot.type
 
@@ -871,6 +872,6 @@ if __name__ == '__main__':
     """
     robot_config = RobotConfig()
     try:
-        robot_config.fromData({'RobotName':['jim'],'Type':['jimtype'],'CalibrationMatrix':'[1,2,3]'})
+        robot_config.fromData({'RobotName':['jim'], 'Type':['jimtype'], 'CalibrationMatrix':'[1, 2, 3]'})
     except ht.LoadingError, msg:
         print msg

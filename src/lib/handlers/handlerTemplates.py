@@ -2,7 +2,7 @@
 
 
 """ ================================================
-    handlerTemplates.py Defines templates for handler classes.  
+    handlerTemplates.py Defines templates for handler classes
     All handlers should be subclasses of an appropriate handler type (e.g. InitHandler)
     ================================================
 """
@@ -24,7 +24,7 @@ class Handler(object):
         Properly terminates all threads/computations in the handler. Leave no trace behind.
         """
         logging.debug("WARNING: No _stop() function implemented, may cause problems on shutdown")
-    
+
     def _onProjectUpdated(self, newPrject):
         """
         Get called when the current project is updated
@@ -77,7 +77,6 @@ class MotionControlHandler(Handler):
     """
     def __init__(self, *args, **kwds):
         super(MotionControlHandler, self).__init__(*args, **kwds)
-    
 
 class DriveHandler(Handler):
     """
@@ -94,7 +93,7 @@ class LocomotionCommandHandler(Handler):
     """
     def __init__(self, *args, **kwds):
         super(LocomotionCommandHandler, self).__init__(*args, **kwds)
-        
+
 class LoadingError(Exception):
     """An exception when any handler fails to load """
     def __init__(self, msg):
