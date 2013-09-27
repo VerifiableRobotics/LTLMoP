@@ -894,7 +894,7 @@ class addRobotDialog(wx.Dialog):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
         wx.Dialog.__init__(self, *args, **kwds)
         self.label_3 = wx.StaticText(self, wx.ID_ANY, "Robot type:")
-        self.combo_box_robottype = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN)
+        self.combo_box_robottype = wx.ComboBox(self, wx.ID_ANY, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.label_4 = wx.StaticText(self, wx.ID_ANY, "Robot name:")
         self.text_ctrl_robotname = wx.TextCtrl(self, wx.ID_ANY, "")
         self.static_line_1 = wx.StaticLine(self, wx.ID_ANY)
