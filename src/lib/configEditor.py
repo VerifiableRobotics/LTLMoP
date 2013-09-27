@@ -1011,14 +1011,15 @@ class addRobotDialog(wx.Dialog):
             # TODO: what should the correct behavior be if it doesn't exist in the list of handlers already?
             self.handler_combos[handler_type_class].SetValue("")
 
-            for handler_config in handler_configs:
-                # construct a list of handler config names based on this robot
-                handler_name_list = [getattr(handler_config, 'name', '') for handler_config in \
-                        self.proj.hsub.handler_configs[self.robot.r_type].get(handler_type_class, [])]
-                # populate the list with shared handlers
-                handler_name_list.extend([getattr(handler_config, 'name', '') for handler_config in \
-                        self.proj.hsub.handler_configs['share'].get(handler_type_class, [])])
+            # construct a list of handler config names based on this robot
+            handler_name_list = [getattr(handler_config, 'name', '') for handler_config in \
+                    self.proj.hsub.handler_configs[self.robot.r_type].get(handler_type_class, [])]
+            # populate the list with shared handlers
+            handler_name_list.extend([getattr(handler_config, 'name', '') for handler_config in \
+                    self.proj.hsub.handler_configs['share'].get(handler_type_class, [])])
 
+            # choose the first handler that is in the list
+            for handler_config in handler_configs:
                 if handler_config.name in handler_name_list:
                     # either this robot or the shared folder has this handler config
                     self.handler_combos[handler_type_class].SetStringSelection(handler_config.name)
@@ -1072,17 +1073,31 @@ class addRobotDialog(wx.Dialog):
                 # If this handler has default values from the selected robot file, use them
                 # TODO: this will erase any previous config settings...
                 default_robot = self.proj.hsub.getRobotByType(self.robot.r_type)
-                if htype in default_robot.handlers and \
-                    default_robot.handlers[htype].name == hname:
-                    hobj = default_robot.handlers[htype]
-                else:
-                    # Otherwise, just grab the plain handler
-                    rname = self.robot.r_type
-                    hobj = self.proj.hsub.getHandlerConfigDefault(rname, htype, hname)
+                handler_config_changed = default_robot.getHandlerOfRobot(htype, hname)
 
-                # TODO: allow multiple handlers per type
-                self.robot.handlers[htype] = hobj
-                
+                if handler_config_changed is None:
+                    # just grab the plain handler
+                    rname = self.robot.r_type
+                    handler_config_changed = self.proj.hsub.getHandlerConfigDefault(rname, htype, hname)
+
+                if handler_config_changed is None:
+                    # this handler might be a shared one
+                    rname = 'share'
+                    handler_config_changed = self.proj.hsub.getHandlerConfigDefault(rname, htype, hname)
+
+                if handler_config_changed is not None:
+                    if htype not in self.robot.handlers.keys():
+                        self.robot.handlers[htype] = []
+                    #TODO: this is not the best way to make sure the chosen handler will actually be selected in the combo box
+                    if handler_config_changed in self.robot.handlers[htype]:
+                        self.robot.handlers[htype].insert(0, \
+                                self.robot.handlers[htype].pop( \
+                                self.robot.handlers[htype].index(handler_config_changed)))
+                    else:
+                        self.robot.handlers[htype].insert(0, handler_config_changed)
+                else:
+                    logging.warning('Cannot find the selected handler config.')
+
                 break
 
         self._robot2dialog(self.robot)
