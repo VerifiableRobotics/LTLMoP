@@ -117,7 +117,6 @@ def drawParamConfigPane(target, method, proj):
             this_param.setValue(param_controls[this_param].GetValue())
 
         #print this_param.name, this_param.value
-        
     target.Bind(wx.EVT_TEXT, paramPaneCallback)
     target.Bind(wx.EVT_COMBOBOX, paramPaneCallback)
     target.Bind(wx.EVT_CHECKBOX, paramPaneCallback)
@@ -524,7 +523,6 @@ class simSetupDialog(wx.Dialog):
 
         # Set up the list of configs
         self.list_box_experiment_name.Clear()
-        
         print "Loading handlers..."
         self.proj.hsub.loadAllHandlers()
         print "Loading robots..."
@@ -931,7 +929,6 @@ class addRobotDialog(wx.Dialog):
             self.Bind(wx.EVT_COMBOBOX, self.onChangeHandler, self.handler_combos[handler_type_class])
 
         self.Layout()
-        
         self.SetSizeHints(self.GetSize()[0], 0)  # Force width to stay the same
         self.Fit()
 
@@ -1040,7 +1037,6 @@ class addRobotDialog(wx.Dialog):
 
     def onClickConfigure(self, event):
         src = event.GetEventObject()
-        
         # Figure out which "Configure..." button was pressed
         for htype, b in self.handler_buttons.iteritems():
             if src is b:
@@ -1116,7 +1112,7 @@ class addRobotDialog(wx.Dialog):
 
         # Make sure another robot doesn't already have this name
         if name != self.original_robot.name and \
-           name in (r.name for r in self.parent._getSelectedConfigObject().robots):
+           name in (r.name for r in self.parent._getSelectedExperimentConfig().robots):
             raise ValueError('Current configuration already contains a robot with name "{}".\n\nPlease rename.'.format(name))
 
         return name
@@ -1145,7 +1141,6 @@ class addRobotDialog(wx.Dialog):
             wx.MessageBox(e.message, "Error", style = wx.OK | wx.ICON_ERROR)
             event.Skip(False)
             return
-    
         event.Skip()
 
     def onChooseRobot(self, event): # wxGlade: addRobotDialog.<event_handler>
@@ -1399,7 +1394,6 @@ class propMappingDialog(wx.Dialog):
                                           wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_RIGHT, wx.WXK_NUMPAD_UP, wx.WXK_NUMPAD_DOWN]:
             #                              wx.WXK_BACK, wx.WXK_DELETE]:
                 return
-        
             # TODO: Make backspace work as expected; maybe colorize/bold
 
             i = self.text_ctrl_mapping.GetInsertionPoint()
@@ -1436,7 +1430,6 @@ class propMappingDialog(wx.Dialog):
             m = m_local
 
         # Make sure the robot name is valid
-            
         rname = m.group("robot")
         if rname == "share":
             rname = "(Simulated)"
@@ -1457,7 +1450,6 @@ class propMappingDialog(wx.Dialog):
                     self.text_ctrl_mapping.MoveCaret(m.end()-1)
 
         # Load detailed view of keyword below
-            
         self.list_box_robots.SetStringSelection(corresponding_robots[0])
         self.onSelectRobot(None)
         self.list_box_functions.SetStringSelection(m.group("name"))
