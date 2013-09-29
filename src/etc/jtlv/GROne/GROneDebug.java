@@ -61,10 +61,10 @@ public class GROneDebug {
 		
 		
 		//Prints the results of analyzing the specification. 
-		System.out.println(analyze(env, sys));		
+		System.out.println(analyze(env, sys, args));		
 	}
 	
-	public static String analyze(SMVModule env, SMVModule sys) {
+	public static String analyze(SMVModule env, SMVModule sys, String[] args) {
 
 		  
 		int explainSys=0, explainEnv = 0; //keep track of explanations to avoid redundancy
@@ -174,6 +174,15 @@ public class GROneDebug {
 			    debugInfo += justiceChecks(env,sys,explainSys,explainEnv, falsifyEnv);
 		}catch (Exception e){//Catch exception if any
 			      System.err.println("Error: " + e.getMessage());
+		}
+		
+		//Compute minimal core of system safeties (but only if there is a problem with the safeties)
+		if (explainSys == 1) {
+			try{
+				debugInfo += "Guilty safety conjuncts are " + SpecSubsets.iteratedCoreSafetyIndices(args);
+			}catch (Exception e){//Catch exception if any
+				      System.err.println("Error: " + e.getMessage());
+			}
 		}
 	
 		return debugInfo;
