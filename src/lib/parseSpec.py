@@ -11,6 +11,7 @@ import re
 import os
 import copy
 import nltk
+import time
 
 def writeSpec(text, sensorList, regionList, robotPropList):
     ''' This function creates the Spec dictionary that contains the parsed LTL
@@ -66,22 +67,22 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     #Generate regular expression to match sentences defining region groups
     #Resultant expression is: 'group (?P<name>\w+) is (?P<items>(?:region1,? ?|region2,? ?|region3,? ?|empty)+)'
     groupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>(?:'
-    groupDefPattern += ',? ?|'.join(regionList)
-    groupDefPattern += ',? ?|empty)+)'
+    groupDefPattern += ',?[^\w_]+|'.join(regionList)
+    groupDefPattern += ',?[^\w_]+|empty)+)'
     r_groupDef = re.compile(groupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining sensor groups
     #Resultant expression is: 'sensor group (?P<name>\w+) is (?P<items>(?:sensor1,? ?|sensor2,? ?|sensor3,? ?|empty)+)'
     sensorGroupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>(?:'
-    sensorGroupDefPattern += ',? ?|'.join(sensorList)
-    sensorGroupDefPattern += ',? ?|empty)+)'
+    sensorGroupDefPattern += ',?[^\w_]+|'.join(sensorList)
+    sensorGroupDefPattern += ',?[^\w_]+|empty)+)'
     r_sensorGroupDef = re.compile(sensorGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining action groups
     #Resultant expression is: 'group (?P<names>\w+) is (?P<items>(?:action1,? ?|action2,? ?|action3,? ?|empty)+)'
     actionGroupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>(?:'
-    actionGroupDefPattern += ',? ?|'.join(robotPropList)
-    actionGroupDefPattern += ',? ?|empty)+)'
+    actionGroupDefPattern += ',?[^\w_]+|'.join(robotPropList)
+    actionGroupDefPattern += ',?[^\w_]+|empty)+)'
     r_actionGroupDef = re.compile(actionGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining correlations
@@ -216,13 +217,15 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     for lineNo in linesToParse:
         
         line = textLines[lineNo].lower()
+        #Put exactly one space before and after parentheses
+        line = re.sub(r'\s*?(\(|\))\s*?',r' \1 ',line)  
         #print line
         
         #Parse input line using grammar; the result here is a collection
         # of pairs of syntax trees and semantic representations in a
         # prefix first-order-logic syntax
-        result = nltk.sem.batch_interpret([line], grammar, 'SEM', 2)[0]
-        
+        result = nltk.sem.batch_interpret([line], grammar, 'SEM')[0]
+
         nTrees = 0;
         formulaeFound = []
         #Iterate over all parse trees found
@@ -267,7 +270,7 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         if nTrees == 0:
             print('Error: No valid parse found for: ' + line)
             failed = True
-    
+
     #Set all empty subformulas to TRUE, and removing last & in 'EnvGoals' and 'SysGoals'
     if spec['EnvInit'] == '':
         spec['EnvInit'] = 'TRUE & \n'
@@ -310,21 +313,19 @@ def parseStay(semstring, regions):
         stay = appendStayClause(0)
         #return semstring.replace('$Stay',stay)
         # Just insert the "STAY_THERE" macro to be dealt with by specCompiler
-        return semstring.replace('Next($Stay)', "STAY_THERE")
+        return semstring.replace('Next($Stay)','STAY_THERE').replace('$Stay','STAY_THERE')
     else:
         return semstring
 
 def parseGroupAll(semstring, allGroups):
-    def appendAllClause(semstring, ind, groupItems):
-        if ind == len(groupItems) - 1:
-            return re.sub(r'\$All\(\w+\)',groupItems[ind],semstring)
-        else:
-            return 'And('+re.sub(r'\$All\(\w+\)',groupItems[ind],semstring)+','+appendAllClause(semstring, ind+1, groupItems)+')'
     while semstring.find('$All') != -1:
         groupName = re.search(r'\$All\((\w+)\)',semstring).groups()[0]
         if groupName in allGroups:
-            if len(allGroups[groupName]) == 0: return re.sub(r'\$All\('+groupName+'\)','TRUE',semstring)
-            semstring = appendAllClause(semstring, 0, allGroups[groupName])
+            group = allGroups[groupName]
+            if len(group) == 0: return re.sub(r'\$All\('+groupName+'\)', 'TRUE', semstring)
+            if len(group) == 1: return re.sub(r'\$All\('+groupName+'\)', group[0], semstring)
+            allClause = 'And(' + ',And('.join(group[0:-1]) + ',' + group[-1] + ')'*(len(group)-1)
+            semstring = re.sub(r'\$All\(' + groupName + '\)', allClause, semstring)
         else:
             print('Error: Could not resolve group '+groupName)
     return semstring
@@ -333,9 +334,9 @@ def parseGroupAny(semstring, allGroups):
     while semstring.find('$Any') != -1:
         groupName = re.search(r'\$Any\((\w+)\)',semstring).groups()[0]
         if groupName in allGroups:
-            if len(allGroups[groupName]) == 0: return re.sub(r'\$Any\('+groupName+'\)','FALSE',semstring)
-            if len(allGroups[groupName]) == 1: return re.sub(r'\$Any\('+groupName+'\)',allGroups[groupName][0],semstring)
             group = allGroups[groupName]
+            if len(group) == 0: return re.sub(r'\$Any\('+groupName+'\)', 'FALSE', semstring)
+            if len(group) == 1: return re.sub(r'\$Any\('+groupName+'\)', group[0], semstring)
             anyClause = 'Or(' + ',Or('.join(group[0:-1]) + ',' + group[-1] + ')'*(len(group)-1)
             semstring = re.sub(r'\$Any\('+groupName+'\)', anyClause, semstring)
         else:
