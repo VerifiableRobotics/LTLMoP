@@ -63,12 +63,10 @@ CONDITIONAL[SPEC=?sp,SEM=<Iff(?cond,?p)>] -> CONSEQUENT[SPEC=?sp,SEM=?req,PROP=?
 CONSEQUENT[SPEC=?sp,SEM=?req,PROP=<Next(?p)>] -> SAFETY[SPEC=?sp,SEM=?req,PROP=?p] | LIVENESS[SPEC=?sp,SEM=?req,PROP=?p]
 CONSEQUENT[SPEC=?sp,SEM=<?lc(?req1,?req2)>,PROP=<Next(?lc(?p1,?p2))>] -> LIVENESS[SPEC=?sp,SEM=?req1,PROP=?p1] LC[SEM=?lc] LIVENESS[SEM=?req2,PROP=?p2] | SAFETY[SPEC=?sp,SEM=?req1,PROP=?p1] LC[SEM=?lc] SAFETY[SEM=?req1,PROP=?p2]
 
-# Conditions are independent clauses (IC) made up of either a noun phrase (NP) and verb phrase (VP)
+# Antecedents are independent clauses (IC) made up of either a noun phrase (NP) and verb phrase (VP)
 # or two ICs conjoined by a logical connective
-IC[SEM=?vp] -> NP[PER=?per] VP[PER=?per,SEM=?vp]
+IC[SEM=?vp] -> NP[PER=?per] VP[PER=?per,SEM=?vp] | PHI[SEM=?vp]
 IC[SEM=<?lc(?ic1,?ic2)>] -> IC[SEM=?ic1] LC[SEM=?lc] IC[SEM=?ic2]
-
-#TODO: Allow proposition change conditions, but not in livenesses, and only on propositions that match the sentence spec
 
 # Valid noun phrases are limited to identifiers of the robot
 NP[PER=?per] -> ROB[PER=?per]
@@ -80,6 +78,7 @@ VP[PER=?per,SEM=<Next(?pe)>] -> LV[PER=?per,TEN=pres] PE[SEM=?pe]
 VP[PER=?per,SEM=?pe] -> LV[PER=?per,TEN=past] PE[SEM=?pe]
 VP[PER=?per,SEM=<Next(?p)>] -> SENSE[TEN=pres,PER=?per] PHI_ENV[SEM=?p] | ACTIVATE[TEN=pres,PER=?per] PHI_ACT[SEM=?p]
 VP[PER=?per,SEM=?p] -> SENSE[TEN=past,PER=?per] PHI_ENV[SEM=?p] | ACTIVATE[TEN=past,PER=?per] PHI_ACT[SEM=?p]
+VP[PER=?per,SEM=<?n(?p)>] -> NEG[SEM=?n] SENSE[TEN=pres,PER=?per] PHI_ENV[SEM=?p] | NEG[SEM=?n] ACTIVATE[TEN=pres,PER=?per] PHI_ACT[SEM=?p]
 VP[PER=?per,SEM=<?lc(?vp1,?vp2)>] -> VP[PER=?per,SEM=?vp1] LC[SEM=?lc] VP[PER=?per,SEM=?vp2]
 
 # Valid predicative expressions are: a preposition (P) and region, a participle (of either
@@ -107,21 +106,24 @@ PHI_ENV[SEM=?ph] -> SENSOR[SEM=?ph] | LPAREN PHI_ENV[SEM=?ph] RPAREN
 PHI_ENV[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ENV[SEM=?ph]
 PHI_ENV[SEM=<?lc(?p1,?p2)>] -> PHI_ENV[SEM=?p1] LC[SEM=?lc] PHI_ENV[SEM=?p2]
 PHI_ENV[SEM=<?q(?g)>] -> ANY[SEM=?q] SENSORGROUP[SEM=?g] | ALL[SEM=?q] SENSORGROUP[SEM=?g] | CORR[SEM=?q] SENSORGROUP[SEM=?g] | EACH[SEM=?q] SENSORGROUP[SEM=?g]
+PHI_ENV[SEM=<?ch(?p)>] -> STARTOF[SEM=?ch] SENSOR[SEM=?p] | ENDOF[SEM=?ch] SENSOR[SEM=?p]
 
 # Region propositions, composed of valid region names or quantified groups
 PHI_REG[SEM=?ph] -> REGION[SEM=?ph] | LPAREN PHI_REG[SEM=?ph] RPAREN
 PHI_REG[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_REG[SEM=?ph]
 PHI_REG[SEM=<?lc(?p1,?p2)>] -> PHI_REG[SEM=?p1] LC[SEM=?lc] PHI_REG[SEM=?p2]
+PHI_REG[SEM=<?ch(?p)>] -> STARTOF[SEM=?ch] REGION[SEM=?p] | ENDOF[SEM=?ch] REGION[SEM=?p]
 REGION[SEM=<?q(?g)>] -> ANY[SEM=?q] GROUP[SEM=?g] | ALL[SEM=?q] GROUP[SEM=?g] | CORR[SEM=?q] GROUP[SEM=?g] | EACH[SEM=?q] GROUP[SEM=?g]
 
 # Action propositions, composed of valid robot actions and auxilliary propositions
 PHI_ACT[SEM=?ph] -> ACTION[SEM=?ph] | LPAREN PHI_ACT[SEM=?ph] RPAREN
 PHI_ACT[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ACT[SEM=?ph]
 PHI_ACT[SEM=<?lc(?p1,?p2)>] -> PHI_ACT[SEM=?p1] LC[SEM=?lc] PHI_ACT[SEM=?p2]
+ACTION[SEM=<?ch(?p)>] -> STARTOF[SEM=?ch] ACTION[SEM=?p] | ENDOF[SEM=?ch] ACTION[SEM=?p]
 ACTION[SEM=<?q(?g)>] -> ANY[SEM=?q] ACTIONGROUP[SEM=?g] | ALL[SEM=?q] ACTIONGROUP[SEM=?g] | CORR[SEM=?q] ACTIONGROUP[SEM=?g] | EACH[SEM=?q] ACTIONGROUP[SEM=?g]
 
 # Robot propositions, composed of any valid proposition except sensor propositions 
-PHI_ROB[SEM=?ph] -> REGION[SEM=?ph] | ACTION[SEM=?ph] | AUXPROP[SEM=?ph] | LPAREN PHI_ROB[SEM=?ph] RPAREN
+PHI_ROB[SEM=?ph] -> REGION[SEM=?ph] | ACTION[SEM=?ph] | LPAREN PHI_ROB[SEM=?ph] RPAREN
 PHI_ROB[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ROB[SEM=?ph]
 PHI_ROB[SEM=<?lc(?p1,?p2)>] -> PHI_ROB[SEM=?p1] LC[SEM=?lc] PHI_ROB[SEM=?p2]
 
@@ -158,7 +160,7 @@ LV[TEN=pres,PER=third] -> 'is'
 LV[TEN=pres,PER=second] -> 'are'
 LV[TEN=past,PER=third] -> 'was'
 LV[TEN=past,PER=second] -> 'were'
-NEG[SEM=<\x.Not(x)>] -> 'not'
+NEG[SEM=<\x.Not(x)>] -> 'not' | 'did' 'not'
 RESETON[SEM=<\x y z.And(Glob(Imp(z,Not(Next(x)))),Glob(Imp(And(Not(x),Not(y)),Not(Next(x)))))>] -> 'and' 'reset' 'on'
 ROB[PER=third] -> 'robot' | 'the' 'robot'
 ROB[PER=second] -> 'you'
