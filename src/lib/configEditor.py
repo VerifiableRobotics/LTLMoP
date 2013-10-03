@@ -910,7 +910,7 @@ class addRobotDialog(wx.Dialog):
         self.parent = parent
         self.proj = parent.proj
         self.robot = RobotConfig()
-        self.original_robot = RobotObject()
+        self.original_robot = RobotConfig()
 
         self.handler_labels = {}
         self.handler_combos = {}
