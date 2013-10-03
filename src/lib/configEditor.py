@@ -1121,11 +1121,13 @@ class addRobotDialog(wx.Dialog):
         # TODO: add in checks for all combo boxes (don't allow null handlers)
 
         # Make sure that all required handler parameters have been specified
+        # since we allow multiple handler config objects per type for each robot
+        # we will only check the first handler config object in the list
         incomplete_params = []
         for h_type, handler in self.robot.handlers.iteritems():
-            for param in handler.getMethodByName("__init__").para:
+            for param in handler[0].getMethodByName("__init__").para:
                 if param.getValue() is None:
-                    incomplete_params.append((handler.name, param.name))
+                    incomplete_params.append((handler[0].name, param.name))
 
         if len(incomplete_params) > 0:
             wx.MessageBox("The following parameters need to be specified:\n" + \
@@ -1133,7 +1135,7 @@ class addRobotDialog(wx.Dialog):
                            "Error", style = wx.OK | wx.ICON_ERROR)
             event.Skip(False)
             return
-            
+
         # Make sure the robot name is OK
         try:
             self.robot.name = self._normalizeRobotName(self.robot.name)
