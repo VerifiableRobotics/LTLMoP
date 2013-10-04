@@ -370,9 +370,9 @@ class HandlerConfig(object):
         return fileName
 
     def getType(self):
-        return self.type
+        return self.h_type
     def setType(self, h_type):
-        self.type = h_type
+        self.h_type = h_type
         return self
 
     def parseHandler(self, handler_module_path, onlyLoadInit=False):

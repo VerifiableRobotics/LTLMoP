@@ -32,14 +32,14 @@ def drawParamConfigPane(target, method, proj):
 
     param_controls = {}
     for p in method.para:
-        #print "name: %s, type: %s, default: %s, value: %s" % (p.name, p.type, p.default, p.value)
+        #print "name: %s, para_type: %s, default: %s, value: %s" % (p.name, p.para_type, p.default, p.value)
         item_sizer = wx.BoxSizer(wx.HORIZONTAL)
         param_label = wx.StaticText(target, -1, "%s:" % p.name)
 
-        if p.type is None:
+        if p.para_type is None:
             continue
 
-        if p.type.lower() == "region":
+        if p.para_type.lower() == "region":
             r_names = [r.name for r in proj.rfi.regions if r.name.lower() != "boundary" and not r.isObstacle]
             param_controls[p] = wx.ComboBox(target, -1, choices=r_names, style=wx.CB_DROPDOWN)
 
@@ -51,7 +51,7 @@ def drawParamConfigPane(target, method, proj):
             else:
                 p.value = r_names[0]
                 param_controls[p].SetSelection(0)
-        elif p.type.lower().startswith("bool"):
+        elif p.para_type.lower().startswith("bool"):
             param_controls[p] = wx.CheckBox(target, -1, "")
             if p.value is not None:
                 param_controls[p].SetValue(p.value)
@@ -61,13 +61,13 @@ def drawParamConfigPane(target, method, proj):
             else:
                 p.value = "False"
                 param_controls[p].SetValue(False)
-        elif p.type.lower().startswith("int"):
+        elif p.para_type.lower().startswith("int"):
             param_controls[p] = wx.lib.intctrl.IntCtrl(target, -1, 0)
-            if p.min is not None:
-                param_controls[p].SetMin(p.min)
+            if p.min_val is not None:
+                param_controls[p].SetMin(p.min_val)
                 param_controls[p].SetLimited(True)
-            if p.max is not None:
-                param_controls[p].SetMax(p.max)
+            if p.max_val is not None:
+                param_controls[p].SetMax(p.max_val)
                 param_controls[p].SetLimited(True)
 
             if p.value is not None:
@@ -88,7 +88,7 @@ def drawParamConfigPane(target, method, proj):
                 p.value = ""
                 param_controls[p] = wx.TextCtrl(target, -1, "")
 
-        param_label.SetToolTip(wx.ToolTip(p.des))
+        param_label.SetToolTip(wx.ToolTip(p.desc))
         item_sizer = wx.BoxSizer(wx.HORIZONTAL)
         item_sizer.Add(param_label, 0, wx.ALL, 5)
         item_sizer.Add(param_controls[p], 1, wx.ALL, 5)
@@ -107,11 +107,11 @@ def drawParamConfigPane(target, method, proj):
             # Ignore; from another control (e.g. calib matrix)
             return
 
-        if this_param.type.lower() == "region":
+        if this_param.para_type.lower() == "region":
             this_param.setValue(param_controls[this_param].GetValue())
-        elif this_param.type.lower().startswith("bool"):
+        elif this_param.para_type.lower().startswith("bool"):
             this_param.setValue(str(param_controls[this_param].GetValue()))
-        elif this_param.type.lower().startswith("int"):
+        elif this_param.para_type.lower().startswith("int"):
             this_param.setValue(str(param_controls[this_param].GetValue()))
         else:
             this_param.setValue(param_controls[this_param].GetValue())
@@ -408,7 +408,7 @@ class handlerConfigDialog(wx.Dialog):
         drawParamConfigPane(self.panel_configs, methodObj, self.proj)
 
         # Add in calibration configuration pane for pose handler
-        if handler.type == "pose":
+        if handler.h_type == "pose":
             # Default to identity matrix
             if self.robot.calibrationMatrix is None:
                 self.robot.calibrationMatrix = eye(3)
