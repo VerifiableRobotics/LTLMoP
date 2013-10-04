@@ -329,7 +329,7 @@ class handlerConfigDialog(wx.Dialog):
             return
 
         # Check that an init handler is selected
-        if self.robot.handlers['init'] is None:
+        if ht.InitHandler not in self.robot.handlers.keys():
             wx.MessageBox("Please choose an Initialization Handler before calibrating.", "Error",
                         style = wx.OK | wx.ICON_ERROR)
             return
@@ -344,10 +344,10 @@ class handlerConfigDialog(wx.Dialog):
 
         cfg.name = "calibrate"
         robot.name = "calibrate"
-        robot.handlers['pose'] = self.handler
+        robot.handlers[ht.PoseHandler] = self.handler
 
         # If the inithandler takes an init_region argument (i.e. playerstage, ODE), set it to the origin
-        p = robot.handlers['init'].getMethodByName("__init__").getParaByName("init_region")
+        p = robot.handlers[ht.InitHandler].getMethodByName("__init__").getParaByName("init_region")
         if p is not None:
             p.setValue("__origin__")
 
