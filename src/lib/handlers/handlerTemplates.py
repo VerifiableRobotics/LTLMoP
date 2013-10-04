@@ -141,11 +141,13 @@ def getHandlerTypeName(h_class, short_name = True):
     except KeyError:
         raise KeyError("Invalid handler type")
 
-def getAllHandlerTypeName():
+def getAllHandlerTypeName(short_name = True):
     """
     Return a list of handler type name in string
+    If short_name is True, return the name without tailing `Handler`
     """
-    return [h_type for h_type in handler_type_mapping.keys() if isinstance(h_type, basestring)]
+    return [h_type + ('Handler' if not short_name else '') \
+            for h_type in handler_type_mapping.keys() if isinstance(h_type, basestring)]
 
 def getAllHandlerTypeClass():
     """
