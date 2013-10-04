@@ -945,18 +945,18 @@ class addRobotDialog(wx.Dialog):
         for handler_type_class in ht.getAllHandlerTypeClass():
             self.handler_combos[handler_type_class].Clear()
             self.handler_combos[handler_type_class].SetValue("")
+            self.handler_buttons[handler_type_class].Enable(False)
 
             # Load handlers under this robot
             if handler_type_class in self.proj.hsub.handler_configs[self.robot.r_type]:
-                for i, handler_config in enumerate( \
-                        self.proj.hsub.handler_configs[self.robot.r_type][handler_type_class]):
-                    self.handler_combos[handler_type_class].Insert(handler_config.name, i)
+                for handler_config in self.proj.hsub.handler_configs[self.robot.r_type][handler_type_class]:
+                    self.handler_combos[handler_type_class].Insert(handler_config.name, 0, handler_config)
 
-            # Load handlers under shared folder
-            if handler_type_class in self.proj.hsub.handler_configs['share']:
-                for i, handler_config in enumerate( \
-                        self.proj.hsub.handler_configs['share'][handler_type_class]):
-                    self.handler_combos[handler_type_class].Insert(handler_config.name, i)
+            # Load handlers under shared folder for pose, motionControl, drive
+            if handler_type_class in self.proj.hsub.handler_configs['share'] and \
+                    handler_type_class in [ht.PoseHandler, ht.MotionControlHandler, ht.DriveHandler]:
+                for handler_config in self.proj.hsub.handler_configs['share'][handler_type_class]:
+                    self.handler_combos[handler_type_class].Insert(handler_config.name, 0, handler_config)
 
     def __set_properties(self):
         # begin wxGlade: addRobotDialog.__set_properties
@@ -1003,32 +1003,19 @@ class addRobotDialog(wx.Dialog):
         self.text_ctrl_robotname.SetValue(self.robot.name)
         self._populateHandlerCombos()
 
-        for handler_type_class, handler_configs in self.robot.handlers.iteritems():
-            # for each handler type, a robot can have multiple options, select any one that is successfully loaded
-            # TODO: what should the correct behavior be if it doesn't exist in the list of handlers already?
+        for handler_type_class, handler_config in self.robot.handlers.iteritems():
+            # for each handler type, a robot can only have one handler config
             self.handler_combos[handler_type_class].SetValue("")
 
-            # construct a list of handler config names based on this robot
-            handler_name_list = [getattr(handler_config, 'name', '') for handler_config in \
-                    self.proj.hsub.handler_configs[self.robot.r_type].get(handler_type_class, [])]
-            # populate the list with shared handlers
-            handler_name_list.extend([getattr(handler_config, 'name', '') for handler_config in \
-                    self.proj.hsub.handler_configs['share'].get(handler_type_class, [])])
+            self.handler_combos[handler_type_class].SetStringSelection(handler_config.name)
 
-            # choose the first handler that is in the list
-            for handler_config in handler_configs:
-                if handler_config.name in handler_name_list:
-                    # either this robot or the shared folder has this handler config
-                    self.handler_combos[handler_type_class].SetStringSelection(handler_config.name)
+            # Disable the "Configure" button if there are no parameters (with an exception for pose)
+            if len(handler_config.getMethodByName("__init__").para) == 0 and \
+                    handler_config.h_type is not ht.PoseHandler:
+                self.handler_buttons[handler_type_class].Enable(False)
+            else:
+                self.handler_buttons[handler_type_class].Enable(True)
 
-                    # Disable the "Configure" button if there are no parameters (with an exception for pose)
-                    if len(handler_config.getMethodByName("__init__").para) == 0 and \
-                            handler_config.h_type is not ht.PoseHandler:
-                        self.handler_buttons[handler_type_class].Enable(False)
-                    else:
-                        self.handler_buttons[handler_type_class].Enable(True)
-
-                    break
             if self.handler_combos[handler_type_class].GetStringSelection() == "":
                 # when neither the robot or the share folder has the handler loaded
                 logging.warning('Cannot find and handler config in the options for handler type {!r}'\
@@ -1069,7 +1056,9 @@ class addRobotDialog(wx.Dialog):
                 # If this handler has default values from the selected robot file, use them
                 # TODO: this will erase any previous config settings...
                 default_robot = self.proj.hsub.getRobotByType(self.robot.r_type)
-                handler_config_changed = default_robot.getHandlerOfRobot(htype, hname)
+                handler_config_changed = default_robot.getHandlerOfRobot(htype)
+                if handler_config_changed.name != hname:
+                    handler_config_changed = None
 
                 if handler_config_changed is None:
                     # just grab the plain handler
@@ -1082,15 +1071,7 @@ class addRobotDialog(wx.Dialog):
                     handler_config_changed = self.proj.hsub.getHandlerConfigDefault(rname, htype, hname)
 
                 if handler_config_changed is not None:
-                    if htype not in self.robot.handlers.keys():
-                        self.robot.handlers[htype] = []
-                    #TODO: this is not the best way to make sure the chosen handler will actually be selected in the combo box
-                    if handler_config_changed in self.robot.handlers[htype]:
-                        self.robot.handlers[htype].insert(0, \
-                                self.robot.handlers[htype].pop( \
-                                self.robot.handlers[htype].index(handler_config_changed)))
-                    else:
-                        self.robot.handlers[htype].insert(0, handler_config_changed)
+                    self.robot.handlers[htype] = handler_config_changed
                 else:
                     logging.warning('Cannot find the selected handler config.')
 
@@ -1121,11 +1102,9 @@ class addRobotDialog(wx.Dialog):
         # TODO: add in checks for all combo boxes (don't allow null handlers)
 
         # Make sure that all required handler parameters have been specified
-        # since we allow multiple handler config objects per type for each robot
-        # we will only check the first handler config object in the list
         incomplete_params = []
         for h_type, handler in self.robot.handlers.iteritems():
-            for param in handler[0].getMethodByName("__init__").para:
+            for param in handler.getMethodByName("__init__").para:
                 if param.getValue() is None:
                     incomplete_params.append((handler[0].name, param.name))
 

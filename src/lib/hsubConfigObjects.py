@@ -458,7 +458,7 @@ class RobotConfig(object):
                 temp_str_list = []
                 for h_type in handler_configs.keys():
                     temp_str_list.append("{0:13}{1:23}{2}".format('', ht.getHandlerTypeName(h_type) + ':', \
-                                                             ','.join([h.name for h in handler_configs[h_type]])))
+                                                             handler_configs[h_type].name))
                 strRepr = strRepr + ("{0}{1}\n".format("<"+key+">:\n", '\n'.join(temp_str_list)))
             else:
                 strRepr = strRepr + ("{0:13}{1}\n".format("<"+key+">:", getattr(self, key, 'NOT DEFINED')))
@@ -466,19 +466,12 @@ class RobotConfig(object):
                     strRepr + " -- End of Robot <{0}> -- \n".format(self.name)
         return reprString
 
-    def getHandlerOfRobot(self, h_type, h_name=''):
-        """Get the handler config object of this robot specified by h_type and h_name
-        h_type is the handler class object specified in lib/handlers/handlerTemplates.py
-        if h_name is empty, then all handler config objects of the given type will be returned"""
+    def getHandlerOfRobot(self, h_type):
+        """Get the handler config object of this robot specified by h_type
+        h_type is the handler class object specified in lib/handlers/handlerTemplates.py"""
 
-        for handler_type, handler_configs in self.handlers.iteritems():
-            if handler_type is h_type:
-                if h_name == '':
-                    return handler_configs
-                else:
-                    for handler_config in handler_configs:
-                        if handler_config.name == h_name:
-                            return handler_config
+        if h_type in self.handlers.keys():
+            return self.handlers[h_type]
         # if cannot find the specified handler, then return None
         logging.debug('Cannot find the specified handler type {!r} in robot {!r}({}).'\
                 .format(h_type, self.name, self.r_type))
@@ -548,9 +541,6 @@ class RobotConfig(object):
                     logging.warning('Cannot recognize handler type {!r} for robot {}({})'.format(key, self.name, self.r_type))
                     continue
 
-                # since we allow multiple handlers specified for each type
-                # we will try to load them one by one
-
                 # use regex to help us parse the string
                 handler_re = re.compile(r"(?P<robot>\w+)\.((?P<h_type>\w+)\.)?(?P<h_name>\w+)\((?P<args>[^\)]*)\)")
 
@@ -612,9 +602,14 @@ class RobotConfig(object):
 
                         # save it into the dictionary
                         if handler_type not in self.handlers.keys():
-                            self.handlers[handler_type] = []
-                        if handler_config.name not in [h.name for h in self.handlers[handler_type]]:
-                            self.handlers[handler_type].append(handler_config)
+                            # This type of handler has not been loaded yet
+                            self.handlers[handler_type] = handler_config
+                        else:
+                            # This type of handler has been loaded, for now, we will NOT overwrite it with new entry
+                            # A warning will be shown
+                            logging.warning('Multiple handler configs are detected for handler type {!r} of robot {}({}). \
+                                    Will only load the first one.'.format(key, self.name, self.r_type))
+                            break
                     else:
                         logging.warning('Cannot recognize handler config description: \n \t {!r} \n \
                                         for handler type {!r} of robot {}({})'.format(handler_config_str, key, self.name, self.r_type))
