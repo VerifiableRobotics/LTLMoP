@@ -117,6 +117,7 @@ class HandlerSubsystem:
 
         try:
             handler_config.parseHandler(handler_module)
+            handler_config.robot_type = r_type
         except ImportError as import_error:
             # TODO: Log an error here if the handler is necessary
             handler_config = None
@@ -192,6 +193,9 @@ class HandlerSubsystem:
         if not os.path.exists(self.config_path):
             os.mkdir(self.config_path)
 
+        # this list stores the experiment configs that name are not loaded successfully
+        self.configs_incomplete = []
+
         for file_name in os.listdir(self.config_path):
             if file_name.endswith('.config'):
                 experiment_config = ExperimentConfig()
@@ -200,9 +204,11 @@ class HandlerSubsystem:
                 except ht.LoadingError, msg:
                     logging.warning(str(msg) + ' in experiment config file {!r}.'\
                                     .format(os.path.join(self.config_path, file_name)))
+                    self.configs_incomplete.append(os.path.join(self.config_path,file_name))
                     continue
                 except TypeError as e:
                     logging.error(e)
+                    self.configs_incomplete.append(os.path.join(self.config_path,file_name))
                 else:
                     self.configs.append(experiment_config)
 
@@ -489,25 +495,23 @@ class HandlerSubsystem:
         return method_input
 
     def saveAllConfigFiles(self):
-        # save all config objects
-        savedFileName = []
-        for configObj in self.configs:
-            logging.debug("Saving config file {0}".format(configObj.fileName))
-            if configObj.saveConfig():
+        # save all config object
+        saved_file_name = []
+        for experiment_config in self.configs:
+            logging.debug("Saving config file {0}".format(experiment_config.file_name))
+            if experiment_config.saveConfig():
                 # successfully saved
-                logging.debug("Config file {0} successfully saved.".format(configObj.fileName))
+                logging.debug("Config file {0} successfully saved.".format(experiment_config.file_name))
+                saved_file_name.append(experiment_config.file_name)
             else:
-                logging.error("Could not save config file {0}".format(configObj.fileName))
-            savedFileName.append(configObj.fileName)
-
-        # construct a list of config filenames that are not loaded successfully, so that we don't delete them
-        incomplete_list = [c.fileName for c in self.configs_incomplete]
+                logging.error("Could not save config file {0}".format(experiment_config.file_name))
 
         # remove delected files
-        for configFile in os.listdir(self.config_path):
-            if (os.path.join(self.config_path,configFile) not in savedFileName) \
-                    or (os.path.join(self.config_path,configFile) not in savedFileName):
-                os.remove(os.path.join(self.config_path,configFile))
+        # do not delect unsuccessfully loaded configs
+        for config_file in os.listdir(self.config_path):
+            if (os.path.join(self.config_path, config_file) not in saved_file_name) \
+                    and (os.path.join(self.config_path, config_file) not in self.configs_incomplete):
+                os.remove(os.path.join(self.config_path, config_file))
 
 
 if __name__ == '__main__':

@@ -280,7 +280,6 @@ class HandlerConfig(object):
     def __init__(self, name="", h_type=None, shared="", methods=None, robot_type=""):
         self.name = name                # name of the handler
         self.h_type = h_type            # type of the handler e.g. motionControl or drive
-        self.shared = shared            # whether the handler is in the shared folder ("y") or not ("n")
         self.methods = methods          # list of method objects in this handler
         # To avoid recursive setting
         if self.methods is None:
@@ -312,47 +311,30 @@ class HandlerConfig(object):
         logging.error("Could not find method of name '{0}' in handler '{1}'".format(name, self.name))
         raise ValueError
 
-    def toString(self, forsave = True):
+    def toString(self):
         """
         Return the string representation of the handler object
-
-        forsave is True then the string is for saving the config file
-        False is for initiate this handler during execution
         """
         # prepare the input for initiation
-        initMethodObj = None
-        for methodObj in self.methods:
-            if methodObj.name == '__init__':
-                initMethodObj = methodObj
-                break
+        init_method_config = self.getMethodByName('__init__')
 
         method_input = []
-        for paraObj in initMethodObj.para:
-            if paraObj.type.lower() in ['str', 'string', 'region']:
-                if paraObj.value is not None:
-                    method_input.append('%s=%s'%(paraObj.name, '\"'+paraObj.value+'\"'))
+        for para_config in init_method_config.para:
+            if para_config.para_type.lower() in ['str', 'string', 'region']:
+                if para_config.value is not None:
+                    method_input.append('%s=%s'%(para_config.name, '\"'+para_config.value+'\"'))
             else:
-                method_input.append('%s=%s'%(paraObj.name, str(paraObj.value)))
-            # change the deliminator of list into ";"
-            if forsave and paraObj.type.startswith('listof'):
-                method_input[-1] = method_input[-1].replace(', ', ';')
+                method_input.append('%s=%s'%(para_config.name, str(para_config.value)))
 
-        if not forsave:
-            for para_name in initMethodObj.omitPara:
-                if para_name == 'initial':
-                    method_input.append('%s=%s'%(para_name, 'True'))
-                elif para_name == 'proj':
-                    method_input.append('%s=%s'%(para_name, 'self.proj'))
-                elif para_name == 'shared_data':
-                    method_input.append('%s=%s'%(para_name, 'self.proj.shared_data'))
+        # build the string starting from the type of the robot
+        method_string = self.robot_type
+        if self.robot_type == 'share':
+            # only add the handler type if the robot type is `share`
+            method_string += '.' + ht.getHandlerTypeName(self.h_type)
 
-        method_input = '('+','.join(method_input)+')'
+        method_string += ('.' + self.name + '(' + ','.join(method_input) + ')')
 
-        if not forsave:
-            string = method_input
-        else:
-            string = self.name+method_input
-        return string
+        return method_string
 
     def fullPath(self, robotName, configObj):
         """ Return the full path for this handler object for importing"""
@@ -773,13 +755,10 @@ class ExperimentConfig(object):
         Save the config object.
         Return True for successfully saved, False for not
         """
-        # Check if the config object is a complete one, if not then throw warning.
-        incomplete_attr = self.checkComplete()
-        if incomplete_attr:
-            logging.warning("Attribute {0} of Config {1} is not complete. Save those attributes with default value.".format(incomplete_attr, self.name))
+        # TODO: check if the config is complete
 
         # the file name is default to be the config name with underscore
-        if 'name' in incomplete_attr:
+        if self.name == "":
             self.name = 'Untitled configuration'
         file_name = self.name.replace(' ', '_')
 
@@ -820,15 +799,13 @@ class ExperimentConfig(object):
             data[header]['CalibrationMatrix'] = repr(robot.calibration_matrix)
             # TODO: change to string function
             try:
-                data[header]['InitHandler'] = robot.handlers['init'].toString()
-                data[header]['PoseHandler'] = robot.handlers['pose'].toString()
-                data[header]['MotionControlHandler'] = robot.handlers['motionControl'].toString()
-                data[header]['DriveHandler'] = robot.handlers['drive'].toString()
-                data[header]['LocomotionCommandHandler'] = robot.handlers['locomotionCommand'].toString()
-                data[header]['SensorHandler'] = robot.handlers['sensor'].toString()
-                data[header]['ActuatorHandler'] = robot.handlers['actuator'].toString()
+                for handler_type_name in  ht.getAllHandlerTypeName(short_name = False):
+                    handler_type_class = ht.getHandlerTypeClass(handler_type_name)
+                    if handler_type_class in robot.handlers.keys():
+                        data[header][handler_type_name] = robot.handlers[handler_type_class].toString()
             except AttributeError:
-                logging.warning("Cannot save all handlers for robot {}. Please make sure they are all successfully loaded. Aborting saving.".format(robot.name))
+                logging.warning("Cannot save handlers for robot {}({}). Please make sure they are all successfully loaded. Aborting saving."\
+                        .format(robot.name, robot.r_type))
                 return False
 
 
