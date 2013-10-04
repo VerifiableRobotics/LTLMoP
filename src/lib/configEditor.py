@@ -821,8 +821,8 @@ class simSetupDialog(wx.Dialog):
 
     def onClickApply(self, event): # wxGlade: simSetupDialog.<event_handler>
         # Save the config files
-        self.proj.hsub.config_parser.configs = self.proj.hsub.configs
-        self.proj.hsub.config_parser.saveAllConfigFiles()
+        self.proj.hsub.configs = self.proj.hsub.configs
+        self.proj.hsub.saveAllConfigFiles()
 
         # Save the name of the currently active config in the spec file
         self.proj.currentConfig = self._getSelectedExperimentConfig()

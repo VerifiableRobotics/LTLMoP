@@ -820,7 +820,7 @@ class ExperimentConfig(object):
             header = 'Robot'+str(i+1)+' Config'
             data[header] = {}
             data[header]['RobotName'] = robot.name
-            data[header]['Type'] = robot.type
+            data[header]['Type'] = robot.r_type
 
             data[header]['CalibrationMatrix'] = repr(robot.calibration_matrix)
             # TODO: change to string function
