@@ -304,14 +304,17 @@ class SpecCompiler(object):
 
                 regionList = [x.name for x in self.proj.rfi.regions]
 
+            #logging.debug('\n'+text)
+            #logging.debug('self.parser.proj.rfi.regions: ' + str([x.name for x in self.parser.proj.rfi.regions]))
+            #logging.debug('self.proj.rfi.regions: ' + str([x.name for x in self.proj.rfi.regions]))
+
             spec, traceback, failed, self.LTL2SpecLineNumber, self.proj.internal_props = parseSpec.writeSpec(text, sensorList, regionList, robotPropList)
 
             robotPropList.extend(self.proj.internal_props)
 
             for spec_section in [x+y for x in ["Sys", "Env"] for y in ["Init", "Trans", "Goals"]]:
-                if self.proj.compile_options["decompose"]:
-                    for r in self.parser.proj.rfi.regions:
-                        spec[spec_section] = re.sub(r'\b'+r.name+r'\b', "s."+r.name, spec[spec_section])
+                for r in self.parser.proj.rfi.regions + self.proj.rfi.regions:
+                    spec[spec_section] = re.sub(r'\b'+r.name+r'\b', "s."+r.name, spec[spec_section])
                 logging.debug("\n"+spec[spec_section])
                 spec[spec_section] = self.postprocessLTL(spec[spec_section], sensorList, robotPropList)
 
