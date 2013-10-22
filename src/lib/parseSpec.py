@@ -11,7 +11,7 @@ import re
 import os
 import copy
 import nltk
-import time
+from ambiguity import showParseDiffs
 
 def writeSpec(text, sensorList, regionList, robotPropList):
     ''' This function creates the Spec dictionary that contains the parsed LTL
@@ -238,53 +238,64 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         #Parse input line using grammar; the result here is a collection
         # of pairs of syntax trees and semantic representations in a
         # prefix first-order-logic syntax
-        result = nltk.sem.batch_interpret([line], grammar, 'SEM')[0]
+        parses = nltk.sem.batch_interpret([line], grammar, 'SEM')[0]
 
-        nTrees = 0;
-        formulaeFound = []
+        if len(parses) == 0:
+            print('Error: No valid parse found for: ' + line)
+            failed = True
+
+        uniqueParses = []
+
         #Iterate over all parse trees found
-        for (syntree, semrep) in result:
+        for (syntree, semrep) in parses:
+            
             semstring = str(semrep)
             
             #We are not interested multiple parse trees that
             # produce the same LTL formula, so skip them
-            if semstring in formulaeFound:
-                continue
-            formulaeFound.append(semstring)
-            nTrees += 1
-            #print '\t' + semstring
-            #Expand initial conditions
-            semstring = parseInit(semstring, sensorList, robotPropList)
-            #Expand 'corresponding' phrases
-            semstring = parseCorresponding(semstring, correlations, allGroups)
-            #Expand 'stay' phrases
-            semstring = parseStay(semstring, regionList)
-            #Expand groups, 'each', 'any', and 'all'
-            semstring = parseGroupEach(semstring, allGroups)
-            semstring = parseGroupAny(semstring, allGroups)
-            semstring = parseGroupAll(semstring, allGroups)
-            semstring = semstring.replace('$','')
-            #Liveness sentences should not contain 'next'
-            if syntree.node['SPEC'] == 'SysGoals' or syntree.node['SPEC'] == 'EnvGoals':
-                semstring = semstring.replace('Next','')
+            if semstring in uniqueParses: continue
 
-            #TODO: In environment safeties, all robot propositions must be PAST TENSE
+            uniqueParses.append((syntree, semstring))
 
-            #Convert formula from prefix FOL to infix LTL and add it to
-            # the appropriate section of the specification
-            stringLTL = prefix2infix(semstring)
-            
-            if stringLTL != '':
-                spec[syntree.node['SPEC']] += stringLTL + ' & \n'
-            linemap[syntree.node['SPEC']].append(lineNo)
-            LTL2LineNo[stringLTL] = lineNo
-            
-            break #For now we'll only look at the first result
-            #TODO: Need to display and resolve ambiguity in the future
+        if len(uniqueParses) > 1:
+            print('Alert! The following sentence is ambiguous:\n')
+            print(line)
+            showParseDiffs(uniqueParses)
         
-        if nTrees == 0:
-            print('Error: No valid parse found for: ' + line)
-            failed = True
+        semstring = uniqueParses[0][1]
+        
+        #print '\t' + semstring
+        #Expand initial conditions
+        semstring = parseInit(semstring, sensorList, robotPropList)
+        
+        #Expand 'corresponding' phrases
+        semstring = parseCorresponding(semstring, correlations, allGroups)
+        
+        #Expand 'stay' phrases
+        semstring = parseStay(semstring, regionList)
+        
+        #Expand groups, 'each', 'any', and 'all'
+        semstring = parseGroupEach(semstring, allGroups)
+        semstring = parseGroupAny(semstring, allGroups)
+        semstring = parseGroupAll(semstring, allGroups)
+        
+        #Trim any extra $'s attached to proposition names
+        semstring = semstring.replace('$','')
+        
+        #Liveness sentences should not contain 'next'
+        if syntree.node['SPEC'] == 'SysGoals' or syntree.node['SPEC'] == 'EnvGoals':
+            semstring = semstring.replace('Next','')
+
+        #TODO: In environment safeties, all robot propositions must be PAST TENSE
+
+        #Convert formula from prefix FOL to infix LTL and add it to
+        # the appropriate section of the specification
+        stringLTL = prefix2infix(semstring)
+        
+        if stringLTL != '':
+            spec[syntree.node['SPEC']] += stringLTL + ' & \n'
+        linemap[syntree.node['SPEC']].append(lineNo)
+        LTL2LineNo[stringLTL] = lineNo
 
     #Set all empty subformulas to TRUE, and removing last & in 'EnvGoals' and 'SysGoals'
     if spec['EnvInit'] == '':
