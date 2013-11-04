@@ -5,6 +5,7 @@
 ======== SETTINGS ========
 
 Actions: # List of action propositions and their state (enabled = 1, disabled = 0)
+defuse, 1
 
 CompileOptions:
 convexify: False
@@ -14,7 +15,7 @@ decompose: False
 use_region_bit_encoding: True
 
 CurrentConfigName:
-Pragbot
+pragbot
 
 Customs: # List of custom propositions
 
@@ -22,6 +23,10 @@ RegionFile: # Relative path of region description file
 nowhere.converted.regions
 
 Sensors: # List of sensor propositions and their state (enabled = 1, disabled = 0)
+bomb, 1
+hostage, 1
+badguy, 1
+defuse_done, 1
 
 
 ======== SPECIFICATION ========
