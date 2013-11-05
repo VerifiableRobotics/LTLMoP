@@ -1,6 +1,18 @@
-"""LTLMoP pose handler for the JR platform."""
+"""LTLMoP pose handler for pragbot."""
 
-from threading import Lock
+# Copyright (C) 2013 Constantine Lignos
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy
 
@@ -8,31 +20,26 @@ import numpy
 class poseHandler:
     """Report the robot's current pose."""
     def __init__(self, proj, shared_data):  # pylint: disable=W0613
-        """
-        init_node (bool): create separate ROS node (default: False)
-        """
 
         self._name = type(self).__name__
 
-        # Initialize pose and lock
+        # Initialize defaul pose
         self._pose = numpy.array([0, 0, 0])
-        self._pose_lock = Lock()
-
-        # Initialize location and lock
-        self._location = "Nowhere"
-        self._location_lock = Lock()
 
         # Get server proxy from shared data
-        self._proxy = proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData()["proxy"]
+        self._proxy = \
+            proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData()["proxy"]
 
     def getPose(self, cached=True):  # pylint: disable=W0613
-        """Return the last reported pose.
+        """Return a default pose.
 
-        The optional second argument is required by LTLMoP but we
-        ignore it.
+        Since this handler can only be run in topo-only mode, the pose
+        never changes, but region does. getRegion should be called to
+        find out where the robot is. The optional second argument is
+        required by LTLMoP but we ignore it.
+
         """
-        with self._pose_lock:
-            return self._pose
+        return self._pose
 
     def getRegion(self):
         """Return the last reported region.
@@ -42,10 +49,5 @@ class poseHandler:
         return self.get_location()
 
     def get_location(self):
-        """Return the room the robot is currently in."""
-        with self._location_lock:
-            return self._proxy.receiveHandlerMessages("Location")
-
-    def set_location(self, location):
-        """Set the location of the robot."""
-        pass
+        """Return the region the robot is currently in."""
+        return self._proxy.receiveHandlerMessages("Location")

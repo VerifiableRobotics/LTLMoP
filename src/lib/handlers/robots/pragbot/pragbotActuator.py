@@ -62,11 +62,11 @@ class gumboActuatorHandler(object):
             # 'defuse_done' sensor  and make the bomb disappear.
             def _complete_defuse():  # pylint: disable=W0613
                 """Set defuse_done and remove the bomb from the sensors."""
-                # TODO: Implement. You can set the sensor by using
-                # self._sensor handler, but we'll need to figure out
-                # how to make it disappear in pragbot. Take care of
-                # the sensor_handler for now, and we'll figure out how
-                # to send the client a message later.
+                # TODO: Implement. You want to make it disappear in
+                # pragbot itself, and then the sensor handler should
+                # get then end up showing no bomb because the game
+                # environment changed. To set defuse_done, use the
+                # sensor hander's set_action_done.
 
             # Use a Timer object to call it after DEFUSE_TIME seconds.
 
