@@ -46,7 +46,7 @@ class gumboActuatorHandler(object):
             self.executor.postEvent("MESSAGE", "Defuse activated")
             # TODO: Implement
             # Get the position of the bomb in the room
-
+            
             # If there's no bomb in the room, print an error and
             # return False.  The return value of this function is not
             # checked by fsa.py at the moment, so the return value is
@@ -57,6 +57,8 @@ class gumboActuatorHandler(object):
 
             # Issue a non-blocking command to move the robot to the
             # bomb position.
+            print "DEFUSAL IS NOW TAKING OVER MOTION CONTROL"            
+            print "Going for bomb."
 
             # Define up a lexically-enclosed function that will set the
             # 'defuse_done' sensor  and make the bomb disappear.

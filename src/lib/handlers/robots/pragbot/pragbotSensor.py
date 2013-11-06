@@ -28,6 +28,8 @@ class sensorHandler(object):
         # Store reference to server proxy
         self._proxy = \
         proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData()["proxy"]
+        
+        self.sensors = {"bomb": self.bomb}
 
 
     def get_sensor(self, sensor_name, initial=False):
@@ -46,7 +48,15 @@ class sensorHandler(object):
             # sensor_name). Take a look at the pragbot game code to
             # figure out what it should be.
             # return self._proxy.receiveHandlerMessages(sensor_name, current_region)
+            if sensor_name in self.sensors:
+                return self.sensors[sensor_name]()
             return False
+        
+    def bomb(self):
+        """Report the state of the bomb sensor by pinging pragbot client
+        """
+        return self._proxy.receiveHandlerMessages("Sensor","bomb")
+        
 
     def set_action_done(self, action_name, value):
         """Set whether an action is done to the given value."""

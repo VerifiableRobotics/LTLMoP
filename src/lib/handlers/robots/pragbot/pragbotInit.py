@@ -11,7 +11,7 @@ class pragbotInitHandler:
 
     def getSharedData(self):
         """Return a dict of objects shared with other handlers."""
-        return {"proxy":self.pragbot_proxy}
+        return {"proxy": self.pragbot_proxy}
 
     def _close(self):
         """Shut down the ROS node."""
