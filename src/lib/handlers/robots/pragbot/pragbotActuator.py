@@ -32,26 +32,39 @@ class gumboActuatorHandler(object):
         self._sensor_handler = proj.h_instance['sensor'][proj.currentConfig.main_robot]
         self._pose_handler = proj.h_instance['pose']
         self.executor = proj.executor
+        
+        # Store reference to server proxy
+        self._proxy = \
+        proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData()["proxy"]
 
     def defuse(self, actuatorVal, initial=False):
         """Defuse a bomb by driving to it and making it disappear."""
         # Perform any initialization required
         if initial:
             return True
-
         # Activate or deactivate defuse
         actuatorVal = _normalize(actuatorVal)
         if actuatorVal:
             # Update the status that we're defusing.
             self.executor.postEvent("MESSAGE", "Defuse activated")
             # TODO: Implement
-            # Get the position of the bomb in the room
-            
+            # Get the position of the bomb in the room            
             # If there's no bomb in the room, print an error and
             # return False.  The return value of this function is not
             # checked by fsa.py at the moment, so the return value is
             # never read, but we use it anyway.
+            location_string = self._proxy.receiveHandlerMessages("Object_Location","bombs")
+            locations = []
+            if not location_string:
+                return False
+            else:
+                pieces = location_string.split(",")
+                numbombs = int(pieces[0])
+                if numbombs > 0: 
+                    locations = pieces[1:-1]
+                    locations = [(int(w),int(v)) for w, v in [l.split(":") for l in locations]]
 
+            
             # Update the status that we've defusing.
             self.executor.postEvent("MESSAGE", "Defusing...")
 
@@ -59,7 +72,7 @@ class gumboActuatorHandler(object):
             # bomb position.
             print "DEFUSAL IS NOW TAKING OVER MOTION CONTROL"            
             print "Going for bomb."
-
+            #self._proxy.receiveHandlerMessages("Move_Location",location[0])
             # Define up a lexically-enclosed function that will set the
             # 'defuse_done' sensor  and make the bomb disappear.
             def _complete_defuse():  # pylint: disable=W0613
@@ -69,6 +82,7 @@ class gumboActuatorHandler(object):
                 # get then end up showing no bomb because the game
                 # environment changed. To set defuse_done, use the
                 # sensor hander's set_action_done.
+                self._proxy.receiveHandlerMessages("Defuse","bomb")
 
             # Use a Timer object to call it after DEFUSE_TIME seconds.
 

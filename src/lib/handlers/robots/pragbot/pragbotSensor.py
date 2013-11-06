@@ -55,8 +55,11 @@ class sensorHandler(object):
     def bomb(self):
         """Report the state of the bomb sensor by pinging pragbot client
         """
-        return self._proxy.receiveHandlerMessages("Sensor","bomb")
-        
+        location_string = self._proxy.receiveHandlerMessages("Sensor","bomb")
+        pieces = location_string.split(",")
+        numbombs = int(pieces[0])
+        if numbombs > 0: return True
+        return False
 
     def set_action_done(self, action_name, value):
         """Set whether an action is done to the given value."""
