@@ -53,6 +53,7 @@ class gumboActuatorHandler(object):
             # return False.  The return value of this function is not
             # checked by fsa.py at the moment, so the return value is
             # never read, but we use it anyway.
+            self._proxy.receiveHandlerMessages("Defusing","True")
             location_string = self._proxy.receiveHandlerMessages("Object_Location","bombs")
             locations = []
             if not location_string:
@@ -90,6 +91,7 @@ class gumboActuatorHandler(object):
         else:
             # Update the status that we're no longer defusing.
             self.executor.postEvent("MESSAGE", "Defuse deactivated")
+            self._proxy.receiveHandlerMessages("Defusing","False")
             return True
 
 
