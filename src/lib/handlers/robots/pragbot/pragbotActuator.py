@@ -64,7 +64,9 @@ class gumboActuatorHandler(object):
                 if numbombs > 0: 
                     locations = pieces[1:-1]
                     locations = [(int(w),int(v)) for w, v in [l.split(":") for l in locations]]
-
+                    location = locations[0]
+                else:
+                    return False
             
             # Update the status that we've defusing.
             self.executor.postEvent("MESSAGE", "Defusing...")
@@ -73,7 +75,7 @@ class gumboActuatorHandler(object):
             # bomb position.
             print "DEFUSAL IS NOW TAKING OVER MOTION CONTROL"            
             print "Going for bomb."
-            self._proxy.receiveHandlerMessages("Move_Location",locations[0])
+            self._proxy.receiveHandlerMessages("Move_Location",location)
             # Define up a lexically-enclosed function that will set the
             # 'defuse_done' sensor  and make the bomb disappear.
             def _complete_defuse():  # pylint: disable=W0613
