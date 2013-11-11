@@ -18,7 +18,7 @@ LTLMoP motion handler for the pragbot game.
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-import time
+import threading
 
 # Time it takes to defuse a bomb, in seconds
 DEFUSE_TIME = 5.0
@@ -74,6 +74,7 @@ class gumboActuatorHandler(object):
             print "DEFUSAL IS NOW TAKING OVER MOTION CONTROL"            
             print "Going for bomb."
             self._proxy.receiveHandlerMessages("Move_Location",nearest_face)
+
             # Define up a lexically-enclosed function that will set the
             # 'defuse_done' sensor  and make the bomb disappear.
             def _complete_defuse():  # pylint: disable=W0613
@@ -82,13 +83,13 @@ class gumboActuatorHandler(object):
                 # pragbot itself, and then the sensor handler should
                 # get then end up showing no bomb because the game
                 # environment changed. To set defuse_done, use the
-                # sensor hander's set_action_done.                
+                # sensor hander's set_action_done.
                 self._proxy.receiveHandlerMessages("Defuse",location)
                 self._proxy.receiveHandlerMessages("Defusing","False")
+                self._sensor_handler.set_action_done("defuse",True)
 
             # Use a Timer object to call it after DEFUSE_TIME seconds.
-            time.sleep(DEFUSE_TIME)
-            _complete_defuse()
+            threading.Timer(DEFUSE_TIME,_complete_defuse).start()            
             return True
         else:
             # Update the status that we're no longer defusing.
@@ -99,7 +100,6 @@ class gumboActuatorHandler(object):
         """Given two coordinates, return the coordinates of the 
             nearest face of the second coordinates to the first
         """
-        self.executor.postEvent("MESSAGE", "Nearest face here:"+str(here)+" there: "+str(there))
         n = here[1] > there[1]
         e = here[0] > there[0]
         s = here[1] < there[1]

@@ -29,8 +29,8 @@ class sensorHandler(object):
         self._proxy = \
         proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData()["proxy"]
         
-        self.sensors = {"bomb": self.bomb}
-
+        self.sensors = {"bomb": self.bomb, "defuse_done" : self.defuse_done}
+        self.defuse_done_status = False
 
     def get_sensor(self, sensor_name, initial=False):
         """Report whether we currently see a fiducial of the requested type.
@@ -60,8 +60,12 @@ class sensorHandler(object):
         numbombs = int(pieces[0])
         if numbombs > 0: return True
         return False
+    
+    def defuse_done(self):
+        return self.defuse_done_status
 
     def set_action_done(self, action_name, value):
         """Set whether an action is done to the given value."""
-        # TODO: Implement
-        raise NotImplementedError()
+        if action_name == "defuse":
+            self.defuse_done_status = value
+        
