@@ -47,12 +47,8 @@ class gumboActuatorHandler(object):
         if actuatorVal:
             # Update the status that we're defusing.
             self.executor.postEvent("MESSAGE", "Defuse activated")
-            # TODO: Implement
-            # Get the position of the bomb in the room            
-            # If there's no bomb in the room, print an error and
-            # return False.  The return value of this function is not
-            # checked by fsa.py at the moment, so the return value is
-            # never read, but we use it anyway.
+
+            #Set defusing to true for the actuators to lock out the stop command from LTLMoP
             self._proxy.receiveHandlerMessages("Defusing","True")
             location_string = self._proxy.receiveHandlerMessages("Object_Location","bombs")
             locations = []
@@ -68,7 +64,7 @@ class gumboActuatorHandler(object):
                 else:
                     return False
             
-            # Update the status that we've defusing.
+            # Update the status via the executor that we're defusing .
             self.executor.postEvent("MESSAGE", "Defusing...")
 
             # Issue a non-blocking command to move the robot to the
@@ -84,16 +80,17 @@ class gumboActuatorHandler(object):
                 # pragbot itself, and then the sensor handler should
                 # get then end up showing no bomb because the game
                 # environment changed. To set defuse_done, use the
-                # sensor hander's set_action_done.
+                # sensor hander's set_action_done.                
                 self._proxy.receiveHandlerMessages("Defuse","bomb")
+                self._proxy.receiveHandlerMessages("Defusing","False")
 
             # Use a Timer object to call it after DEFUSE_TIME seconds.
-
+            time.sleep(DEFUSE_TIME)
+            _complete_defuse()
             return True
         else:
             # Update the status that we're no longer defusing.
-            self.executor.postEvent("MESSAGE", "Defuse deactivated")
-            self._proxy.receiveHandlerMessages("Defusing","False")
+            self.executor.postEvent("MESSAGE", "Defuse deactivated")            
             return True
 
 
