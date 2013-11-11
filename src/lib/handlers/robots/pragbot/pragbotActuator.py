@@ -51,6 +51,7 @@ class gumboActuatorHandler(object):
             #Set defusing to true for the actuators to lock out the stop command from LTLMoP
             self._proxy.receiveHandlerMessages("Defusing","True")
             location_string = self._proxy.receiveHandlerMessages("Object_Location","bombs")
+            jr_location = self._proxy.receiveHandlerMessages("Location","coordinates")
             locations = []
             if not location_string:
                 return False
@@ -64,6 +65,7 @@ class gumboActuatorHandler(object):
                 else:
                     return False
             
+            nearest_face = self._nearest_face(jr_location,location)
             # Update the status via the executor that we're defusing .
             self.executor.postEvent("MESSAGE", "Defusing...")
 
@@ -71,7 +73,7 @@ class gumboActuatorHandler(object):
             # bomb position.
             print "DEFUSAL IS NOW TAKING OVER MOTION CONTROL"            
             print "Going for bomb."
-            self._proxy.receiveHandlerMessages("Move_Location",location)
+            self._proxy.receiveHandlerMessages("Move_Location",nearest_face)
             # Define up a lexically-enclosed function that will set the
             # 'defuse_done' sensor  and make the bomb disappear.
             def _complete_defuse():  # pylint: disable=W0613
@@ -81,7 +83,7 @@ class gumboActuatorHandler(object):
                 # get then end up showing no bomb because the game
                 # environment changed. To set defuse_done, use the
                 # sensor hander's set_action_done.                
-                self._proxy.receiveHandlerMessages("Defuse","bomb")
+                self._proxy.receiveHandlerMessages("Defuse",location)
                 self._proxy.receiveHandlerMessages("Defusing","False")
 
             # Use a Timer object to call it after DEFUSE_TIME seconds.
@@ -92,7 +94,21 @@ class gumboActuatorHandler(object):
             # Update the status that we're no longer defusing.
             self.executor.postEvent("MESSAGE", "Defuse deactivated")            
             return True
-
+        
+    def _nearest_face(self,here,there):
+        """Given two coordinates, return the coordinates of the 
+            nearest face of the second coordinates to the first
+        """
+        self.executor.postEvent("MESSAGE", "Nearest face here:"+str(here)+" there: "+str(there))
+        n = here[1] > there[1]
+        e = here[0] > there[0]
+        s = here[1] < there[1]
+        w = here[0] < there[0]
+        if n: return (there[0],there[1]+1)
+        if e: return (there[0]+1,there[1])
+        if s: return (there[0],there[1]-1)
+        if w: return (there[0]-1, there[1])
+            
 
 def _normalize(value):
     """Normalize the value that an actuator is being set to."""
