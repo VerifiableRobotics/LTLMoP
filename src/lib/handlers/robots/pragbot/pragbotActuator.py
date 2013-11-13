@@ -93,7 +93,8 @@ class gumboActuatorHandler(object):
             return True
         else:
             # Update the status that we're no longer defusing.
-            self.executor.postEvent("MESSAGE", "Defuse deactivated")            
+            self.executor.postEvent("MESSAGE", "Defuse deactivated")
+            self._proxy.receiveHandlerMessages("Defusing","False")            
             return True
         
     def _nearest_face(self,here,there):
