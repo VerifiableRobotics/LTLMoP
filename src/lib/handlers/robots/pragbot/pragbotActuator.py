@@ -45,8 +45,11 @@ class gumboActuatorHandler(object):
         # Activate or deactivate defuse
         actuatorVal = _normalize(actuatorVal)
         if actuatorVal:
+            #Beginning to defuse, so set defuse_done to false
+            self._sensor_handler.set_action_done("defuse",False)
+
             # Update the status that we're defusing.
-            self.executor.postEvent("MESSAGE", "Defuse activated")
+            self.executor.postEvent("MESSAGE", "Defuse activated")           
 
             #Set defusing to true for the actuators to lock out the stop command from LTLMoP
             self._proxy.receiveHandlerMessages("Defusing","True")
@@ -89,6 +92,9 @@ class gumboActuatorHandler(object):
                 self._sensor_handler.set_action_done("defuse",True)
 
             # Use a Timer object to call it after DEFUSE_TIME seconds.
+            # TODO: Wait until we get to the bomb then start wait timer.
+            # Because the amount of time to the bomb is unknown and handled simulation-side,
+            # there would need to be some flag that we have arrived at the bomb
             threading.Timer(DEFUSE_TIME,_complete_defuse).start()            
             return True
         else:
