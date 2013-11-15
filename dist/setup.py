@@ -115,7 +115,7 @@ if __name__ == "__main__":
             skip_slurp = False
 
     if not skip_slurp:
-        runProgramWithLiveOutput(slurp_dir, "python", ["-u", os.path.join(slurp_dir, "download.py")], shell=False)
+        runProgramWithLiveOutput(slurp_dir, sys.executable, ["-u", os.path.join(slurp_dir, "download.py")], shell=False)
 
     print "\n>>> Done!\n"
 

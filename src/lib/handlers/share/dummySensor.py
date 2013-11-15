@@ -38,7 +38,7 @@ class sensorHandler:
     def _createSubwindow(self):
             # Create a subprocess
             print "(SENS) Starting sensorHandler window and listen thread..."
-            self.p_sensorHandler = subprocess.Popen(["python", "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stdin=subprocess.PIPE)
+            self.p_sensorHandler = subprocess.Popen([sys.executable, "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stdin=subprocess.PIPE)
         
             # Create new thread to communicate with subwindow
             self.sensorListenThread = threading.Thread(target = self._sensorListen)

@@ -4,7 +4,7 @@ import sys
 import os
 
 def ensureGitBash(script_path):
-	# If on Windows, use Git Bash for the shell
+    # If on Windows, use Git Bash for the shell
     if sys.platform in ['win32', 'cygwin']:
         # Check if we have access to bash
         cmd = subprocess.Popen(["bash", "--version"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
@@ -37,7 +37,7 @@ def ensureGitBash(script_path):
 
             print "Found Git Bash at %s" % bash_path
 
-            cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", 'python "%s"' % (os.path.abspath(script_path))])
+            cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", '%s "%s"' % (sys.executable, os.path.abspath(script_path))])
 
             # Wait for subprocess to finish
             try:

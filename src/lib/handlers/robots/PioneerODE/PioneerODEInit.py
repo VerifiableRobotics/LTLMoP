@@ -51,9 +51,9 @@ class PioneerODEInitHandler:
 
         # Initiate the Python ODE simulator and start the UDP socket manager.
         regc =  str(region_calib)
-        UDPServer = subprocess.Popen(["python",os.path.join(proj.ltlmop_root,"lib","simulator","ode","pioneer","UDPServer.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        UDPServer = subprocess.Popen([sys.executable,os.path.join(proj.ltlmop_root,"lib","simulator","ode","pioneer","UDPServer.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
                 
-        drive = subprocess.Popen(["python",os.path.join(proj.ltlmop_root,"lib", "simulator","ode","pioneer", "PioneerSim.py"), regionfile,regc,pose])
+        drive = subprocess.Popen([sys.executable,os.path.join(proj.ltlmop_root,"lib", "simulator","ode","pioneer", "PioneerSim.py"), regionfile,regc,pose])
         
         
     def getSharedData(self):
