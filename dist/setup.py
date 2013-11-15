@@ -55,8 +55,8 @@ if __name__ == "__main__":
     gitUtils.ensureGitBash(__file__)
 
     # Check python version
-    if sys.hexversion < 0x02070000:
-        print "ERROR: LTLMoP requires Python 2.7+"
+    if sys.hexversion < 0x02070000 or sys.hexversion >= 0x03000000:
+        print "ERROR: LTLMoP requires Python 2.7.x"
         print "Press any key to quit..."
         raw_input()
         sys.exit(2)
