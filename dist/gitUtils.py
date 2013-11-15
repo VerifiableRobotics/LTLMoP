@@ -37,7 +37,7 @@ def ensureGitBash(script_path):
 
             print "Found Git Bash at %s" % bash_path
 
-            cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", '%s "%s"' % (sys.executable, os.path.abspath(script_path))])
+            cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", '"%s" "%s"' % (sys.executable, os.path.abspath(script_path))])
 
             # Wait for subprocess to finish
             try:
