@@ -355,7 +355,7 @@ class Automaton:
                 if state.outputs[key] == '1':
                     FILE.write( key + '\\n')
                 else:
-                    FILE.write( '¬' + key + '\\n')
+                    FILE.write( '!' + key + '\\n')
             #FILE.write( "("+state.rank + ')\\n ')
             FILE.write('\" ];\n')
 
@@ -372,7 +372,7 @@ class Automaton:
                     if nextState.inputs[key] == '1':
                         FILE.write( key + '\\n')
                     else:
-                        FILE.write( '¬' + key + '\\n')
+                        FILE.write( '!' + key + '\\n')
                 FILE.write('\" ];\n')
 
         FILE.write('} \n')

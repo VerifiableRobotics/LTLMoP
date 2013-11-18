@@ -383,6 +383,8 @@ class SimGUI_Frame(wx.Frame):
         f.close()
 
     def onClose(self, event):
+        msg = wx.BusyInfo("Please wait, shutting down...")
+
         try:
             self.executorProxy.shutdown()
         except socket.error:

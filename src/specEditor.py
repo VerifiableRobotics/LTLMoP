@@ -466,9 +466,12 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.StyleSetFont(wx.stc.STC_P_STRING, wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, u'Consolas'))
         self.text_ctrl_spec.StyleSetForeground(wx.stc.STC_P_STRING, wx.Colour(200, 200, 0))
 
-        self.text_ctrl_spec.SetMouseDwellTime(500)
-        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLSTART, self.onMouseDwellStart)
-        self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLEND, self.onMouseDwellEnd)
+        # Don't enable tooltips on wx2.9.5 on OS X
+        # Temporary workaround for http://trac.wxwidgets.org/ticket/15508
+        if wx.version() != '2.9.5.0 osx-cocoa (classic)':
+            self.text_ctrl_spec.SetMouseDwellTime(500)
+            self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLSTART, self.onMouseDwellStart)
+            self.text_ctrl_spec.Bind(wx.stc.EVT_STC_DWELLEND, self.onMouseDwellEnd)
 
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
 
@@ -1181,7 +1184,7 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = redir
         sys.stderr = redir
 
-        subprocess.Popen(["python", "-u", os.path.join("lib","execute.py"), "-a", self.proj.getFilenamePrefix() + ".aut", "-s", self.proj.getFilenamePrefix() + ".spec"])
+        subprocess.Popen([sys.executable, "-u", os.path.join("lib","execute.py"), "-a", self.proj.getFilenamePrefix() + ".aut", "-s", self.proj.getFilenamePrefix() + ".spec"])
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1242,7 +1245,7 @@ class SpecEditorFrame(wx.Frame):
             # If we already have a region file defined, open it up for editing
             fileName = self.proj.rfi.filename
             self.lastRegionModTime = os.path.getmtime(fileName)
-            self.subprocess["Region Editor"] = AsynchronousProcessThread(["python","-u","regionEditor.py",fileName], regedCallback, None)
+            self.subprocess["Region Editor"] = AsynchronousProcessThread([sys.executable,"-u","regionEditor.py",fileName], regedCallback, None)
         else:
             # Otherwise let's create a new region file
             if self.proj.project_basename is None:
@@ -1259,7 +1262,7 @@ class SpecEditorFrame(wx.Frame):
 
             # We'll name the region file with the same name as our project
             fileName = self.proj.getFilenamePrefix()+".regions"
-            self.subprocess["Region Editor"] = AsynchronousProcessThread(["python","-u","regionEditor.py",fileName], regedCallback, None)
+            self.subprocess["Region Editor"] = AsynchronousProcessThread([sys.executable,"-u","regionEditor.py",fileName], regedCallback, None)
 
     def onMenuConfigSim(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Launch the config editor
@@ -1288,7 +1291,7 @@ class SpecEditorFrame(wx.Frame):
             self.proj.currentConfig = other_proj.loadConfig()
             self.subprocess["Simulation Configuration"] = None
 
-        self.subprocess["Simulation Configuration"] = AsynchronousProcessThread(["python","-u",os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
+        self.subprocess["Simulation Configuration"] = AsynchronousProcessThread([sys.executable,"-u",os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
 
     def _exportDotFile(self):
         proj_copy = deepcopy(self.proj)
@@ -1519,7 +1522,7 @@ class SpecEditorFrame(wx.Frame):
 
         print "Calling mopsy with desired_jx={}...".format(desired_jx)
 
-        subprocess.Popen(["python", os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec", str(desired_jx)])
+        subprocess.Popen([sys.executable, os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec", str(desired_jx)])
 
     def onPropAdd(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
