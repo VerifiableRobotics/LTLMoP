@@ -565,7 +565,7 @@ class Automaton:
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', key): continue
             if key in self.actuators:
-                new_val = output_val
+                new_val = (output_val == "1")
                 initial=False
                 eval(self.actuator_handler[key])
 
