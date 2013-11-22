@@ -10,8 +10,8 @@ from numpy import *
 class motionControlHandler:
     def __init__(self, proj, shared_data):
         # Get references to handlers we'll need to communicate with
-        self.drive_handler = proj.drive_handler
-        self.pose_handler = proj.pose_handler
+        self.drive_handler = proj.h_instance["drive"]
+        self.pose_handler = proj.h_instance["pose"]
         
         # Get information about regions
         self.rfi = proj.rfi
