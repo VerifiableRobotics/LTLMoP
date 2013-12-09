@@ -325,24 +325,27 @@ class Project:
 
         self.hsub.importHandlers(self.currentConfig, all_handler_types)
 
-        logging.info("Initializing sensor/actuator methods...")
+        if 'sensor' in all_handler_types:
+            logging.info("Initializing sensor/actuator methods...")
 
-        # initialize all sensor and actuators
-        for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
-            if prop in self.enabled_sensors:
-                for code in codes:
-                    eval(code, {'self':self,'initial':True})
+            # initialize all sensor and actuators
+            for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
+                if prop in self.enabled_sensors:
+                    for code in codes:
+                        print code
+                        eval(code, {'self':self,'initial':True})
 
-        # Figure out our initially true outputs
-        init_outputs = []
-        for prop in self.currentConfig.initial_truths:
-            if prop not in self.enabled_sensors:
-                init_outputs.append(prop)
+            # Figure out our initially true outputs
+            init_outputs = []
+            for prop in self.currentConfig.initial_truths:
+                if prop not in self.enabled_sensors:
+                    init_outputs.append(prop)
 
-        for prop,codes in self.actuator_handler['initializing_handler'].iteritems():
-            if prop in self.enabled_actuators:
-                new_val = prop in init_outputs
-                for code in codes:
-                    eval(code, {'self':self,'initial':True,'new_val':new_val})
+        if 'sensor' in all_handler_types:
+            for prop,codes in self.actuator_handler['initializing_handler'].iteritems():
+                if prop in self.enabled_actuators:
+                    new_val = prop in init_outputs
+                    for code in codes:
+                        eval(code, {'self':self,'initial':True,'new_val':new_val})
 
         logging.debug("(POSE) Initial pose: " + str(self.h_instance['pose'].getPose()))
