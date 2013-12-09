@@ -410,7 +410,6 @@ class ConfigObject:
                     "Main_Robot":'The name of the robot used for moving in this config',
                     "Initial_Truths": "Initially true propositions",
                     "Region_Tags": "Mapping from tag names to region groups, for quantification"}
-
         fileMethods.writeToFile(fileName, data, comments)
         return True
 

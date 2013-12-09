@@ -341,7 +341,9 @@ class handlerConfigDialog(wx.Dialog):
         cfg = ConfigObject()
         robot = deepcopy(self.robot)
 
-        cfg.name = "calibrate"
+        cfg.name = 'calibrate'
+        cfg.fileName = os.path.join(proj_copy.project_root, 'configs', 'calibrate.config')
+        cfg.complete = True
         robot.name = "calibrate"
         robot.handlers['pose'] = self.handler
 
@@ -356,7 +358,7 @@ class handlerConfigDialog(wx.Dialog):
         proj_copy.currentConfig = cfg
 
         proj_copy.writeSpecFile(proj_copy.getFilenamePrefix()+".spec_calibtmp")
-        proj_copy.hsub.config_parser.saveConfigFile(cfg)
+        cfg.saveConfig()
 
         print "Running calibration tool..."
         proc = subprocess.Popen(["python", "-u", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
