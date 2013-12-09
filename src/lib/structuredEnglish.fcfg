@@ -33,14 +33,13 @@ SAFETY[SPEC=SysTrans,SEM=<Glob(?ph)>,PROP=?ph] -> ALWAYS PHI_ROB[SEM=?ph]
 SAFETY[SPEC=EnvTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=EnvTrans,SEM=?s]
 SAFETY[SPEC=SysTrans,SEM=<Glob(?s)>] -> CONDITIONAL[SPEC=SysTrans,SEM=?s]
 SAFETY[SPEC=SysTrans,SEM=<Glob(?s)>,PROP=?s] -> STAY[SEM=?s]
-SAFETY[SPEC=?s,SEM=<Glob(?lc(?ph1,?ph2))>,PROP=<?lc(?ph1,?ph2)>] -> SAFETY[SPEC=?s,SEM=?ph1] LC[SEM=?lc] SAFETY[SPEC=?s,SEM=?ph2]
+SAFETY[SPEC=?s,SEM=<Glob(?lc(?ph1,?ph2))>,PROP=<?lc(?ph1,?ph2)>] -> SAFETY[SPEC=?s,SEM=?ph1] AND[SEM=?lc] SAFETY[SPEC=?s,SEM=?ph2] | SAFETY[SPEC=?s,SEM=?ph1] OR[SEM=?lc] SAFETY[SPEC=?s,SEM=?ph2]
 
 # Liveness formulae
 ###################
 
 LIVENESS[SPEC=EnvGoals,SEM=<GlobFin(?ph)>,PROP=?ph] -> INFDO PHI_ENV[SEM=?ph]
 LIVENESS[SPEC=SysGoals,SEM=<GlobFin(?ph)>,PROP=?ph] -> INFDO PHI_ROB[SEM=?ph]
-LIVENESS[SPEC=SysGoals,SEM=<?lc(GlobFin(?ph1),GlobFin(?ph2))>,PROP=<?lc(?ph1,?ph2)>] -> INFDO PHI_ROB[SEM=?ph1] LC[SEM=?lc] PHI_ROB[SEM=?ph2]
 LIVENESS[SPEC=SysGoals,SEM=<And(GlobFin(?ph),Glob(Imp(?ph,?s)))>,PROP=<And(?ph,Imp(?ph,?s))>] -> GOTO PHI_ROB[SEM=?ph] ANDSTAY[SEM=?s]
 LIVENESS[SPEC=EnvGoals,SEM=<GlobFin(?s)>,PROP=?s] -> CONDITIONAL[SPEC=EnvGoals,SEM=?s]
 LIVENESS[SPEC=SysGoals,SEM=<GlobFin(?s)>,PROP=?s] -> CONDITIONAL[SPEC=SysGoals,SEM=?s]
@@ -61,12 +60,13 @@ CONDITIONAL[SPEC=?sp,SEM=<Iff(?cond,?p)>] -> CONSEQUENT[SPEC=?sp,SEM=?req,PROP=?
 
 # Requirements can be either a safety sentence or a liveness sentence
 CONSEQUENT[SPEC=?sp,SEM=?req,PROP=<Next(?p)>] -> SAFETY[SPEC=?sp,SEM=?req,PROP=?p] | LIVENESS[SPEC=?sp,SEM=?req,PROP=?p]
-CONSEQUENT[SPEC=?sp,SEM=<?lc(?req1,?req2)>,PROP=<Next(?lc(?p1,?p2))>] -> LIVENESS[SPEC=?sp,SEM=?req1,PROP=?p1] LC[SEM=?lc] LIVENESS[SEM=?req2,PROP=?p2] | SAFETY[SPEC=?sp,SEM=?req1,PROP=?p1] LC[SEM=?lc] SAFETY[SEM=?req1,PROP=?p2]
+CONSEQUENT[SPEC=?sp,SEM=<?lc(?req1,?req2)>,PROP=<Next(?lc(?p1,?p2))>] -> LIVENESS[SPEC=?sp,SEM=?req1,PROP=?p1] AND[SEM=?lc] LIVENESS[SEM=?req2,PROP=?p2] | LIVENESS[SPEC=?sp,SEM=?req1,PROP=?p1] OR[SEM=?lc] LIVENESS[SEM=?req2,PROP=?p2]
+CONSEQUENT[SPEC=?sp,SEM=<?lc(?req1,?req2)>,PROP=<Next(?lc(?p1,?p2))>] -> SAFETY[SPEC=?sp,SEM=?req1,PROP=?p1] AND[SEM=?lc] SAFETY[SEM=?req1,PROP=?p2] | SAFETY[SPEC=?sp,SEM=?req1,PROP=?p1] OR[SEM=?lc] SAFETY[SEM=?req1,PROP=?p2]
 
 # Antecedents are independent clauses (IC) made up of either a noun phrase (NP) and verb phrase (VP)
 # or two ICs conjoined by a logical connective
 IC[SEM=?vp] -> NP[PER=?per] VP[PER=?per,SEM=?vp] | PHI[SEM=?vp]
-IC[SEM=<?lc(?ic1,?ic2)>] -> IC[SEM=?ic1] LC[SEM=?lc] IC[SEM=?ic2]
+IC[SEM=<?lc(?ic1,?ic2)>] -> IC[SEM=?ic1] AND[SEM=?lc] IC[SEM=?ic2] | IC[SEM=?ic1] OR[SEM=?lc] IC[SEM=?ic2] 
 
 # Valid noun phrases are limited to identifiers of the robot
 NP[PER=?per] -> ROB[PER=?per]
@@ -79,7 +79,7 @@ VP[PER=?per,SEM=?pe] -> LV[PER=?per,TEN=past] PE[SEM=?pe]
 VP[PER=?per,SEM=<Next(?p)>] -> SENSE[TEN=pres,PER=?per] PHI_ENV[SEM=?p] | ACTIVATE[TEN=pres,PER=?per] PHI_ACT[SEM=?p]
 VP[PER=?per,SEM=?p] -> SENSE[TEN=past,PER=?per] PHI_ENV[SEM=?p] | ACTIVATE[TEN=past,PER=?per] PHI_ACT[SEM=?p]
 VP[PER=?per,SEM=<?n(?p)>] -> NEG[SEM=?n] SENSE[TEN=pres,PER=?per] PHI_ENV[SEM=?p] | NEG[SEM=?n] ACTIVATE[TEN=pres,PER=?per] PHI_ACT[SEM=?p]
-VP[PER=?per,SEM=<?lc(?vp1,?vp2)>] -> VP[PER=?per,SEM=?vp1] LC[SEM=?lc] VP[PER=?per,SEM=?vp2]
+VP[PER=?per,SEM=<?lc(?vp1,?vp2)>] -> VP[PER=?per,SEM=?vp1] AND[SEM=?lc] VP[PER=?per,SEM=?vp2] | VP[PER=?per,SEM=?vp1] OR[SEM=?lc] VP[PER=?per,SEM=?vp2]
 
 # Valid predicative expressions are: a preposition (P) and region, a participle (of either
 # 'sense' or 'activate') and a corresponding proposition, a negation (NEG) and a PE, 
@@ -87,7 +87,7 @@ VP[PER=?per,SEM=<?lc(?vp1,?vp2)>] -> VP[PER=?per,SEM=?vp1] LC[SEM=?lc] VP[PER=?p
 PE[SEM=?r] -> IN PHI_REG[SEM=?r]
 PE[SEM=?p] -> SENSING PHI_ENV[SEM=?p] | ACTIVATING PHI_ACT[SEM=?p]
 PE[SEM=<?n(?p)>] -> NEG[SEM=?n] PE[TEN=?t,SEM=?p]
-PE[SEM=<?lc(?p1,?p2)>] -> PE[SEM=?p1] LC[SEM=?lc] PE[SEM=?p2]
+PE[SEM=<?lc(?p1,?p2)>] -> PE[SEM=?p1] AND[SEM=?lc] PE[SEM=?p2] | PE[SEM=?p1] OR[SEM=?lc] PE[SEM=?p2]
 
 # Memory proposition
 MEMORY[SPEC=SysTrans,SEM=<And(?s(?pm,?ps,?pr),?r(?pm,?ps,?pr))>] -> PHI_ROB[SEM=?pm] SETON[SEM=?s] PHI[SEM=?ps] RESETON[SEM=?r] PHI[SEM=?pr]
@@ -99,33 +99,34 @@ MEMORY[SPEC=SysTrans,SEM=<?t(?pm,?pt)>] -> PHI_ROB[SEM=?pm] TOGGLEON[SEM=?t] PHI
 ##############
 
 PHI[SEM=?p] -> PHI_ENV[SEM=?p] | PHI_ROB[SEM=?p] | FALSE[SEM=?p] | LPAREN PHI[SEM=?p] RPAREN
-PHI[SEM=<?lc(?ph1,?ph2)>] -> PHI[SEM=?ph1] LC[SEM=?lc] PHI[SEM=?ph2]
+PHI[SEM=<?lc(?ph1,?ph2)>] -> PHI[SEM=?ph1] AND[SEM=?lc] PHI[SEM=?ph2] | PHI[SEM=?ph1] LC[SEM=?lc] PHI[SEM=?ph2]
+
 
 # Environment propositions, composed of valid sensor propositions
 PHI_ENV[SEM=?ph] -> SENSOR[SEM=?ph] | LPAREN PHI_ENV[SEM=?ph] RPAREN
 PHI_ENV[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ENV[SEM=?ph]
-PHI_ENV[SEM=<?lc(?p1,?p2)>] -> PHI_ENV[SEM=?p1] LC[SEM=?lc] PHI_ENV[SEM=?p2]
+PHI_ENV[SEM=<?lc(?p1,?p2)>] -> PHI_ENV[SEM=?p1] AND[SEM=?lc] PHI_ENV[SEM=?p2] | PHI_ENV[SEM=?p1] OR[SEM=?lc] PHI_ENV[SEM=?p2]
 PHI_ENV[SEM=<?q(?g)>] -> ANY[SEM=?q] SENSORGROUP[SEM=?g] | ALL[SEM=?q] SENSORGROUP[SEM=?g] | CORR[SEM=?q] SENSORGROUP[SEM=?g] | EACH[SEM=?q] SENSORGROUP[SEM=?g]
 PHI_ENV[SEM=<?ch(?p)>] -> STARTOF[SEM=?ch] SENSOR[SEM=?p] | ENDOF[SEM=?ch] SENSOR[SEM=?p]
 
 # Region propositions, composed of valid region names or quantified groups
 PHI_REG[SEM=?ph] -> REGION[SEM=?ph] | LPAREN PHI_REG[SEM=?ph] RPAREN
 PHI_REG[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_REG[SEM=?ph]
-PHI_REG[SEM=<?lc(?p1,?p2)>] -> PHI_REG[SEM=?p1] LC[SEM=?lc] PHI_REG[SEM=?p2]
+PHI_REG[SEM=<?lc(?p1,?p2)>] -> PHI_REG[SEM=?p1] AND[SEM=?lc] PHI_REG[SEM=?p2] | PHI_REG[SEM=?p1] OR[SEM=?lc] PHI_REG[SEM=?p2]
 PHI_REG[SEM=<?ch(?p)>] -> STARTOF[SEM=?ch] REGION[SEM=?p] | ENDOF[SEM=?ch] REGION[SEM=?p]
 REGION[SEM=<?q(?g)>] -> ANY[SEM=?q] GROUP[SEM=?g] | ALL[SEM=?q] GROUP[SEM=?g] | CORR[SEM=?q] GROUP[SEM=?g] | EACH[SEM=?q] GROUP[SEM=?g]
 
 # Action propositions, composed of valid robot actions and auxilliary propositions
 PHI_ACT[SEM=?ph] -> ACTION[SEM=?ph] | LPAREN PHI_ACT[SEM=?ph] RPAREN
 PHI_ACT[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ACT[SEM=?ph]
-PHI_ACT[SEM=<?lc(?p1,?p2)>] -> PHI_ACT[SEM=?p1] LC[SEM=?lc] PHI_ACT[SEM=?p2]
+PHI_ACT[SEM=<?lc(?p1,?p2)>] -> PHI_ACT[SEM=?p1] AND[SEM=?lc] PHI_ACT[SEM=?p2] | PHI_ACT[SEM=?p1] OR[SEM=?lc] PHI_ACT[SEM=?p2]
 ACTION[SEM=<?ch(?p)>] -> STARTOF[SEM=?ch] ACTION[SEM=?p] | ENDOF[SEM=?ch] ACTION[SEM=?p]
 ACTION[SEM=<?q(?g)>] -> ANY[SEM=?q] ACTIONGROUP[SEM=?g] | ALL[SEM=?q] ACTIONGROUP[SEM=?g] | CORR[SEM=?q] ACTIONGROUP[SEM=?g] | EACH[SEM=?q] ACTIONGROUP[SEM=?g]
 
 # Robot propositions, composed of any valid proposition except sensor propositions 
 PHI_ROB[SEM=?ph] -> REGION[SEM=?ph] | ACTION[SEM=?ph] | LPAREN PHI_ROB[SEM=?ph] RPAREN
 PHI_ROB[SEM=<?ng(?ph)>] -> NEG[SEM=?ng] PHI_ROB[SEM=?ph]
-PHI_ROB[SEM=<?lc(?p1,?p2)>] -> PHI_ROB[SEM=?p1] LC[SEM=?lc] PHI_ROB[SEM=?p2]
+PHI_ROB[SEM=<?lc(?p1,?p2)>] -> PHI_ROB[SEM=?p1] AND[SEM=?lc] PHI_ROB[SEM=?p2] | PHI_ROB[SEM=?p1] OR[SEM=?lc] PHI_ROB[SEM=?p2]
 
 ###############
 # Lexical Rules
@@ -141,6 +142,7 @@ ACTIVATE[TEN=past,PER=third] -> 'activated'
 ACTIVATING -> 'activating'
 ALL[SEM=<\x.$All(x)>] -> 'all'
 ALWAYS[SEM=<\x.Glob(x)>] -> 'always' | 'always' 'do' | 'do'
+AND[SEM=<\x y.And(x,y)>] -> 'and'
 ANDSTAY[SEM=<$Stay>] -> 'and' 'stay' | 'and' 'stay' 'there'
 ANY[SEM=<\x.$Any(x)>] -> 'any'
 CORR[SEM=<\x.$Corr(x)>] -> 'corresponding' | 'the' 'corresponding'
@@ -153,14 +155,13 @@ IF -> 'if'
 IFF -> 'if' 'and' 'only' 'if' | 'iff'
 IN -> 'in'
 INFDO[SEM=<\x.GlobFin(x)>] -> 'go' 'to' | 'visit' | 'infinitely' 'often' 'do' | 'infinitely' 'often'
-LC[SEM=<\x y.Or(x,y)>] -> 'or'
-LC[SEM=<\x y.And(x,y)>] -> 'and'
 LPAREN -> '('
 LV[TEN=pres,PER=third] -> 'is'
 LV[TEN=pres,PER=second] -> 'are'
 LV[TEN=past,PER=third] -> 'was'
 LV[TEN=past,PER=second] -> 'were'
 NEG[SEM=<\x.Not(x)>] -> 'not' | 'did' 'not'
+OR[SEM=<\x y.Or(x,y)>] -> 'or'
 RESETON[SEM=<\x y z.And(Glob(Imp(z,Not(Next(x)))),Glob(Imp(And(Not(x),Not(y)),Not(Next(x)))))>] -> 'and' 'reset' 'on'
 ROB[PER=third] -> 'robot' | 'the' 'robot'
 ROB[PER=second] -> 'you'
