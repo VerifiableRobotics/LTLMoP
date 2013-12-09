@@ -12,7 +12,7 @@ extinguish, 0
 
 CompileOptions:
 convexify: True
-parser: structured
+parser: nltk
 fastslow: False
 decompose: True
 use_region_bit_encoding: True
@@ -58,14 +58,14 @@ If you are activating pick_up then stay there
 carrying_item is set on pick_up and reset on drop
 Do drop if and only if you are in porch and you are activating carrying_item
 
-If you did not activate carrying_item then always not porch
+If you did not activate carrying_item then always not porch or deck
 
 # Define when and how to radio
 Do radio if and only if you are sensing person
 If you are activating radio or you were activating radio then stay there
 
 # Patrol goals
-Group rooms is living, bedroom, deck, kitchen, dining
-If you are not activating carrying_item and you are not activating radio then visit all rooms
+Group rooms is living, bedroom, kitchen, dining
+If you are not activating carrying_item and you are not activating radio then visit each rooms
 if you are activating carrying_item and you are not activating radio then visit porch
 

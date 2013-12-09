@@ -264,7 +264,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
         
         semstring = uniqueParses[0][1]
         
-        #print '\t' + semstring
         #Expand initial conditions
         semstring = parseInit(semstring, sensorList, robotPropList)
         
