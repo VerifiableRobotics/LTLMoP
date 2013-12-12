@@ -9,7 +9,7 @@ sensors = ['letter1', 'letter2', 'newletter']
 auxProps = []
 
 specText = """
-infinitely often not room1 or room2 and room3
+infinitely often room1 and room2 and room3
 """
 
 sent = specText.split('\n')
@@ -19,6 +19,6 @@ sent = specText.split('\n')
 # cProfile.run('[spec,linemap,failed,LTL2LineNo,internal_props] = parseSpec.writeSpec(specText, sensors, regions, actions+auxProps)')
 #print('\nLTL Formulas: \n')
 
-#for formula in spec.values():
-#    print formula
+for formula in spec.values():
+    print formula
 

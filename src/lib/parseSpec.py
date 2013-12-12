@@ -258,8 +258,6 @@ def writeSpec(text, sensorList, regionList, robotPropList):
             uniqueParses.append((syntree, semstring))
 
         if len(uniqueParses) > 1:
-            print('Alert! The following sentence is ambiguous:\n')
-            print(line)
             showParseDiffs(uniqueParses)
         
         semstring = uniqueParses[0][1]

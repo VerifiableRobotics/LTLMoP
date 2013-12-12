@@ -6,10 +6,26 @@ def showParseDiffs(parseTuples):
 		and prints a line for each tree showing its disambiguated interpretation using parentheses
 	'''
 
+	i = 0
+	while i < len(parseTuples):
+		j = i+1
+		while j < len(parseTuples):
+			if semEqual(parseTuples[i][0],parseTuples[j][0]):
+				parseTuples.pop(j)
+			j = j + 1
+		i = i + 1
+
+	if len(parseTuples) > 1:
+		print('\nAlert! The following sentence is ambiguous:\n\n' + ' '.join(parseTuples[0][0].leaves()))
+	else:
+		return
+
 	revisedStrings = []
 	trimmedTrees = removeCommonRoots([tree for (tree, semrep) in parseTuples])
+
 	for tree in trimmedTrees:
-		revisedStrings.append(makeExplicitScope(tree)[1:-1])
+		revisedStrings.append(makeExplicitScope(tree)[1:-2])
+		# revisedStrings.append(makeExplicitScope(tree))
 
 	print('\nDid you mean: \n' + '\n~or~\n'.join(revisedStrings))
 	print('\nIf the first option is not your intended meaning, please revise your sentence with parentheses.')
@@ -57,6 +73,65 @@ def getTreeItem(tree, indexTuple):
 		return tree.node[TYPE]
 	else:
 		return tree
+
+def semEqual(treeA, treeB):
+	''' Takes in two nltk.tree.Tree's and evaluates whether they are semantically equal,
+		that is, whether they only differ by re-ordering of commutative operations; 
+		returns true or false
+	'''
+
+	#First we'll make copies of the trees to modify
+	treeAcopy = treeA.copy(True)
+	#treeAcopy.draw()
+	treeBcopy = treeB.copy(True)
+	#treeBcopy.draw()
+
+	#Now we normalize the trees by flattening conjunctions and disjunctions and sorting
+	# the conjuncts and disjuncts
+	treeAcopy = flattenAndSortOperator(treeAcopy, 'AND')[1]
+	#treeAcopy.draw()
+	treeAcopy = flattenAndSortOperator(treeAcopy, 'OR')[1]
+	#treeAcopy.draw()
+	treeBcopy = flattenAndSortOperator(treeBcopy, 'AND')[1]
+	#treeBcopy.draw()
+	treeBcopy = flattenAndSortOperator(treeBcopy, 'OR')[1]
+	#treeBcopy.draw()
+
+	#Finally we can compare the trees for equality!
+	positions = treeAcopy.treepositions()
+	for position in positions:
+		if getTreeItem(treeAcopy, position) != getTreeItem(treeBcopy, position):
+			return False
+	return True
+
+def flattenAndSortOperator(tree, nodeType):
+
+	if not isinstance(tree, nltk.tree.Tree):
+		return (False, tree)
+	if any([not isinstance(child, nltk.tree.Tree) for child in tree]):
+		return (False, tree)
+	
+	flatten = False
+	for child in tree:
+		if not isinstance(child, nltk.tree.Tree):
+			return (False, tree)
+		flatten = flatten or child.node[TYPE] == nodeType
+
+	for child in tree:
+		childFlattened, childTree = flattenAndSortOperator(child, nodeType)
+		if  childFlattened and flatten:
+			tree.remove(child)
+			tree.extend(childTree[:])
+	tree[:] = sorted(tree[:], key=lambda child: str(child.node['SEM']))
+		
+	if flatten:
+		return (True, tree)
+	else:
+		return (False, tree)
+
+######
+# Functions below are unused previous attempts at implementation
+######
 
 def diffParses(parseTrees, startPosition = ()):
 
