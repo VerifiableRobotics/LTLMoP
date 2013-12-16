@@ -27,6 +27,9 @@ from parseEnglishToLTL import writeSpec
 from copy import deepcopy
 import threading, time
 
+import logging
+import globalConfig
+
 
 ######################### WARNING! ############################
 #         DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.         #
@@ -477,8 +480,9 @@ class SpecEditorFrame(wx.Frame):
 
         #self.text_ctrl_spec.SetEOLMode(wx.stc.STC_EOL_LF)
         
-        # Listen for changes to the text
-        self.text_ctrl_spec.SetModEventMask(self.text_ctrl_spec.GetModEventMask() & ~(wx.stc.STC_MOD_CHANGESTYLE | wx.stc.STC_MOD_CHANGEMARKER))
+        # Listen for changes to the text (except for style and marker changes)
+        self.text_ctrl_spec.SetModEventMask(self.text_ctrl_spec.GetModEventMask() \
+                                            & ~(wx.stc.STC_MOD_CHANGESTYLE | wx.stc.STC_MOD_CHANGEMARKER))
         self.Bind(wx.stc.EVT_STC_CHANGE, self.onSpecTextChange, self.text_ctrl_spec)
 
         # Set up locative phrase map
@@ -558,7 +562,7 @@ class SpecEditorFrame(wx.Frame):
             start -= 1
 
         # Set everything to the default style
-        self.text_ctrl_spec.StartStyling(start, 31)
+        self.text_ctrl_spec.StartStyling(start, 31)  # 31 is the default mask
         self.text_ctrl_spec.SetStyling(end-start, wx.stc.STC_P_DEFAULT)
 
         # Find propositions
@@ -582,6 +586,15 @@ class SpecEditorFrame(wx.Frame):
         for m in re.finditer("^#.*?$", text, re.MULTILINE):
             self.text_ctrl_spec.StartStyling(start+m.start(), 31)
             self.text_ctrl_spec.SetStyling(m.end()-m.start(), wx.stc.STC_P_COMMENTLINE)
+
+        # Perform a no-op style operation on the entire section of text to ensure that
+        # Scintilla knows we've styled to the end of the section.  It's not clear why this is
+        # necessary, as it should have been taken care of by the STC_P_DEFAULT styling above
+        # but if this is not here this event can get thrown over and over, causing flickering.
+        # (It appears that only the end-point of the last set-styling call affects Scintilla's internal
+        # style-needed pointer?)
+        self.text_ctrl_spec.StartStyling(start, 0)
+        self.text_ctrl_spec.SetStyling(end-start, 0)
 
     def __set_properties(self):
         # begin wxGlade: SpecEditorFrame.__set_properties
