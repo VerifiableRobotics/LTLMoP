@@ -495,11 +495,6 @@ class SpecEditorFrame(wx.Frame):
 
         self.initializeNewSpec()
 
-        # HACK: This is an undocumented hack you can uncomment to help kill stuck copies of speceditor on windows
-        # If in use, requires spec file argument on command line
-        #if sys.argv[-1] != "-dontbreak":
-        #    os.system("taskkill /im python.exe /f & " + " ".join(sys.argv) + " -dontbreak")
-
     def onMouseDwellStart(self, event):
         pos = event.GetPosition()
         line = self.text_ctrl_spec.LineFromPosition(pos) # 0-indexed
