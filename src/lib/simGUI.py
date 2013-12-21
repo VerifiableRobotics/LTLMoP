@@ -166,25 +166,25 @@ class SimGUI_Frame(wx.Frame):
             wx.CallAfter(self.loadSpecFile, eventData)
         elif eventType == "REGIONS":
             wx.CallAfter(self.loadRegionFile, eventData)
-        elif eventData.startswith("Output proposition"):
-            if self.checkbox_statusLog_propChange.GetValue():
-                wx.CallAfter(self.appendLog, eventData + "\n", color="GREEN") 
-        elif eventData.startswith("Heading to"):
-            if self.checkbox_statusLog_targetRegion.GetValue():
-                wx.CallAfter(self.appendLog, eventData + "\n", color="BLUE") 
-        elif eventData.startswith("Crossed border"):
-            if self.checkbox_statusLog_border.GetValue():
-                wx.CallAfter(self.appendLog, eventData + "\n", color="CYAN") 
         else:
-            # Detect our current goal index
-            if eventData.startswith("Currently pursuing goal"):
-                m = re.search(r"#(\d+)", eventData)
-                if m is not None:
-                    self.currentGoal = int(m.group(1))
-
-            if self.checkbox_statusLog_other.GetValue():
+            if isinstance(eventData, basestring):
+                if eventData.startswith("Output proposition"):
+                    if self.checkbox_statusLog_propChange.GetValue():
+                        wx.CallAfter(self.appendLog, eventData + "\n", color="GREEN") 
+                elif eventData.startswith("Heading to"):
+                    if self.checkbox_statusLog_targetRegion.GetValue():
+                        wx.CallAfter(self.appendLog, eventData + "\n", color="BLUE") 
+                elif eventData.startswith("Crossed border"):
+                    if self.checkbox_statusLog_border.GetValue():
+                        wx.CallAfter(self.appendLog, eventData + "\n", color="CYAN") 
+                    # Detect our current goal index
+                elif eventData.startswith("Currently pursuing goal"):
+                    m = re.search(r"#(\d+)", eventData)
+                    if m is not None:
+                        self.currentGoal = int(m.group(1))
+            elif self.checkbox_statusLog_other.GetValue():
                 if eventData != "":
-                    wx.CallAfter(self.appendLog, eventData + "\n", color="BLACK") 
+                    wx.CallAfter(self.appendLog, str(eventData) + "\n", color="BLACK") 
 
     def __set_properties(self):
         # begin wxGlade: SimGUI_Frame.__set_properties
