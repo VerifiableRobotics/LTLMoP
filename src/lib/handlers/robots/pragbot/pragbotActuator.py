@@ -68,15 +68,14 @@ class gumboActuatorHandler(object):
                 else:
                     return False
             
-            nearest_face = self._nearest_face(jr_location,location)
             # Update the status via the executor that we're defusing .
-            self.executor.postEvent("MESSAGE", "Defusing...")
+            self.executor.postEvent("MESSAGE", "Defusing bomb at location " + str(location))
 
             # Issue a non-blocking command to move the robot to the
             # bomb position.
             print "DEFUSAL IS NOW TAKING OVER MOTION CONTROL"            
             print "Going for bomb."
-            self._proxy.receiveHandlerMessages("Move_Location",nearest_face)
+            self._proxy.receiveHandlerMessages("Move_Location",location)
 
             # Define up a lexically-enclosed function that will set the
             # 'defuse_done' sensor  and make the bomb disappear.
