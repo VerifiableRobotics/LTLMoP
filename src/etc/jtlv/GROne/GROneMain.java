@@ -200,10 +200,11 @@ public class GROneMain {
 		System.out.println("===== Done ==============================");
 		
 		// ** Analysis calls
-
-				String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
-				GROneDebug.analyze(env,sys);
-				
+		// TODO: Replace this with the real conditional
+		if (false) {
+		    String debugFile = args[1].replaceAll("\\.[^\\.]+$",".debug");
+		    GROneDebug.analyze(env,sys);
+		}	
 		System.exit(0);
 		
 		
