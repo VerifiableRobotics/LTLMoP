@@ -27,9 +27,9 @@ class sensorHandler(object):
 
         # Store reference to server proxy
         self._proxy = \
-        proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData()["proxy"]
-        
-        self.sensors = {"bomb": self.bomb, "defuse_done" : self.defuse_done}
+            proj.h_instance['init'][proj.currentConfig.main_robot].getSharedData()["proxy"]
+
+        self.sensors = {"bomb": self.bomb, "defuse_done": self.defuse_done}
         self.defuse_done_status = False
 
     def get_sensor(self, sensor_name, initial=False):
@@ -51,21 +51,21 @@ class sensorHandler(object):
             if sensor_name in self.sensors:
                 return self.sensors[sensor_name]()
             return False
-        
+
     def bomb(self):
-        """Report the state of the bomb sensor by pinging pragbot client
-        """
-        location_string = self._proxy.receiveHandlerMessages("Sensor","bomb")
+        """Report the state of the bomb sensor by pinging pragbot client."""
+        location_string = self._proxy.receiveHandlerMessages("Sensor", "bomb")
         pieces = location_string.split(",")
         numbombs = int(pieces[0])
-        if numbombs > 0: return True
+        if numbombs > 0:
+            return True
         return False
-    
+
     def defuse_done(self):
+        """Report whether defuse is done."""
         return self.defuse_done_status
 
     def set_action_done(self, action_name, value):
         """Set whether an action is done to the given value."""
         if action_name == "defuse":
             self.defuse_done_status = value
-        
