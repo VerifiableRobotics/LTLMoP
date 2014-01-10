@@ -160,6 +160,9 @@ class SpecCompiler(object):
                 region_tags = {}
             else:
                 region_tags = self.proj.currentConfig.region_tags
+
+            # Hack: We check this SLURP-specific configuration flag here
+            struct_responses = "slurp_struct_responses" in self.proj.compile_options
  
             # Hack: We need to make sure there's only one of these
             global _SLURP_SPEC_GENERATOR
@@ -170,7 +173,7 @@ class SpecCompiler(object):
                 p = os.path.dirname(os.path.abspath(__file__))
                 sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
                 from ltlbroom.specgeneration import SpecGenerator
-                _SLURP_SPEC_GENERATOR = SpecGenerator()
+                _SLURP_SPEC_GENERATOR = SpecGenerator(struct_responses)
             
             # Filter out regions it shouldn't know about
             filtered_regions = [region.name for region in self.proj.rfi.regions 
