@@ -162,7 +162,12 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
     def pause(self):
         """ pause execution of the automaton """
         self.runFSA.clear()
-        time.sleep(0.1)  # Wait for FSA to stop
+        # TODO: This sleep is not guaranteed to be long enough to
+        # allow the system to pause. For example, slow XML-RPC can
+        # mean the robot is still moving and handlers are being
+        # polled, which can cause a crash in the RPC because the calls
+        # overlap.
+        time.sleep(0.5)  # Wait for FSA to stop
         self.postEvent("PAUSE")
 
     def resume(self):
