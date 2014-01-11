@@ -174,7 +174,7 @@ class ExecutorResynthesisExtensions:
 
         spec_file = self.proj.getFilenamePrefix() + ".spec"
         aut_file = self.proj.getFilenamePrefix() + ".aut"
-        self.initialize(spec_file, aut_file, firstRun=False)
+        self.initialize(spec_file, aut_file, firstRun=True, wait=False)
 
         self.resume()
 

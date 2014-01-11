@@ -197,7 +197,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
         self.externalEventTargetRegistered.set()
 
-    def initialize(self, spec_file, aut_file, firstRun=True):
+    def initialize(self, spec_file, aut_file, firstRun=True, wait=True):
         """
         Prepare for execution, by loading and initializing all the relevant files (specification, map, handlers, aut)
 
@@ -246,7 +246,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         # Load automaton file
         new_aut = self.loadAutFile(aut_file)
 
-        if firstRun:
+        if firstRun and wait:
             # ## Wait for the initial start command
             logging.info("Ready.  Press [Start] to begin...")
             self.runFSA.wait()
