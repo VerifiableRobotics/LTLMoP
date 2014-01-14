@@ -19,6 +19,8 @@ import fsa
 from copy import deepcopy
 from cores.coreUtils import *
 
+from asyncProcesses import AsynchronousProcessThread
+
 # Hack needed to ensure there's only one
 _SLURP_SPEC_GENERATOR = None
 
@@ -26,6 +28,7 @@ _SLURP_SPEC_GENERATOR = None
 class SpecCompiler(object):
     def __init__(self, spec_filename=None):
         self.proj = project.Project()
+        self.synthesis_subprocess = None
 
         if spec_filename is not None:
             self.loadSpec(spec_filename)
@@ -810,32 +813,76 @@ class SpecCompiler(object):
             conjuncts.extend(newCs)
         
         return conjuncts
-    
 
     def _synthesize(self):
+        """ Call the synthesis tool, and block until it completes.
+            Returns success flags `realizable` and `realizableFS`, and the raw
+            synthesizer log output. """
+
+        log_string = StringIO.StringIO()
+        completion_flag = threading.Event()
+
+        # This is a bit round-about, but we need a way to save
+        # the output of the callback function
+        results = {}
+        def callback(realizable, realizableFS):
+            results["realizable"] = realizable
+            results["realizableFS"] = realizableFS
+            completion_flag.set()
+
+        self._synthesizeAsync(log_function=log_string.write,
+                              completion_callback_function=callback)
+
+        completion_flag.wait()  # Block here until synthesis is done
+
+        return (results["realizable"], results["realizableFS"], log_string.getvalue())
+
+    def _synthesizeAsync(self, log_function, completion_callback_function):
+        """ Asynchronously call the synthesis tool.  This function will return immediately after
+            spawning a subprocess.  `log_function` will be called with a string argument every time
+            the subprocess generates a line of text.  `completion_callback_function` will be called
+            when synthesis finishes, with two arguments: the success flags `realizable`
+            and `realizableFS`. """
+
+        # Find the synthesis tool
         cmd = self._getGROneCommand("GROneMain")
         if cmd is None:
+            # No tool available
             return (False, False, "")
 
+        # Add any extra compiler options
         if self.proj.compile_options["fastslow"]:
             cmd.append("--fastslow")
 
-        subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-        
-        realizable = False
-        realizableFS = False
+        results = {"realizable": False,
+                   "realizableFS": False}
 
-        output = ""
-        for line in subp.stdout:
-            output += line
-            if "Specification is realizable" in line:
-                realizable = True
-            if "Specification is realizable with slow and fast actions" in line:
-                realizableFS = True
-               
-        subp.stdout.close()
+        # Define some wrappers around the callback functions so we can parse the output
+        # of the synthesis tool and return it in a meaningful way.
+        def onLog(text):
+            """ Intercept log callbacks to check for realizability status. """
 
-        return (realizable, realizableFS, output)
+            if "Specification is realizable" in text:
+                results["realizable"] = True
+            if "Specification is realizable with slow and fast actions" in text:
+                results["realizableFS"] = True
+
+            # You'll pass this on, won't you
+            log_function(text)
+
+        def onSubprocessComplete():
+            completion_callback_function(results["realizable"], results["realizableFS"])
+            self.synthesis_subprocess = None
+
+        # Kick off the subprocess
+        self.synthesis_subprocess = AsynchronousProcessThread(cmd, onSubprocessComplete, onLog)
+
+    def abortSynthesis(self):
+        """ Kill any running synthesis process. """
+
+        if self.synthesis_subprocess is not None:
+            logging.warning("Aborting synthesis!")
+            self.synthesis_subprocess.kill()
 
     def compile(self):
         if self.proj.compile_options["decompose"]:
