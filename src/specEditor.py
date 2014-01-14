@@ -11,18 +11,15 @@
 
 import re, sys, os, subprocess
 import wx, wx.richtext, wx.stc
-import numpy
 
 sys.path.append("lib")
 sys.path.append(os.path.join("lib","cores"))
 
 from regions import *
-import fileMethods
 import project
 import fsa
 import mapRenderer
 from specCompiler import SpecCompiler
-from parseEnglishToLTL import writeSpec
 
 from copy import deepcopy
 import threading, time
