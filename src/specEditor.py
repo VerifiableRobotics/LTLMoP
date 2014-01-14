@@ -20,9 +20,9 @@ import project
 import fsa
 import mapRenderer
 from specCompiler import SpecCompiler
+from asyncProcesses import AsynchronousProcessThread
 
 from copy import deepcopy
-import threading, time
 
 import logging
 import globalConfig
@@ -32,6 +32,22 @@ import globalConfig
 #         DO NOT EDIT GUI CODE BY HAND.  USE WXGLADE.         #
 #   The .wxg file is located in the etc/wxglade/ directory.   #
 ###############################################################
+
+class WxAsynchronousProcessThread(AsynchronousProcessThread):
+    """ Make sure callbacks from AsynchronousProcessThreads are
+        safe for threading in wx by wrapping with a wx.CallAfter. """
+
+    def __init__(self, cmd, callback, logFunction):
+        def wxSafeCallback(*args, **kwds):
+            wx.CallAfter(callback, *args, **kwds)
+
+        if logFunction is None:
+            wxSafeLogger = None
+        else:
+            def wxSafeLogger(*args, **kwds):
+                wx.CallAfter(logFunction, *args, **kwds)
+
+        super(WxAsynchronousProcessThread, self).__init__(cmd, wxSafeCallback, wxSafeLogger)
 
 class AnalysisResultsDialog(wx.Dialog):
     def __init__(self, parent, *args, **kwds):
@@ -157,79 +173,6 @@ class AnalysisResultsDialog(wx.Dialog):
         event.Skip()
 
 # end of class AnalysisResultsDialog
-
-
-
-class AsynchronousProcessThread(threading.Thread):
-    def __init__(self, cmd, callback, logFunction, *args, **kwds):
-        """
-        Run a command asynchronously, calling a callback function (if given) upon completion.
-        If a logFunction is given, stdout and stderr will be redirected to it.
-        Otherwise, these streams are printed to the console.
-        """
-
-        self.cmd = cmd
-        self.callback = callback
-        self.logFunction = logFunction
-
-        self.running = False
-
-        threading.Thread.__init__(self, *args, **kwds)
-
-        self.startComplete = threading.Event()
-
-        # Auto-start
-        self.daemon = True
-        self.start()
-
-    def kill(self):
-        print "Killing process `%s`..." % ' '.join(self.cmd)
-        # This should cause the blocking readline() in the run loop to return with an EOF
-        try:
-            self.process.kill()
-        except OSError:
-            # TODO: Figure out what's going on when this (rarely) happens
-            print "Ran into an error killing the process.  Hopefully we just missed it..."
-
-    def run(self):
-
-        if os.name == "nt":
-            err_types = (OSError, WindowsError)
-        else:
-            err_types = OSError
-
-        # Start the process
-        try:
-            if self.logFunction is not None:
-                self.process = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False, bufsize=-1)
-            else:
-                self.process = subprocess.Popen(self.cmd, bufsize=-1)
-        except err_types as (errno, strerror):
-            print "ERROR: " + strerror
-            self.startComplete.set()
-            return
-
-        self.running = True
-        self.startComplete.set()
-
-        # Sit around while it does its thing
-        while self.process.returncode is None:
-            # Make sure we aren't being interrupted
-            if not self.running:
-                return
-
-            # Output to either a RichTextCtrl or the console
-            if self.logFunction is not None:
-                output = self.process.stdout.readline() # Blocking :(
-                wx.CallAfter(self.logFunction, "\t"+output, "BLACK")
-
-            # Check the status of the process
-            self.process.poll()
-            time.sleep(0.01)
-
-        # Call any callback function
-        if self.callback is not None:
-            wx.CallAfter(self.callback) # thread-safe call
 
 class MapDialog(wx.Dialog):
     """
@@ -1026,7 +969,7 @@ class SpecEditorFrame(wx.Frame):
         #event.Skip()
 
     def onMenuCompile(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        # TODO: Use AsynchronousProcessThread for this too
+        # TODO: Use WxAsynchronousProcessThread for this too
 
         # Clear the error markers
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
@@ -1250,7 +1193,7 @@ class SpecEditorFrame(wx.Frame):
             # If we already have a region file defined, open it up for editing
             fileName = self.proj.rfi.filename
             self.lastRegionModTime = os.path.getmtime(fileName)
-            self.subprocess["Region Editor"] = AsynchronousProcessThread([sys.executable,"-u","regionEditor.py",fileName], regedCallback, None)
+            self.subprocess["Region Editor"] = WxAsynchronousProcessThread([sys.executable,"-u","regionEditor.py",fileName], regedCallback, None)
         else:
             # Otherwise let's create a new region file
             if self.proj.project_basename is None:
@@ -1267,7 +1210,7 @@ class SpecEditorFrame(wx.Frame):
 
             # We'll name the region file with the same name as our project
             fileName = self.proj.getFilenamePrefix()+".regions"
-            self.subprocess["Region Editor"] = AsynchronousProcessThread([sys.executable,"-u","regionEditor.py",fileName], regedCallback, None)
+            self.subprocess["Region Editor"] = WxAsynchronousProcessThread([sys.executable,"-u","regionEditor.py",fileName], regedCallback, None)
 
     def onMenuConfigSim(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Launch the config editor
@@ -1296,7 +1239,7 @@ class SpecEditorFrame(wx.Frame):
             self.proj.currentConfig = other_proj.loadConfig()
             self.subprocess["Simulation Configuration"] = None
 
-        self.subprocess["Simulation Configuration"] = AsynchronousProcessThread([sys.executable,"-u",os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
+        self.subprocess["Simulation Configuration"] = WxAsynchronousProcessThread([sys.executable,"-u",os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
 
     def _exportDotFile(self):
         proj_copy = deepcopy(self.proj)
@@ -1345,7 +1288,7 @@ class SpecEditorFrame(wx.Frame):
 
             self.subprocess["Dotty"] = None
 
-        self.subprocess["Dotty"] = AsynchronousProcessThread(["dot","-Tpdf","-o%s.pdf" % self.proj.getFilenamePrefix(),"%s.dot" % self.proj.getFilenamePrefix()], dottyCallback, None)
+        self.subprocess["Dotty"] = WxAsynchronousProcessThread(["dot","-Tpdf","-o%s.pdf" % self.proj.getFilenamePrefix(),"%s.dot" % self.proj.getFilenamePrefix()], dottyCallback, None)
 
         self.subprocess["Dotty"].startComplete.wait()
         if not self.subprocess["Dotty"].running:
