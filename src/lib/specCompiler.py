@@ -812,13 +812,10 @@ class SpecCompiler(object):
         return conjuncts
     
 
-    def _synthesize(self, with_safety_aut=False):
+    def _synthesize(self):
         cmd = self._getGROneCommand("GROneMain")
         if cmd is None:
             return (False, False, "")
-
-        if with_safety_aut:    # Generally used for Mopsy
-            cmd.append("--safety")
 
         if self.proj.compile_options["fastslow"]:
             cmd.append("--fastslow")
@@ -840,7 +837,7 @@ class SpecCompiler(object):
 
         return (realizable, realizableFS, output)
 
-    def compile(self, with_safety_aut=False):
+    def compile(self):
         if self.proj.compile_options["decompose"]:
             logging.info("Decomposing...")
             self._decompose()
@@ -856,5 +853,5 @@ class SpecCompiler(object):
         #self._checkForEmptyGaits()
         logging.info("Synthesizing a strategy...")
 
-        return self._synthesize(with_safety_aut)
+        return self._synthesize()
 

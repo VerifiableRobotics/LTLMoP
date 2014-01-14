@@ -1028,7 +1028,7 @@ class SpecEditorFrame(wx.Frame):
 
         #event.Skip()
 
-    def onMenuCompile(self, event, with_safety_aut=False): # wxGlade: SpecEditorFrame.<event_handler>
+    def onMenuCompile(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # TODO: Use AsynchronousProcessThread for this too
 
         # Clear the error markers
@@ -1122,7 +1122,7 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Creating automaton...\n", "BLUE")
 
-        realizable, realizableFS, output = compiler._synthesize(with_safety_aut)
+        realizable, realizableFS, output = compiler._synthesize()
 
         print "\n"
 
@@ -1372,7 +1372,7 @@ class SpecEditorFrame(wx.Frame):
 
     def onMenuAnalyze(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         #TODO: check to see if we need to recompile
-        self.compiler, self.badInit = self.onMenuCompile(event, with_safety_aut=False)
+        self.compiler, self.badInit = self.onMenuCompile(event)
 
         # instantiate if necessary
         if self.analysisDialog is None:
