@@ -11,6 +11,8 @@
 
 import re, sys, os, subprocess
 import wx, wx.richtext, wx.stc
+import threading
+import time
 
 sys.path.append("lib")
 sys.path.append(os.path.join("lib","cores"))
@@ -969,8 +971,6 @@ class SpecEditorFrame(wx.Frame):
         #event.Skip()
 
     def onMenuCompile(self, event): # wxGlade: SpecEditorFrame.<event_handler>
-        # TODO: Use WxAsynchronousProcessThread for this too
-
         # Clear the error markers
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_INIT)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
@@ -1062,39 +1062,67 @@ class SpecEditorFrame(wx.Frame):
 
         self.appendLog("Creating automaton...\n", "BLUE")
 
-        realizable, realizableFS, output = compiler._synthesize()
+        # Disable console redirection
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
 
-        print "\n"
+        # Put up a busy dialog
+        busy_dialog = wx.ProgressDialog("Synthesizing...", "Please wait, synthesizing a strategy...",
+                                        style=wx.PD_APP_MODAL | wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
 
-        badInit = ""
-        for line in output.split('\n'):
-            if "For example" in line:
-                badInit = line.split('\t')[-1].strip()
-                
-        self.appendLog("\t"+output.replace("\n", "\n\t"))        
+        self.badInit = ""
+        def onLog(text):
+            # Check for bad initial conditions list in unsynth case
+            if "For example" in text:
+                self.badInit = text.split('\t')[-1].strip()
+
+            # Display output realtime in the log
+            wx.CallAfter(self.appendLog, "\t"+text)
+
+        # Kick off the synthesis
+        compiler._synthesizeAsync(onLog)
+
+        while not compiler.synthesis_complete.isSet():
+            # Keep the progress bar spinning and check if the Abort button has been pressed
+            keep_going = busy_dialog.UpdatePulse()[0]
+
+            if not keep_going:
+                compiler.abortSynthesis()
+                break
+
+            # Let wx and the OS have some time
+            # We are updating here instead of in the log callback because log output
+            # may be very infrequent
+            wx.Yield()
+            time.sleep(0.1)
+
+        # Done! Close the dialog.
+        busy_dialog.Destroy()
+
+        # If the user aborted, we should just stop here
+        if not keep_going:
+            self.appendLog("\tSynthesis aborted by user!\n", "RED")
+            return compiler, None
 
         if self.proj.compile_options['fastslow']:
-            if realizableFS:
+            if compiler.realizableFS:
                 self.appendLog("Automaton successfully synthesized for slow and fast actions.\n", "GREEN")
-            elif realizable:
+            elif compiler.realizable:
                 self.appendLog("Specification is unsynthesizable for slow and fast actions.\n Automaton successfully synthesized for instantaneous actions.\n", "GREEN")
             else:
                 self.appendLog("ERROR: Specification was unsynthesizable (unrealizable/unsatisfiable) for instantaneous actions.\n", "RED")
         else:
-            if realizable:
+            if compiler.realizable:
                 self.appendLog("Automaton successfully synthesized for instantaneous actions.\n", "GREEN")
             else:
                 self.appendLog("ERROR: Specification was unsynthesizable (unrealizable/unsatisfiable) for instantaneous actions.\n", "RED")
 
         # Check for trivial aut
-        if realizable or realizableFS:
+        if compiler.realizable or compiler.realizableFS:
             if not compiler._autIsNonTrivial():
                 self.appendLog("\tWARNING: Automaton is trivial.  Further analysis is recommended.\n", "RED")
 
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-
-        return compiler, badInit
+        return compiler, self.badInit
 
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_log.BeginTextColour(color)
