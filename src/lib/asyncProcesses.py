@@ -1,4 +1,5 @@
 import os
+import logging
 import time
 import threading
 import subprocess
@@ -27,15 +28,17 @@ class AsynchronousProcessThread(threading.Thread):
 
     def kill(self):
         print "Killing process `%s`..." % ' '.join(self.cmd)
-        # This should cause the blocking readline() in the run loop to return with an EOF
+
+        self.running = False
+
         try:
+            # This should cause the blocking readline() in the run loop to return with an EOF
             self.process.kill()
         except OSError:
             # TODO: Figure out what's going on when this (rarely) happens
             print "Ran into an error killing the process.  Hopefully we just missed it..."
 
     def run(self):
-
         if os.name == "nt":
             err_types = (OSError, WindowsError)
         else:
@@ -70,7 +73,7 @@ class AsynchronousProcessThread(threading.Thread):
             self.process.poll()
             time.sleep(0.01)
 
-        # Call any callback function
-        if self.callback is not None:
+        # Call any callback function if terminated succesfully
+        if self.callback is not None and self.running:
             self.callback()
 

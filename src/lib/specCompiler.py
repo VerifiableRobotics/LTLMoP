@@ -820,24 +820,14 @@ class SpecCompiler(object):
             synthesizer log output. """
 
         log_string = StringIO.StringIO()
-        completion_flag = threading.Event()
 
-        # This is a bit round-about, but we need a way to save
-        # the output of the callback function
-        results = {}
-        def callback(realizable, realizableFS):
-            results["realizable"] = realizable
-            results["realizableFS"] = realizableFS
-            completion_flag.set()
+        self._synthesizeAsync(log_function=log_string.write)
 
-        self._synthesizeAsync(log_function=log_string.write,
-                              completion_callback_function=callback)
+        self.synthesis_complete.wait()  # Block here until synthesis is done
 
-        completion_flag.wait()  # Block here until synthesis is done
+        return (self.realizable, self.realizableFS, log_string.getvalue())
 
-        return (results["realizable"], results["realizableFS"], log_string.getvalue())
-
-    def _synthesizeAsync(self, log_function, completion_callback_function):
+    def _synthesizeAsync(self, log_function=None, completion_callback_function=None):
         """ Asynchronously call the synthesis tool.  This function will return immediately after
             spawning a subprocess.  `log_function` will be called with a string argument every time
             the subprocess generates a line of text.  `completion_callback_function` will be called
@@ -854,8 +844,8 @@ class SpecCompiler(object):
         if self.proj.compile_options["fastslow"]:
             cmd.append("--fastslow")
 
-        results = {"realizable": False,
-                   "realizableFS": False}
+        self.realizable = False
+        self.realizableFS = False
 
         # Define some wrappers around the callback functions so we can parse the output
         # of the synthesis tool and return it in a meaningful way.
@@ -863,15 +853,21 @@ class SpecCompiler(object):
             """ Intercept log callbacks to check for realizability status. """
 
             if "Specification is realizable" in text:
-                results["realizable"] = True
+                self.realizable = True
             if "Specification is realizable with slow and fast actions" in text:
-                results["realizableFS"] = True
+                self.realizableFS = True
 
             # You'll pass this on, won't you
-            log_function(text)
+            if log_function is not None:
+                log_function(text)
+
+        # Create a flag for convenience
+        self.synthesis_complete = threading.Event()
 
         def onSubprocessComplete():
-            completion_callback_function(results["realizable"], results["realizableFS"])
+            if completion_callback_function is not None:
+                completion_callback_function(self.realizable, self.realizableFS)
+            self.synthesis_complete.set()
             self.synthesis_subprocess = None
 
         # Kick off the subprocess
@@ -883,6 +879,8 @@ class SpecCompiler(object):
         if self.synthesis_subprocess is not None:
             logging.warning("Aborting synthesis!")
             self.synthesis_subprocess.kill()
+            self.synthesis_complete = None
+            self.synthesis_subprocess = None
 
     def compile(self):
         if self.proj.compile_options["decompose"]:
