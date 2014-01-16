@@ -541,6 +541,11 @@ class Automaton:
 
         self.current_region = init_region
 
+        # If there are no states, give up
+        if not self.states:
+            print "(FSA) Automaton has zero states! (No suitable initial state found)"
+            return None
+
         for output in self.states[0].outputs.keys():
             # Skip any "bitX" region encodings
             if re.match('^bit\d+$', output): continue
