@@ -174,11 +174,13 @@ class ExecutorResynthesisExtensions:
 
         spec_file = self.proj.getFilenamePrefix() + ".spec"
         aut_file = self.proj.getFilenamePrefix() + ".aut"
-        self.initialize(spec_file, aut_file, firstRun=True, wait=False)
+        result = self.initialize(spec_file, aut_file, firstRun=True, wait=False, allow_fail=True)
 
-        self.resume()
-
-        return True
+        if result:
+            self.resume()
+            return True
+        else:
+            return False
         
         # TODO: reload from file less often
 

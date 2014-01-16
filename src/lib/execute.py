@@ -197,7 +197,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
         self.externalEventTargetRegistered.set()
 
-    def initialize(self, spec_file, aut_file, firstRun=True, wait=True):
+    def initialize(self, spec_file, aut_file, firstRun=True, wait=True, allow_fail=False):
         """
         Prepare for execution, by loading and initializing all the relevant files (specification, map, handlers, aut)
 
@@ -277,12 +277,17 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             init_state = new_aut.chooseInitialState(init_region, init_outputs)  # , goal=prev_z)
 
         if init_state is None:
-            logging.error("No suitable initial state found; unable to execute. Quitting...")
-            sys.exit(-1)
+            if not allow_fail:
+                logging.error("No suitable initial state found; unable to execute. Quitting...")
+                sys.exit(-1)
+            else:
+                logging.error("No suitable initial state found; unable to execute.")
+                return False
         else:
             logging.info("Starting from state %s." % init_state.name)
 
         self.aut = new_aut
+        return True
 
     def run(self):
         # ## Get everything moving
