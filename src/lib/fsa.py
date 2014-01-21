@@ -19,10 +19,10 @@ def stateToLTL(state, use_next=False, include_env=True, swap_io=False):
     """ swap_io is for the counterstrategy aut in mopsy """
 
     def decorate_prop(prop, polarity):
-        if int(polarity) == 0:
-            prop = "!"+prop
         if use_next:
             prop = "next({})".format(prop)
+        if int(polarity) == 0:
+            prop = "!"+prop
         return prop
         
     inputs = state.inputs
