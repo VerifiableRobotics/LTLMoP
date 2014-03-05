@@ -64,35 +64,9 @@ def writeSpec(text, sensorList, regionList, robotPropList):
     grammarFile = open('lib/structuredEnglish.fcfg','rb')
     grammarText = grammarFile.read()
     
-    #Generate regular expression to match sentences defining region groups
-    #Resultant expression is: 'group (?P<name>\w+) is (?P<items>(?:region1,? ?|region2,? ?|region3,? ?|empty)+)'
-    if regionList:
-        groupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>(?:'
-        groupDefPattern += '\W*|'.join(regionList)
-        groupDefPattern += '\W*|empty)+)'
-    else:
-        groupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>empty)'
+    #Generate regular expression to match sentences defining groups
+    groupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>(?:\w+)(?:,[ \w]+)*)'
     r_groupDef = re.compile(groupDefPattern, re.I)
-    
-    #Generate regular expression to match sentences defining sensor groups
-    #Resultant expression is: 'sensor group (?P<name>\w+) is (?P<items>(?:sensor1,? ?|sensor2,? ?|sensor3,? ?|empty)+)'
-    if sensorList:
-        sensorGroupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>(?:'
-        sensorGroupDefPattern += '\W*|'.join(sensorList)
-        sensorGroupDefPattern += '\W*|empty)+)'
-    else:
-        sensorGroupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>empty)'
-    r_sensorGroupDef = re.compile(sensorGroupDefPattern, re.I)
-
-    #Generate regular expression to match sentences defining action groups
-    #Resultant expression is: 'group (?P<names>\w+) is (?P<items>(?:action1,? ?|action2,? ?|action3,? ?|empty)+)'
-    if robotPropList:
-        actionGroupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>(?:'
-        actionGroupDefPattern += '\W*|'.join(robotPropList)
-        actionGroupDefPattern += '\W*|empty)+)'
-    else:
-        actionGroupDefPattern = r'\s*group (?P<name>\w+) is (?P<items>empty)'
-    r_actionGroupDef = re.compile(actionGroupDefPattern, re.I)
     
     #Generate regular expression to match sentences defining correlations
     correlationDefPattern = r'((?:\w+,? )+)correspond(?:s)? to((?:,? \w+)+)'
@@ -125,45 +99,51 @@ def writeSpec(text, sensorList, regionList, robotPropList):
 
         #If there is a newline at the end, remove it
         if re.search('\n$',line):
-            line = re.sub('\n$','',line)
+            line = re.sub('\n$',' ',line)
         
-        #Find any region group definitons
+        #print line
+        
+        #Find any group definitons
         m_groupDef = r_groupDef.match(line)
         if m_groupDef:
-            #Add semantics of group to our grammar string
+            #Add an entry to the grammar for the group defined in this line
+
             groupName = m_groupDef.group('name')
-            #We want to recognize the group name with or without a trailing 's'
-            grammarText += '\nGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
-            #Add specified regions to our dictionary of region groups
-            regionGroups[groupName] = filter(lambda x: x!='empty',re.split(r',\W*', m_groupDef.group('items')))
-            allGroups[groupName] = regionGroups[groupName]
-            #print '\tGroups updated: ' + str(regionGroups)
+            groupItems = filter(lambda x: x != None and x!='empty', m_groupDef.group('items').replace(' or ',' | ').split(', '))
+            groupItems = [item.strip() for item in groupItems]
 
-        #Find any sensor group definitions
-        m_sensorGroupDef = r_sensorGroupDef.match(line)
-        if m_sensorGroupDef:
-            #Add semantics of group to our grammar string
-            groupName = m_sensorGroupDef.group('name')
-            #We want to recognize the group name with or without a trailing 's'
-            grammarText += '\nSENSORGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
-            #Add specified sensors to our dictionary of sensor groups
-            sensorGroups[groupName] = filter(lambda x: x!='empty',re.split(r',\W*', m_sensorGroupDef.group('items')))
-            allGroups[groupName] = sensorGroups[groupName]
-            #print '\tSensor groups updated: ' + str(sensorGroups)
+            #Determine which kind of group this could be defining
+            regionGroup = True
+            sensorGroup = True
+            actionGroup = True
+            for item in groupItems:
+                if item not in regionList and item != 'empty' and not all(x in regionList for x in item.split(' | ')):
+                    regionGroup = False
+                if item not in sensorList and item != 'empty'and not all(x in sensorList for x in item.split(' | ')):
+                    sensorGroup = False
+                if item not in robotPropList and item != 'empty'and not all(x in robotPropList for x in item.split(' | ')):
+                    actionGroup = False
 
-        #Find any action group definitions
-        m_actionGroupDef = r_actionGroupDef.match(line)
-        if m_actionGroupDef:
-            #Add semantics of group to our grammar string
-            groupName = m_actionGroupDef.group('name')
-            #We want to recognize the group name with or without a trailing 's'
-            grammarText += '\nACTIONGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
-            #Add specified sensors to our dictionary of action groups
-            actionGroups[groupName] = filter(lambda x: x!='empty',re.split(r',\W*', m_actionGroupDef.group('items')))
-            allGroups[groupName] = actionGroups[groupName]
-            #print '\tAction groups updated: ' + str(actionGroups)
+            #Extend grammar for all possible group types
+            if regionGroup:
+                grammarText += '\nGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
+                regionGroups[groupName] = groupItems
+                #print '\tRegion groups updated: ' + str(regionGroups)
+            if sensorGroup:
+                grammarText += '\nSENSORGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''     
+                sensorGroups[groupName] = groupItems
+                #print '\tSensor groups updated: ' + str(sensorGroups)
+            if actionGroup:
+                grammarText += '\nACTIONGROUP[SEM=<' + groupName + '>] -> \'' + groupName + '\' | \''+groupName+'s\' | \''+re.sub(r'(\w+)s',r'\1',groupName)+'\''
+                actionGroups[groupName] = groupItems
+                #print '\tAction groups updated: ' + str(actionGroups)
 
-        if m_groupDef or m_sensorGroupDef or m_actionGroupDef: continue
+            if regionGroup or sensorGroup or actionGroup:
+                allGroups[groupName] = groupItems
+            else:
+                print('ERROR: Could not create group out of items ' + groupItems)
+
+        if m_groupDef: continue
 
         #Find any correlation definitions
         m_correlationDef = r_correlationDef.match(line)
