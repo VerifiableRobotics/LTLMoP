@@ -16,6 +16,8 @@ import re
 # TODO: make f/s adjustments easy in the future, somehow?
 # TODO: minimize interdependence so constantine can use
 # TODO: classmethod constructor that creates correct subclass based on filename
+# TODO: clarify distinction between propositions as in bivalent t/f-only domains, propositions as raw
+#       low-level prop names, and domains
 
 class Domain:
     """
@@ -50,12 +52,13 @@ class Domain:
             if value_mapping is None:
                 raise TypeError("Cannot create domain without either value_mapping or num_props specified.")
             else:
-                self.num_props = max(1,int(math.ceil(math.log(len(value_mapping),2))))
+                # Calculate the minimum number of bits necessary; note that we use max(1,...) because log(1)==0
+                self.num_props = max(1, int(math.ceil(math.log(len(value_mapping),2))))
         else:
             self.num_props = num_props
 
     def propAssignmentsToValue(self, prop_assignments):
-        """ Return the value of this domain, based on a dictionary [prop_name(str)->value(bool)] of 
+        """ Return the value of this domain, based on a dictionary [prop_name(str)->value(bool)] of
             the values of the propositions composing this domain.
         """
         n = self.propAssignmentsToNumericValue(prop_assignments)
@@ -71,8 +74,8 @@ class Domain:
         """
 
         value = 0
-        for bit in range(self.num_props):
-            if prop_assignments["{}_b{}".format(self.name, bit)]:
+        for bit, prop_name in enumerate(self.getPropositions()):
+            if prop_assignments[prop_name]:
                 if self.endianness == Domain.B0_IS_MSB:
                     value += 2**((self.num_props-1)-bit)
                 else:
@@ -85,8 +88,11 @@ class Domain:
             of propositions composing this domain
         """
 
-        if isinstance(value, int) or self.value_mapping is None:
-            n = value
+        if self.value_mapping is None:
+            if isinstance(value, int):
+                n = value
+            else:
+                raise TypeError("Non-integral values are not permitted without a value_mapping.")
         else:
             n = self.value_mapping.index(value)
 
@@ -96,15 +102,25 @@ class Domain:
         """ Convert an integer value into the corresponding dictionary [prop_name(str)->value(bool)]
             of propositions composing this domain
         """
+
+        # Perform input sanity checks
         if not isinstance(number, int):
             raise TypeError("Cannot set domain to non-integral value.")
+
         if number < 0:
             raise TypeError("Cannot set domain to negative value.")
-        
+
+        # Convert to a left-padded bitstring
         bs = "{0:0>{1}}".format(bin(number)[2:], self.num_props)
 
-        return {"{}_b{}".format(self.name, bit):(v=="1") for bit, v in 
-                enumerate(bs if self.endianness == Domain.B0_IS_MSB else reversed(bs))} 
+        # Create a dictionary based on the bitstring
+        return {"{}_b{}".format(self.name, bit):(v=="1") for bit, v in
+                enumerate(bs if self.endianness == Domain.B0_IS_MSB else reversed(bs))}
+
+    def getPropositions(self):
+        """ Returns a list of the names of the propositions that are covered by this domain. """
+
+        return ["{}_b{}".format(self.name, bit) for bit in range(self.num_props)]
 
     def __str__(self):
         return '<Domain "{0}" ({0}_b0:{0}_b{1})>'.format(self.name, self.num_props-1)
@@ -118,47 +134,82 @@ class State:
     When created, a reference to the parent StateCollection needs to be be
     passed so that the state is aware of its evaluation context
     """
-    
-    def __init__(self, parent, true_props):
+
+    def __init__(self, parent, prop_assignments):
         if not isinstance(parent, StateCollection):
             raise TypeError("The parent of a State must be a StateCollection.")
 
         self.context = parent
-        self.true_props = frozenset(true_props) # set of names of propositions that are true in this state
+        self.true_props = set() # Set of names of propositions that are true in this state
+        self.setPropValues(prop_assignments)
 
     def getInputs(self, eval_domains=True):
         """ Return a dictionary of input proposition values for this state.
 
             If `eval_domains` is True, ignore individual bit-vector propositions and return only the value of
             the relevant domain in its entirety. """
+
         if eval_domains:
-            pass #TODO
+            return self.getPropValues(self.context.collapseDomains(self.context.input_props))
         else:
             return self.getPropValues(self.context.input_props)
 
     def getOutputs(self, eval_domains=True):
-        return self.getPropValues(self.context.output_props, eval_domains)
+        if eval_domains:
+            return self.getPropValues(self.context.collapseDomains(self.context.output_props))
+        else:
+            return self.getPropValues(self.context.output_props)
 
     def getAll(self, eval_domains=True):
-        return self.getPropValues(self.context.input_props + self.context.output_props, eval_domains)
+        all_props = self.context.input_props + self.context.output_props
+        if eval_domains:
+            return self.getPropValues(self.context.collapseDomains(all_props))
+        else:
+            return self.getPropValues(all_props)
 
-    def getPropValues(self, names, eval_domains=True):
-        return {p:self.getPropValue(p, eval_domains) for p in names} 
+    def getPropValues(self, names):
+        return {p:self.getPropValue(p) for p in names}
 
     def getDomainValue(self, name):
         d = self.context.getDomainByName(name)
         return d.propAssignmentsToValue(self.getAll(eval_domains=False))
 
     def getPropValue(self, name):
-        # Check to see if a domain with this name exists
-        if prop_name in domains:
-            return self.getDomainValue(prop_name)
+        try:
+            return self.getDomainValue(name)
+        except ValueError:
+            return (name in self.true_props)
+
+    def setPropValue(self, prop_name, prop_value):
+        # TODO: warning if prop_assignments are non-sensical, or maybe check whether
+        # we are leaving some values undefined (though this might even be OK in some circumstances?)
+
+        # First, see if this prop_name is a domain
+        try:
+            domain = self.context.getDomainByName(prop_name)
+        except ValueError:
+            domain = None
+
+        if domain is not None:
+            # Handle domains
+            # TODO: Are we being ridiculously inefficient here?  Should we stop using sets?
+            #       Should we only deal with underlying bit-vectors on import/export instead of
+            #       continuously mapping back and forth on every data structure access?
+            for subprop_name, subprop_value in domain.valueToPropAssignments(prop_value).iteritems():
+                self.setPropValue(subprop_name, subprop_value)
         else:
-            return self.prop_values[prop_name]
+            # Handle boolean propositions
+            if not isinstance(prop_value, bool):
+                raise ValueError("Can only assign boolean values to non-Domain propositions.")
+
+            if prop_value:
+                self.true_props.add(prop_name)
+            else:
+                self.true_props.discard(prop_name)
 
     def setPropValues(self, prop_assignments):
-        # TOOD: warning
-        pass
+        for prop_name, prop_value in prop_assignments.iteritems():
+            self.setPropValue(prop_name, prop_value)
 
     def __eq__(self, other):
         return (self.context is other.context) and (self.true_props == other.true_props)
@@ -173,21 +224,59 @@ class StateCollection(list):
     are outputs, as well as domains. (These are not class properties of State
     because different StateCollections might have different settings.)
     """
+
     def __init__(self, *args, **kwds):
         self.input_props = []
         self.output_props = []
-        self.domains = []#[Domain("region", Domain.B0_IS_MSB, regions)]
+        self.domains = []
         super(StateCollection, self).__init__(*args, **kwds)
 
-    def addState(self, ...)
-    def getDomainOfProp(self, prop_name):
+    def addInputDomain(self, domain):
+        self.domains.append(domain)
+        self.input_props.extend(domain.getPropositions())
+
+    def addOutputDomain(self, domain):
+        self.domains.append(domain)
+        self.output_props.extend(domain.getPropositions())
+
+    def addInputPropositions(self, prop_list):
+        # TODO: error on non-list input because strings are quietly accepted..
+        self.input_props.extend(prop_list)
+
+    def addOutputPropositions(self, prop_list):
+        self.output_props.extend(prop_list)
+
+    def addNewState(self, prop_values):
+        self.append(State(self, prop_values))
+
+    def getDomainOfProposition(self, prop_name):
+        # TODO: There might be ways to make all these lookups more efficient
+        return next((d for d in self.domains if prop_name in d.getPropositions()), None)
+
+    def collapseDomains(self, prop_name_list):
+        """ Given a list of proposition names, remove any names contained in a domain
+            and replace them with the name of the relevant domain.
+
+            Note that a given domain will be included in the output list only once,
+            and will be included even if not all of its sub-propositions have been provided. """
+
+        # TODO: this seems excessive
+        new_list = []
+        for prop_name in prop_name_list:
+            d = self.getDomainOfProposition(prop_name)
+            if d is not None:
+                if d.name not in new_list:
+                    new_list.append(d.name)
+            else:
+                new_list.append(prop_name)
+
+        return new_list
 
     def getDomainByName(self, name):
-        for d in self.domains:
-            if d.name == name:
-                return d
-
-        raise ValueError("No domain defined with name '{}'".format(name))
+        try:
+            return next((d for d in self.domains if d.name == name))
+        except StopIteration:
+            raise ValueError("No domain defined with name '{}'".format(name))
 
 class Strategy:
     """
@@ -517,7 +606,7 @@ class Strategy:
             if initial:
                 # First see if we can be in the state given our current region
                 if self.regionFromState(state) != self.current_region: continue
-                
+
                 # Start only with Rank 0 states
                 #if int(state.rank) != 0: continue
 
@@ -646,7 +735,7 @@ class Strategy:
             print "Now in state %s (z = %s)" % (self.current_state.name, self.current_state.rank)
 
 
-         
+
 if __name__ == "__main__":
     #### Test: Domains ####
     animals = ["cat", "dog", "red-backed fairywren", "pseudoscorpion", "midshipman"]
@@ -657,4 +746,19 @@ if __name__ == "__main__":
         p = d.valueToPropAssignments(value)
         print p
         assert value == d.propAssignmentsToValue(p)
-    
+
+    ### Test: StateCollections & States ###
+    states = StateCollection()
+    regions = ["kitchen", "living", "bedroom"]
+    states.addOutputDomain(Domain("region", Domain.B0_IS_MSB, regions))
+    states.addInputDomain(Domain("nearby_animal", Domain.B0_IS_LSB, animals))
+    states.addInputPropositions(("low_battery",))
+    states.addOutputPropositions(("hypothesize", "experiment", "give_up"))
+    states.addNewState({"region": "bedroom", "low_battery": True})
+    print "Inputs:", states.input_props
+    print "Outputs:", states.output_props
+    print "Domains:", states.domains
+    for state in states:
+        print state.true_props
+        print state
+
