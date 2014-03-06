@@ -1,6 +1,35 @@
 class ExecutorStrategyExtensions:
     """ Extensions to Executor to allow for the strategy structure (replacement of old FSA.py)."""
+    
+    def updateOutputs(self, state=None):
+        """
+        Update the values of current outputs in our execution environment to reflect the output
+        proposition values associated with the given state
+        """
 
+        if state is None:
+            state = self.current_state
+
+        for key, output_val in state.outputs.iteritems():  #TODO: state.getOutputs()
+            # Skip any "bitX" region encodings
+            if re.match('^bit\d+$', key): continue
+
+            new_val = (output_val == "1")
+
+            if key not in self.current_outputs or new_val != self.current_outputs[key]:
+                # The state of this output proposition has changed!
+
+                print "Output proposition \"%s\" is now %s!" % (key, str(new_val))
+
+                # Run any actuator handlers if appropriate
+                if key in self.actuators:
+                    self.motion_handler.gotoRegion(self.current_region, self.current_region)  # Stop, in case actuation takes time
+                    #self.actuator_handler.setActuator(key, new_val)
+                    initial=False
+                    exec(self.actuator_handler[key])
+
+                self.current_outputs[key] = new_val
+                
     def regionFromState(self, state):
         #TODO: maybe use domain
         """
@@ -16,7 +45,9 @@ class ExecutorStrategyExtensions:
         except KeyError:
             print "FATAL: Missing expected proposition 'bit%d' in automaton!" % bit
             region = None
-
+        #TODO: 
+        #state.getPropValues(region)
+        
         return region
         
     def findTransitionableStates(self, sensor_state):
@@ -36,7 +67,7 @@ class ExecutorStrategyExtensions:
         if initial:
             state_list = self.states
         else:
-            state_list = self.current_state.transitions
+            state_list = self.current_state.transitions   # TODO: state.getTransitions()
 
         for state in state_list:
             okay = True
@@ -53,7 +84,7 @@ class ExecutorStrategyExtensions:
                 #if int(state.rank) != 0: continue
 
                 # Now check whether our current output values match those of the state
-                for key, value in state.outputs.iteritems():
+                for key, value in state.outputs.iteritems(): #TODO: state.getOutputs()
                     # Ignore "bitX" output propositions
                     if re.match('^bit\d+$', key): continue
 
@@ -64,7 +95,7 @@ class ExecutorStrategyExtensions:
                 if not okay: continue
 
             # Now check whether our current sensor values match those of the state
-            for key, value in state.inputs.iteritems():
+            for key, value in state.inputs.iteritems(): #TODO: state.getInputs()
                 if int(sensor_state[key]) != int(value):
                     okay = False
                     break
@@ -79,8 +110,14 @@ class ExecutorStrategyExtensions:
         Run, run, run the automaton!  (For one evaluation step)
         """
 
+        # Take a snapshot of our current sensor readings
+        # This is so we don't risk the readings changing in the middle of our state search
+        sensor_state = {}
+        for sensor in self.sensors:
+            sensor_state[sensor] = eval(self.sensor_handler[sensor], {'self':self,'initial':False})
+            
         # Let's try to transition
-        next_states = self.findTransitionableStates()
+        next_states = self.findTransitionableStates(sensor_state)
 
         # Make sure we have somewhere to go
         if len(next_states) == 0:
@@ -102,12 +139,9 @@ class ExecutorStrategyExtensions:
 
             self.next_state = random.choice(next_states)
             
-            if not self.proj.compile_options['fastslow']:
+            if self.proj.compile_options['fastslow']:
                 # normal execution
                 self.next_region = self.regionFromState(self.next_state)
-            else:
-                #TODO: execution with fast slow
-                pass  #self.next_region = self.regionFromState(self.next_state)
 
             print "Currently pursuing goal #{}".format(self.next_state.rank)
 
@@ -116,7 +150,7 @@ class ExecutorStrategyExtensions:
 
             if self.proj.compile_options['fastslow']:
                 # Run actuators before motion
-                self.updateOutputs(self.current_state)
+                self.updateOutputs(self.next_state)
 
             if self.transition_contains_motion:
                 # We're going to a new region
