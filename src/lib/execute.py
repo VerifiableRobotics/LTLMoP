@@ -20,6 +20,19 @@
 
 import sys, os, getopt, textwrap
 import threading, subprocess, time
+
+
+# Climb the tree to find out where we are
+p = os.path.abspath(__file__)
+t = ""
+while t != "src":
+    (p, t) = os.path.split(p)
+    if p == "":
+        print "I have no idea where I am; this is ridiculous"
+        sys.exit(1)
+
+sys.path.append(os.path.join(p,"src","lib"))
+
 import fsa, project
 from copy import deepcopy
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
@@ -368,7 +381,7 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
     if show_gui:
         # Create a subprocess
         logging.info("Starting GUI window...")
-        p_gui = subprocess.Popen([sys.executable, "-u", os.path.join(globalConfig.get_ltlmop_root(), "lib", "simGUI.py"), str(listen_port)])
+        p_gui = subprocess.Popen([sys.executable, "-u", "-m", os.path.join(globalConfig.get_ltlmop_root(), "lib", "simGUI"), str(listen_port)])
 
         # Wait for GUI to fully load, to make sure that
         # to make sure all messages are redirected

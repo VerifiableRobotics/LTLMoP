@@ -13,8 +13,18 @@ import re, sys, os, subprocess
 import wx, wx.richtext, wx.stc
 import numpy
 
-sys.path.append("lib")
-sys.path.append(os.path.join("lib","cores"))
+
+# Climb the tree to find out where we are
+p = os.path.abspath(__file__)
+t = ""
+while t != "src":
+    (p, t) = os.path.split(p)
+    if p == "":
+        print "I have no idea where I am; this is ridiculous"
+        sys.exit(1)
+
+sys.path.append(os.path.join(p,"src","lib"))
+sys.path.append(os.path.join(p,"lib","cores"))
 
 from regions import *
 import fileMethods
@@ -1184,7 +1194,7 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = redir
         sys.stderr = redir
 
-        subprocess.Popen([sys.executable, "-u", "-m", os.path.join("lib","execute.py"), "-a", self.proj.getFilenamePrefix() + ".aut", "-s", self.proj.getFilenamePrefix() + ".spec"])
+        subprocess.Popen([sys.executable, "-u", "-m", os.path.join("lib","execute"), "-a", self.proj.getFilenamePrefix() + ".aut", "-s", self.proj.getFilenamePrefix() + ".spec"])
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1291,7 +1301,7 @@ class SpecEditorFrame(wx.Frame):
             self.proj.currentConfig = other_proj.loadConfig()
             self.subprocess["Simulation Configuration"] = None
 
-        self.subprocess["Simulation Configuration"] = AsynchronousProcessThread([sys.executable,"-u",os.path.join(self.proj.ltlmop_root,"lib","configEditor.py"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
+        self.subprocess["Simulation Configuration"] = AsynchronousProcessThread([sys.executable,"-u","-m",os.path.join(self.proj.ltlmop_root,"lib","configEditor"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
 
     def _exportDotFile(self):
         proj_copy = deepcopy(self.proj)
