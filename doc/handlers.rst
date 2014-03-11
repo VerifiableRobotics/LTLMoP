@@ -1,45 +1,32 @@
 Handlers
 ========
 
-Initialization
---------------
-.. automodule:: handlers.init.stage
-    :members:
-    :undoc-members:
 
-.. automodule:: handlers.init.playerclient
-    :members:
-    :undoc-members:
-
-Sensor
+Shared
 ------
-.. automodule:: handlers.sensor.dummySensor
+.. automodule:: handlers.share.dummySensor
     :members:
     :undoc-members:
 
-Actuator
---------
-.. automodule:: handlers.actuator.dummyActuator
-    :members:
-    :undoc-members:
-
-Locomotion Command
--------------------
-.. automodule:: handlers.locomotionCommand.playerLocomotionCommand
-    :members:
-    :undoc-members:
-
-.. automodule:: handlers.locomotionCommand.orcaLocomotionCommand
+.. automodule:: handlers.share.dummyActuator
     :members:
     :undoc-members:
 
 Pose
 -----
-.. automodule:: handlers.pose.stagePose
+.. automodule:: handlers.pose.basicSimPose
     :members:
     :undoc-members:
 
-.. automodule:: handlers.pose.orcaPose
+.. automodule:: handlers.pose.NullPose
+    :members:
+    :undoc-members:
+
+.. automodule:: handlers.pose.rosPose
+    :members:
+    :undoc-members:
+
+.. automodule:: handlers.pose.viconPose
     :members:
     :undoc-members:
 
@@ -59,3 +46,18 @@ Motion Control
     :members:
     :undoc-members:
 
+.. automodule:: handlers.motionControl.vectorController
+    :members:
+    :undoc-members:
+
+.. automodule:: handlers.motionControl.RRTController
+    :members:
+    :undoc-members:
+
+.. automodule:: handlers.motionControl.OMPLController
+    :members:
+    :undoc-members:
+
+Robot-specific handlers
+-----------------------
+TODO

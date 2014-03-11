@@ -25,3 +25,30 @@ Shared Modules
     :members:
     :undoc-members:
 
+.. automodule:: asyncProcesses
+    :members:
+    :undoc-members:
+
+.. automodule:: decomposition
+    :members:
+    :undoc-members:
+
+.. automodule:: handlerSubsystem
+    :members:
+    :undoc-members:
+
+.. automodule:: mapRenderer
+    :members:
+    :undoc-members:
+
+.. automodule:: parseLP
+    :members:
+    :undoc-members:
+
+.. automodule:: resynthesis
+    :members:
+    :undoc-members:
+
+.. automodule:: specCompiler
+    :members:
+    :undoc-members:
