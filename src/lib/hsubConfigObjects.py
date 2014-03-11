@@ -448,6 +448,17 @@ class RobotConfig(object):
                     strRepr + " -- End of Robot <{0}> -- \n".format(self.name)
         return reprString
 
+    def getHandlerByName(self, name):
+        """
+        Returns the handler config of the give name.
+        """
+        for handler_type_class, handler_config in self.handlers.iteritems():
+            if handler_config.name == name:
+                return handler_config
+
+        logging.error("Cannot find handler {!r} for robot {!r}.".format(name, self.name))
+        return None
+
     def getHandlerOfRobot(self, h_type):
         """Get the handler config object of this robot specified by h_type
         h_type is the handler class object specified in lib/handlers/handlerTemplates.py"""

@@ -239,69 +239,69 @@ class HandlerSubsystem:
         logging.error("Could not find handler of type '%s' with name '%s'" % (htype, hname))
         return None
 
-    def string2Method(self,method_string):
+    def string2Method(self, method_string, robots):
         """
-        Return the method object according to the input string
+        Return the HandlerMethodConfig according to the input string from configEditor
+        This functions must be located in HandlerSubsystem in order to get access to handler_configs dictionary
+
+        method_string: a string that stores the information of a method configObj
+                       for example: a = "nao_maeby.NaoSensorHandler.seePerson(name='nao', test=[1,2,3])"
+        robots: a list of robots in the current experiment config. we need this to find the robot type and avaliable handlers
+                based on robot_name
         """
 
-        if not self.handler_dic:
-            logging.error("Cannot find handler dictionary, please load all handlers first.")
-            return
+        if not self.handler_configs:
+            logging.error("Cannot find handler_configs dictionary, please load all handlers first.")
+            return None
 
-        method_info,para_info = method_string.split('(')
-        para_info = para_info.replace(')','')
+        # construct regex for identify each parts
+        method_RE = re.compile("(?P<robot_name>\w+)\.(?P<handler_name>\w+)\.(?P<method_name>\w+)\((?P<para_info>.*?)\)")
 
-        items = method_info.split('.')
-        methodObj = HandlerMethodConfig()
+        result = method_RE.search(method_string)
 
-        if len(items) == 3:
-            robotName = items[0]
-            handlerName = items[1]
-            methodName = items[2]
+        if not result:
+            logging.error("Cannot parse setting {!r}".format(method_string))
+            return None
 
-            handlerObj = None
+        # parse each part
+        robot_name = result.group("robot_name")
+        handler_name = result.group("handler_name")
+        method_name = result.group("method_name")
+        para_info = result.group("para_info")
 
-            if robotName == 'share':
-                # this ia a dummy sensor/actuator
-                for h in self.handler_dic['share']:
-                    if h.name == handlerName:
-                        handlerObj = h
-                        break
-            else:
-                # this is a robot sensor/actuator
-                for robotObj in self.robots:
-                    if robotObj.name == robotName:
-                        if 'sensor' in handlerName.lower():
-                            handlerObj = robotObj.handlers['sensor']
-                        elif 'actuator' in handlerName.lower():
-                            handlerObj = robotObj.handlers['actuator']
-                        else:
-                            logging.error("Cannot recognize handler {}".format(handlerName))
-                            return
+        # find which handler does this method belongs to
+        handler_config = None
 
-                        break
-
-            if handlerObj is None:
-                logging.error("Cannot recognize robot {}".format(robotName))
-                logging.error("I only know about these robots: {!r}".format([r.name for r in self.robots]))
-                return
-
-            for method_obj in handlerObj.methods:
-                if method_obj.name == methodName:
-                    methodObj = method_obj
+        if robot_name == "share":
+            # this ia a dummy sensor/actuator
+            for h in self.handler_configs["share"][ht.SensorHandler] + \
+                     self.handler_configs["share"][ht.ActuatorHandler]:
+                if h.name == handler_name:
+                    handler_config = h
+                    break
+        else:
+            # this is a robot sensor/actuator
+            for robot_config in robots:
+                if robot_config.name == robot_name:
+                    handler_config = robot_config.getHandlerByName(handler_name)
                     break
 
-            for para_name, para_value in re.findall(r'(?P<key>\w+)\s*=\s*(?P<val>"[^"]*"|\'[^\']*\'|[^,]+)', para_info):
-                para_value = para_value.strip("\"\'")
-                for paraObj in methodObj.para:
-                    if paraObj.name == para_name:
-                        paraObj.setValue(para_value)
-                        break
-        else:
-            logging.error("Cannot recognize method {}, please spicify which handler it belongs to.".format(method_info))
-            return
+        # we did not find the correct handler config
+        if handler_config is None:
+            logging.error("Cannot recognize handler {!r} of robot {!r}".format(handler_name, robot_name))
+            logging.error("Please make sure it is correctly loaded")
+            return None
 
-        return methodObj
+        # try to find the method config
+        try:
+            method_config = deepcopy(handler_config.getMethodByName(method_name))
+        except ValueError:
+            return None
+
+        # update parameters of this method
+        method_config.updateParaFromString(para_info)
+
+        return method_config
 
 
     def method2String(self,methodObj,robotName=''):

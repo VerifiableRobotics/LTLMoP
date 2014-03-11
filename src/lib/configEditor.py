@@ -1339,14 +1339,16 @@ class propMappingDialog(wx.Dialog):
         if self.list_box_props.GetStringSelection() in self.proj.all_sensors:
             if self.list_box_robots.GetStringSelection() == "(Simulated)":
                 # TODO: might there be more than one type of handler in share?
-                methods = self.proj.hsub.handler_dic["sensor"]["share"][0].methods
+                methods = self.proj.hsub.handler_configs["share"][ht.SensorHandler][0].methods
             else:
-                methods = r.handlers['sensor'].methods
+                methods = getattr(r.getHandlerOfRobot(ht.SensorHandler), 'methods', [])
+
         elif self.list_box_props.GetStringSelection() in self.proj.all_actuators:
             if self.list_box_robots.GetStringSelection() == "(Simulated)":
-                methods = self.proj.hsub.handler_dic["actuator"]["share"][0].methods
+                # TODO: might there be more than one type of handler in share?
+                methods = self.proj.hsub.handler_configs["share"][ht.ActuatorHandler][0].methods
             else:
-                methods = r.handlers['actuator'].methods
+                methods = getattr(r.getHandlerOfRobot(ht.ActuatorHandler), 'methods', [])
         else:
             print ("WARNING: Selected proposition '%s' that is neither sensor nor actuator. " +
                   "This should be impossible.") % (self.list_box_props.GetStringSelection())
@@ -1448,7 +1450,7 @@ class propMappingDialog(wx.Dialog):
         self.list_box_functions.SetStringSelection(m.group("name"))
 
         #print "matched: ", m.group()
-        self.tempMethod = self.proj.hsub.string2Method(m.group())
+        self.tempMethod = self.proj.hsub.string2Method(m.group(), self.robots)
         drawParamConfigPane(self.panel_method_cfg, self.tempMethod, self.proj)
         self.Layout()
 
