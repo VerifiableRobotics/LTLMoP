@@ -17,7 +17,7 @@ class NaoInitHandler(handlerTemplates.InitHandler):
         """
         Initialization handler for NAO robot.
 
-        ip (string): The ip address of NAO (default=nao.local)
+        ip (string): The ip address of NAO (default="nao.local")
         port (int): The port of NAO (default=9559)
         """
 
