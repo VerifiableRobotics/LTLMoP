@@ -533,6 +533,7 @@ class RobotConfig(object):
                 mat_str = mat_str.replace("array(", "")
                 mat_str = mat_str.replace(")", "")
                 self.calibration_matrix = array(ast.literal_eval(mat_str))
+                if mat_str == "None" or mat_str == "": self.calibration_matrix = array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]])
             except SyntaxError:
                 raise ht.LoadingError("Invalid calibration data found for robot {0}({1})".format(self.name, self.r_type))
                 self._setSuccess()
