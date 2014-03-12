@@ -25,6 +25,7 @@ import socket
 
 import lib.handlers.handlerTemplates as ht
 import lib.globalConfig
+from lib.hsubConfigObjects import ExperimentConfig
 # begin wxGlade: extracode
 # end wxGlade
 
@@ -700,7 +701,7 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: Check for existing untitleds and add a number at the end (steal from reged)
         cfg.name = "Untitled configuration"
-        cfg.fileName = os.path.join(self.proj.hsub.config_parser.config_path, cfg.name.replace(' ','_'))
+        cfg.file_name = os.path.join(self.proj.hsub.config_path, cfg.name.replace(' ','_'))
         # since this config is not loaded, we assume it is complete
         self.proj.hsub.configs.append(cfg)
 
@@ -710,13 +711,14 @@ class simSetupDialog(wx.Dialog):
         event.Skip()
 
     def onConfigImport(self, event): # wxGlade: simSetupDialog.<event_handler>
-        fileName = wx.FileSelector("Import Config File", default_extension="config",
+        file_name = wx.FileSelector("Import Config File", default_extension="config",
                                   wildcard="Experiment config files (*.config)|*.config",
                                   flags = wx.OPEN | wx.FILE_MUST_EXIST)
-        if fileName == "": return
+        if file_name == "": return
 
         # import the config file
-        cfg = self.proj.hsub.config_parser.loadConfigFile(fileName)
+        cfg = ExperimentConfig()
+        cfg.fromFile(file_name, self.proj.hsub)
         self.proj.hsub.configs.append(cfg)
         self.list_box_experiment_name.Append(cfg.name, cfg)
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
