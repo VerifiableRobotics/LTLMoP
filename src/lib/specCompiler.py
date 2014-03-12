@@ -21,6 +21,8 @@ from cores.coreUtils import *
 
 from asyncProcesses import AsynchronousProcessThread
 
+import strategy
+
 # Hack needed to ensure there's only one
 _SLURP_SPEC_GENERATOR = None
 
@@ -518,12 +520,13 @@ class SpecCompiler(object):
         proj_copy.sensor_handler = None
         proj_copy.actuator_handler = None
         proj_copy.h_instance = None
-
-        aut = fsa.Automaton(proj_copy)
-
-        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
+  
+        aut = fsa.FSAStrategy()       
+        region_domain = strategy.Domain("region",  self.proj.rfi.regions, strategy.Domain.B0_IS_MSB)
+        aut.configurePropositions(self.proj.enabled_sensors + [], self.proj.enabled_actuators + self.proj.all_customs +  [region_domain])
+        aut.loadFromFile(self.proj.getFilenamePrefix()+".aut")     
         
-        nonTrivial = any([len(s.transitions) > 0 for s in aut.states])
+        nonTrivial = any([len(aut.findTransitionableStates({},s)) > 0 for s in aut.states])
 
         return nonTrivial
 

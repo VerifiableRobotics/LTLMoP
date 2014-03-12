@@ -1,6 +1,6 @@
 import fsa
 import sys
-
+import logging
 
 class ExecutorStrategyExtensions(object):
     """ Extensions to Executor to allow for the strategy structure (replacement of old FSA.py)."""
@@ -21,7 +21,7 @@ class ExecutorStrategyExtensions(object):
         if state is None:
             state = self.current_state
         
-        for key, output_val in state.getOutputs()
+        for key, output_val in state.getOutputs():
             #TODO: figure out if the key is called region now. I think so. 
             print >> sys.__stdout__, key, output_val
             # Skip any "bitX" region encodings

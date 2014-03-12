@@ -29,6 +29,7 @@ import random
 import math
 import traceback
 from resynthesis import ExecutorResynthesisExtensions
+from executeStrategy import ExecutorStrategyExtensions
 import globalConfig, logging
 
 
@@ -53,7 +54,7 @@ def usage(script_name):
                               -s FILE, --spec-file FILE:
                                   Load experiment configuration from FILE """ % script_name)
 
-class LTLMoPExecutor(object, ExecutorResynthesisExtensions, ExecutorStrategyExtensions):
+class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, object ):
     """
     This is the main execution object, which combines the synthesized discrete automaton
     with a set of handlers (as specified in a .config file) to create and run a hybrid controller
@@ -64,7 +65,7 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions, ExecutorStrategyExte
         Create a new execution context object
         """
         super(LTLMoPExecutor, self).__init__()
-        
+
         self.proj = project.Project() # this is the project that we are currently using to execute
         self.aut = None
 
@@ -107,9 +108,8 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions, ExecutorStrategyExte
         logging.info("Loading automaton...")
         
         aut = fsa.FSAStrategy()       
-        region_domain = strategy.Domain("region", strategy.Domain.B0_IS_MSB, self.proj.rfi.regions)
-        aut.configurePropositions(self.proj.enabled_sensors, self.proj.enabled_actuators + self.proj.all_customs,
-                            [], [region_domain])
+        region_domain = strategy.Domain("region",  self.proj.rfi.regions, strategy.Domain.B0_IS_MSB)
+        aut.configurePropositions(self.proj.enabled_sensors + [], self.proj.enabled_actuators + self.proj.all_customs +  [region_domain])
         aut.loadFromFile(filename)
         
         return aut
@@ -184,8 +184,8 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions, ExecutorStrategyExte
         # Redirect all output to the log
         redir = RedirectText(self.externalEventTarget.handleEvent)
 
-        sys.stdout = redir
-        sys.stderr = redir
+        #sys.stdout = redir
+        #sys.stderr = redir
 
         self.externalEventTargetRegistered.set()
 
@@ -235,18 +235,19 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions, ExecutorStrategyExte
 
         ### Figure out where we should start from
 
-        init_region = self._getCurrentRegionFromPose()
+        # FIXME: make getcurrentregion return object instead of number, also fix the isNone check
+        init_region = self.proj.rfi.regions[self._getCurrentRegionFromPose()]
         if init_region is None:
             logging.error("Initial pose not inside any region!")
             sys.exit(-1)
 
-        logging.info("Starting from initial region: " + self.proj.rfi.regions[init_region].name)
+        logging.info("Starting from initial region: " + init_region.name)
 
         ### Have the FSA find a valid initial state
         # Figure out our initially true outputs and T/F inputs
         # store region number, true and false sensors, and true acutators
         init_outputsInputs = {"region": init_region} 
-        
+
         if firstRun or self.aut is None:   
             for prop in self.proj.currentConfig.initial_truths:
                 if prop not in self.proj.enabled_sensors:
@@ -254,21 +255,23 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions, ExecutorStrategyExte
 
         else:
             init_outputsInputs = dict(init_outputsInputs.items() + self.current_outputs.items())            
-            
+        
+
         #TODO: need to fetch from handleSub
         self.sensor_handler = self.proj.sensor_handler
         for sensor in self.proj.enabled_sensors:
-            init_outputsInputs[sensor] = eval(self.sensor_handler[sensor], {'self':self,'initial':False}) 
-                   
+            init_outputsInputs[sensor] = eval(self.sensor_handler[sensor], {'self':self.proj,'initial':False}) 
+
         init_state = new_aut.searchForState(init_outputsInputs)
 
         if init_state is None:
             logging.error("No suitable initial state found; unable to execute. Quitting...")
             sys.exit(-1)
         else:
-            logging.info("Starting from state %s." % init_state.name)
-
+            logging.info("Starting from state %s." % init_state.state_id)
+        logging.debug("sdfsdf")
         self.aut = new_aut
+        self.aut.current_state = init_state
 
     def run(self):
         ### Get everything moving
