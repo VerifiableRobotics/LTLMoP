@@ -371,8 +371,8 @@ class StateCollection(list):
     Define some multi-valent propositions:
     >>> regions = ["kitchen", "living", "bedroom"]
     >>> animals = ["cat", "dog", "red-backed fairywren", "pseudoscorpion", "midshipman"]
-    >>> states.addOutputDomain(Domain("region", regions))
-    >>> states.addInputDomain(Domain("nearby_animal", animals, Domain.B0_IS_LSB))
+    >>> states.addOutputPropositions([Domain("region", regions)])
+    >>> states.addInputPropositions([Domain("nearby_animal", animals, Domain.B0_IS_LSB)])
 
     Create a new state:
     >>> test_assignment = {"region": "bedroom", "nearby_animal": "midshipman",
@@ -389,48 +389,80 @@ class StateCollection(list):
     >>> s2.getLTLRepresentation()
     '!e.nearby_animal_b1 & !e.nearby_animal_b0 & e.nearby_animal_b2 & e.low_battery & s.region_b0 & !s.region_b1 & !s.give_up & !s.experiment & s.hypothesize'
     """
-    # TODO: remove add*domain functions and let add*props take both
 
     def __init__(self, *args, **kwds):
         self.clearPropositionsAndDomains()
         super(StateCollection, self).__init__(*args, **kwds)
 
     def clearPropositionsAndDomains(self):
+        """ Remove all propositions and domain definitions. """
+
         self.input_props = []
         self.output_props = []
         self.domains = []
 
     def clearStates(self):
+        """ Remove all states. """
+
         del self[:]
 
-    def addInputDomain(self, domain):
-        self.domains.append(domain)
-        self.input_props.append(domain.name)
+    def _addPropositions(self, prop_list, target):
+        """ Take a mixed list of plain propositions (str) and Domain objects
+            and load them into the proper `target` location. """
 
-    def addOutputDomain(self, domain):
-        self.domains.append(domain)
-        self.output_props.append(domain.name)
+        # Make sure we don't accept bare strings, which are also iterables
+        if not isinstance(prop_list, (tuple, list)):
+            raise TypeError("prop_list must be a list or tuple")
+
+        for prop in prop_list:
+            if isinstance(prop, Domain):
+                self.domains.append(prop)
+                target.append(prop.name)
+            else:
+                target.append(prop)
 
     def addInputPropositions(self, prop_list):
-        # TODO: error on non-list input because strings are quietly accepted..
-        self.input_props.extend(prop_list)
+        """ Register the propositions in `prop_list` as input propositions.
+            Each element of `prop_list` may be either a bare string,
+            which is treated as the name of a binary proposition,
+            or a Domain object, which indicates a multivalent proposition. """
+
+        self._addPropositions(prop_list, self.input_props)
 
     def addOutputPropositions(self, prop_list):
-        self.output_props.extend(prop_list)
+        """ Register the propositions in `prop_list` as output propositions.
+            Each element of `prop_list` may be either a bare string,
+            which is treated as the name of a binary proposition,
+            or a Domain object, which indicates a multivalent proposition. """
 
-    def addNewState(self, prop_values=None):
-        new_state = State(self, prop_values)
+        self._addPropositions(prop_list, self.output_props)
+
+    def addNewState(self, prop_assignments=None):
+        """ Create a new state with the assignment `prop_assignment` and
+            add it to the StateCollection.
+
+            Returns the new state. """
+
+        new_state = State(self, prop_assignments)
         self.append(new_state)
 
         return new_state
 
     def getDomainOfProposition(self, prop_name):
-        # TODO: There might be ways to make all these lookups more efficient
-        #       Maybe just use the beginning of the proposition's name?  More
-        #       fragile, though.
+        """ Returns the Domain object for which proposition `prop_name`
+            is a subproposition.
+
+            If no such Domain is found, returns None. """
+
+        # TODO: We could do this faster by just using the beginning of the
+        #       proposition's name-- it would be more hard-coded, though.
         return next((d for d in self.domains if prop_name in d.getPropositions()), None)
 
     def getDomainByName(self, name):
+        """ Returns the Domain object with name `name`.
+
+            If no such Domain is found, returns None. """
+
         return next((d for d in self.domains if d.name == name), None)
 
 class Strategy(object):
