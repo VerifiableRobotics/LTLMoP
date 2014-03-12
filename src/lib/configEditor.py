@@ -834,12 +834,19 @@ class simSetupDialog(wx.Dialog):
         event.Skip()
 
     def onClickApply(self, event): # wxGlade: simSetupDialog.<event_handler>
+
+        # Get the current experiment config
+        self.proj.currentConfig = self._getSelectedExperimentConfig()
+
+        if len(self.proj.currentConfig.robots) == 0:
+            wx.MessageBox("There is no robot in the current experiment config. Please add one before saving.", style = wx.OK | wx.ICON_ERROR)
+            event.Skip(False)
+            return
+
         # Save the config files
-        self.proj.hsub.configs = self.proj.hsub.configs
         self.proj.hsub.saveAllConfigFiles()
 
         # Save the name of the currently active config in the spec file
-        self.proj.currentConfig = self._getSelectedExperimentConfig()
         self.proj.writeSpecFile()
 
         event.Skip()
@@ -848,8 +855,9 @@ class simSetupDialog(wx.Dialog):
         self.onClickApply(event)
 
         # Clean up
-        self.doClose(event)
-        event.Skip()
+        if event.GetSkipped():
+            self.doClose(event)
+            event.Skip()
 
     def _getSelectedExperimentConfig(self):
         pos = self.list_box_experiment_name.GetSelection()
