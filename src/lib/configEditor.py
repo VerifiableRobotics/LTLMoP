@@ -958,9 +958,7 @@ class addRobotDialog(wx.Dialog):
         self.combo_box_robottype.Clear()
 
         for r in self.proj.hsub.robot_configs:
-            self.combo_box_robottype.Append(r.r_type)
-            if r.r_type == self.robot.r_type:
-                self.combo_box_robottype.SetStringSelection(r)
+            self.combo_box_robottype.Append(r.r_type + r.successfully_loaded)
 
     def _populateHandlerCombos(self):
         # Populate based on current robot type
@@ -1021,7 +1019,7 @@ class addRobotDialog(wx.Dialog):
         self.robot = robot
         if original:
             self.original_robot = deepcopy(robot)
-        self.combo_box_robottype.SetStringSelection(self.robot.r_type)
+        self.combo_box_robottype.SetStringSelection(self.robot.r_type + self.robot.successfully_loaded)
         self.text_ctrl_robotname.SetValue(self.robot.name)
         self._populateHandlerCombos()
 
@@ -1147,7 +1145,9 @@ class addRobotDialog(wx.Dialog):
         event.Skip()
 
     def onChooseRobot(self, event): # wxGlade: addRobotDialog.<event_handler>
-        self.robot = deepcopy(self.proj.hsub.getRobotByType(event.GetEventObject().GetValue()))
+        # Strip the trailing note
+        robot_type = event.GetEventObject().GetValue().replace(" (Not successfully loaded)", "")
+        self.robot = deepcopy(self.proj.hsub.getRobotByType(robot_type))
         self._robot2dialog(self.robot)
         event.Skip()
 
