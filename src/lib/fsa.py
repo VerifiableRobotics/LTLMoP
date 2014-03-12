@@ -161,11 +161,13 @@ def FSATest(spec_file_name):
     print "0th state:", s.states[0]
 
     initial_region = rfi.regions[rfi.indexOfRegionWithName("p3")]
-    start_state = s.searchForState({"region": initial_region, "person": True})
+    start_state = s.searchForState({"region": initial_region, "person": False})
     print "Start state:", start_state
 
     print "Successors:"
     pprint.pprint(s.findTransitionableStates({}, from_state=start_state))
+
+    #s.exportAsDotFile("test.dot")
 
 if __name__ == "__main__":
     FSATest(sys.argv[1])
