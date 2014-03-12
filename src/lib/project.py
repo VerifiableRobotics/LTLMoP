@@ -119,6 +119,9 @@ class Project:
             return (None, None)
 
         r = self.currentConfig.getRobotByName(self.currentConfig.main_robot)
+        if r is None:
+            return (None, None)
+
         if r.calibration_matrix is None:
             logging.warning("Main robot has no calibration data.  Using identity matrix.")
             T = eye(3)
