@@ -15,6 +15,8 @@ class FSAStrategy(strategy.Strategy):
     """
 
     def __init__(self):
+        super(FSAStrategy, self).__init__()
+
         # A collection of state objects belonging to the automaton
         self.states = strategy.StateCollection()
         self.transitions = defaultdict(lambda: defaultdict(bool)) # (state1, state2) -> T/F
