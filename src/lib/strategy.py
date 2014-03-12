@@ -10,6 +10,7 @@
 
 import math
 import re
+import logging
 
 # TODO: make sure this works with mopsy
 # TODO: classmethod constructor that creates correct subclass based on filename
@@ -30,6 +31,18 @@ class Domain(object):
         `num_props` can be used to specify the size of the vector; if not
     specified, this will be automatically calculated based on the size of the
     `value_mapping` array.
+
+    Define a domain:
+    >>> animals = ["cat", "dog", "red-backed fairywren", "pseudoscorpion", "midshipman"]
+    >>> d = Domain("favorite_animal", animals)
+
+    Notice that by using a domain we've reduced the number of props necessary
+    >>> assert d.num_props == 3
+
+    Conversion can go in both directions:
+    >>> for value in animals:
+    ...     p = d.valueToPropAssignments(value)
+    ...     assert value == d.propAssignmentsToValue(p)
     """
 
     # TODO: add code for generating LTL mutexes
@@ -38,7 +51,7 @@ class Domain(object):
     # Constants to indicate endianness options
     B0_IS_MSB, B0_IS_LSB = range(2)
 
-    def __init__(self, name, endianness=B0_IS_MSB, value_mapping=None, num_props=None):
+    def __init__(self, name, value_mapping=None, endianness=B0_IS_MSB, num_props=None):
         if not re.match(r"^[A-Za-z][A-Za-z0-9_]*$", name):
             raise ValueError("Name must begin with a letter and contain only alphanumeric characters or underscores.")
 
@@ -274,6 +287,8 @@ class State(object):
     def setPropValue(self, prop_name, prop_value):
         """ Sets the assignment of propositions `prop_name` to `prop_value` in this state.
             A lot of sanity checking is performed to ensure the name and value are both appropriate. """
+        # FIXME: Changing the value of subpropositions after the domain
+        # has been upconverted will cause problems
 
         # Check that this is a known prop_name
         if (prop_name not in self.context.input_props) and \
@@ -341,7 +356,32 @@ class StateCollection(list):
     meta-information about states, such as which propositions are inputs and which
     are outputs, as well as domains. (These are not class properties of State
     because different StateCollections might have different settings.)
+
+    Create a new state collection:
+    >>> states = StateCollection()
+
+    Define some basic true/false propositions:
+    >>> states.addInputPropositions(("low_battery",))
+    >>> states.addOutputPropositions(("hypothesize", "experiment", "give_up"))
+
+    Define some multi-valent propositions:
+    >>> regions = ["kitchen", "living", "bedroom"]
+    >>> animals = ["cat", "dog", "red-backed fairywren", "pseudoscorpion", "midshipman"]
+    >>> states.addOutputDomain(Domain("region", regions))
+    >>> states.addInputDomain(Domain("nearby_animal", animals, Domain.B0_IS_LSB))
+
+    Create a new state:
+    >>> test_assignment = {"region": "bedroom", "nearby_animal": "midshipman",
+    ...                    "low_battery": True, "hypothesize": True,
+    ...                    "experiment":False, "give_up":False}
+    >>> s = states.addNewState(test_assignment)
+    >>> assert s.satisfies(test_assignment)
+
+    You can also query and set the state values using low-level subpropositions:
+    >>> s2 = states.addNewState(s.getAll(expand_domains=True))
+    >>> assert s2.satisfies(test_assignment)
     """
+    # TODO: remove add*domain functions and let add*props take both
 
     def __init__(self, *args, **kwds):
         self.clearPropositionsAndDomains()
@@ -378,6 +418,8 @@ class StateCollection(list):
 
     def getDomainOfProposition(self, prop_name):
         # TODO: There might be ways to make all these lookups more efficient
+        #       Maybe just use the beginning of the proposition's name?  More
+        #       fragile, though.
         return next((d for d in self.domains if prop_name in d.getPropositions()), None)
 
     def getDomainByName(self, name):
@@ -543,35 +585,9 @@ class Strategy(object):
         #input.close()
         #output.close()
 
-
-
-
         ## Write the transitions with the input labels (only inputs that are true)
 
 
 if __name__ == "__main__":
-    #### Test: Domains ####
-    animals = ["cat", "dog", "red-backed fairywren", "pseudoscorpion", "midshipman"]
-    d = Domain("favorite_animal", value_mapping=animals)
-    print d
-    assert d.num_props == 3
-    for value in animals:
-        p = d.valueToPropAssignments(value)
-        print p
-        assert value == d.propAssignmentsToValue(p)
-
-    ### Test: StateCollections & States ###
-    states = StateCollection()
-    regions = ["kitchen", "living", "bedroom"]
-    states.addOutputDomain(Domain("region", Domain.B0_IS_MSB, regions))
-    states.addInputDomain(Domain("nearby_animal", Domain.B0_IS_LSB, animals))
-    states.addInputPropositions(("low_battery",))
-    states.addOutputPropositions(("hypothesize", "experiment", "give_up"))
-    states.addNewState({"region": "bedroom", "nearby_animal": "midshipman", "low_battery": True, "hypothesize": True, "experiment":False, "give_up":False})
-    print "Inputs:", states.input_props
-    print "Outputs:", states.output_props
-    print "Domains:", states.domains
-    for state in states:
-        print state.getAll(expand_domains=True)
-        print state
-
+    import doctest
+    doctest.testmod()
