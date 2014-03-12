@@ -516,6 +516,7 @@ class simSetupDialog(wx.Dialog):
 
         self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckProp, self.list_box_init_customs)
         self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckProp, self.list_box_init_actions)
+        self.list_box_experiment_name.Bind(wx.EVT_LEFT_DOWN, self.onLoseFocusSimName)
 
         self.Bind(wx.EVT_CLOSE, self.doClose)
 
@@ -689,6 +690,21 @@ class simSetupDialog(wx.Dialog):
         if len(cfg.robots) > 0:
             self.list_box_robots.Select(0)
 
+    def onLoseFocusSimName(self, event):
+        if len(self.text_ctrl_sim_experiment_name.GetValue()) == 0:
+            d = wx.MessageDialog(self, "Current experiment config needs a name. Please add one.", style = wx.OK | wx.ICON_ERROR)
+            d.ShowModal()
+            event.Skip(False)
+            return
+
+        if  [r.name for r in self.proj.hsub.configs].count(self.text_ctrl_sim_experiment_name.GetValue()) > 1:
+            d = wx.MessageDialog(self, "Current experiment config has the same name with another config. Please change it.", style = wx.OK | wx.ICON_ERROR)
+            d.ShowModal()
+            event.Skip(False)
+            return
+
+        event.Skip()
+
     def onSimLoad(self, event): # wxGlade: simSetupDialog.<event_handler>
         cfg = event.GetClientData()
         if cfg is not None:
@@ -701,6 +717,7 @@ class simSetupDialog(wx.Dialog):
 
         # TODO: Check for existing untitleds and add a number at the end (steal from reged)
         cfg.name = "Untitled configuration"
+        cfg.name = self._normalizeConfigName(cfg.name)
         cfg.file_name = os.path.join(self.proj.hsub.config_path, cfg.name.replace(' ','_'))
         # since this config is not loaded, we assume it is complete
         self.proj.hsub.configs.append(cfg)
@@ -709,6 +726,13 @@ class simSetupDialog(wx.Dialog):
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
         self._cfg2dialog(cfg)
         event.Skip()
+
+    def _normalizeConfigName(self, name):
+        """ Make sure the config name is not taken already"""
+        # Make sure another config doesn't already have this name
+        while name in (r.name for r in self.proj.hsub.configs):
+            name = name + " copy"
+        return name
 
     def onConfigImport(self, event): # wxGlade: simSetupDialog.<event_handler>
         file_name = wx.FileSelector("Import Config File", default_extension="config",
@@ -719,6 +743,7 @@ class simSetupDialog(wx.Dialog):
         # import the config file
         cfg = ExperimentConfig()
         cfg.fromFile(file_name, self.proj.hsub)
+        cfg.name = self._normalizeConfigName(cfg.name)
         self.proj.hsub.configs.append(cfg)
         self.list_box_experiment_name.Append(cfg.name, cfg)
         self.list_box_experiment_name.Select(self.list_box_experiment_name.GetCount()-1)
@@ -839,7 +864,20 @@ class simSetupDialog(wx.Dialog):
         self.proj.currentConfig = self._getSelectedExperimentConfig()
 
         if len(self.proj.currentConfig.robots) == 0:
-            wx.MessageBox("There is no robot in the current experiment config. Please add one before saving.", style = wx.OK | wx.ICON_ERROR)
+            d = wx.MessageDialog(self, "There is no robot in the current experiment config. Please add one before saving.", style = wx.OK | wx.ICON_ERROR)
+            d.ShowModal()
+            event.Skip(False)
+            return
+
+        if len(self.proj.currentConfig.name) == 0:
+            d = wx.MessageDialog(self, "Current experiment config needs a name. Please add one before saving.", style = wx.OK | wx.ICON_ERROR)
+            d.ShowModal()
+            event.Skip(False)
+            return
+
+        if  [r.name for r in self.proj.hsub.configs].count(self.text_ctrl_sim_experiment_name.GetValue()) > 1:
+            d = wx.MessageDialog(self, "Current experiment config has the same name with another config. Please change it.", style = wx.OK | wx.ICON_ERROR)
+            d.ShowModal()
             event.Skip(False)
             return
 
