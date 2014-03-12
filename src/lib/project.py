@@ -226,7 +226,14 @@ class Project:
                 logging.warning("No experiment configuration defined")
                 return None
 
+        # look for experiment config in the list of loaded configs
         for c in self.hsub.configs:
+            if c.name.lower() == name.lower():
+                return c
+
+        # look for experiment config in the list of incompletely loaded configs
+        for c in self.hsub.configs_incomplete:
+            print c
             if c.name.lower() == name.lower():
                 return c
 
