@@ -39,7 +39,7 @@ class HandlerSubsystem:
 
         # Create Handler path
         self.handler_path = os.path.join('lib','handlers')
-        # Create config parser
+        # Create config path
         self.config_path = os.path.join(self.proj.project_root,'configs')
 
     def _getSubdirectories(self, path):
@@ -193,7 +193,7 @@ class HandlerSubsystem:
         if not os.path.exists(self.config_path):
             os.mkdir(self.config_path)
 
-        # this list stores the experiment configs that name are not loaded successfully
+        # this list stores the experiment config names that are not loaded successfully
         self.configs_incomplete = []
 
         for file_name in os.listdir(self.config_path):
@@ -506,8 +506,8 @@ class HandlerSubsystem:
             else:
                 logging.error("Could not save config file {0}".format(experiment_config.file_name))
 
-        # remove delected files
-        # do not delect unsuccessfully loaded configs
+        # remove deleted files
+        # do not delete unsuccessfully loaded configs
         for config_file in os.listdir(self.config_path):
             if (os.path.join(self.config_path, config_file) not in saved_file_name) \
                     and (os.path.join(self.config_path, config_file) not in self.configs_incomplete):
