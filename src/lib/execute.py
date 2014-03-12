@@ -20,7 +20,7 @@
 
 import sys, os, getopt, textwrap
 import threading, subprocess, time
-import fsa, project
+import fsa, strategy, project
 from copy import deepcopy
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 import xmlrpclib
@@ -53,7 +53,7 @@ def usage(script_name):
                               -s FILE, --spec-file FILE:
                                   Load experiment configuration from FILE """ % script_name)
 
-class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
+class LTLMoPExecutor(object, ExecutorResynthesisExtensions, ExecutorStrategyExtensions):
     """
     This is the main execution object, which combines the synthesized discrete automaton
     with a set of handlers (as specified in a .config file) to create and run a hybrid controller
@@ -63,7 +63,8 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         """
         Create a new execution context object
         """
-
+        super(LTLMoPExecutor, self).__init__()
+        
         self.proj = project.Project() # this is the project that we are currently using to execute
         self.aut = None
 
@@ -104,12 +105,15 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
 
     def loadAutFile(self, filename):
         logging.info("Loading automaton...")
+        
+        aut = fsa.FSAStrategy()       
+        region_domain = strategy.Domain("region", strategy.Domain.B0_IS_MSB, self.proj.rfi.regions)
+        aut.configurePropositions(self.proj.enabled_sensors, self.proj.enabled_actuators + self.proj.all_customs,
+                            [], [region_domain])
+        aut.loadFromFile(filename)
+        
+        return aut
 
-        aut = fsa.Automaton(self.proj)
-
-        success = aut.loadFile(filename, self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs + self.proj.internal_props)
-
-        return aut if success else None
 
     def _getCurrentRegionFromPose(self, rfi=None):
         # TODO: move this to regions.py
@@ -165,13 +169,14 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         """ return whether the automaton is currently executing """
         return self.runFSA.isSet()
 
-    def getCurrentGoalNumber(self):
-        """ Return the index of the goal currently being pursued (jx).
-            If no automaton is loaded, return None. """
-        if not self.aut:
-            return None
-        else:
-            return self.aut.next_state.rank
+    #TODO: double check this is not used anywhere
+####    def getCurrentGoalNumber(self):
+####        """ Return the index of the goal currently being pursued (jx).
+####            If no automaton is loaded, return None. """
+####        if not self.aut:
+####            return None
+####        else:
+####            return self.aut.next_state.rank
 
     def registerExternalEventTarget(self, address):
         self.externalEventTarget = xmlrpclib.ServerProxy(address, allow_none=True)
@@ -238,20 +243,24 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
         logging.info("Starting from initial region: " + self.proj.rfi.regions[init_region].name)
 
         ### Have the FSA find a valid initial state
-
-        if firstRun or self.aut is None:
-            # Figure out our initially true outputs
-            init_outputs = []
+        # Figure out our initially true outputs and T/F inputs
+        # store region number, true and false sensors, and true acutators
+        init_outputsInputs = {"region": init_region} 
+        
+        if firstRun or self.aut is None:   
             for prop in self.proj.currentConfig.initial_truths:
                 if prop not in self.proj.enabled_sensors:
-                    init_outputs.append(prop)
+                    init_outputsInputs[prop] = True
 
-            init_state = new_aut.chooseInitialState(init_region, init_outputs)
         else:
-            # Figure out our initially true outputs
-            init_outputs = [k for k,v in self.aut.current_outputs.iteritems() if int(v) == 1]
-
-            init_state = new_aut.chooseInitialState(init_region, init_outputs)#, goal=prev_z)
+            init_outputsInputs = dict(init_outputsInputs.items() + self.current_outputs.items())            
+            
+        #TODO: need to fetch from handleSub
+        self.sensor_handler = self.proj.sensor_handler
+        for sensor in self.proj.enabled_sensors:
+            init_outputsInputs[sensor] = eval(self.sensor_handler[sensor], {'self':self,'initial':False}) 
+                   
+        init_state = new_aut.searchForState(init_outputsInputs)
 
         if init_state is None:
             logging.error("No suitable initial state found; unable to execute. Quitting...")
@@ -284,8 +293,8 @@ class LTLMoPExecutor(object, ExecutorResynthesisExtensions):
             if not self.alive.isSet():
                 break
             
-            self.prev_outputs = deepcopy(self.aut.current_outputs)
-            self.prev_z = self.aut.current_state.rank
+            self.prev_outputs = self.aut.current_state.getOutputs() 
+            self.prev_z = self.aut.goal_id 
 
             tic = self.timer_func()
             self.aut.runIteration()
