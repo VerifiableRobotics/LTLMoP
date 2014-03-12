@@ -96,7 +96,7 @@ class Domain(object):
                 if self.endianness == Domain.B0_IS_MSB:
                     value += 2**((self.num_props-1)-bit)
                 else:
-                    value += 2**(bit-1)
+                    value += 2**bit
 
         return value
 
