@@ -8,9 +8,6 @@ import sys
 import time
 from collections import defaultdict
 
-# TODO: make states hashable?
-# TODO: .transitions should not be directly inside a state object because BDD
-
 class FSAStrategy(strategy.Strategy):
     """
     An automaton object is a collection of state objects along with information about the
@@ -22,16 +19,13 @@ class FSAStrategy(strategy.Strategy):
         self.states = strategy.StateCollection()
         self.transitions = defaultdict(lambda: defaultdict(bool)) # (state1, state2) -> T/F
 
-    def configurePropositions(self, input_propositions, output_propositions,
-                              input_domains, output_domains):
-
+    def configurePropositions(self, input_propositions, output_propositions):
         self.states.clearPropositionsAndDomains()
         self.states.addInputPropositions(input_propositions)
         self.states.addOutputPropositions(output_propositions)
-        for d in input_domains:
-            self.states.addInputDomain(d)
-        for d in output_domains:
-            self.states.addOutputDomain(d)
+
+    def iterateOverStates(self):
+        return self.states
 
     def loadFromFile(self, filename):
         """
@@ -158,9 +152,8 @@ def FSATest(spec_file_name):
     rfi = proj.loadRegionFile(decomposed=True)
     aut_file_name = proj.getFilenamePrefix()+'.aut'
     s = FSAStrategy()
-    region_domain = strategy.Domain("region", strategy.Domain.B0_IS_MSB, rfi.regions)
-    s.configurePropositions(proj.enabled_sensors, proj.enabled_actuators + proj.all_customs,
-                            [], [region_domain])
+    region_domain = strategy.Domain("region", rfi.regions, strategy.Domain.B0_IS_MSB)
+    s.configurePropositions(proj.enabled_sensors, proj.enabled_actuators + proj.all_customs + [region_domain])
     s.loadFromFile(aut_file_name)
 
     # TODO: should we be using region names instead of objects to avoid

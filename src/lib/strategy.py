@@ -469,9 +469,6 @@ class Strategy(object):
     def __init__(self):
         self.current_state = None
 
-    def transitionExists(self, state1, state2):
-        raise NotImplementedError("Use a subclass of Strategy")
-
     def iterateOverStates(self):
         raise NotImplementedError("Use a subclass of Strategy")
 
