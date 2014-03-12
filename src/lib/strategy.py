@@ -1,37 +1,41 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-""" ==================================================================================================
-    strategy.py - A Strategy object encodes a discrete strategy, which gives a system move in response
-    to an environment move (or the reverse, in the case of a counterstrategy).
-    ==================================================================================================
+""" ==============================================================================
+    strategy.py - A Strategy object encodes a discrete strategy, which gives a
+    system move in response to an environment move (or the reverse, in the case of
+    a counterstrategy).
+    ==============================================================================
 """
 
 import math
 import re
 
-# TODO: allow mopsy usage cleanly
+# TODO: make sure this works with mopsy
 # TODO: classmethod constructor that creates correct subclass based on filename
-# TODO: clarify distinction between propositions as in bivalent t/f-only domains, propositions as raw
-#       low-level prop names, and domains
-# TODO: error if domain is evaluated and subprops are missing... uh oh
 
 class Domain(object):
+    """ A Domain is a bit-vector abstraction, allowing a proposition to effectively
+    have values other than just True and False.
+
+        Domain "x" consists of propositions "x_b0", "x_b1", "x_b2", ..., and the
+    value of the domain corresponds to the interpretation of these propositions as
+    a binary string (following the order specified by `endianness`).  If
+    `value_mapping` is specified, the numeric value of the domain will be used as
+    an index into this array, and the corresponding element (must be non-integer)
+    will be returned when the proposition value is queried, instead of a number
+    (likewise, when setting the value of the proposition, this mapping will be used
+    in reverse).
+
+        `num_props` can be used to specify the size of the vector; if not
+    specified, this will be automatically calculated based on the size of the
+    `value_mapping` array.
     """
-    A Domain is a bit-vector abstraction, allowing a proposition to effectively have values other than
-    just True and False.
 
-    Domain "x" consists of propositions "x_b0", "x_b1", "x_b2", ..., and the value of the domain corresponds
-    to the interpretation of these propositions as a binary string (following the order specified
-    by `endianness`).  If `value_mapping` is specified, the numeric value of the domain will be used
-    as an index into this array, and the corresponding element (must be non-integer) will be returned when the proposition value
-    is queried, instead of a number (likewise, when setting the value of the proposition, this mapping will be
-    used in reverse).
+    # TODO: add code for generating LTL mutexes
+    # TODO: add non-bitvector mode (e.g. region_kitchen)-- but requires mutex!
 
-    `num_props` can be used to specify the size of the vector; if not specified,
-    this will be automatically calculated based on the size of the `value_mapping` array.
-    """
-
+    # Constants to indicate endianness options
     B0_IS_MSB, B0_IS_LSB = range(2)
 
     def __init__(self, name, endianness=B0_IS_MSB, value_mapping=None, num_props=None):
@@ -72,6 +76,9 @@ class Domain(object):
 
         value = 0
         for bit, prop_name in enumerate(self.getPropositions()):
+            if prop_name not in prop_assignments:
+                raise ValueError("Cannot evaluate domain {!r} because expected subproposition {!r} is undefined.".format(self.name, prop_name))
+
             if prop_assignments[prop_name]:
                 if self.endianness == Domain.B0_IS_MSB:
                     value += 2**((self.num_props-1)-bit)
@@ -124,105 +131,181 @@ class Domain(object):
 
 class State(object):
     """
-    At its most basic, a state has only binary proposition values (this is
-    stored internally as the set of propositions that are true in the state);
-    more information can be attached by subclasses
+    A state, at its most basic, consists of a value assignment to propositions
+    (represented as a dictionary {proposition name (string) -> proposition value}).
+
+    Additional metadata can be attached as necessary.
 
     When created, a reference to the parent StateCollection needs to be be
-    passed so that the state is aware of its evaluation context
+    passed so that the state is aware of its evaluation context.
+
+    A Note About Multi-Valent Propositions:
+
+        Multivalent propositions (i.e. those whose value can span a Domain), are
+    handled fairly flexibly internally, but most of the dynamic translation is
+    hidden from the user.
+
+        In general, read access to propositions will always be presented at the
+    highest-level possible.  For example, when asking for the value of a state,
+    multivalent propositions are presented instead of the underlying binary
+    subpropositions (unless explicitly overridden by using the `expand_domains`
+    flag provided by some functions).  That said, if one wishes to query the value
+    of a subproposition for some reason, its value will be calculated
+    automatically.
+
+        In a similar vein, in order to minimize the worries of those using this
+    module, multivalent propositions can be written to-- and are stored
+    internally-- in one of two ways: either as multiple binary assignments to the
+    subpropositions of the domain, or a single value assignment to the domain
+    proposition itself.  This latter form is preferred, since it is simplest, and
+    internal accounting is biased in this direction.
     """
 
     def __init__(self, parent, prop_assignments=None):
+        """ Create a new state.  Optionally set the state assignment immediately,
+            using `prop_assignments`. """
+
         if not isinstance(parent, StateCollection):
             raise TypeError("The parent of a State must be a StateCollection.")
 
         self.context = parent
-        self.true_props = set() # Set of names of propositions that are true in this state
+        self.assignment = {}
 
-        # TODO: formalize this part
-        self.state_id = None
-        self.goal_id = None
+        # Some optional meta-data
+        self.state_id = None  # If you want to give the state a unique identifier
+        self.goal_id = None   # Index of currently-pursued goal
 
         if prop_assignments is not None:
             self.setPropValues(prop_assignments)
 
-    def getInputs(self, eval_domains=True):
-        """ Return a dictionary of input proposition values for this state.
+    def getInputs(self, expand_domains=False):
+        """ Return a dictionary of assignments to input propositions for this state.
 
-            If `eval_domains` is True, ignore individual bit-vector propositions and return only the value of
-            the relevant domain in its entirety. """
+            If `expand_domains` is True, return only the binary subpropositions
+            for domains instead of the usual multivalent proposition. """
 
-        if eval_domains:
-            return self.getPropValues(self.context.collapseDomains(self.context.input_props))
-        else:
-            return self.getPropValues(self.context.input_props)
+        return self.getPropValues(self.context.input_props, expand_domains)
 
-    def getOutputs(self, eval_domains=True):
-        if eval_domains:
-            return self.getPropValues(self.context.collapseDomains(self.context.output_props))
-        else:
-            return self.getPropValues(self.context.output_props)
+    def getOutputs(self, expand_domains=False):
+        """ Return a dictionary of assignments to output propositions for this state.
 
-    def getAll(self, eval_domains=True):
-        all_props = self.context.input_props + self.context.output_props
-        if eval_domains:
-            return self.getPropValues(self.context.collapseDomains(all_props))
-        else:
-            return self.getPropValues(all_props)
+            If `expand_domains` is True, return only the binary subpropositions
+            for domains instead of the usual multivalent proposition. """
+
+        return self.getPropValues(self.context.output_props, expand_domains)
+
+    def getAll(self, expand_domains=False):
+        """ Return a dictionary of assignments to all propositions for this state.
+
+            If `expand_domains` is True, return only the binary subpropositions
+            for domains instead of the usual multivalent proposition. """
+
+        assignments = self.getInputs(expand_domains)
+        assignments.update(self.getOutputs(expand_domains))
+
+        return assignments
 
     def satisfies(self, prop_assignments):
-        """ Returns True iff the proposition settings in this state agree with all
-            prop_assignments.  Any unspecified propositions are treated as don't-cares. """
+        """ Returns `True` iff the proposition settings in this state agree with all
+            `prop_assignments`.  Any unspecified propositions are treated as don't-cares. """
 
         return all((self.getPropValue(k) == v for k, v in prop_assignments.iteritems()))
 
-    def getPropValues(self, names):
-        return {p:self.getPropValue(p) for p in names}
+    def getPropValues(self, names, expand_domains=False):
+        """ Return a dictionary of assignments to the propositions in `names`
+            for this state.
 
-    def getDomainValue(self, name):
-        d = self.context.getDomainByName(name)
-        return d.propAssignmentsToValue(self.getAll(eval_domains=False))
+            If `expand_domains` is True, return only the binary subpropositions
+            for domains instead of the usual multivalent proposition. """
+
+        prop_values = {p: self.getPropValue(p) for p in names}
+
+        # If expand_domains is True, replace all domain propositions in the
+        # return dictionary with their subpropositions
+        if expand_domains:
+            for n in names:
+                domain = self.context.getDomainByName(n)
+                if domain is None:
+                    continue
+                prop_values.update(domain.valueToPropAssignments(prop_values[n]))
+                del prop_values[n]
+
+        return prop_values
 
     def getPropValue(self, name):
-        try:
-            return self.getDomainValue(name)
-        except ValueError:
-            return (name in self.true_props)
+        """ Return the value of the proposition `name` in this state.
+
+            (Note: `expand_domains` is not supported here because it would
+             entail returning multiple values.  Use getPropValues() for that.) """
+
+        # OK, there are three possibilities for how we will evaluate the name:
+
+        # 1) If this is a normal proposition name, and we know about it,
+        #    just return its value directly
+        if name in self.assignment:
+            return self.assignment[name]
+
+        # 2) If this is the name of a domain for which we only have the
+        #    subpropositions, try to upconvert the subpropositions to a single
+        #    multivalent proposition
+        domain = self.context.getDomainByName(name)
+        if domain is not None:
+            # Try to calculate the value of the domain
+            value = domain.propAssignmentsToValue(self.assignment)
+
+            # Remove the subprops
+            for subprop in domain.getPropositions():
+                del self.assignment[subprop]
+
+            # Add the multivalent prop
+            self.assignment[name] = value
+
+            return value
+
+        # 3) Check to see if this is the name of a subproposition of any domain,
+        #    in which case we can calculate the subproposition value
+        parent_domain = self.context.getDomainOfProposition(name)
+        if parent_domain is not None:
+            return parent_domain.valueToPropAssignments(self.getPropValue(parent_domain.name))[name]
+
+        # Otherwise, we'll have to throw an error
+        raise ValueError("Proposition of name '{}' is undefined in this state".format(name))
 
     def setPropValue(self, prop_name, prop_value):
-        # TODO: warning if prop_assignments are non-sensical, or maybe check whether
-        # we are leaving some values undefined (though this might even be OK in some circumstances?)
+        """ Sets the assignment of propositions `prop_name` to `prop_value` in this state.
+            A lot of sanity checking is performed to ensure the name and value are both appropriate. """
 
-        # First, see if this prop_name is a domain
-        try:
-            domain = self.context.getDomainByName(prop_name)
-        except ValueError:
-            domain = None
+        # Check that this is a known prop_name
+        if (prop_name not in self.context.input_props) and \
+           (prop_name not in self.context.output_props) and \
+           (self.context.getDomainOfProposition(prop_name) is None):
+            raise ValueError("Unknown proposition/domain {!r}".format(prop_name))
 
-        if domain is not None:
-            # Handle domains
-            # TODO: Are we being ridiculously inefficient here?  Should we stop using sets?
-            #       Should we only deal with underlying bit-vectors on import/export instead of
-            #       continuously mapping back and forth on every data structure access?
-            for subprop_name, subprop_value in domain.valueToPropAssignments(prop_value).iteritems():
-                self.setPropValue(subprop_name, subprop_value)
-        else:
-            # Handle boolean propositions
+        # Make sure that the value makes sense
+        domain = self.context.getDomainByName(prop_name)
+        if domain is None:
             if not isinstance(prop_value, bool):
-                raise ValueError("Can only assign boolean values to non-Domain propositions.")
+                raise ValueError("Invalid value of {!r} for proposition {!r}: can only assign boolean values to non-Domain propositions".format(prop_value, prop_name))
+        else:
+            if prop_value not in domain.value_mapping:
+                raise ValueError("Invalid value of {!r} for domain {!r}.  Acceptable values: {!r}".format(prop_value, prop_name, domain.value_mapping))
 
-            if prop_value:
-                self.true_props.add(prop_name)
-            else:
-                self.true_props.discard(prop_name)
+        # Store the value
+        self.assignment[prop_name] = prop_value
 
     def setPropValues(self, prop_assignments):
+        """ Update the assignments in this state according to `prop_assignments`.
+
+            Any existing assignments to propositions not mentioned in `prop_assignments`
+            are untouched. """
+
         for prop_name, prop_value in prop_assignments.iteritems():
             self.setPropValue(prop_name, prop_value)
 
-    ######## TODO: fix this function
-    def stateToLTL(state, use_next=False, include_env=True, swap_io=False):
+    def stateToLTL(self, state, use_next=False, include_env=True, swap_io=False):
         """ swap_io is for the counterstrategy aut in mopsy """
+
+        # TODO: fix this function
 
         def decorate_prop(prop, polarity):
             if use_next:
@@ -246,7 +329,7 @@ class State(object):
             return sys_state
 
     def __eq__(self, other):
-        return (self.context is other.context) and (self.true_props == other.true_props)
+        return (self.context is other.context) and (self.assignment == other.assignment)
 
     def __repr__(self):
         # TODO: print as LTL instead?
@@ -274,11 +357,11 @@ class StateCollection(list):
 
     def addInputDomain(self, domain):
         self.domains.append(domain)
-        self.input_props.extend(domain.getPropositions())
+        self.input_props.append(domain.name)
 
     def addOutputDomain(self, domain):
         self.domains.append(domain)
-        self.output_props.extend(domain.getPropositions())
+        self.output_props.append(domain.name)
 
     def addInputPropositions(self, prop_list):
         # TODO: error on non-list input because strings are quietly accepted..
@@ -297,30 +380,8 @@ class StateCollection(list):
         # TODO: There might be ways to make all these lookups more efficient
         return next((d for d in self.domains if prop_name in d.getPropositions()), None)
 
-    def collapseDomains(self, prop_name_list):
-        """ Given a list of proposition names, remove any names contained in a domain
-            and replace them with the name of the relevant domain.
-
-            Note that a given domain will be included in the output list only once,
-            and will be included even if not all of its sub-propositions have been provided. """
-
-        # TODO: this seems excessive
-        new_list = []
-        for prop_name in prop_name_list:
-            d = self.getDomainOfProposition(prop_name)
-            if d is not None:
-                if d.name not in new_list:
-                    new_list.append(d.name)
-            else:
-                new_list.append(prop_name)
-
-        return new_list
-
     def getDomainByName(self, name):
-        try:
-            return next((d for d in self.domains if d.name == name))
-        except StopIteration:
-            raise ValueError("No domain defined with name '{}'".format(name))
+        return next((d for d in self.domains if d.name == name), None)
 
 class Strategy(object):
     def __init__(self):
@@ -340,25 +401,6 @@ class Strategy(object):
 
     def findTransitionableStates(self, prop_assignments, from_state=None):
         raise NotImplementedError("Use a subclass of Strategy")
-
-    def dumpStates(self, range=None):
-        """
-        Print out the contents of the automaton in a human-readable format
-        """
-        if range is None:
-            range = self.states
-
-        for state in range:
-            print "Name: ", state.name
-            print "Inputs: "
-            for key, val in state.inputs.iteritems():
-                print key + " = " + val
-            print "Outputs: "
-            for key, val in state.outputs.iteritems():
-                print key + " = " + val
-            print "Transitions: "
-            for trans in state.transitions:
-                print trans.name
 
     # TODO: Fix these and maybe move to a different StrategyDumper file
     #def writeDot(self, filename):
@@ -525,11 +567,11 @@ if __name__ == "__main__":
     states.addInputDomain(Domain("nearby_animal", Domain.B0_IS_LSB, animals))
     states.addInputPropositions(("low_battery",))
     states.addOutputPropositions(("hypothesize", "experiment", "give_up"))
-    states.addNewState({"region": "bedroom", "low_battery": True})
+    states.addNewState({"region": "bedroom", "nearby_animal": "midshipman", "low_battery": True, "hypothesize": True, "experiment":False, "give_up":False})
     print "Inputs:", states.input_props
     print "Outputs:", states.output_props
     print "Domains:", states.domains
     for state in states:
-        print state.true_props
+        print state.getAll(expand_domains=True)
         print state
 

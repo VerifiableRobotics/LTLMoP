@@ -155,18 +155,19 @@ def FSATest(spec_file_name):
 
     proj = project.Project()
     proj.loadProject(spec_file_name)
+    rfi = proj.loadRegionFile(decomposed=True)
     aut_file_name = proj.getFilenamePrefix()+'.aut'
     s = FSAStrategy()
-    s.loadFromFile(aut_file_name)
-    region_domain = strategy.Domain("region", strategy.Domain.B0_IS_MSB, proj.rfi.regions)
+    region_domain = strategy.Domain("region", strategy.Domain.B0_IS_MSB, rfi.regions)
     s.configurePropositions(proj.enabled_sensors, proj.enabled_actuators + proj.all_customs,
                             [], [region_domain])
+    s.loadFromFile(aut_file_name)
 
     # TODO: should we be using region names instead of objects to avoid
     # weird errors if two copies of the same map are used?
     print "0th state:", s.states[0]
 
-    initial_region = proj.rfi.regions[proj.rfi.indexOfRegionWithName("porch")]
+    initial_region = rfi.regions[rfi.indexOfRegionWithName("p3")]
     start_state = s.searchForState({"region": initial_region, "person": True})
     print "Start state:", start_state
 
