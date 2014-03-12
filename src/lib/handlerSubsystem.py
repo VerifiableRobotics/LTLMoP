@@ -304,37 +304,37 @@ class HandlerSubsystem:
         return method_config
 
 
-    def method2String(self,methodObj,robotName=''):
+    def method2String(self, method_config, robot_name=''):
         """
-        Return the string representation according to the input method object
+        Return the string representation according to the input method config
         """
-        if not self.handler_dic:
-            logging.error("ERROR: Cannot find handler dictionary, please load all handler first.")
+        if not self.handler_configs:
+            logging.error("Cannot find handler dictionary, please load all handler first.")
             return
-        if not isinstance(methodObj,HandlerMethodConfig):
-            logging.error("ERROR: Input is not a valid method object!")
+        if not isinstance(method_config,HandlerMethodConfig):
+            logging.error("Input is not a valid method config.")
             return
-        if robotName=='':
-            logging.error("ERROR: Needs robot name for method2String")
+        if robot_name=='':
+            logging.error("Needs robot name for method2String")
             return
 
-        handlerName = methodObj.handler.name
-        methodName = methodObj.name
+        handler_name = method_config.handler.name
+        method_name = method_config.name
 
         # convert all parameter object into string
         para_list = []
-        for paraObj in methodObj.para:
-            if paraObj.value is None:
-                para_list.append( paraObj.name+'='+str(paraObj.default))
+        for para_config in method_config.para:
+            if para_config.value is None:
+                para_list.append( para_config.name+'='+str(para_config.default))
             else:
-                if paraObj.type.lower() in ['str', 'string', 'region']:
-                    para_list.append( paraObj.name+'=\"'+str(paraObj.value)+'\"')
+                if para_config.para_type.lower() in ['str', 'string', 'region']:
+                    para_list.append( para_config.name+'=\"'+str(para_config.value)+'\"')
                 else:
-                    para_list.append( paraObj.name+'='+str(paraObj.value))
+                    para_list.append( para_config.name+'='+str(para_config.value))
 
         para_info = ','.join(para_list)
 
-        return '.'.join([robotName,handlerName,methodName])+'('+para_info+')'
+        return '.'.join([robot_name,handler_name,method_name])+'('+para_info+')'
 
 
     def importHandlers(self,configObj,all_handler_types):
