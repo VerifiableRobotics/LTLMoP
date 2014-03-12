@@ -152,6 +152,8 @@ class State(object):
     When created, a reference to the parent StateCollection needs to be be
     passed so that the state is aware of its evaluation context.
 
+    For example usage, see the documentation for StateCollection.
+
     A Note About Multi-Valent Propositions:
 
         Multivalent propositions (i.e. those whose value can span a Domain), are
@@ -317,28 +319,31 @@ class State(object):
         for prop_name, prop_value in prop_assignments.iteritems():
             self.setPropValue(prop_name, prop_value)
 
-    def stateToLTL(self, state, use_next=False, include_env=True, swap_io=False):
-        """ swap_io is for the counterstrategy aut in mopsy """
+    def getLTLRepresentation(self, mark_players=True, use_next=False, include_inputs=True):
+        """ Returns an LTL formula representing this state.
 
-        # TODO: fix this function
+            If `mark_players` is True, input propositions are prepended with
+            "e.", and output propositions are prepended with "s.".
 
+            If `use_next` is True, all propositions will be modified by a single
+            "next()" operator.  `include_env`, which defaults to True,
+            determines whether to include input propositions in addition to
+            output propositions. """
+
+        # Make a helpful little closure for adding operators to bare props
         def decorate_prop(prop, polarity):
             if use_next:
                 prop = "next({})".format(prop)
-            if int(polarity) == 0:
+            if polarity is False:
                 prop = "!"+prop
             return prop
 
-        inputs = state.inputs
-        outputs = state.outputs
+        sys_state = " & ".join((decorate_prop("s."+p, v) for p, v in \
+                                self.getOutputs(expand_domains=True).iteritems()))
 
-        if swap_io:
-            inputs, outputs = outputs, inputs
-
-        sys_state = " & ".join([decorate_prop("s."+p, v) for p,v in outputs.iteritems()])
-
-        if include_env:
-            env_state = " & ".join([decorate_prop("e."+p, v) for p,v in inputs.iteritems()])
+        if include_inputs:
+            env_state = " & ".join((decorate_prop("e."+p, v) for p, v in \
+                                    self.getInputs(expand_domains=True).iteritems()))
             return " & ".join([env_state, sys_state])
         else:
             return sys_state
@@ -347,7 +352,6 @@ class State(object):
         return (self.context is other.context) and (self.assignment == other.assignment)
 
     def __repr__(self):
-        # TODO: print as LTL instead?
         return "<State with assignment: inputs = {}, outputs = {}>".format(self.getInputs(), self.getOutputs())
 
 class StateCollection(list):
@@ -380,6 +384,10 @@ class StateCollection(list):
     You can also query and set the state values using low-level subpropositions:
     >>> s2 = states.addNewState(s.getAll(expand_domains=True))
     >>> assert s2.satisfies(test_assignment)
+
+    LTL is available too!
+    >>> s2.getLTLRepresentation()
+    '!e.nearby_animal_b1 & !e.nearby_animal_b0 & e.nearby_animal_b2 & e.low_battery & s.region_b0 & !s.region_b1 & !s.give_up & !s.experiment & s.hypothesize'
     """
     # TODO: remove add*domain functions and let add*props take both
 
