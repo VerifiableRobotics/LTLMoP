@@ -81,6 +81,8 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         self.runFSA = threading.Event()  # Start out paused
         self.alive = threading.Event()
         self.alive.set()
+        
+        self.current_outputs = {}
 
     def postEvent(self, eventType, eventData=None):
         """ Send a notice that an event occurred, if anyone wants it """
@@ -169,23 +171,14 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         """ return whether the automaton is currently executing """
         return self.runFSA.isSet()
 
-    #TODO: double check this is not used anywhere
-####    def getCurrentGoalNumber(self):
-####        """ Return the index of the goal currently being pursued (jx).
-####            If no automaton is loaded, return None. """
-####        if not self.aut:
-####            return None
-####        else:
-####            return self.aut.next_state.rank
-
     def registerExternalEventTarget(self, address):
         self.externalEventTarget = xmlrpclib.ServerProxy(address, allow_none=True)
 
         # Redirect all output to the log
         redir = RedirectText(self.externalEventTarget.handleEvent)
 
-        #sys.stdout = redir
-        #sys.stderr = redir
+        sys.stdout = redir
+        sys.stderr = redir
 
         self.externalEventTargetRegistered.set()
 
@@ -252,24 +245,30 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
             for prop in self.proj.currentConfig.initial_truths:
                 if prop not in self.proj.enabled_sensors:
                     init_outputsInputs[prop] = True
+            
+            # save a copy of current_outputs (for actuator and custom proposition updates)
+            for actuator in self.proj.enabled_actuators:
+                self.current_outputs[actuator] = (actuator in self.proj.currentConfig.initial_truths) 
+            
+            for customProp in self.proj.all_customs:    
+                self.current_outputs[customProp] = (customProp in self.proj.currentConfig.initial_truths) 
 
         else:
-            init_outputsInputs = dict(init_outputsInputs.items() + self.current_outputs.items())            
-        
+            init_outputsInputs = dict(init_outputsInputs.items() + self.current_outputs.items())             
 
         #TODO: need to fetch from handleSub
         self.sensor_handler = self.proj.sensor_handler
         for sensor in self.proj.enabled_sensors:
             init_outputsInputs[sensor] = eval(self.sensor_handler[sensor], {'self':self.proj,'initial':False}) 
 
-        init_state = new_aut.searchForState(init_outputsInputs)
+        init_state = new_aut.searchForOneState(init_outputsInputs)
 
         if init_state is None:
             logging.error("No suitable initial state found; unable to execute. Quitting...")
             sys.exit(-1)
         else:
             logging.info("Starting from state %s." % init_state.state_id)
-        logging.debug("sdfsdf")
+
         self.aut = new_aut
         self.aut.current_state = init_state
 
@@ -297,10 +296,10 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
                 break
             
             self.prev_outputs = self.aut.current_state.getOutputs() 
-            self.prev_z = self.aut.goal_id 
+            self.prev_z = self.aut.current_state.goal_id 
 
             tic = self.timer_func()
-            self.aut.runIteration()
+            self.runStrategyIteration()
             toc = self.timer_func()
 
             #self.checkForInternalFlags()
