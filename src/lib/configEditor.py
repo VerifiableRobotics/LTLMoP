@@ -691,13 +691,13 @@ class simSetupDialog(wx.Dialog):
             self.list_box_robots.Select(0)
 
     def onLoseFocusSimName(self, event):
-        if len(self.text_ctrl_sim_experiment_name.GetValue()) == 0:
+        if len(self.text_ctrl_sim_experiment_name.GetValue().strip()) == 0:
             d = wx.MessageDialog(self, "Current experiment config needs a name. Please add one.", style = wx.OK | wx.ICON_ERROR)
             d.ShowModal()
             event.Skip(False)
             return
 
-        if  [r.name for r in self.proj.hsub.configs].count(self.text_ctrl_sim_experiment_name.GetValue()) > 1:
+        if  [c.name.strip() for c in self.proj.hsub.configs].count(self.text_ctrl_sim_experiment_name.GetValue().strip()) > 1:
             d = wx.MessageDialog(self, "Current experiment config has the same name with another config. Please change it.", style = wx.OK | wx.ICON_ERROR)
             d.ShowModal()
             event.Skip(False)
@@ -775,10 +775,8 @@ class simSetupDialog(wx.Dialog):
 
     def onSimNameEdit(self, event): # wxGlade: simSetupDialog.<event_handler>
         pos = self.list_box_experiment_name.GetSelection()
-        self.list_box_experiment_name.GetClientData(pos).name = event.GetString()
-        pathName = os.path.dirname(self.list_box_experiment_name.GetClientData(pos).file_name)
-        self.list_box_experiment_name.GetClientData(pos).fileName = os.path.join(pathName, event.GetString().replace(' ','_'))
-        self.list_box_experiment_name.SetString(pos, event.GetString())
+        self.list_box_experiment_name.GetClientData(pos).name = event.GetString().strip()
+        self.list_box_experiment_name.SetString(pos, event.GetString().strip())
         event.Skip()
 
     def onClickAddRobot(self, event): # wxGlade: simSetupDialog.<event_handler>
@@ -875,7 +873,7 @@ class simSetupDialog(wx.Dialog):
             event.Skip(False)
             return
 
-        if  [r.name for r in self.proj.hsub.configs].count(self.text_ctrl_sim_experiment_name.GetValue()) > 1:
+        if  [c.name.strip() for c in self.proj.hsub.configs].count(self.text_ctrl_sim_experiment_name.GetValue().strip()) > 1:
             d = wx.MessageDialog(self, "Current experiment config has the same name with another config. Please change it.", style = wx.OK | wx.ICON_ERROR)
             d.ShowModal()
             event.Skip(False)
