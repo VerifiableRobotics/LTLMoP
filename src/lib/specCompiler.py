@@ -842,6 +842,8 @@ class SpecCompiler(object):
         # Add any extra compiler options
         if self.proj.compile_options["fastslow"]:
             cmd.append("--fastslow")
+        if self.proj.compile_options["symbolic"]:
+            cmd.append("--symbolic")
 
         self.realizable = False
         self.realizableFS = False
