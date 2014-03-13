@@ -482,6 +482,21 @@ class Strategy(object):
     def __init__(self):
         self.current_state = None
 
+    def configurePropositions(self, input_propositions, output_propositions):
+        """ Set the input and output propositions for this strategy.
+
+            `input_propositions` and `output_propositions` must both be lists,
+            consisting of any combination of strings (i.e. binary proposition names) and
+            strategy.Domain objects (for multivalent propositions).
+
+            All existing definitions will be cleared.
+
+            This must be done before creating any states. """
+
+        self.states.clearPropositionsAndDomains()
+        self.states.addInputPropositions(input_propositions)
+        self.states.addOutputPropositions(output_propositions)
+
     def iterateOverStates(self):
         """ Returns an iterator over all known states. """
 
