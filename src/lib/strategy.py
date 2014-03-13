@@ -15,6 +15,10 @@ import textwrap
 
 # TODO: make sure this works with mopsy
 # TODO: classmethod constructor that creates correct subclass based on filename
+# TODO: make states hashable based on assignment?
+# TODO: generalize notion of sets of states in a way transparent to both BDD and
+# FSA, so we don't end up unnecessarily creating and iterating over state
+# objects for things that can be done with a single BDD op
 
 class Domain(object):
     """ A Domain is a bit-vector abstraction, allowing a proposition to effectively
@@ -68,7 +72,7 @@ class Domain(object):
                 raise TypeError("Cannot create domain without either value_mapping or num_props specified.")
             else:
                 # Calculate the minimum number of bits necessary; note that we use max(1,...) because log(1)==0
-                self.num_props = max(1, int(math.ceil(math.log(len(value_mapping),2))))
+                self.num_props = max(1, int(math.ceil(math.log(len(value_mapping), 2))))
         else:
             self.num_props = num_props
 
@@ -467,20 +471,47 @@ class StateCollection(list):
         return next((d for d in self.domains if d.name == name), None)
 
 class Strategy(object):
+    """
+    A Strategy object encodes a discrete strategy, which gives a
+    system move in response to an environment move (or the reverse, in the case of
+    a counterstrategy).
+
+    Only subclasses of Strategy should be used.
+    """
+
     def __init__(self):
         self.current_state = None
 
     def iterateOverStates(self):
-        raise NotImplementedError("Use a subclass of Strategy")
+        """ Returns an iterator over all known states. """
+
+        return self.searchForStates({})
 
     def loadFromFile(self, filename):
+        """ Load a strategy from a file. """
+
         raise NotImplementedError("Use a subclass of Strategy")
 
-    def searchForState(self, prop_assignments, state_list=None):
+    def searchForStates(self, prop_assignments, state_list=None):
+        """ Returns an iterator for the subset of all known states (or a subset
+            specified in `state_list`) that satisfy `prop_assignments`. """
+
         raise NotImplementedError("Use a subclass of Strategy")
 
     def findTransitionableStates(self, prop_assignments, from_state=None):
+        """ Return a list of states that can be reached from `from_state`
+            and satisfy `prop_assignments`.  If `from_state` is omitted,
+            the strategy's current state will be used. """
+
         raise NotImplementedError("Use a subclass of Strategy")
+
+    def searchForOneState(self, prop_assignments, state_list=None):
+        """ Iterate through all known states (or a subset specified in `state_list`)
+            and return the first one that matches `prop_assignments`.
+
+            Returns None if no such state is found.  """
+
+        return next(self.searchForStates(prop_assignments, state_list), None)
 
     def exportAsDotFile(self, filename):
         """ Output an explicit-state strategy to a .dot file of name `filename`.
@@ -505,7 +536,8 @@ class Strategy(object):
 
             # Write the states
             for state in self.iterateOverStates():
-                state_label = "\\n".join((pprint_assignment(k, v) for k, v in state.getOutputs().iteritems()))
+                state_label = "\\n".join((pprint_assignment(k, v)
+                                          for k, v in state.getOutputs().iteritems()))
                 f_out.write('\t{} [style="bold", width=0, height=0, fontsize=20, label="{}"];\n'\
                             .format(state.state_id, state_label))
 
@@ -513,7 +545,8 @@ class Strategy(object):
             # Write the transitions with the input labels (only inputs that are true)
             for state in self.iterateOverStates():
                 for next_state in self.findTransitionableStates({}, from_state=state):
-                    trans_label = "\\n".join((pprint_assignment(k, v) for k, v in next_state.getInputs().iteritems()))
+                    trans_label = "\\n".join((pprint_assignment(k, v)
+                                              for k, v in next_state.getInputs().iteritems()))
                     f_out.write('\t{} -> {} [style="bold", arrowsize=1.5, fontsize=20, label="{}"];\n'\
                                 .format(state.state_id, next_state.state_id, trans_label))
 

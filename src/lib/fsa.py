@@ -19,15 +19,24 @@ class FSAStrategy(strategy.Strategy):
 
         # A collection of state objects belonging to the automaton
         self.states = strategy.StateCollection()
+
+        # A data structure for recording valid transitions between states
         self.transitions = defaultdict(lambda: defaultdict(bool)) # (state1, state2) -> T/F
 
     def configurePropositions(self, input_propositions, output_propositions):
+        """ Set the input and output propositions for this strategy.
+
+            `input_propositions` and `output_propositions` must both be lists,
+            consisting of any combination of strings (i.e. binary proposition names) and
+            strategy.Domain objects (for multivalent propositions).
+
+            All existing definitions will be cleared.
+
+            This must be done before creating any states. """
+
         self.states.clearPropositionsAndDomains()
         self.states.addInputPropositions(input_propositions)
         self.states.addOutputPropositions(output_propositions)
-
-    def iterateOverStates(self):
-        return self.states
 
     def loadFromFile(self, filename):
         """
@@ -60,14 +69,16 @@ class FSAStrategy(strategy.Strategy):
 
         # Now, for each state we find:
         for match in m:
-            # We'll add transitions later; first we have to create all the states so we can
-            # refer to them when we define transitions
+            # We'll add transitions later; first we have to create all the
+            # states so we can refer to them when we define transitions
 
-            # Get the State ID (at least the number that JTLV assigned the state; JTLV deletes states
-            # during optimization, resulting in non-consecutive numbering which would be bad for binary
-            # encoding efficiency, so we don't use these numbers internally except as state names)
-            # and Goal ID ("rank" is a misnomer in the JTLV output; actually corresponds to index of currently pursued goal -- aka "jx").
-            # This is the easy part.
+            # Get the State ID (at least the number that JTLV assigned the
+            # state; JTLV deletes states during optimization, resulting in
+            # non-consecutive numbering which would be bad for binary encoding
+            # efficiency, so we don't use these numbers internally except as
+            # state names) and Goal ID ("rank" is a misnomer in the JTLV
+            # output; actually corresponds to index of currently pursued goal
+            # -- aka "jx").  This is the easy part.
 
             new_state = self.states.addNewState()
             new_state.state_id = match.group('state_id')
@@ -83,8 +94,7 @@ class FSAStrategy(strategy.Strategy):
                 #### TEMPORARY HACK: REMOVE ME AFTER OTHER COMPONENTS ARE UPDATED!!!
                 # Rewrite proposition names to make the old bitvector system work
                 # with the new one
-                prop_m = re.match('^bit(\d+)$', prop_name)
-                if prop_m: prop_name = "region_b{}".format(prop_m.group(1))
+                prop_name = re.sub(r'^bit(\d+)$', r'region_b\1', prop_name)
                 #################################################################
 
                 if prop_value == "0":
@@ -120,30 +130,30 @@ class FSAStrategy(strategy.Strategy):
         logging.info("Loaded %d states in %f seconds.", len(self.states), toc-tic)
 
 
-    # TODO: add a "getFirstState" to do this and make this return a list
-    def searchForState(self, prop_assignments, state_list=None):
-        """ Iterate through all known states (or a subset specified in `state_list`)
-            and return the first one that matches `prop_assignments`.
-
-            Returns None if no such state is found.  """
+    def searchForStates(self, prop_assignments, state_list=None):
+        """ Returns an iterator for the subset of all known states (or a subset
+            specified in `state_list`) that satisfy `prop_assignments`. """
 
         if state_list is None:
             state_list = self.states
 
-        satisfying_state = next((s for s in state_list if s.satisfies(prop_assignments)), None)
+        satisfying_states = (s for s in state_list if s.satisfies(prop_assignments))
 
-        return satisfying_state
+        return satisfying_states
 
     def findTransitionableStates(self, prop_assignments, from_state=None):
+        """ Return a list of states that can be reached from `from_state`
+            and satisfy `prop_assignments`.  If `from_state` is omitted,
+            the strategy's current state will be used. """
+
         if from_state is None:
             if self.current_state is None:
                 raise ValueError("You must specify from_state if no current_state is set.")
             from_state = self.current_state
 
-        transitionable_states = [s for s in self.transitions[from_state] if s.satisfies(prop_assignments)]
+        transitionable_states = self.searchForStates(prop_assignments, state_list=self.transitions[from_state])
 
-        return transitionable_states
-
+        return list(transitionable_states)
 
 def FSATest(spec_file_name):
     import project
@@ -163,7 +173,7 @@ def FSATest(spec_file_name):
     print "0th state:", s.states[0]
 
     initial_region = rfi.regions[rfi.indexOfRegionWithName("p3")]
-    start_state = s.searchForState({"region": initial_region, "person": False})
+    start_state = s.searchForOneState({"region": initial_region, "person": False})
     print "Start state:", start_state
 
     print "Successors:"
