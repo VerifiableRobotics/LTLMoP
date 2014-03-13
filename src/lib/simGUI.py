@@ -182,6 +182,9 @@ class SimGUI_Frame(wx.Frame):
                     m = re.search(r"#(\d+)", eventData)
                     if m is not None:
                         self.currentGoal = int(m.group(1))
+                elif self.checkbox_statusLog_other.GetValue():
+                    if eventData != "":
+                        wx.CallAfter(self.appendLog, eventData + "\n", color="BLACK")
             elif self.checkbox_statusLog_other.GetValue():
                 if eventData != "":
                     wx.CallAfter(self.appendLog, str(eventData) + "\n", color="BLACK") 
