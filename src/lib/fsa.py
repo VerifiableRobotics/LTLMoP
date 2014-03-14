@@ -31,6 +31,8 @@ class FSAStrategy(strategy.Strategy):
         Basically just a lot of regexes.
         """
 
+        logging.info("Loading strategy from file '{}'...".format(filename))
+
         tic = time.time()
 
         # Clear any existing states
