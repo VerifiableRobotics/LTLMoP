@@ -442,6 +442,21 @@ class StateCollection(list):
 
         self._addPropositions(prop_list, self.output_props)
 
+    def getPropositions(self, expand_domains=False):
+        """ Return a list of all known proposition names. """
+
+        # TODO: this is kind of redundant with some code in State.getPropValues()
+        prop_list = self.input_props + self.output_props
+
+        # If expand_domains is True, replace all domain propositions in the
+        # return list with their subpropositions
+        if expand_domains:
+            for d in self.domains:
+                prop_list.remove(d.name)
+                prop_list.extend(d.getPropositions())
+
+        return prop_list
+
     def addNewState(self, prop_assignments=None):
         """ Create a new state with the assignment `prop_assignment` and
             add it to the StateCollection.
