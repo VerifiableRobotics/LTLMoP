@@ -19,7 +19,6 @@ class BDDStrategy(strategy.Strategy):
         self.strategy = None
         self.var_name_to_BDD = {}
         self.BDD_to_var_name = {}
-        self.var_num_to_var_name = []
         self.jx_vars = []
         self.strat_type_var = None
 
@@ -92,7 +91,6 @@ class BDDStrategy(strategy.Strategy):
                     self.BDD_to_var_name[self.mgr.IthVar(varnum)] = varname
                     self.var_name_to_BDD[varname] = self.mgr.IthVar(varnum)
 
-                self.var_num_to_var_name.append(varname)
                 # TODO: check for consecutivity
 
         toc = self.timer_func()
@@ -200,20 +198,6 @@ class BDDStrategy(strategy.Strategy):
                 print "this bit is wack", bit
         return jx_bdd
 
-    def cubeToString(self, cube):
-        cube = list(cube)
-        for i, v in enumerate(cube):
-            if v == 0:
-                cube[i] = "{}".format(self.var_num_to_var_name[i])
-            elif v == 1:
-                cube[i] = "!{}".format(self.var_num_to_var_name[i])
-            elif v == 2:
-                #cube[i] = "({})".format(self.var_num_to_var_name[i])
-                cube[i] = "--"
-            else:
-                print "this cube is wack", cube
-        return ", ".join(cube)
-
     def printSats(self, bdd):
         for cube in bdd:
             print self.cubeToString(cube)
@@ -267,7 +251,6 @@ if __name__ == "__main__":
 
     BDDTest(sys.argv[1])
     ##strategy.printStrategy()
-    #print " ".join(strategy.var_num_to_var_name)
     #curr_state = strategy.stateToBDD(None)
     #strategy.printSats(curr_state)
     #strategy.printSats(strategy.getJxBDD(1))
