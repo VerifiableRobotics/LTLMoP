@@ -378,13 +378,11 @@ public class GROneMain {
          *  numbering of nodes, starting with 1, while the JTLV export function
          *  prints node names that are effectively arbitrary.  To avoid memory problems,
          *  we rewrite the BDD output line-by-line as we go. 
-         *
          */
 
         private String line_buffer;
         private int num_lines_processed;
         private HashMap<Integer,Integer> nodeNameMapping = new HashMap<Integer,Integer>(); // key is old name, value is new name
-        private boolean lastNodeWasNegated = false;
 
         public LinewiseBufferedWriter(Writer out) {
             super(out);
