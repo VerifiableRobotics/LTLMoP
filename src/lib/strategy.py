@@ -12,6 +12,7 @@ import math
 import re
 import logging
 import textwrap
+import regions
 
 # TODO: make sure this works with mopsy
 # TODO: classmethod constructor that creates correct subclass based on filename
@@ -561,8 +562,10 @@ class Strategy(object):
             def pprint_assignment(name, val):
                 if isinstance(val, bool):
                     return name if val else "!"+name
-                else:
-                    return "{}={}".format(name, val)
+                elif isinstance(val, regions.Region):
+                    val = val.name + " ()" # TODO: parent region
+
+                return "{} = {}".format(name, val)
 
             # Write the states
             for state in self.iterateOverStates():
