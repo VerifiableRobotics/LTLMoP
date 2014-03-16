@@ -67,7 +67,7 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         super(LTLMoPExecutor, self).__init__()
 
         self.proj = project.Project() # this is the project that we are currently using to execute
-        self.aut = None
+        self.strategy = None
 
         # Choose a timer func with maximum accuracy for given platform
         if sys.platform in ['win32', 'cygwin']:
@@ -78,15 +78,15 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         self.externalEventTarget = None
         self.externalEventTargetRegistered = threading.Event()
         self.postEventLock = threading.Lock()
-        self.runFSA = threading.Event()  # Start out paused
+        self.runStrategy = threading.Event()  # Start out paused
         self.alive = threading.Event()
         self.alive.set()
-        
-        self.current_outputs = {}
+
+        self.current_outputs = {}     # keep track on current outputs values (for actuations)
 
     def postEvent(self, eventType, eventData=None):
         """ Send a notice that an event occurred, if anyone wants it """
-        
+
         with self.postEventLock:
             if self.externalEventTarget is None:
                 return
@@ -107,13 +107,17 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         self.postEvent("SPEC", self.proj.getFilenamePrefix() + ".spec")
 
     def loadAutFile(self, filename):
+        """
+        This function loads the the .aut file named filename and returns the strategy object.
+        filename (string): name of the file with path included
+        """
         logging.info("Loading automaton...")
-        
-        aut = fsa.FSAStrategy()       
+
+        aut = fsa.FSAStrategy()
         region_domain = strategy.Domain("region",  self.proj.rfi.regions, strategy.Domain.B0_IS_MSB)
         aut.configurePropositions(self.proj.enabled_sensors + [], self.proj.enabled_actuators + self.proj.all_customs +  [region_domain])
         aut.loadFromFile(filename)
-        
+
         return aut
 
 
@@ -126,14 +130,14 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
 
         region = next((i for i, r in enumerate(rfi.regions) if r.name.lower() != "boundary" and \
                         r.objectContainsPoint(*pose)), None)
- 
+
         if region is None:
             logging.warning("Pose of {} not inside any region!".format(pose))
 
         return region
 
     def shutdown(self):
-        self.runFSA.clear()
+        self.runStrategy.clear()
         logging.info("QUITTING.")
 
         all_handler_types = ['init', 'pose', 'locomotionCommand', 'drive', 'motionControl', 'sensor', 'actuator']
@@ -145,7 +149,7 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
                     handlers = [v for k,v in self.proj.h_instance[htype].iteritems()]
                 else:
                     handlers = [self.proj.h_instance[htype]]
-            
+
                 for h in handlers:
                     if hasattr(h, "_stop"):
                         logging.debug("Calling _stop() on {}".format(h.__class__.__name__))
@@ -159,17 +163,17 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
 
     def pause(self):
         """ pause execution of the automaton """
-        self.runFSA.clear()
+        self.runStrategy.clear()
         time.sleep(0.1) # Wait for FSA to stop
         self.postEvent("PAUSE")
 
     def resume(self):
         """ start/resume execution of the automaton """
-        self.runFSA.set()
+        self.runStrategy.set()
 
     def isRunning(self):
         """ return whether the automaton is currently executing """
-        return self.runFSA.isSet()
+        return self.runStrategy.isSet()
 
     def registerExternalEventTarget(self, address):
         self.externalEventTarget = xmlrpclib.ServerProxy(address, allow_none=True)
@@ -182,10 +186,9 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
 
         self.externalEventTargetRegistered.set()
 
-    def initialize(self, spec_file, aut_file, firstRun=True):
+    def initialize(self, spec_file, strategy_file, firstRun=True):
         """
-        Prepare for execution, by loading and initializing all the relevant files (specification, map, handlers, aut)
-
+        Prepare for execution, by loading and initializing all the relevant files (specification, map, handlers, strategy)
         If `firstRun` is true, all handlers will be imported; otherwise, only the motion control handler will be reloaded.
         """
 
@@ -215,19 +218,22 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
             pass
 
         # We are done initializing at this point if there is no aut file yet
-        if aut_file is None:
+        if strategy_file is None:
             return
 
+        # TODO: maybe an option for BDD here later
         # Load automaton file
-        new_aut = self.loadAutFile(aut_file)
+        new_strategy = self.loadAutFile(strategy_file)
 
         if firstRun:
             ### Wait for the initial start command
             logging.info("Ready.  Press [Start] to begin...")
-            self.runFSA.wait()
+            self.runStrategy.wait()
 
-        ### Figure out where we should start from
+        ### Figure out where we should start from by passing proposition assignments to strategy and search for initial state
+        ### pass in sensor values, current actuator and custom proposition values, and current region object
 
+        ## Region
         # FIXME: make getcurrentregion return object instead of number, also fix the isNone check
         init_region = self.proj.rfi.regions[self._getCurrentRegionFromPose()]
         if init_region is None:
@@ -235,33 +241,21 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
             sys.exit(-1)
 
         logging.info("Starting from initial region: " + init_region.name)
+        init_prop_assignments = {"region": init_region}
 
-        ### Have the FSA find a valid initial state
-        # Figure out our initially true outputs and T/F inputs
-        # store region number, true and false sensors, and true acutators
-        init_outputsInputs = {"region": init_region} 
+        ## outputs
+        if firstRun or self.strategy is None:
+            # save the initial values of the actuators and the custom propositions
+            for prop in self.proj.enabled_actuators + self.proj.all_customs:
+                self.current_outputs[prop] = (prop in self.proj.currentConfig.initial_truths)
 
-        if firstRun or self.aut is None:   
-            for prop in self.proj.currentConfig.initial_truths:
-                if prop not in self.proj.enabled_sensors:
-                    init_outputsInputs[prop] = True
-            
-            # save a copy of current_outputs (for actuator and custom proposition updates)
-            for actuator in self.proj.enabled_actuators:
-                self.current_outputs[actuator] = (actuator in self.proj.currentConfig.initial_truths) 
-            
-            for customProp in self.proj.all_customs:    
-                self.current_outputs[customProp] = (customProp in self.proj.currentConfig.initial_truths) 
+        init_prop_assignments.update(self.current_outputs)
 
-        else:
-            init_outputsInputs = dict(init_outputsInputs.items() + self.current_outputs.items())             
+        ## inputs
+        init_prop_assignments.update(self.HSubGetSensorValue(self.proj.enabled_sensors))
 
-        #TODO: need to fetch from handleSub
-        self.sensor_handler = self.proj.sensor_handler
-        for sensor in self.proj.enabled_sensors:
-            init_outputsInputs[sensor] = eval(self.sensor_handler[sensor], {'self':self.proj,'initial':False}) 
-
-        init_state = new_aut.searchForOneState(init_outputsInputs)
+        #search for initial state in the strategy
+        init_state = new_strategy.searchForOneState(init_prop_assignments)
 
         if init_state is None:
             logging.error("No suitable initial state found; unable to execute. Quitting...")
@@ -269,8 +263,8 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         else:
             logging.info("Starting from state %s." % init_state.state_id)
 
-        self.aut = new_aut
-        self.aut.current_state = init_state
+        self.strategy = new_strategy
+        self.strategy.current_state = init_state
 
     def run(self):
         ### Get everything moving
@@ -281,22 +275,22 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         # FIXME: don't crash if no spec file is loaded initially
         while self.alive.isSet():
             # Idle if we're not running
-            if not self.runFSA.isSet():
+            if not self.runStrategy.isSet():
                 try:
                     self.proj.h_instance['motionControl'].stop()
                 except AttributeError:
                     self.proj.h_instance['drive'].setVelocity(0,0)
 
                 # wait for either the FSA to unpause or for termination
-                while (not self.runFSA.wait(0.1)) and self.alive.isSet():
+                while (not self.runStrategy.wait(0.1)) and self.alive.isSet():
                     pass
 
             # Exit immediately if we're quitting
             if not self.alive.isSet():
                 break
-            
-            self.prev_outputs = self.aut.current_state.getOutputs() 
-            self.prev_z = self.aut.current_state.goal_id 
+
+            self.prev_outputs = self.strategy.current_state.getOutputs()
+            self.prev_z = self.strategy.current_state.goal_id
 
             tic = self.timer_func()
             self.runStrategyIteration()
@@ -323,10 +317,10 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
 
     # This function is necessary to prevent xmlrpcserver from catching
     # exceptions and eating the tracebacks
-    def _dispatch(self, method, args): 
-        try: 
-            return getattr(self, method)(*args) 
-        except: 
+    def _dispatch(self, method, args):
+        try:
+            return getattr(self, method)(*args)
+        except:
             traceback.print_exc()
             raise
 
@@ -362,14 +356,14 @@ def execute_main(listen_port=None, spec_file=None, aut_file=None, show_gui=False
                 break
     else:
         xmlrpc_server = SimpleXMLRPCServer(("127.0.0.1", listen_port), logRequests=False, allow_none=True)
-    
+
     # Create the execution context object
     e = LTLMoPExecutor()
 
     # Register functions with the XML-RPC server
     xmlrpc_server.register_instance(e)
 
-    # Kick off the XML-RPC server thread    
+    # Kick off the XML-RPC server thread
     XMLRPCServerThread = threading.Thread(target=xmlrpc_server.serve_forever)
     XMLRPCServerThread.daemon = True
     XMLRPCServerThread.start()
@@ -414,7 +408,7 @@ if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hnp:a:s:", ["help", "no-gui", "xmlrpc-listen-port=", "aut-file=", "spec-file="])
     except getopt.GetoptError:
-        logging.exception("Bad arguments") 
+        logging.exception("Bad arguments")
         usage(sys.argv[0])
         sys.exit(2)
 
