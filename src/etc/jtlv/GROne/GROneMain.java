@@ -424,9 +424,12 @@ public class GROneMain {
                 nodeData[2] = nodeNameMapping.get(nodeData[2]);
                 nodeData[3] = nodeNameMapping.get(nodeData[3]);
                 
+                // NOTE: We swap the if/else nodes to make dddmp-compatible output
+                // From the BuDDy docs for bdd_load(): "Each set consists of first the node number, then the variable number and then the low and high nodes."
+                // From the dddmp "docs": fscanf(fp, "%d %s %d %d\n", &id, buf, &idT, &idE)
                 nodeData[0] = num_lines_processed + 1;
                 writeString(nodeData[0] + " " + nodeData[1] + " " +
-                            nodeData[2] + " " + nodeData[3] + "\n");
+                            nodeData[3] + " " + nodeData[2] + "\n");
             }
 
             num_lines_processed++;
