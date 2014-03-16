@@ -89,6 +89,9 @@ def createTopologyFragment(adjData, regions, use_bits=True):
 
         adjFormulas.append(adjFormula)
 
+    # In a BDD strategy, it's best to explicitly exclude these
+    adjFormulas.append("[]"+createInitialRegionFragment(regions, use_bits))
+
     return " & \n".join(adjFormulas)
 
 def createInitialRegionFragment(regions, use_bits=True):
