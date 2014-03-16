@@ -8,6 +8,9 @@ import logging
 # NOTE: This module requires a modified version of pycudd!!
 # See src/etc/patches/README_PYCUDD for instructions.
 
+# TODO: We could probably get away with a really minimal Python BDD
+#       implementation
+
 class BDDStrategy(strategy.Strategy):
     def __init__(self):
         super(BDDStrategy, self).__init__()
@@ -33,10 +36,11 @@ class BDDStrategy(strategy.Strategy):
 
     def loadFromFile(self, filename):
         """
-        Load in a strategy BDD from a  file produced by a synthesizer,
+        Load in a strategy BDD from a file produced by a synthesizer,
         such as JTLV or Slugs.
         """
 
+        # TODO: logging and timer code can be moved to Strategy parent class
         logging.info("Loading strategy from file '{}'...".format(filename))
 
         a = pycudd.DdArray(1)
@@ -103,9 +107,7 @@ class BDDStrategy(strategy.Strategy):
             specified in `state_list`) that satisfy `prop_assignments`. """
 
         if state_list is None:
-            # TODO: we only need to calculate this once
-            all_primed_vars_bdd = self.propAssignmentToBDD({k:True for k in self.states.getPropositions(expand_domains=True)}, use_next=True)
-            state_list_bdd = self.strategy.ExistAbstract(all_primed_vars_bdd)
+            state_list_bdd = self.strategy
         else:
             state_list_bdd = self.stateListToBDD(state_list)
 
@@ -173,6 +175,56 @@ class BDDStrategy(strategy.Strategy):
 
         return self.propAssignmentToBDD(state.getAll(expand_domains=True), use_next)
 
+    def getAllVariableNames(self, use_next=False):
+        # TODO use everywher
+        if use_next:
+            return (v+"'" for v in self.states.getPropositions(expand_domains=True))
+        else:
+            return self.states.getPropositions(expand_domains=True)
+
+    def getAllVariableBDDs(self, use_next=False):
+        return (self.var_name_to_BDD[v] for v in self.getAllVariableNames(use_next))
+
+    def prime(self, bdd):
+        # TODO: modify support? error check
+        return self._BDDSwapVars(bdd, self.getAllVariableBDDs(use_next=False), self.getAllVariableBDDs(use_next=True))
+
+    def unprime(self, bdd):
+        return self._BDDSwapVars(bdd, self.getAllVariableBDDs(use_next=True), self.getAllVariableBDDs(use_next=False))
+
+    def _DDArrayFromList(self, elements):
+        # We have to do this silly type conversion because we're using a very loosely-wrapped C library
+        dd_array = pycudd.DdArray(len(elements))
+        for idx, el in enumerate(elements):
+            dd_array[idx] = el
+
+        return dd_array
+
+    def _BDDSwapVars(self, bdd, varset1, varset2):
+        # Make sure we have an iterator with a len()
+        varset1 = list(varset1)
+        varset2 = list(varset2)
+
+        assert len(varset1) == len(varset2)
+
+        dd_varset1 = self._DDArrayFromList(varset1)
+        dd_varset2 = self._DDArrayFromList(varset2)
+
+        return bdd.SwapVariables(dd_varset1, dd_varset2, len(varset1))
+
+    def findTransitionableStates(self, prop_assignments, from_state=None):
+        """ Return a list of states that can be reached from `from_state`
+            and satisfy `prop_assignments`.  If `from_state` is omitted,
+            the strategy's current state will be used. """
+
+        if from_state is None:
+            from_state = self.current_state
+
+        next_state_restrictions = self.propAssignmentToBDD(prop_assignments, use_next=True)
+        candidates = self.unprime(self.stateToBDD(from_state) & self.strategy & next_state_restrictions)
+
+        return list(self.BDDToStates(candidates))
+
     def getTransitions(self, state, jx, strat_type):
         # 0. The strategies that do not change the justice pursued
         # 1. The strategies that change the justice pursued
@@ -197,14 +249,6 @@ class BDDStrategy(strategy.Strategy):
             else:
                 print "this bit is wack", bit
         return jx_bdd
-
-    def printSats(self, bdd):
-        for cube in bdd:
-            print self.cubeToString(cube)
-            #print pycudd.cube_tuple_to_str(cube)
-
-    # getTransitions or whaterver else FSA does
-
 
 def BDDTest(spec_file_name):
     # TODO: move generalized test to main Strategy class
