@@ -3,8 +3,7 @@
 
 """ ==============================================================================
     strategy.py - A Strategy object encodes a discrete strategy, which gives a
-    system move in response to an environment move (or the reverse, in the case of
-    a counterstrategy).
+    system move in response to an environment move (or the reverse, in the case of a counterstrategy).
     ==============================================================================
 """
 
