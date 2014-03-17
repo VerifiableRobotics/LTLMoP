@@ -480,13 +480,14 @@ class StateCollection(list):
 
         return prop_list
 
-    def addNewState(self, prop_assignments=None):
+    def addNewState(self, prop_assignments=None, goal_id=None):
         """ Create a new state with the assignment `prop_assignment` and
-            add it to the StateCollection.
+            goal ID `goal_id` and add it to the StateCollection.
 
             Returns the new state. """
 
         new_state = State(self, prop_assignments)
+        new_state.goal_id = goal_id
         self.append(new_state)
 
         return new_state
