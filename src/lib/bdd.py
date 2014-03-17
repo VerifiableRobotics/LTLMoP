@@ -11,6 +11,14 @@ import logging
 # TODO: We could probably get away with a really minimal Python BDD
 #       implementation
 
+# TODO: move jtlv bdd outputter in GROneMain to separate file?
+# TODO: move generic bdd functions to a different file so others can use?
+# TODO: variable reordering so Jx and strat_type are first
+
+# TODO: optimize strategy:
+#       - stutter state removal
+#       - minimal Y after Z change
+
 class BDDStrategy(strategy.Strategy):
     def __init__(self):
         super(BDDStrategy, self).__init__()
@@ -20,13 +28,16 @@ class BDDStrategy(strategy.Strategy):
         self.states = strategy.StateCollection()
 
         self.strategy = None
+
         self.var_name_to_BDD = {}
         self.BDD_to_var_name = {}
-        self.jx_vars = []
+
         self.strat_type_var = None
 
         self.mgr = pycudd.DdManager()
         self.mgr.SetDefault()
+        # TODO: why is garbage collection crashing?? :( [e.g. on firefighting]
+        self.mgr.DisableGarbageCollection()
 
         # Choose a timer func with maximum accuracy for given platform
         if sys.platform in ['win32', 'cygwin']:
@@ -64,14 +75,20 @@ class BDDStrategy(strategy.Strategy):
 
         # Load in meta-data
         with open(filename, 'r') as f:
-            # Seek forward to the start of the variable definition section
+            # Seek forward to the max goal ID notation
             line = ""
+            while not line.startswith("# Max goal ID:"):
+                line = f.readline()
+
+            self.max_jx = int(line.split(":")[1]) # This is actually one more than the highest jx
+
+            # Seek forward to the start of the variable definition section
             while not line.startswith("# Variable names:"):
                 line = f.readline()
 
             # Parse the variable definitions
             for line in f:
-                m = re.match(r"^#\s*(?P<num>\d+)\s*:\s*<(?P<name>\w+'?)>", line)
+                m = re.match(r"^#\s*(?P<num>\d+)\s*:\s*(?P<name>\w+'?)", line)
 
                 # We will stop parsing as soon as we encounter an invalid line
                 # Note: This includes empty lines!
@@ -87,15 +104,16 @@ class BDDStrategy(strategy.Strategy):
                 varname = re.sub(r"^bit(\d+)('?)$", r'region_b\1\2', varname)
                 #################################################################
 
-                if varname == "jx":
-                    self.jx_vars.append(self.mgr.IthVar(varnum))
-                elif varname == "strat_type":
+                if varname == "strat_type":
                     self.strat_type_var = self.mgr.IthVar(varnum)
                 else:
                     self.BDD_to_var_name[self.mgr.IthVar(varnum)] = varname
                     self.var_name_to_BDD[varname] = self.mgr.IthVar(varnum)
 
                 # TODO: check for consecutivity
+
+        # Create a Domain for jx to help with conversion to/from bitvectors
+        self.jx_domain = strategy.Domain("_jx", value_mapping=range(self.max_jx), endianness=strategy.Domain.B0_IS_LSB)
 
         toc = self.timer_func()
 
@@ -132,17 +150,23 @@ class BDDStrategy(strategy.Strategy):
             bdd &= ~one_sat
 
     def BDDToStates(self, bdd):
-        for one_sat in self.satAll(bdd, self.states.getPropositions(expand_domains=True)):
+        for one_sat in self.satAll(bdd, self.getAllVariableNames() + self.jx_domain.getPropositions()):
             yield self.BDDToState(one_sat)
 
     def BDDToState(self, bdd):
-        prop_assignments = {k: bool(bdd & self.var_name_to_BDD[k])
-                            for k in self.states.getPropositions(expand_domains=True)}
-        # TODO: jx?
-        return self.states.addNewState(prop_assignments)
+        prop_assignments = self.BDDToPropAssignment(bdd, self.getAllVariableNames())
+        jx = self.getJxFromBDD(bdd)
+
+        return self.states.addNewState(prop_assignments, jx)
+
+    def BDDToPropAssignment(self, bdd, var_names):
+        prop_assignments = {k: bool(bdd & self.var_name_to_BDD[k]) for k in var_names}
+
+        return prop_assignments
 
     def printStrategy(self):
         """ Dump the minterm of the strategy BDD.  For debugging only. """
+
         self.strategy.PrintMinterm()
 
     def stateListToBDD(self, state_list, use_next=False):
@@ -173,10 +197,15 @@ class BDDStrategy(strategy.Strategy):
         """ Create a BDD that represents the given state.
             If `use_next` is True, all variables will be primed. """
 
-        return self.propAssignmentToBDD(state.getAll(expand_domains=True), use_next)
+        state_bdd = self.propAssignmentToBDD(state.getAll(expand_domains=True), use_next)
+
+        if use_next is False:
+            # We don't currently use jx in the next
+            state_bdd &= self.getBDDFromJx(state.goal_id)
+
+        return state_bdd
 
     def getAllVariableNames(self, use_next=False):
-        # TODO use everywher
         if use_next:
             return (v+"'" for v in self.states.getPropositions(expand_domains=True))
         else:
@@ -220,35 +249,48 @@ class BDDStrategy(strategy.Strategy):
         if from_state is None:
             from_state = self.current_state
 
-        next_state_restrictions = self.propAssignmentToBDD(prop_assignments, use_next=True)
-        candidates = self.unprime(self.stateToBDD(from_state) & self.strategy & next_state_restrictions)
+        # If possible, move on to the next goal (only possible if current states fulfils current goal)
+        candidates = self._getNextStateBDD(from_state, prop_assignments, "Z")
+        if candidates:
+            candidate_states = list(self.BDDToStates(candidates))
+            for s in candidate_states:
+                # add 1 to jx
+                s.goal_id = (s.goal_id + 1) % self.max_jx
 
-        return list(self.BDDToStates(candidates))
+            return candidate_states
 
-    def getTransitions(self, state, jx, strat_type):
-        # 0. The strategies that do not change the justice pursued
-        # 1. The strategies that change the justice pursued
+        # If that wasn't possible, try to move closer to the current goal
+        candidates = self._getNextStateBDD(from_state, prop_assignments, "Y")
+        if candidates:
+            return list(self.BDDToStates(candidates))
+
+        # If we've gotten here, something's terribly wrong
+        raise RuntimeError("No next state could be found.")
+
+    def _getNextStateBDD(self, from_state, prop_assignments, strat_type):
+        # Explanation of the strat_type var (from JTLV code):
+        #    0. The strategies that do not change the justice pursued
+        #    1. The strategies that change the justice pursued
         if strat_type == "Y":
             strat_type_bdd = ~self.strat_type_var
         elif strat_type == "Z":
             strat_type_bdd = self.strat_type_var
         else:
-            print "bad strat type", strat_type
-            return None
-        cand = self.strategy & state & self.getJxBDD(jx) & strat_type_bdd
-        return cand
+            raise ValueError("Invalid strategy type")
 
-    def getJxBDD(self, jx):
-        jx_bdd = self.mgr.ReadOne()
-        # TODO: safety checks
-        for i, bit in enumerate(("{:0"+str(len(self.jx_vars))+"b}").format(jx)[::-1]): # lesser significant bits have lower varids
-            if bit == "0":
-                jx_bdd &= ~self.jx_vars[i]
-            elif bit == "1":
-                jx_bdd &= self.jx_vars[i]
-            else:
-                print "this bit is wack", bit
-        return jx_bdd
+        next_state_restrictions = self.propAssignmentToBDD(prop_assignments, use_next=True)
+        candidates = self.unprime(  self.stateToBDD(from_state)
+                                  & self.strategy
+                                  & strat_type_bdd
+                                  & next_state_restrictions)
+        return candidates
+
+    def getBDDFromJx(self, jx):
+        return self.propAssignmentToBDD(self.jx_domain.numericValueToPropAssignments(jx))
+
+    def getJxFromBDD(self, bdd):
+        return self.jx_domain.propAssignmentsToNumericValue(self.BDDToPropAssignment(bdd, self.jx_domain.getPropositions()))
+
 
 def BDDTest(spec_file_name):
     # TODO: move generalized test to main Strategy class

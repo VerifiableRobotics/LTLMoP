@@ -59,7 +59,7 @@ class Domain(object):
     B0_IS_MSB, B0_IS_LSB = range(2)
 
     def __init__(self, name, value_mapping=None, endianness=B0_IS_MSB, num_props=None):
-        if not re.match(r"^[A-Za-z][A-Za-z0-9_]*$", name):
+        if not re.match(r"^[A-Za-z][A-Za-z0-9_]*$", name) and not name.startswith("_jx"):
             raise ValueError("Name must begin with a letter and contain only alphanumeric characters or underscores.")
 
         self.name = name
