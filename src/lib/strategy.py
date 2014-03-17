@@ -86,7 +86,12 @@ class Domain(object):
         if self.value_mapping is None:
             return n
         else:
-            return self.value_mapping[n]
+            try:
+                return self.value_mapping[n]
+            except IndexError:
+                relevant_assignments = {k: v for k, v in prop_assignments.iteritems() if k in self.getPropositions()}
+                raise ValueError("Invalid assignment of {!r} to domain {!r} ({} > {})".format(relevant_assignments, self.name,
+                                                                                              n, len(self.value_mapping)-1))
 
     def propAssignmentsToNumericValue(self, prop_assignments):
         """ Convert a dictionary [prop_name(str)->value(bool)] of propositions composing this domain
