@@ -173,16 +173,20 @@ class BDDStrategy(strategy.Strategy):
         return reduce(lambda bdd1, bdd2: bdd1 | bdd2,
                       (self.stateToBDD(s, use_next) for s in state_list))
 
-    def propAssignmentToBDD(self, prop_assigments, use_next=False):
+    def propAssignmentToBDD(self, prop_assignments, use_next=False):
         """ Create a BDD that represents the given *binary* proposition
             assignments (expressed as a dictionary from prop_name[str]->prop_val[bool]).
             If `use_next` is True, all variables will be primed. """
+
+        # Expand all domains in the prop assignments since the BDD operates
+        # on binary propositions
+        prop_assignments = self.states.expandDomainsInPropAssignment(prop_assignments)
 
         # Start with the BDD for True
         bdd = self.mgr.ReadOne()
 
         # Add all the proposition values one by one
-        for prop_name, prop_value in prop_assigments.iteritems():
+        for prop_name, prop_value in prop_assignments.iteritems():
             if use_next:
                 prop_name += "'"
 

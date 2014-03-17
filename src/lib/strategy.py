@@ -15,6 +15,7 @@ import textwrap
 import regions
 import sys
 import collections
+import copy
 
 # TODO: make sure this works with mopsy
 # TODO: classmethod constructor that creates correct subclass based on filename
@@ -258,12 +259,7 @@ class State(object):
         # If expand_domains is True, replace all domain propositions in the
         # return dictionary with their subpropositions
         if expand_domains:
-            for n in names:
-                domain = self.context.getDomainByName(n)
-                if domain is None:
-                    continue
-                prop_values.update(domain.valueToPropAssignments(prop_values[n]))
-                del prop_values[n]
+            prop_values = self.context.expandDomainsInPropAssignment(prop_values)
 
         return prop_values
 
@@ -465,6 +461,20 @@ class StateCollection(list):
             or a Domain object, which indicates a multivalent proposition. """
 
         self._addPropositions(prop_list, self.output_props)
+
+    def expandDomainsInPropAssignment(self, prop_assignments):
+        """ Replace all domain propositions in the dictionary with their subpropositions """
+
+        prop_values = copy.copy(prop_assignments)
+
+        for n in prop_assignments.keys():
+            domain = self.getDomainByName(n)
+            if domain is None:
+                continue
+            prop_values.update(domain.valueToPropAssignments(prop_values[n]))
+            del prop_values[n]
+
+        return prop_values
 
     def getPropositions(self, expand_domains=False):
         """ Return a list of all known proposition names. """
