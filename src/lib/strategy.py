@@ -14,6 +14,7 @@ import logging
 import textwrap
 import regions
 import sys
+import collections
 
 # TODO: make sure this works with mopsy
 # TODO: classmethod constructor that creates correct subclass based on filename
@@ -567,9 +568,18 @@ class Strategy(object):
 
         return next(self.searchForStates(prop_assignments, state_list), None)
 
-    def exportAsDotFile(self, filename):
+    def exportAsDotFile(self, filename, starting_states=None):
         """ Output an explicit-state strategy to a .dot file of name `filename`.
             (For use with GraphViz.) """
+
+        if starting_states is None:
+            starting_states = self.iterateOverStates()
+
+        processed_states = set()
+        states_to_process = collections.deque(starting_states)
+
+        # We will save the transitions in memory to output at the end of the file, after the states
+        transitions = []
 
         with open(filename, 'w') as f_out:
             # Header
@@ -577,8 +587,7 @@ class Strategy(object):
                 digraph A {
                     rankdir = LR;
                     overlap = false;
-                    size = "8.5,11";
-                    overlap = false;
+                    ratio = "compress";
             """))
 
             # Define a helper function
@@ -590,21 +599,47 @@ class Strategy(object):
 
                 return "{} = {}".format(name, val)
 
-            # Write the states
-            for state in self.iterateOverStates():
+            while states_to_process:
+                this_state = states_to_process.pop()
+
+                # Skip this if we processed this already earlier on the stack
+                if this_state in processed_states:
+                    continue
+
                 state_label = "\\n".join((pprint_assignment(k, v)
-                                          for k, v in state.getOutputs().iteritems()))
+                                          for k, v in this_state.getOutputs().iteritems()))
+                state_label += "\\n[Goal #{}]".format(this_state.goal_id)
                 f_out.write('\t{} [style="bold", width=0, height=0, fontsize=20, label="{}"];\n'\
-                            .format(state.state_id, state_label))
+                            .format(this_state.getName(), state_label))
+
+                processed_states.add(this_state)
+
+                for next_state in self.findTransitionableStates({}, from_state=this_state):
+                    trans_label = "\\n".join((pprint_assignment(k, v)
+                                              for k, v in next_state.getInputs().iteritems()))
+                    transitions.append('\t{} -> {} [style="bold", arrowsize=1.5, fontsize=20, label="{}"];\n'\
+                                .format(this_state.getName(), next_state.getName(), trans_label))
+
+                    if next_state not in processed_states:
+                        states_to_process.append(next_state)
+
+            f_out.writelines(transitions)
+
+            # Write the states
+            #for state in self.iterateOverStates():
+                #state_label = "\\n".join((pprint_assignment(k, v)
+                                          #for k, v in state.getOutputs().iteritems()))
+                #f_out.write('\t{} [style="bold", width=0, height=0, fontsize=20, label="{}"];\n'\
+                            #.format(state.getName(), state_label))
 
 
             # Write the transitions with the input labels (only inputs that are true)
-            for state in self.iterateOverStates():
-                for next_state in self.findTransitionableStates({}, from_state=state):
-                    trans_label = "\\n".join((pprint_assignment(k, v)
-                                              for k, v in next_state.getInputs().iteritems()))
-                    f_out.write('\t{} -> {} [style="bold", arrowsize=1.5, fontsize=20, label="{}"];\n'\
-                                .format(state.state_id, next_state.state_id, trans_label))
+            #for state in self.iterateOverStates():
+                #for next_state in self.findTransitionableStates({}, from_state=state):
+                    #trans_label = "\\n".join((pprint_assignment(k, v)
+                                              #for k, v in next_state.getInputs().iteritems()))
+                    #f_out.write('\t{} -> {} [style="bold", arrowsize=1.5, fontsize=20, label="{}"];\n'\
+                                #.format(state.getName(), next_state.getName(), trans_label))
 
             # Close the digraph
             f_out.write("} \n")
