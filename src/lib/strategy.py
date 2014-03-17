@@ -13,10 +13,10 @@ import re
 import logging
 import textwrap
 import regions
+import sys
 
 # TODO: make sure this works with mopsy
 # TODO: classmethod constructor that creates correct subclass based on filename
-# TODO: make states hashable based on assignment?
 # TODO: generalize notion of sets of states in a way transparent to both BDD and
 # FSA, so we don't end up unnecessarily creating and iterating over state
 # objects for things that can be done with a single BDD op
@@ -199,6 +199,14 @@ class State(object):
         if prop_assignments is not None:
             self.setPropValues(prop_assignments)
 
+    def getName(self):
+        if self.state_id is None:
+            # Make sure the unique ID is positive
+            unique_id = hash(self) % ((sys.maxsize + 1) * 2)
+            return "state_{}".format(unique_id)
+        else:
+            return self.state_id
+
     def getInputs(self, expand_domains=False):
         """ Return a dictionary of assignments to input propositions for this state.
 
@@ -355,10 +363,19 @@ class State(object):
             return sys_state
 
     def __eq__(self, other):
-        return (self.context is other.context) and (self.assignment == other.assignment)
+        return isinstance(other, State) and hash(self) == hash(other)
+
+    def __hash__(self):
+        # We need to call getAll() instead of using self.assignment directly so
+        # that the hash is consistent between states with different levels of
+        # Domain "up-conversion"
+        # TODO: This design choice might be worth reconsidering at some point.
+        return hash((id(self.context),
+                     frozenset(self.getAll().items()),
+                     self.goal_id))
 
     def __repr__(self):
-        return "<State with assignment: inputs = {}, outputs = {}>".format(self.getInputs(), self.getOutputs())
+        return "<State with assignment: inputs = {}, outputs = {} (goal_id = {})>".format(self.getInputs(), self.getOutputs(), self.goal_id)
 
 class StateCollection(list):
     """
