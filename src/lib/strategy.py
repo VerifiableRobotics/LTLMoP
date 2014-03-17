@@ -119,9 +119,9 @@ class Domain(object):
         else:
             n = self.value_mapping.index(value)
 
-        return self.numericValueToPropAssigments(n)
+        return self.numericValueToPropAssignments(n)
 
-    def numericValueToPropAssigments(self, number):
+    def numericValueToPropAssignments(self, number):
         """ Convert an integer value into the corresponding dictionary [prop_name(str)->value(bool)]
             of propositions composing this domain
         """
