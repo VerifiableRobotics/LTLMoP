@@ -77,10 +77,10 @@ class BDDStrategy(strategy.Strategy):
         with open(filename, 'r') as f:
             # Seek forward to the max goal ID notation
             line = ""
-            while not line.startswith("# Max goal ID:"):
+            while not line.startswith("# Num goals:"):
                 line = f.readline()
 
-            self.max_jx = int(line.split(":")[1]) # This is actually one more than the highest jx
+            self.num_goals = int(line.split(":")[1])
 
             # Seek forward to the start of the variable definition section
             while not line.startswith("# Variable names:"):
@@ -113,7 +113,7 @@ class BDDStrategy(strategy.Strategy):
                 # TODO: check for consecutivity
 
         # Create a Domain for jx to help with conversion to/from bitvectors
-        self.jx_domain = strategy.Domain("_jx", value_mapping=range(self.max_jx), endianness=strategy.Domain.B0_IS_LSB)
+        self.jx_domain = strategy.Domain("_jx", value_mapping=range(self.num_goals), endianness=strategy.Domain.B0_IS_LSB)
 
         toc = self.timer_func()
 
@@ -259,7 +259,7 @@ class BDDStrategy(strategy.Strategy):
             candidate_states = list(self.BDDToStates(candidates))
             for s in candidate_states:
                 # add 1 to jx
-                s.goal_id = (s.goal_id + 1) % self.max_jx
+                s.goal_id = (s.goal_id + 1) % self.num_goals
 
             return candidate_states
 
