@@ -71,7 +71,17 @@ class AsynchronousProcessThread(threading.Thread):
 
             # Check the status of the process
             self.process.poll()
-            time.sleep(0.01)
+
+            # If we're not logging, limit our poll frequency
+            # (In the case of logging, readline() effectively does something similar)
+            if self.logFunction is None:
+                time.sleep(0.01)
+
+        # Grab any remaining output (often an error)
+        if self.logFunction is not None:
+            output = self.process.stdout.readlines()
+            for line in output:
+                self.logFunction(line)
 
         # Call any callback function if terminated succesfully
         if self.callback is not None and self.running:
