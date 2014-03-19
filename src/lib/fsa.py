@@ -23,17 +23,13 @@ class FSAStrategy(strategy.Strategy):
         # A data structure for recording valid transitions between states
         self.transitions = defaultdict(lambda: defaultdict(bool)) # (state1, state2) -> T/F
 
-    def loadFromFile(self, filename):
+    def _loadFromFile(self, filename):
         """
         Create an automaton by reading in a file produced by a synthesizer,
         such as JTLV or Slugs.
 
         Basically just a lot of regexes.
         """
-
-        logging.info("Loading strategy from file '{}'...".format(filename))
-
-        tic = time.time()
 
         # Clear any existing states
         self.states.clearStates()
@@ -113,9 +109,7 @@ class FSAStrategy(strategy.Strategy):
                 self.transitions[state_by_id[start]][state_by_id[end]] = True
 
         # All done, hooray!
-        toc = time.time()
-        logging.info("Loaded %d states in %f seconds.", len(self.states), toc-tic)
-
+        logging.info("Loaded %d states.", len(self.states))
 
     def searchForStates(self, prop_assignments, state_list=None):
         """ Returns an iterator for the subset of all known states (or a subset

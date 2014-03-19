@@ -11,9 +11,9 @@ import logging
 # TODO: We could probably get away with a really minimal Python BDD
 #       implementation
 
-# TODO: move jtlv bdd outputter in GROneMain to separate file?
 # TODO: move generic bdd functions to a different file so others can use?
-# TODO: variable reordering so Jx and strat_type are first
+# TODO: variable reordering so Jx and strat_type are first (is this actually
+#       best?)
 
 # TODO: optimize strategy:
 #       - stutter state removal
@@ -39,24 +39,16 @@ class BDDStrategy(strategy.Strategy):
         # TODO: why is garbage collection crashing?? :( [e.g. on firefighting]
         self.mgr.DisableGarbageCollection()
 
-        # Choose a timer func with maximum accuracy for given platform
-        if sys.platform in ['win32', 'cygwin']:
-            self.timer_func = time.clock
-        else:
-            self.timer_func = time.time
-
-    def loadFromFile(self, filename):
+    def _loadFromFile(self, filename):
         """
         Load in a strategy BDD from a file produced by a synthesizer,
         such as JTLV or Slugs.
         """
 
-        # TODO: logging and timer code can be moved to Strategy parent class
-        logging.info("Loading strategy from file '{}'...".format(filename))
+        # Clear any existing states
+        self.states.clearStates()
 
         a = pycudd.DdArray(1)
-
-        tic = self.timer_func()
 
         # Load in the actual BDD itself
         # Note: We are using an ADD loader because the BDD loader
@@ -114,11 +106,6 @@ class BDDStrategy(strategy.Strategy):
 
         # Create a Domain for jx to help with conversion to/from bitvectors
         self.jx_domain = strategy.Domain("_jx", value_mapping=range(self.num_goals), endianness=strategy.Domain.B0_IS_LSB)
-
-        toc = self.timer_func()
-
-        logging.info("Loaded in {} seconds.".format(toc-tic))
-
 
     def searchForStates(self, prop_assignments, state_list=None):
         """ Returns an iterator for the subset of all known states (or a subset

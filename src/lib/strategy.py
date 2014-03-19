@@ -578,6 +578,18 @@ class Strategy(object):
     def loadFromFile(self, filename):
         """ Load a strategy from a file. """
 
+        logging.info("Loading strategy from file '{}'...".format(filename))
+
+        tic = globalConfig.best_timer()
+        self._loadFromFile(filename)
+        toc = globalConfig.best_timer()
+
+        logging.info("Loaded in {} seconds.".format(toc-tic))
+
+    def _loadFromFile(self, filename):
+        """ The inner function that actually performs file loading
+            for loadFromFile(). """
+
         raise NotImplementedError("Use a subclass of Strategy")
 
     def searchForStates(self, prop_assignments, state_list=None):
