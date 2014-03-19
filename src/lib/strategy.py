@@ -15,12 +15,36 @@ import regions
 import sys
 import collections
 import copy
+import globalConfig
 
 # TODO: make sure this works with mopsy
-# TODO: classmethod constructor that creates correct subclass based on filename
 # TODO: generalize notion of sets of states in a way transparent to both BDD and
 # FSA, so we don't end up unnecessarily creating and iterating over state
 # objects for things that can be done with a single BDD op
+# TODO: should we be using region names instead of objects to avoid
+# weird errors if two copies of the same map are used?
+
+def createStrategyFromFile(filename, input_propositions, output_propositions):
+    """ High-level method for loading a strategy of any type from file.
+
+        Takes a filename and lists of input and output propositions.
+        Returns a fully-loaded instance of a Strategy subclass."""
+
+    # Instantiate the appropriate subclass of strategy
+    if filename.endswith(".aut"):
+        import fsa
+        new_strategy = fsa.FSAStrategy()
+    elif filename.endswith(".bdd"):
+        import bdd
+        new_strategy = bdd.BDDStrategy()
+    else:
+        raise ValueError("Unsupported strategy file type.  Filename must end with either '.aut' or '.bdd'.")
+
+    # Configure and load
+    new_strategy.configurePropositions(input_propositions, output_propositions)
+    new_strategy.loadFromFile(filename)
+
+    return new_strategy
 
 class Domain(object):
     """ A Domain is a bit-vector abstraction, allowing a proposition to effectively
