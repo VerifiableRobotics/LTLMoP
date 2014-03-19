@@ -658,22 +658,6 @@ class Strategy(object):
 
             f_out.writelines(transitions)
 
-            # Write the states
-            #for state in self.iterateOverStates():
-                #state_label = "\\n".join((pprint_assignment(k, v)
-                                          #for k, v in state.getOutputs().iteritems()))
-                #f_out.write('\t{} [style="bold", width=0, height=0, fontsize=20, label="{}"];\n'\
-                            #.format(state.getName(), state_label))
-
-
-            # Write the transitions with the input labels (only inputs that are true)
-            #for state in self.iterateOverStates():
-                #for next_state in self.findTransitionableStates({}, from_state=state):
-                    #trans_label = "\\n".join((pprint_assignment(k, v)
-                                              #for k, v in next_state.getInputs().iteritems()))
-                    #f_out.write('\t{} -> {} [style="bold", arrowsize=1.5, fontsize=20, label="{}"];\n'\
-                                #.format(state.getName(), next_state.getName(), trans_label))
-
             # Close the digraph
             f_out.write("} \n")
 
