@@ -141,32 +141,3 @@ class FSAStrategy(strategy.Strategy):
         transitionable_states = self.searchForStates(prop_assignments, state_list=self.transitions[from_state])
 
         return list(transitionable_states)
-
-def FSATest(spec_file_name):
-    import project
-    import pprint
-
-    proj = project.Project()
-    proj.loadProject(spec_file_name)
-    rfi = proj.loadRegionFile(decomposed=True)
-    aut_file_name = proj.getFilenamePrefix()+'.aut'
-    s = FSAStrategy()
-    region_domain = strategy.Domain("region", rfi.regions, strategy.Domain.B0_IS_MSB)
-    s.configurePropositions(proj.enabled_sensors, proj.enabled_actuators + proj.all_customs + [region_domain])
-    s.loadFromFile(aut_file_name)
-
-    # TODO: should we be using region names instead of objects to avoid
-    # weird errors if two copies of the same map are used?
-    print "0th state:", s.states[0]
-
-    initial_region = rfi.regions[rfi.indexOfRegionWithName("p3")]
-    start_state = s.searchForOneState({"region": initial_region, "person": False})
-    print "Start state:", start_state
-
-    print "Successors:"
-    pprint.pprint(s.findTransitionableStates({}, from_state=start_state))
-
-    #s.exportAsDotFile("test.dot")
-
-if __name__ == "__main__":
-    FSATest(sys.argv[1])

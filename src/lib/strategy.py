@@ -677,6 +677,38 @@ class Strategy(object):
             # Close the digraph
             f_out.write("} \n")
 
+def TestLoadAndDump(spec_filename):
+    import project
+    import pprint
+    import strategy  # When running from the context of __name__ == "__main__", we need to
+                     # explicitly import like this or else things get weird... e.g. __main__.Domain
+                     # and strategy.Domain become different things
+
+    ### Load the project
+    proj = project.Project()
+    proj.loadProject(spec_filename)
+    spec_map = proj.loadRegionFile(decomposed=True)
+
+    ### Load the strategy
+    region_domain = strategy.Domain("region", spec_map.regions, Domain.B0_IS_MSB)
+
+    strat = createStrategyFromFile(proj.getStrategyFilename(),
+                                   proj.enabled_sensors,
+                                   proj.enabled_actuators + proj.all_customs + [region_domain])
+
+    ### Choose a starting state
+    initial_region = spec_map.regions[0]  # Hopefully this is a valid region to start from...
+    start_state = strat.searchForOneState({"region": initial_region, "radio": False})
+    #pprint.pprint(strat.findTransitionableStates({}, from_state=start_state))
+
+    ### Dump the strategy from this initial state
+    strat.exportAsDotFile("strategy_test.dot", starting_states = [start_state])
+
 if __name__ == "__main__":
+    logging.info("Running doctests...")
     import doctest
     doctest.testmod()
+
+    if len(sys.argv) > 1:
+        logging.info("Running file load/dump test for {!r}...".format(sys.argv[1]))
+        TestLoadAndDump(sys.argv[1])
