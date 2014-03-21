@@ -998,7 +998,60 @@ public class GROneGame {
 	}
 
 	
-	
+       // Compute the symbolic winning strategy
+       public BDD[][] calculate_symb_strategy() {
+
+               BDD[][] res;
+
+               // result is an array of BDDs that contains the following strategies:
+               // 0. The strategies that do not change the justice pursued
+               // 1. The strategies that change the justice pursued
+               res = new BDD[2][sys.justiceNum()];
+
+               BDD trans = env.trans().and(sys.trans());
+               
+               // Initialize the strategies for the case that the justice is visited
+               // In this case the memory value is adjusted.
+               for (int i=0 ; i<sys.justiceNum(); i++) {
+                       int next_just = (i + 1) % sys.justiceNum();
+                       res[0][i] = Env.FALSE();
+                       res[1][i] = z_mem[i].and(trans.and(sys.justiceAt(i).and(Env.prime(z_mem[next_just]))));
+               }
+
+               // Add to the strategy that does not visit the justice the option to reduce the distance to the current goal
+               // That is, reduce the index of the y_mem visited.
+               for (int i=0 ; i < sys.justiceNum() ; i++) {
+                       BDD low = y_mem[i][0];
+                       for (int r=1 ; r<y_mem[i].length ; r++) {
+                                // look for the minimal y_mem we can jump to
+                               //BDD cand = Env.FALSE();
+                               // int look_r = 0;
+                               //for (int look_r = 0; cand.isZero(); look_r++) {
+                                //   cand = y_mem[i][r].and(low.not()).and(trans.and(Env.prime(y_mem[i][look_r])));
+                                //}
+                                BDD cand = y_mem[i][r].and(low.not()).and(trans.and(Env.prime(low)));
+                               res[0][i] = res[0][i].or(cand);
+                               low = low.or(y_mem[i][r]);
+                       }
+               }
+
+               // Add to the strategy that does not visit the justice the option to not visit the justice of the environment and remain in same distance
+               // That is, remain in the same x_mem.
+               // FIXME: we don't really want this in practical situations
+               for (int i=0 ; i < sys.justiceNum() ; i++) {
+                       BDD low = y_mem[i][0];
+                       for (int r=1 ; r<x_mem[i].length ; r++) {
+                               for (int j=0 ; j < env.justiceNum(); j++){
+                                       BDD cand = x_mem[i][r][j].and(low.not()).and(trans).and(env.justiceAt(j).not()).and(Env.prime(x_mem[i][r][j]));
+                                       res[0][i] = res[0][i].or(cand);
+                                       low = low.or(x_mem[i][r][j]);
+                               }
+                       }
+               }
+
+               return res;
+       }
+       	
 		
 	/**
 	 * <p>

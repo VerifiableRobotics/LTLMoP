@@ -56,6 +56,7 @@ class Project:
         # Compilation options (with defaults)
         self.compile_options = {"convexify": True,  # Decompose workspace into convex regions
                                 "fastslow": False,  # Enable "fast-slow" synthesis algorithm
+                                "symbolic": False,  # Use BDDs instead of explicit-state strategies
                                 "decompose": True,  # Create regions for free space and region overlaps (required for Locative Preposition support)
                                 "use_region_bit_encoding": True, # Use a vector of "bitX" propositions to represent regions, for efficiency
                                 "parser": "structured"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
@@ -214,7 +215,7 @@ class Project:
             data['SETTINGS']['CurrentConfigName'] = self.currentConfig.name
 
         data['SETTINGS']['CompileOptions'] = "\n".join(["%s: %s" % (k, str(v)) for k,v in self.compile_options.iteritems()])
-    
+
         if self.rfi is not None:
             # Save the path to the region file as relative to the spec file
             # FIXME: relpath has case sensitivity problems on OS X
@@ -306,6 +307,12 @@ class Project:
             then this function will return ``/home/ltlmop/examples/test/test``
         """
         return os.path.join(self.project_root, self.project_basename)
+
+    def getStrategyFilename(self):
+        """ Returns the full path of the file that should contain the strategy
+            for this specification. """
+
+        return self.getFilenamePrefix() + ('.bdd' if self.compile_options["symbolic"] else '.aut')
 
     def importHandlers(self, all_handler_types=None):
         """

@@ -1,0 +1,15 @@
+--- pycudd2.0.2/pycudd/ddmanager.i	2012-03-30 16:47:57.000000000 -0400
++++ pycudd2.0.2-new/pycudd/ddmanager.i	2013-02-04 20:39:04.000000000 -0500
+@@ -389,6 +389,12 @@
+ 
+   /*  DDDmp Functions */
+   int ArrayLoad( int rootmatchmode, char **rootmatchnames, int varmatchmode, char **varmatchnames, IntArray *varmatchauxids, IntArray *varcomposeids, int mode, char *filename, FILE *fp, DdArray *pproots) { return Dddmp_cuddBddArrayLoad( self, (Dddmp_RootMatchType) rootmatchmode, rootmatchnames, (Dddmp_VarMatchType) varmatchmode, varmatchnames, (int *) ( varmatchauxids ? varmatchauxids->vec : NULL), (int *) ( varcomposeids ? varcomposeids->vec : NULL), mode, filename, fp, &(pproots->vec)); }
++
++    %constant DDDMP_ROOT_MATCHLIST = DDDMP_ROOT_MATCHLIST;
++    %constant DDDMP_VAR_MATCHIDS = DDDMP_VAR_MATCHIDS;
++    %constant DDDMP_MODE_TEXT = DDDMP_MODE_TEXT;
++  int AddArrayLoad( int rootmatchmode, char **rootmatchnames, int varmatchmode, char **varmatchnames, IntArray *varmatchauxids, IntArray *varcomposeids, int mode, char *filename, FILE *fp, DdArray *pproots) { return Dddmp_cuddAddArrayLoad( self, (Dddmp_RootMatchType) rootmatchmode, rootmatchnames, (Dddmp_VarMatchType) varmatchmode, varmatchnames, (int *) ( varmatchauxids ? varmatchauxids->vec : NULL), (int *) ( varcomposeids ? varcomposeids->vec : NULL), mode, filename, fp, &(pproots->vec)); }
++
+   int ArrayStore( char *ddname, DdArray *roots, char **rootnames, char **varnames, IntArray *auxids, int mode, int varinfo, char *filename, FILE *fp) { return Dddmp_cuddBddArrayStore(self, ddname, roots->sz, roots->vec, rootnames, varnames, (int *) ( auxids ? auxids->vec : NULL), mode, (Dddmp_VarInfoType) varinfo, filename, fp); }
+ %newobject BddLoad;   DdNode *BddLoad( int varmatchmode, char **varmatchnames, IntArray *varmatchauxids, IntArray *varcomposeids, int mode, char *filename, FILE *fp) { return Dddmp_cuddBddLoad( self, (Dddmp_VarMatchType) varmatchmode, varmatchnames, (int *) ( varmatchauxids ? varmatchauxids->vec : NULL), (int *) ( varcomposeids ? varcomposeids->vec : NULL), mode, filename, fp); }
+   int BddStore( char *ddname, DdNode *f, char **varnames, IntArray *auxids, int mode, int varinfo, char *fname, FILE *fp) { return Dddmp_cuddBddStore( self, ddname, f, varnames, (int *) (auxids ? auxids->vec : NULL), mode, (Dddmp_VarInfoType) varinfo, fname, fp); }

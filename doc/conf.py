@@ -221,6 +221,13 @@ class Mock(object):
         else:
             return Mock()
 
-MOCK_MODULES = ['wx', 'wx.richtext', 'wx.stc', 'wx.grid', 'wx.lib', 'wx.lib.buttons', 'wx.lib.intctrl', 'wxversion', 'Polygon', 'Polygon.Shapes', 'Polygon.IO', 'Polygon.Utils', 'playerc', 'numpy', 'numpy.ma', 'numpy.matlib', 'scipy', 'scipy.linalg', 'scipy.optimize', 'ompl', 'roslib', 'rospy', 'gazebo', 'gazebo.srv', 'matplotlib', 'matplotlib.pyplot', 'matplotlib.cbook', 'std_msgs', 'std_msgs.msg', 'tf', 'tf.transformations', 'matplotlib.backends', 'matplotlib.backends.backend_tkagg', 'matplotlib.figure', 'matplotlib.axes', 'matplotlib.transforms']
+MOCK_MODULES = ['wx', 'wx.richtext', 'wx.stc', 'wx.grid', 'wx.lib',
+'wx.lib.buttons', 'wx.lib.intctrl', 'wxversion', 'Polygon', 'Polygon.Shapes',
+'Polygon.IO', 'Polygon.Utils', 'playerc', 'numpy', 'numpy.ma', 'numpy.matlib',
+'scipy', 'scipy.linalg', 'scipy.optimize', 'ompl', 'roslib', 'rospy', 'gazebo',
+'gazebo.srv', 'matplotlib', 'matplotlib.pyplot', 'matplotlib.cbook', 'std_msgs',
+'std_msgs.msg', 'tf', 'tf.transformations', 'matplotlib.backends',
+'matplotlib.backends.backend_tkagg', 'matplotlib.figure', 'matplotlib.axes',
+'matplotlib.transforms', 'pycudd']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()

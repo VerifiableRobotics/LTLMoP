@@ -493,6 +493,10 @@ class Region(object):
         self.isObstacle = False
         self.holeList = []
 
+
+    def __repr__(self):
+        return "<Region '{}' (@{})>".format(self.name, hex(id(self)))
+
     # =================================
     # == Region Manipulation Methods ==
     # =================================

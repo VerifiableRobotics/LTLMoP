@@ -1,0 +1,192 @@
+diff -rupN pycudd2.0.2/cudd-2.4.2/Makefile pycudd2.0.2-new/cudd-2.4.2/Makefile
+--- pycudd2.0.2/cudd-2.4.2/Makefile	2012-03-30 17:20:07.000000000 -0400
++++ pycudd2.0.2-new/cudd-2.4.2/Makefile	2012-12-12 00:36:16.000000000 -0500
+@@ -66,9 +67,9 @@ ICFLAGS	= -g -O6
+ # Gcc 2.8.1 on i686.
+ #XCFLAGS	= -mcpu=pentiumpro -malign-double -DHAVE_IEEE_754 -DBSD
+ # Gcc 4.2.4 or higher on x86 (32-bit)
+-XCFLAGS	= -m32 -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=4 -DSIZEOF_LONG=8 -fPIC
++#XCFLAGS	= -m32 -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=4 -DSIZEOF_LONG=8 -fPIC
+ # Gcc 4.2.4 or higher on x86_64 (64-bit compilation)
+-#XCFLAGS	= -mtune=native -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -fPIC
++XCFLAGS	= -mtune=native -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -fPIC -fno-common
+ # Gcc 4.2.4 or higher on x86_64 (32-bit compilation)
+ #XCFLAGS	= -m32 -mtune=native -malign-double -DHAVE_IEEE_754 -DBSD
+ # Icc on i686 (older versions may not support -xHost).
+@@ -203,6 +204,7 @@ INCLUDE = -I$(IDIR)
+ 
+ BDIRS	= cudd dddmp mtr st util epd
+ DIRS	= $(BDIRS) nanotrav
++#DIRS	= $(BDIRS)
+ 
+ #------------------------------------------------------------------------
+ 
+diff -rupN pycudd2.0.2/cudd-2.4.2/cudd/Makefile pycudd2.0.2-new/cudd-2.4.2/cudd/Makefile
+--- pycudd2.0.2/cudd-2.4.2/cudd/Makefile	2012-03-30 16:51:30.000000000 -0400
++++ pycudd2.0.2-new/cudd-2.4.2/cudd/Makefile	2012-12-06 03:51:32.000000000 -0500
+@@ -126,6 +126,7 @@ distclean: clean
+ 	*.bak *~ tags .gdb_history *.qv *.qx
+ 
+ libso:
+-	gcc -shared $(POBJ) -o ../lib/libcudd.so
++#	gcc -shared $(POBJ) -o ../lib/libcudd.so
++	gcc -dynamiclib -undefined suppress -flat_namespace $(POBJ) -o /usr/local/cudd-2.4.2/lib/libcudd.dylib
+
+
+diff -rupN pycudd2.0.2/cudd-2.4.2/dddmp/Makefile pycudd2.0.2-new/cudd-2.4.2/dddmp/Makefile
+--- pycudd2.0.2/cudd-2.4.2/dddmp/Makefile	2012-03-30 16:51:29.000000000 -0400
++++ pycudd2.0.2-new/cudd-2.4.2/dddmp/Makefile	2012-12-11 23:46:55.000000000 -0500
+@@ -244,5 +244,6 @@ distclean: clean
+ 	
+ 
+ libso:
+-	gcc -shared $(POBJ) -o ../lib/libdddmp.so
++	#gcc -shared $(POBJ) -o ../lib/libdddmp.so
++	gcc -dynamiclib -undefined suppress -flat_namespace $(POBJ) -o /usr/local/cudd-2.4.2/lib/libdddmp.dylib
+ 
+
+
+diff -rupN pycudd2.0.2/cudd-2.4.2/epd/Makefile pycudd2.0.2-new/cudd-2.4.2/epd/Makefile
+--- pycudd2.0.2/cudd-2.4.2/epd/Makefile	2012-03-30 16:51:28.000000000 -0400
++++ pycudd2.0.2-new/cudd-2.4.2/epd/Makefile	2012-12-06 03:52:35.000000000 -0500
+@@ -68,4 +68,5 @@ distclean: clean
+ 	
+ 	
+ libso:
+-	gcc -shared $(POBJ) -o ../lib/libcuddepd.so
++	#gcc -shared $(POBJ) -o ../lib/libcuddepd.so
++	gcc -dynamiclib -undefined suppress -flat_namespace $(POBJ) -o /usr/local/cudd-2.4.2/lib/libcuddepd.dylib
+
+
+
+diff -rupN pycudd2.0.2/cudd-2.4.2/mtr/Makefile pycudd2.0.2-new/cudd-2.4.2/mtr/Makefile
+--- pycudd2.0.2/cudd-2.4.2/mtr/Makefile	2012-03-30 16:51:31.000000000 -0400
++++ pycudd2.0.2-new/cudd-2.4.2/mtr/Makefile	2012-12-06 03:52:56.000000000 -0500
+@@ -99,4 +99,5 @@ distclean: clean
+ 	
+ 
+ libso:
+-	gcc -shared $(POBJ) -o ../lib/libcuddmtr.so
++	#gcc -shared $(POBJ) -o ../lib/libcuddmtr.so
++	gcc -dynamiclib -undefined suppress -flat_namespace $(POBJ) -o /usr/local/cudd-2.4.2/lib/libcuddmtr.dylib
+
+
+diff -rupN pycudd2.0.2/cudd-2.4.2/st/Makefile pycudd2.0.2-new/cudd-2.4.2/st/Makefile
+--- pycudd2.0.2/cudd-2.4.2/st/Makefile	2012-03-30 16:51:31.000000000 -0400
++++ pycudd2.0.2-new/cudd-2.4.2/st/Makefile	2012-12-06 03:53:18.000000000 -0500
+@@ -69,4 +69,5 @@ distclean: clean
+ 
+ 
+ libso:
+-	gcc -shared $(POBJ) -o ../lib/libcuddst.so
++	#gcc -shared $(POBJ) -o ../lib/libcuddst.so
++	gcc -dynamiclib -undefined suppress -flat_namespace $(POBJ) -o /usr/local/cudd-2.4.2/lib/libcuddst.dylib
+
+
+diff -rupN pycudd2.0.2/cudd-2.4.2/util/Makefile pycudd2.0.2-new/cudd-2.4.2/util/Makefile
+--- pycudd2.0.2/cudd-2.4.2/util/Makefile	2012-03-30 16:51:29.000000000 -0400
++++ pycudd2.0.2-new/cudd-2.4.2/util/Makefile	2012-12-06 03:53:29.000000000 -0500
+@@ -68,5 +68,6 @@ distclean: clean
+ 	rm -f lib$(P).a lib$(P).b llib-l$(P).ln tags *.bak *~ .pure
+ 
+ libso:
+-	gcc -shared $(POBJ) -o ../lib/libcuddutil.so
++	#gcc -shared $(POBJ) -o ../lib/libcuddutil.so
++	gcc -dynamiclib -undefined suppress -flat_namespace $(POBJ) -o /usr/local/cudd-2.4.2/lib/libcuddutil.dylib
+ 
+diff -rupN pycudd2.0.2/cudd-2.4.2/util/cpu_stats.c pycudd2.0.2-new/cudd-2.4.2/util/cpu_stats.c
+--- pycudd2.0.2/cudd-2.4.2/util/cpu_stats.c	2012-03-30 16:51:30.000000000 -0400
++++ pycudd2.0.2-new/cudd-2.4.2/util/cpu_stats.c	2012-12-06 03:47:39.000000000 -0500
+@@ -8,13 +8,21 @@
+ #include <sys/time.h>
+ #include <sys/resource.h>
+ 
+-#if defined(_IBMR2)
++#ifdef __APPLE__
++#include <mach-o/getsect.h>
++
++#define end get_end()
++#define etext get_etext()
++#define edata get_edata()
++#elif defined(_IBMR2)
+ #define etext _etext
+ #define edata _edata
+ #define end _end
+ #endif
+ 
++#ifndef __APPLE__
+ extern int end, etext, edata;
++#endif 
+ 
+ #endif
+
+@@ -34,10 +42,17 @@ util_print_cpu_stats(FILE *fp)
+     hostname[256] = '\0';		/* just in case */
+ 
+     /* Get the virtual memory sizes */
++    #ifdef __APPLE__
++    vm_text = (long) (((long) etext) / 1024.0 + 0.5);
++    vm_init_data = (long) (((long) (edata) - (long) (etext)) / 1024.0 + 0.5);
++    vm_uninit_data = (long) (((long) (end) - (long) (edata)) / 1024.0 + 0.5);
++    vm_sbrk_data = (long) (((long) sbrk(0) - (long) (end)) / 1024.0 + 0.5);
++	#else
+     vm_text = (long) (((long) (&etext)) / 1024.0 + 0.5);
+     vm_init_data = (long) (((long) (&edata) - (long) (&etext)) / 1024.0 + 0.5);
+     vm_uninit_data = (long) (((long) (&end) - (long) (&edata)) / 1024.0 + 0.5);
+     vm_sbrk_data = (long) (((long) sbrk(0) - (long) (&end)) / 1024.0 + 0.5);
++	#endif
+ 
+     /* Get virtual memory limits */
+     (void) getrlimit(RLIMIT_DATA, &rlp);
+
+
+diff -rupN pycudd2.0.2/pycudd/Makefile pycudd2.0.2-new/pycudd/Makefile
+--- pycudd2.0.2/pycudd/Makefile	2012-03-30 17:33:11.000000000 -0400
++++ pycudd2.0.2-new/pycudd/Makefile	2013-02-04 20:29:46.000000000 -0500
+@@ -17,14 +17,14 @@ MOD = pycudd
+ ## Change these to reflect local settings
+ ##
+ #######
+-CUDD        := ../cudd-2.4.2/
++CUDD        := /usr/local/cudd-2.4.2/
+ CUDDVER     = 0x020400
+ PYTHON_LOC  := /usr
+ # Change the following to lib64 for 64-bit architectures
+-LIB_DIR     := lib
++LIB_DIR     := lib64
+ #PYTHON_LOC  := /usr
+ PYTHON_VER  := python2.7
+-SWIG	    := /usr/bin/swig
++SWIG	    := /opt/local/bin/swig
+ CCPLUS      := g++
+ 
+ ##
+@@ -57,7 +57,7 @@ PYTHON_INCL := -I$(PYTHON_LOC)/include/$
+ PY_DEP_INCL := -isystem $(PYTHON_LOC)/include/$(PYTHON_VER) -isystem $(PYTHON_LOC)$(LIB_DIR)/$(PYTHON_VER)/config
+ #
+ CUDD_INCL   := -I$(CUDD)/include
+-INCLUDES    := $(CUDD_INCL) -I. $(PYTHON_INCL)
++INCLUDES    := $(CUDD_INCL) -I. $(PYTHON_INCL) -I /opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7/
+ DEP_INCL    := $(CUDD_INCL) -I. $(PY_DEP_INCL)
+ LDFLAGS     := -L$(CUDD)/lib -lm -lstdc++ -lcudd -lcuddmtr -lcuddst -lcuddutil -ldddmp -lcuddepd
+ SWIG_FLAGS  := -c++ -python -o $(MOD)_wrap.cpp -DCUDDVER=$(CUDDVER)
+@@ -73,7 +73,7 @@ SWIG_FLAGS  := $(SWIG_FLAGS) -DPYCUDD_DE
+ else
+ FLAGS       := $(FLAGS) -O2 
+ endif
+-LFLAGS      := -Xlinker -rpath $(CUDD)/lib 
++#LFLAGS      := -Xlinker -rpath $(CUDD)/lib 
+ 
+ #######
+ ##
+@@ -105,7 +105,8 @@ HDR = $(MOD).h docstring.h
+ 	$(CCPLUS) $(FLAGS) $(INCLUDES) -c $<
+ 
+ all: $(OBJ) $(HDR)
+-	$(CCPLUS) -shared $(OBJ) $(LFLAGS) -o _$(MOD).so $(LDFLAGS);
++	#$(CCPLUS) -shared $(OBJ) $(LFLAGS) -o _$(MOD).so $(LDFLAGS);
++	$(CCPLUS) -bundle -undefined suppress -flat_namespace $(OBJ) $(LFLAGS) -o _$(MOD).so $(LDFLAGS);
+ 
+ ##
+ ## This target is useful if you're hacking manually with the SWIG wrapper
+

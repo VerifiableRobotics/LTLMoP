@@ -7,6 +7,7 @@ import logging
 import ConfigParser
 import sys, os
 import project
+import time
 
 def setupLogging(loggerLevel=None):
     # Set up loggers for printing error messages
@@ -60,4 +61,11 @@ def setupLogging(loggerLevel=None):
     elif loggerLevel == 'debug':
         logger.setLevel(logging.DEBUG)
 
+# Choose the timer func with maximum accuracy for given platform
+if sys.platform in ['win32', 'cygwin']:
+    best_timer = time.clock
+else:
+    best_timer = time.time
+
+# Set-up logging automatically on import
 setupLogging()

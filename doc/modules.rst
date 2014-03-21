@@ -9,10 +9,6 @@ Shared Modules
     :members:
     :undoc-members:
 
-.. automodule:: fsa
-    :members:
-    :undoc-members:
-
 .. automodule:: fileMethods
     :members:
     :undoc-members:
@@ -52,3 +48,16 @@ Shared Modules
 .. automodule:: specCompiler
     :members:
     :undoc-members:
+
+.. automodule:: strategy
+    :members:
+    :undoc-members:
+
+.. automodule:: fsa
+    :members:
+    :undoc-members:
+
+.. automodule:: bdd
+    :members:
+    :undoc-members:
+
