@@ -31,6 +31,9 @@ class HandlerSubsystem:
     def __init__(self,proj):
         self.proj = proj
 
+    # Set the pattern for regex to match the functions in proposition mapping
+    handler_function_RE = r"(?P<robot_name>\w+)\.(?P<handler_name>\w+)\.(?P<method_name>\w+)\((?P<para_info>.*?)\)"
+
         self.handler_configs = {}   # dictionary for all handler information [robot type or shared][handler type]
         self.robot_configs = []     # list of robot objects
         self.configs = []           # list of config objects
@@ -253,7 +256,7 @@ class HandlerSubsystem:
             return None
 
         # construct regex for identify each parts
-        method_RE = re.compile("(?P<robot_name>\w+)\.(?P<handler_name>\w+)\.(?P<method_name>\w+)\((?P<para_info>.*?)\)")
+        method_RE = re.compile(HandlerSubsystem.handler_function_RE)
 
         result = method_RE.search(method_string)
 
