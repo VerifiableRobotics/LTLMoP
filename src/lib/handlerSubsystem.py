@@ -283,6 +283,23 @@ class HandlerSubsystem:
                 return h
         return None
 
+    def getPose(self, cached=False):
+        """
+        A wrapper function that returns the pose from the pose handler of the main robot in the
+        current executing config
+        """
+        # get the main robot config
+        robot_config = self.executing_config.getRobotByName(self.executing_config.main_robot)
+
+        # first make sure the coord transformation function is ready
+        if self.coordmap_map2lab is None:
+            self.coordmap_map2lab, self.coordmap_lab2map = robot_config.getCoordMaps()
+            self.executor.proj.coordmap_map2lab, self.executor.proj.coordmap_lab2map = robot_config.getCoordMaps()
+
+        pose_handler_instance = self.getHandlerByName(robot_config.getHandlerOfRobot(ht.PoseHandler).name)
+
+        return pose_handler_instance.getPose(cached)
+
 
     def initializeAllMethods(self):
         """
@@ -596,163 +613,13 @@ class HandlerSubsystem:
 
         return '.'.join([robot_name,handler_name,method_name])+'('+para_info+')'
 
-
-    def importHandlers(self,configObj,all_handler_types):
         """
-        Figure out which handlers we are going to use, based on the different configurations file settings
-        Only one motion/pose/drive/locomotion handler per experiment
-        Multiple init/sensor/actuator handlers per experiment, one for each robot (if any)
-        Note that the order of loading is important, due to inter-handler dependencies.
         """
-        self.h_obj = {'init':{},'pose':{},'locomotionCommand':{},'motionControl':{},'drive':{},'sensor':{},'actuator':{}}
-        robots = configObj.robots
-
-        # load all handler objects based on the current configuration
-        for robotObj in robots:
-            handlers = robotObj.handlers
-            for handler_type,handlerObj in handlers.iteritems():
-                if handler_type in ['init','sensor','actuator']:
-                    self.h_obj[handler_type][robotObj.name] = handlerObj
-                elif handler_type in ['pose','motionControl','locomotionCommand','drive']:
-                    # only load for main robot
-                    if robotObj.name == configObj.main_robot:
-                        self.h_obj[handler_type][robotObj.name] = handlerObj
-                else:
-                    logging.error("ERROR: Cannot recognize handler type {}".format(handler_type))
-
-        # load dummy handlers
-        handlerParser = HandlerParser(self.handler_path)
-        for handlerObj in handlerParser.loadHandler('share'):
-            if 'sensor' in handlerObj.name.lower():
-                self.h_obj['sensor']['share'] = handlerObj
-            elif 'actuator' in handlerObj.name.lower():
-                self.h_obj['actuator']['share'] = handlerObj
-        # complain if there is any missing handler
-        for handler_type, handlerObj in self.h_obj.iteritems():
-            if (handlerObj == {}):
-                logging.error("ERROR: Cannot find handler for {}".format(handler_type))
 
 
-        # initiate all handlers
-        for handler_type in all_handler_types:
-            for robotName,handlerObj in self.h_obj[handler_type].iteritems():
-                # get handler class object for initiating
-                fileName = handlerObj.fullPath(robotName,configObj)
-                logging.info("Loading handler: %s" % fileName.split('.')[-1])
-                try:
-                    __import__(fileName)
-                except ImportError as import_error:
-                    logging.error("Failed to import handler %s : %s" % (fileName.split('.')[-1],import_error))
 
-                handlerModule = sys.modules[fileName]
-                allClass = inspect.getmembers(handlerModule,inspect.isclass)
-                for classObj in allClass:
-                    if classObj[1].__module__ == fileName and not classObj[0].startswith('_'):
-                        handlerClass = classObj[1]
-                        break
 
-                # initiate the handler
-                if handler_type in ['init','sensor','actuator']:
-                    self.proj.h_instance[handler_type][robotName] = eval('handlerClass'+handlerObj.toString(False))
-                    if handler_type == 'init':
-                        self.proj.shared_data.update(self.proj.h_instance[handler_type][robotName].getSharedData())
-                else:
-                    self.proj.h_instance[handler_type] = eval('handlerClass'+handlerObj.toString(False))
-
-        self.proj.sensor_handler = {}
-        self.proj.actuator_handler = {}
-        self.proj.sensor_handler['initializing_handler']={}
-        self.proj.actuator_handler['initializing_handler']={}
-
-        # prepare the regular expression
-        methodRE = re.compile(r"(?P<method_string>(?P<robot>\w+)\.(?P<type>\w+)\.(?P<name>\w+)\((?P<args>[^\)]*)\))")
-
-        # initialize sensor and actuator methods
-        # first need to get the method used for sensor and actuator
-
-        for prop in self.proj.enabled_sensors:
-            if prop in configObj.prop_mapping:
-                method = configObj.prop_mapping[prop]
             else:
-                # Default to dummysensor
-                logging.warning("WARNING: No mapping given for sensor prop '{}', so using default simulated handler.".format(prop))
-                method = "share.dummySensor.buttonPress(button_name='%s')" % prop
-
-            fullExpression = method
-            codeList = []
-            for m in methodRE.finditer(method):
-                method_string = m.group('method_string')
-                methodEvalString = ''
-                robotName = m.group('robot')
-                handlerName = m.group('type')
-                methodName = m.group('name')
-                para_info = [x.strip() for x in m.group('args').replace(')','').split(',')]
-
-                methodEvalString = 'self.h_instance[%s][%s].%s'%('\'sensor\'','\''+robotName+'\'',self.constructMethodString(robotName,'sensor',methodName,para_info))
-                codeList.append(methodEvalString)
-
-                fullExpression = fullExpression.replace(method_string,methodEvalString)
-
-            self.proj.sensor_handler['initializing_handler'][prop] = codeList
-            self.proj.sensor_handler[prop]=compile(fullExpression,"<string>","eval")
-
-        for prop in self.proj.enabled_actuators:
-            if prop in configObj.prop_mapping:
-                method = configObj.prop_mapping[prop]
-            else:
-                # Default to dummyactuator
-                logging.warning("WARNING: No mapping given for actuator prop '{}', so using default simulated handler.".format(prop))
-                method = "share.dummyActuator.setActuator(name='%s')" % prop
-
-            fullExpression = method.replace(" and ", " ; ")
-            # TODO: Complain about ORs
-            codeList = []
-            for m in methodRE.finditer(method):
-                method_string = m.group('method_string')
-                methodEvalString = ''
-                robotName = m.group('robot')
-                handlerName = m.group('type')
-                methodName = m.group('name')
-                para_info = [x.strip() for x in m.group('args').replace(')','').split(',')]
-
-                methodEvalString = 'self.h_instance[%s][%s].%s'%('\'actuator\'','\''+robotName+'\'',self.constructMethodString(robotName,'actuator',methodName,para_info))
-                codeList.append(methodEvalString)
-
-                fullExpression = fullExpression.replace(method_string,methodEvalString)
-
-            self.proj.actuator_handler['initializing_handler'][prop] = codeList
-            self.proj.actuator_handler[prop]=compile(fullExpression,"<string>","exec")
-
-    def constructMethodString(self,robotName,handlerName,methodName,para_info):
-        """
-        returns the string used to execute the corresponding method
-        """
-        methods = deepcopy(self.h_obj[handlerName][robotName].methods)
-        for methodObj in methods:
-            if methodObj.name == methodName:
-                method_input = []
-                for paraObj in methodObj.para:
-                    for para_pair in para_info:
-                        if paraObj.name == para_pair.split('=',1)[0]:
-                            paraObj.setValue(para_pair.split('=',1)[1])
-                            break
-
-                    if paraObj.type.lower() in ['str', 'string', 'region']:
-                        method_input.append('%s=%s'%(paraObj.name,'\"'+paraObj.value+'\"'))
-                    else:
-                        method_input.append('%s=%s'%(paraObj.name,str(paraObj.value)))
-                for para_name in methodObj.omitPara:
-                    if para_name == 'initial':
-                        method_input.append('%s=%s'%(para_name,'initial'))
-                    elif para_name == 'proj':
-                        method_input.append('%s=%s'%(para_name,'self.proj'))
-                    elif para_name == 'shared_data':
-                        method_input.append('%s=%s'%(para_name,'self.proj.shared_data'))
-                    elif para_name == 'actuatorVal':
-                        method_input.append('%s=%s'%(para_name,'new_val'))
-
-                method_input = methodName+'('+','.join(method_input)+')'
-        return method_input
 
     def saveAllConfigFiles(self):
         # save all config object
