@@ -630,7 +630,7 @@ class RobotConfig(object):
                                 continue
                             if handler_type_from_str != handler_type:
                                 # the handler type from the description does not match the one from section name
-                                logging.warning('Miss placed handler description: \n \t {!r} \n \
+                                logging.warning('Misplaced handler description: \n \t {!r} \n \
                                                 in handler type {!r} for robot {}({})' \
                                                 .format(result.group(handler_config_str, handler_type, self.name, self.r_type)))
                                 # we still want to put this handler config into the right type
