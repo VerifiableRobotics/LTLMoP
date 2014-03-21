@@ -160,6 +160,7 @@ class HandlerMethodConfig(object):
         self.comment = comment      # comment of the method
         self.para = para            # list of method parameter config of this method
         self.omit_para = omit_para  # list of parameter names that are omitted
+        self.method_reference = None # a reference to this method
 
         # To avoid recursive setting
         if self.para is None:
@@ -208,14 +209,42 @@ class HandlerMethodConfig(object):
         # parse the string and set the value accordingly
         for para_name, para_value in re.findall(r'(?P<key>\w+)\s*=\s*(?P<val>"[^"]*"|\'[^\']*\'|[^,]+)', para_str):
             para_value = para_value.strip("\"\'")
-            set_value = False
-            for para_config in self.para:
-                if para_config.name == para_name:
-                    para_config.setValue(para_value)
-                    set_value = True
-                    break
-            if not set_value:
-                logging.warning('Cannot not find parameter {!r} for method {!r}'.format(para_name, self.name))
+            para_config = self.getParaByName(para_name)
+            para_config.setValue(para_value)
+
+    def updateParaFromDict(self, para_dict):
+        """
+        update all parameter config object of this method config object with info from given dictionary
+        """
+
+        for para_name, para_value in para_dict.iteritems():
+            para_config = self.getParaByName(para_name)
+            para_config.setValue(para_value)
+
+    def execute(self, extra_args={}):
+        """
+        call the reference of this method with stored parameter values
+        value of extra argument can be given by extra_args
+        """
+        if self.method_reference is None:
+            raise ValueError("No reference of method {} is set.".format(self.name))
+
+        # construct the arguments list
+        # starts with LTLMoP internal arguments
+        arg_dict = {}
+
+        for para_config in self.para:
+            if para_config.name in extra_args:
+                arg_dict[para_config.name] = extra_args[para_config.name]
+            else:
+                arg_dict[para_config.name] = para_config.getValue()
+
+        for para_name in self.omit_para:
+            if para_name in extra_args:
+                arg_dict[para_name] = extra_args[para_name]
+
+        return self.method_reference(**arg_dict)
+
 
     def fromMethod(self, method, handler_config):
         """
@@ -336,34 +365,18 @@ class HandlerConfig(object):
 
         return method_string
 
-    def fullPath(self, robotName, configObj):
-        """ Return the full path for this handler object for importing"""
-        if self.getType() in ['init', 'sensor', 'actuator', 'locomotionCommand']:
-            for robotObj in configObj.robots:
-                if robotObj.name == robotName:
-                    robotFolder = robotObj.type
-                    break
-            if robotName =='share':
-                fileName = '.'.join(['handlers.share', self.name])
-            else:
-                fileName = '.'.join(['handlers.robots', robotFolder, self.name])
-        else:
-            fileName = '.'.join(['handlers', self.getType(), self.name])
-        return fileName
-
     def getType(self):
         return self.h_type
+
     def setType(self, h_type):
         self.h_type = h_type
         return self
 
-    def parseHandler(self, handler_module_path, onlyLoadInit=False):
+    @classmethod
+    def loadHandlerClass(self, handler_module_path):
         """
-        Load method info (name, arg...) in the given handler file
-        If onlyLoadInit is True, only the info of __init__ method will be loaded
-        If over_write_h_type is given, then over write the handler type with it
-
-        returns a handler object or None if fail to load the given handler file
+        load the handler class object for a given handler module
+        return handlername, handlertype and the class object
         """
 
         # add lib to the module name if it is not there already
@@ -396,14 +409,29 @@ class HandlerConfig(object):
         if handler_class.__name__.lower() != handler_module_name.lower():
             logging.warning("File name: {0} mismatch with class name: {1}.".format(handler_class.__name__, handler_module_name))
 
+        name = handler_module_name
+        h_type = inspect.getmro(handler_class)[1] # direct parent
+
+        return name, h_type, handler_class
+
+    def loadHandlerMethod(self, handler_module_path, onlyLoadInit=False):
+        """
+        Load method info (name, arg...) in the given handler file
+        If onlyLoadInit is True, only the info of __init__ method will be loaded
+        If over_write_h_type is given, then over write the handler type with it
+        """
+        # load the handler class first
+        name, h_type, handler_class = self.loadHandlerClass(handler_module_path)
+
         # update the handler name and type info
         # handler name is the name of the file
         # handler type is the corresponding handler object defined in handlerTemplates.py
-        self.name = handler_module_name
-        self.h_type = inspect.getmro(handler_class)[1] # direct parent
+        self.name = name
+        self.h_type = h_type
 
         # get all methods in this handler
         handler_methods = inspect.getmembers(handler_class, inspect.ismethod)
+
         # parse each method into method object
         for method_name, method in handler_methods:
             # only parse the method not start with underscore (exclude __inti__)

@@ -40,6 +40,12 @@ class HandlerSubsystem:
         self.configs = []           # list of config objects
         self.executing_config = None  # current experiment config object that is executing
 
+        self.prop2func = {}         # a mapping from a proporsition to a handler function for execution
+        self.handler_instance = []  # a list of handler instances that are instantiated
+        self.method_configs = set() # a set of func references
+
+        self.coordmap_map2lab = None# function that maps from map coord to lab coord
+        self.coordmap_lab2map = None# function that maps from lab coord to map coord
 
         # Create Handler path
         self.handler_path = os.path.join('lib','handlers')
@@ -120,7 +126,7 @@ class HandlerSubsystem:
             handler_module = '.'.join(['lib', 'handlers', r_type, h_name])
 
         try:
-            handler_config.parseHandler(handler_module)
+            handler_config.loadHandlerMethod(handler_module)
             handler_config.robot_type = r_type
         except ImportError as import_error:
             # TODO: Log an error here if the handler is necessary
@@ -238,22 +244,230 @@ class HandlerSubsystem:
         logging.error("Could not find robot of type '{0}'".format(t))
         return None
 
-    def getHandler(self, htype, hname, rname=None):
-        if htype in self.handler_parser.handler_robotSpecific_type:
-            if rname is None:
-                logging.error("Handler of type '%s' requires a robot type to be specified for lookup" % (htype))
-                return None
-
-            for h in self.handler_dic[htype][rname]:
-                if h.name == hname:
-                    return h
-        else:
-            for h in self.handler_dic[htype]:
-                if h.name == hname:
-                    return h
-
-        logging.error("Could not find handler of type '%s' with name '%s'" % (htype, hname))
+    def getHandlerByName(self, handler_name):
+        """
+        Return the instantiated handler object for a given name or None if it is not instantiated
+        """
+        for h in self.handler_instance:
+            if h.__class__.__name__ == handler_name:
+                return h
         return None
+
+
+    def initializeAllMethods(self):
+        """
+        initialize all method in self.prop2func mapping with initial=True
+        """
+
+        logging.info("Initializing sensor/actuator methods...")
+        # initialize all sensor and actuators
+        # since we cannot distinguish the method for sensor and actuator
+        # we will pass in arguments for both types of methods
+        for method_config in self.method_configs:
+            method_config.execute({"initial":True, "actuatorVal":False})
+
+    def prepareHandler(self, handler_config):
+        """
+        Instantiate the handler object of the given handler config if it is not already instantiated
+        Return the handler instance
+        """
+
+        # Check if we alreay instantiated the handler
+        handler_name = handler_config.name
+        h = self.getHandlerByName(handler_name)
+
+        if h is None:
+            # we need to instantiate the handler
+            robot_type = handler_config.robot_type
+
+            # construct the handler module path for importing
+            if robot_type == "share":
+                handler_type_string = ht.getHandlerTypeName(handler_config.h_type)
+                handler_module_path = ".".join(["lib", "handlers", robot_type, handler_type_string,  handler_name])
+            else:
+                handler_module_path = ".".join(["lib", "handlers", robot_type, handler_name])
+
+            # find the handler class object
+            h_name, h_type, handler_class = HandlerConfig.loadHandlerClass(handler_module_path)
+
+            # construct the arguments list
+            arg_dict = {"proj":self.executor.proj, "shared_data":self.executor.proj.shared_data}
+            init_method = handler_config.getMethodByName("__init__")
+            arg_dict = self.prepareArguments(init_method, arg_dict)
+
+            # instantiate the handler
+            try:
+                h = handler_class(**arg_dict)
+            except Exception:
+                logging.exception("Failed during handler {} instantiation".format(handler_module_path))
+            else:
+                self.handler_instance.append(h)
+        return h
+
+    def prepareArguments(self, method_config, arg_dict={}):
+        """
+        Prepare a dictionary {arg_name:arg_value} based on the method_config given.
+        Extra argment setting can be given with the arg_dict
+
+        return a dictionary that holds the argument name and value
+        """
+
+        # construct the arguments list
+        # starts with LTLMoP internal arguments
+        output_arg_dict = {}
+
+        for para_config in method_config.para:
+            if para_config.name in arg_dict:
+                output_arg_dict[para_config.name] = arg_dict[para_config.name]
+            else:
+                output_arg_dict[para_config.name] = para_config.getValue()
+
+        for para_name in method_config.omit_para:
+            if para_name in arg_dict:
+                output_arg_dict[para_name] = arg_dict[para_name]
+
+        return output_arg_dict
+
+    def prepareMapping(self):
+        """
+        prepare the python objects corresponding to each proposition stored in the prop_mapping of current config object
+        """
+
+        mapping = self.executing_config.prop_mapping
+
+        for prop_name, func_string in mapping.iteritems():
+            if prop_name in self.executor.proj.all_sensors:
+                mode = "sensor"
+            elif prop_name in self.executor.proj.all_actuators:
+                mode = "actuator"
+            else:
+                raise ValueError("Proposition name {} is not recognized.".format(prop_name))
+
+            self.prop2func[prop_name] = self.handlerStringToFunction(func_string, mode)
+
+    def instantiateAllHandlers(self):
+        """
+        instantiate all the handlers of the main robot of the current executing config
+        instantiate only the init handler of the non-main robot
+        """
+        for robot in self.executing_config.robots:
+            if robot.name == self.executing_config.main_robot:
+                # this is a main robot
+                for handler_type_class in ht.getAllHandlerTypeClass():
+                    if handler_type_class in robot.handlers:
+                        h = self.prepareHandler(robot.handlers[handler_type_class])
+                    # if this is a init handler, set the shared_data
+                    if handler_type_class == ht.InitHandler:
+                        self.executor.proj.shared_data = h.getSharedData()
+            else:
+                # this is a non-main robot
+                h = self.prepareHandler(robot_config.getHandlerOfRobot(ht.InitHandler))
+                # this is a init handler, set the shared_data
+                self.executor.proj.shared_data = h.getSharedData()
+
+    def handlerStringToFunction(self, text, mode):
+        """ Mode is either 'sensor' or 'actuator' so we can make operands have
+            different meanings in those contexts. """
+
+        # Parse into AST
+        tree = ast.parse(text)
+        # Start the recursion from the first/only Expr (which itself is always
+        # wrapper in a top-level Module
+        assert isinstance(tree, ast.Module) and len(tree.body) == 1 and isinstance(tree.body[0], ast.Expr)
+        f = self.handlerTreeToFunction(tree.body[0].value, mode)
+        f.func_name = re.sub("\W", "_", text)  # TODO: hsub can give this a better name
+        f.__doc__ = text
+        return f
+
+    def handlerTreeToFunction(self, tree, mode):
+        if isinstance(tree, ast.BoolOp):
+            subfunctions = (handlerTreeToFunction(t, mode) for t in tree.values)
+            if isinstance(tree.op, ast.And):
+                if mode == "sensor":
+                    return lambda extra_args: all((f(extra_args) for f in subfunctions))
+                elif mode == "actuator":
+                    # For actuators, we treat "and" as "and next..."
+                    # We can return a list of the return values, but it's probably not useful
+                    return lambda extra_args: [f(extra_args) for f in subfunctions]
+            elif isinstance(tree.op, ast.Or):
+                if mode == "sensor":
+                    return lambda extra_args: any((f(extra_args) for f in subfunctions))
+                elif mode == "actuator":
+                    raise ValueError("OR operator is not permitted in actuators because it doesn't make sense.")
+        elif isinstance(tree, ast.Call):
+            # Calculate the full name of the function
+            name_parts = []
+            subtree = tree.func
+            while isinstance(subtree, ast.Attribute):
+                name_parts.insert(0, subtree.attr)
+                subtree = subtree.value
+            name_parts.insert(0, subtree.id)
+
+            if len(name_parts) != 3:
+                raise ValueError("Handler method call must be in form of robot.handler.method(...)")
+
+            robot_name, handler_name, method_name = name_parts
+
+            # Extract the function arguments using literal_eval
+            kwargs = {}
+            for kw in tree.keywords:
+                try:
+                    kwargs[kw.arg] =  ast.literal_eval(kw.value)
+                except ValueError:
+                    name = ".".join(name)
+                    raise ValueError("Invalid value for argument {!r} of handler name {!r}".format(kw.arg, name))
+
+            # Create a MethodConfigObject, to give it a chance to do typechecking, etc.
+            method_config = self.createHandlerMethodConfig(robot_name, handler_name, method_name, kwargs)
+            self.method_configs.add(method_config)
+
+            # Return a function that calls the MethodConfigObject's execute() function
+            return lambda extra_args:method_config.execute(extra_args)
+        else:
+            raise ValueError("Encountered unexpected node of type {}".format(type(tree)))
+
+    def createHandlerMethodConfig(self, robot_name, handler_name, method_name, kwargs):
+        """
+        Create a handler method config object from the given information of this method
+        """
+
+        # find which handler does this method belongs to
+        handler_config = None
+
+        if robot_name == "share":
+            # this ia a dummy sensor/actuator
+            handler_type = None
+            handler_config = self.getHandlerConfigDefault(robot_name, handler_type, handler_name)
+        else:
+            # this is a robot sensor/actuator
+            for robot_config in self.executing_config.robots:
+                if robot_config.name == robot_name:
+                    handler_config = robot_config.getHandlerByName(handler_name)
+                    break
+
+        # we did not find the correct handler config
+        if handler_config is None:
+            logging.error("Cannot recognize handler {!r} of robot {!r}".format(handler_name, robot_name))
+            logging.error("Please make sure it is correctly loaded")
+            return None
+
+        # try to find the method config
+        try:
+            method_config = deepcopy(handler_config.getMethodByName(method_name))
+        except ValueError:
+            return None
+
+        # find the handler instance
+        h = self.prepareHandler(method_config.handler)
+
+        # Get the function object and make its arg dict
+        method_config.method_reference = getattr(h, method_config.name)
+
+        # update parameters of this method
+        method_config.updateParaFromDict(kwargs)
+
+        return method_config
+
 
     def string2Method(self, method_string, robots):
         """
