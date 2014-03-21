@@ -613,13 +613,34 @@ class HandlerSubsystem:
 
         return '.'.join([robot_name,handler_name,method_name])+'('+para_info+')'
 
+    def getSensorValue(self, prop_name_list):
         """
+        given a list of proposition names, return dictionary with {prop_name:sensor_value},
+        where sensor_value is a boolean value returned by sensor handler
         """
 
-
-
-
+        sensor_state = {}
+        for prop_name in prop_name_list:
+            if prop_name not in self.prop2func.keys():
+                raise ValueError("Cannot find proposition {} in the given proposition mapping".format(prop_name))
             else:
+                arg_dict = {"initial":False}
+                sensor_state[prop_name] = self.prop2func[prop_name](arg_dict)
+
+        return sensor_state
+
+    def setActuatorValue(self, actuator_state):
+        """
+        given a dictionary with {prop_name:actuator_value},
+        where actuator_value is a boolean value that gets passed to actuator handler
+        """
+
+        for prop_name, actuator_value in actuator_state.iteritems():
+            if prop_name not in self.prop2func.keys():
+                raise ValueError("Cannot find proposition {} in the given proposition mapping".format(prop_name))
+            else:
+                arg_dict = {"initial":False, "actuatorVal":actuator_value}
+                self.prop2func[prop_name](arg_dict)
 
     def saveAllConfigFiles(self):
         # save all config object

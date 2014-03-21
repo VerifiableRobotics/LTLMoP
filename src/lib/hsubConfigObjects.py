@@ -499,6 +499,28 @@ class RobotConfig(object):
                 .format(h_type, self.name, self.r_type))
         return None
 
+    def getCoordMaps(self):
+        """
+        Returns forward (map->lab) and reverse (lab->map) coordinate mapping functions, in that order
+        """
+
+        if self.calibration_matrix is None:
+            logging.warning("Robot {} has no calibration data.  Using identity matrix.".format(self.name))
+            T = eye(3)
+        else:
+            T = self.calibration_matrix
+
+        # Check for singular matrix
+        if abs(linalg.det(T)) < finfo(float).eps:
+            logging.warning("Singular calibration matrix.  Ignoring, and using identity matrix.")
+            T = eye(3)
+
+        #### Create the coordmap functions
+        coordmap_map2lab = lambda pt: (linalg.inv(T) * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
+        coordmap_lab2map = lambda pt: (T * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
+
+        return coordmap_map2lab, coordmap_lab2map
+
     def _setSuccess(self, success = False):
         """
         Set whether if this robot is successfully loaded or not
