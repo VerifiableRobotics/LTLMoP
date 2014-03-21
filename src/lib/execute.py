@@ -20,7 +20,7 @@
 
 import sys, os, getopt, textwrap
 import threading, subprocess, time
-import fsa, strategy, project
+import strategy, project
 from copy import deepcopy
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 import xmlrpclib
@@ -54,7 +54,7 @@ def usage(script_name):
                               -s FILE, --spec-file FILE:
                                   Load experiment configuration from FILE """ % script_name)
 
-class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, object ):
+class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, object):
     """
     This is the main execution object, which combines the synthesized discrete automaton
     with a set of handlers (as specified in a .config file) to create and run a hybrid controller
@@ -108,18 +108,15 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
 
     def loadAutFile(self, filename):
         """
-        This function loads the the .aut file named filename and returns the strategy object.
+        This function loads the the .aut/.bdd file named filename and returns the strategy object.
         filename (string): name of the file with path included
         """
-        logging.info("Loading automaton...")
-
-        aut = fsa.FSAStrategy()
         region_domain = strategy.Domain("region",  self.proj.rfi.regions, strategy.Domain.B0_IS_MSB)
-        aut.configurePropositions(self.proj.enabled_sensors + [], self.proj.enabled_actuators + self.proj.all_customs +  [region_domain])
-        aut.loadFromFile(filename)
+        strat = strategy.createStrategyFromFile(filename,
+                                                self.proj.enabled_sensors,
+                                                self.proj.enabled_actuators + self.proj.all_customs +  [region_domain])
 
-        return aut
-
+        return strat
 
     def _getCurrentRegionFromPose(self, rfi=None):
         # TODO: move this to regions.py
