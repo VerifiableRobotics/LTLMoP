@@ -108,6 +108,21 @@ class HandlerSubsystem:
                     self.handler_configs[robot_type][handler_config.h_type] = []
                 self.handler_configs[robot_type][handler_config.h_type].append(handler_config)
 
+    def findHandlerTypeStringFromName(self, handler_name):
+        """
+        given a handler name, find folder of this handler in the handlers/share folder
+        """
+        share_folder = os.path.join(self.handler_path, "share")
+
+        for handler_type_string in os.listdir(share_folder):
+            temp_folder = os.path.join(share_folder, handler_type_string)
+            if os.path.isdir(temp_folder):
+                handler_files = [f for f in os.listdir(temp_folder) if f.endswith('.py')]
+                if handler_name + ".py" in handler_files:
+                    return handler_type_string
+        logging.error("Cannot find the type of handler with name {} in folds in handlers/share".format(handler_name))
+        return None
+
     def loadHandler(self, r_type, h_type, h_name):
         """
         Load the handler config object from the file based on the given info
@@ -118,6 +133,8 @@ class HandlerSubsystem:
         if r_type in ['share']:
             # this is a shared handler, we will require a handler type
             # if the h_type is a handler type class object, translate it into a str
+            if h_type is None:
+                h_type =  self.findHandlerTypeStringFromName(h_name)
             if not isinstance(h_type, str):
                 h_type = ht.getHandlerTypeName(h_type)
             handler_module = '.'.join(['lib', 'handlers', r_type, h_type, h_name])
