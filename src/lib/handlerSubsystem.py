@@ -663,42 +663,22 @@ class HandlerSubsystem:
 
 
 if __name__ == '__main__':
-    pass
-#    m = HandlerMethodConfig()
-#    print m
-#    m = MethodParameterConfig('Jim')
-#    print m
-#    m = HandlerConfig()
-#    print m
-#    m = RobotConfig()
-#    print m
-#    m = ExperimentConfig()
-#    print m
-    proj = project.Project()
-    proj.project_root = '/home/jim/LTLMoP/src/examples/firefighting/'
-    h = HandlerSubsystem(proj)
-#    h.loadAllHandlers()
+    import execute
+    e = execute.LTLMoPExecutor()
+    filename = os.path.join(globalConfig.get_ltlmop_root(), "examples", "firefighting", "firefighting.spec")
+    e.proj.loadProject(filename)
+    e.hsub = HandlerSubsystem(e, e.proj.project_root)
+    logging.info("Setting current executing config...")
+    config, success = e.hsub.loadConfigFile(e.proj.current_config)
+    if success: e.hsub.configs.append(config)
+    e.hsub.setExecutingConfig(e.proj.current_config)
 
-#    print [hcfg.name for hcfg in h.handler_configs['share'][ht.SensorHandler]]
+    logging.info("Importing handler functions...")
+    e.hsub.prepareMapping()
+    logging.info("Initializing all functions...")
+    e.hsub.initializeAllMethods()
 
-#    h.loadAllRobots()
- #   print h.robot_configs
-    h.loadAllConfigFiles()
-    print h.configs
-
-
-#    h.handler_parser.printHandler()
-#    print h.configs[0].robots[0].handlers['sensor'].methods
-
-#    testStringBefore = 'share.dummySensor.buttonPress(button_name="Wave")'
-#    testMethod = h.string2Method(testStringBefore)
-
-#    print
-#    testStringAfter = h.method2String(testMethod,'share')
-
-#    print testStringBefore == testStringAfter
-
-#    testStringBefore = 'MAE.naoSensor.hearWord(word="Fire",threshold=0.9)'
-#    testMethod = h.string2Method(testStringBefore)
-#    testStringAfter = h.method2String(testMethod,'MAE')
-#    print testStringBefore == testStringAfter
+    while True:
+        sensor_state = e.hsub.getSensorValue(e.proj.enabled_sensors)
+        e.hsub.setActuatorValue({'pick_up': not sensor_state['person']})
+        time.sleep(1)
