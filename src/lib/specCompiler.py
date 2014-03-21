@@ -515,18 +515,17 @@ class SpecCompiler(object):
         load the whole aut just to check this.
         """
 
-        proj_copy = deepcopy(self.proj)
-        proj_copy.rfi = self.parser.proj.rfi
-        proj_copy.sensor_handler = None
-        proj_copy.actuator_handler = None
-        proj_copy.h_instance = None
+        if self.proj.compile_options["decompose"]:
+            regions = self.parser.proj.rfi.regions
+        else:
+            regions = self.proj.rfi.regions
 
-        aut = fsa.FSAStrategy()
-        region_domain = strategy.Domain("region",  self.proj.rfi.regions, strategy.Domain.B0_IS_MSB)
-        aut.configurePropositions(self.proj.enabled_sensors + [], self.proj.enabled_actuators + self.proj.all_customs +  [region_domain])
-        aut.loadFromFile(self.proj.getFilenamePrefix()+".aut")
+        region_domain = strategy.Domain("region", regions, strategy.Domain.B0_IS_MSB)
+        strat = strategy.createStrategyFromFile(self.proj.getStrategyFilename(),
+                                                self.proj.enabled_sensors,
+                                                self.proj.enabled_actuators + self.proj.all_customs + [region_domain])
 
-        nonTrivial = any([len(aut.findTransitionableStates({},s)) > 0 for s in aut.states])
+        nonTrivial = any([len(strat.findTransitionableStates({}, s)) > 0 for s in strat.iterateOverStates()])
 
         return nonTrivial
 
