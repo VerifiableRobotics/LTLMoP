@@ -28,11 +28,12 @@ class HandlerSubsystem:
     """
     Interface dealing with configuration files and handlers
     """
-    def __init__(self,proj):
-        self.proj = proj
 
     # Set the pattern for regex to match the functions in proposition mapping
     handler_function_RE = r"(?P<robot_name>\w+)\.(?P<handler_name>\w+)\.(?P<method_name>\w+)\((?P<para_info>.*?)\)"
+
+    def __init__(self, executor, project_root_dir):
+        self.executor = executor
 
         self.handler_configs = {}   # dictionary for all handler information [robot type or shared][handler type]
         self.robot_configs = []     # list of robot objects
@@ -41,7 +42,7 @@ class HandlerSubsystem:
         # Create Handler path
         self.handler_path = os.path.join('lib','handlers')
         # Create config path
-        self.config_path = os.path.join(self.proj.project_root,'configs')
+        self.config_path = os.path.join(project_root_dir,'configs')
 
     def _getSubdirectories(self, path):
         """
