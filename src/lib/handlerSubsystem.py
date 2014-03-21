@@ -19,6 +19,20 @@ from lib.hsubConfigObjects import MethodParameterConfig,HandlerMethodConfig,\
                                 HandlerConfig,RobotConfig,ExperimentConfig
 import lib.handlers.handlerTemplates as ht
 
+# TODO: Get rid of this todo list
+# TODO: Move testing code to doctest
+# TODO: Replace regex with ast.parse
+# TODO: Implement motion handler wrapper
+# TODO: Group functions better
+# TODO: Robot type not recognized when not loaded
+# TODO: warn if no __init__.py is in a robot folder
+# TODO: make sure python defaults matched doc defaults for para
+# TODO: pass executor to handlers, and use postEvent
+# TODO: clean up toString
+# TODO: test multiple shared handlers
+# TODO: clean relation of motionControl, drive, LocomotionCommand
+# TODO: check proposition name with enabled s/a
+
 
 ###################################################
 # Define individual objects for handler subsystem #
