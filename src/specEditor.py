@@ -1170,7 +1170,7 @@ class SpecEditorFrame(wx.Frame):
         sys.stdout = redir
         sys.stderr = redir
 
-        subprocess.Popen([sys.executable, "-u", "-m", os.path.join("lib","execute"), "-a", self.proj.getStrategyFilename(), "-s", self.proj.getFilenamePrefix() + ".spec"])
+        subprocess.Popen([sys.executable, "-u", "-m", "lib.execute", "-a", self.proj.getStrategyFilename(), "-s", self.proj.getFilenamePrefix() + ".spec"])
 
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -1231,7 +1231,7 @@ class SpecEditorFrame(wx.Frame):
             # If we already have a region file defined, open it up for editing
             fileName = self.proj.rfi.filename
             self.lastRegionModTime = os.path.getmtime(fileName)
-            self.subprocess["Region Editor"] = WxAsynchronousProcessThread([sys.executable,"-u","regionEditor.py",fileName], regedCallback, None)
+            self.subprocess["Region Editor"] = WxAsynchronousProcessThread([sys.executable, "-u", "regionEditor.py", fileName], regedCallback, None)
         else:
             # Otherwise let's create a new region file
             if self.proj.project_basename is None:
@@ -1248,7 +1248,7 @@ class SpecEditorFrame(wx.Frame):
 
             # We'll name the region file with the same name as our project
             fileName = self.proj.getFilenamePrefix()+".regions"
-            self.subprocess["Region Editor"] = WxAsynchronousProcessThread([sys.executable,"-u","regionEditor.py",fileName], regedCallback, None)
+            self.subprocess["Region Editor"] = WxAsynchronousProcessThread([sys.executable, "-u", "regionEditor.py", fileName], regedCallback, None)
 
     def onMenuConfigSim(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         # Launch the config editor
@@ -1277,7 +1277,7 @@ class SpecEditorFrame(wx.Frame):
             self.proj.currentConfig = other_proj.current_config
             self.subprocess["Simulation Configuration"] = None
 
-        self.subprocess["Simulation Configuration"] = WxAsynchronousProcessThread([sys.executable,"-u","-m",os.path.join(self.proj.ltlmop_root,"lib","configEditor"),self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
+        self.subprocess["Simulation Configuration"] = WxAsynchronousProcessThread([sys.executable, "-u", "-m", "lib.configEditor", self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
 
     def _exportDotFile(self):
         proj_copy = deepcopy(self.proj)
@@ -1508,7 +1508,7 @@ class SpecEditorFrame(wx.Frame):
 
         print "Calling mopsy with desired_jx={}...".format(desired_jx)
 
-        subprocess.Popen([sys.executable, os.path.join(self.proj.ltlmop_root,"etc","utils","mopsy.py"), self.proj.getFilenamePrefix()+".spec", str(desired_jx)])
+        subprocess.Popen([sys.executable, os.path.join(self.proj.ltlmop_root, "etc", "utils", "mopsy.py"), self.proj.getFilenamePrefix()+".spec", str(desired_jx)])
 
     def onPropAdd(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
