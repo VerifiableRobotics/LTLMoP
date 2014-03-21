@@ -236,20 +236,33 @@ class HandlerSubsystem:
         self.configs_incomplete = []
 
         for file_name in os.listdir(self.config_path):
-            if file_name.endswith('.config'):
-                experiment_config = ExperimentConfig()
-                try:
-                    experiment_config.fromFile(os.path.join(self.config_path,file_name), self)
-                except ht.LoadingError, msg:
-                    logging.warning(str(msg) + ' in experiment config file {!r}.'\
-                                    .format(os.path.join(self.config_path, file_name)))
-                    self.configs_incomplete.append(os.path.join(self.config_path,file_name))
-                    continue
-                except TypeError as e:
-                    logging.error(e)
-                    self.configs_incomplete.append(os.path.join(self.config_path,file_name))
-                else:
-                    self.configs.append(experiment_config)
+            config, success = self.loadConfigFile(file_name)
+            if success:
+                self.configs.append(config)
+            else:
+                self.configs_incomplete.append(config)
+
+    def loadConfigFile(self, file_name):
+        """
+        Load the given experiment config file in the project/configs folder
+        """
+        file_name = file_name.replace(" ","_")
+        if not file_name.endswith(".config"):
+            file_name = file_name + ".config"
+
+        experiment_config = ExperimentConfig()
+        try:
+            experiment_config.fromFile(os.path.join(self.config_path,file_name), self)
+        except ht.LoadingError, msg:
+            logging.warning(str(msg) + ' in experiment config file {!r}.'\
+                            .format(os.path.join(self.config_path, file_name)))
+            return os.path.join(self.config_path,file_name), False
+        except TypeError as e:
+            logging.error(e)
+            return os.path.join(self.config_path,file_name), False
+        else:
+            return experiment_config, True
+
 
     def getRobotByType(self, t):
         """
