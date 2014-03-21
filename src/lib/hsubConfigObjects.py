@@ -13,7 +13,7 @@
 import os, sys, re
 import fileMethods
 import inspect, types
-from numpy import *
+from numpy import linalg, array
 from copy import deepcopy
 import ast
 import json
