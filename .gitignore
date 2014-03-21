@@ -22,3 +22,5 @@ sysBugs.txt
 *.sat
 src/lib/cores/picosat*
 .settings
+.ropeproject
+.idea

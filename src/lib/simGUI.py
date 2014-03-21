@@ -15,6 +15,18 @@ import math, time, sys, os, re
 import wxversion
 import wx, wx.richtext, wx.grid
 import threading
+
+# Climb the tree to find out where we are
+p = os.path.abspath(__file__)
+t = ""
+while t != "src":
+    (p, t) = os.path.split(p)
+    if p == "":
+        print "I have no idea where I am; this is ridiculous"
+        sys.exit(1)
+
+sys.path.append(os.path.join(p,"src","lib"))
+
 import project, mapRenderer, regions
 import socket
 import copy
