@@ -38,6 +38,8 @@ class HandlerSubsystem:
         self.handler_configs = {}   # dictionary for all handler information [robot type or shared][handler type]
         self.robot_configs = []     # list of robot objects
         self.configs = []           # list of config objects
+        self.executing_config = None  # current experiment config object that is executing
+
 
         # Create Handler path
         self.handler_path = os.path.join('lib','handlers')
@@ -186,6 +188,18 @@ class HandlerSubsystem:
                     continue
                 else:
                     self.robot_configs.append(robot_config)
+
+    def setExecutingConfig(self, config_object_name):
+        """
+        set the current executing config to the experiment config with the given name
+        """
+        self.executing_config = None
+        for config_object in self.configs:
+            if config_object_name == config_object.name:
+                self.executing_config = config_object
+
+        if self.executing_config is None:
+            logging.error("Cannot find the config with name {}".format(config_object_name))
 
     def loadAllConfigFiles(self):
         """
