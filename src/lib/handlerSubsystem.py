@@ -277,7 +277,6 @@ class HandlerSubsystem:
         else:
             return experiment_config, True
 
-
     def getRobotByType(self, t):
         """
         Assume only one robot is loaded per type
