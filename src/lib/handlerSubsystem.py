@@ -32,6 +32,8 @@ import lib.handlers.handlerTemplates as ht
 # TODO: test multiple shared handlers
 # TODO: clean relation of motionControl, drive, LocomotionCommand
 # TODO: check proposition name with enabled s/a
+# TODO: reorder the load config fromData function if indent
+# TODO: print out which file is loading
 
 
 ###################################################
