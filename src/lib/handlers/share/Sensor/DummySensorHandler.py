@@ -36,12 +36,12 @@ class DummySensorHandler(handlerTemplates.SensorHandler):
             print >>sys.__stderr__, "(SENS) Terminating dummysensor GUI listen thread..."
             self._running = False
             self.sensorListenThread.join()
-        
+
     def _createSubwindow(self):
             # Create a subprocess
             print "(SENS) Starting sensorHandler window and listen thread..."
-            self.p_sensorHandler = subprocess.Popen([sys.executable, "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_SensorHandler.py")], stdin=subprocess.PIPE)
-        
+            self.p_sensorHandler = subprocess.Popen([sys.executable, "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","Sensor","_SensorHandler.py")], stdin=subprocess.PIPE)
+
             # Create new thread to communicate with subwindow
             self.sensorListenThread = threading.Thread(target = self._sensorListen)
             self.sensorListenThread.daemon = True

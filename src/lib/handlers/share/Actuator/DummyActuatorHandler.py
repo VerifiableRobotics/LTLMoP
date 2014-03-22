@@ -52,8 +52,8 @@ class DummyActuatorHandler(handlerTemplates.ActuatorHandler):
 
                 # Create a subprocess
                 print "(SENS) Starting actuatorHandler window..."
-                self.p_gui = subprocess.Popen([sys.executable, "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","_ActuatorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-                
+                self.p_gui = subprocess.Popen([sys.executable, "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","Actuator","_ActuatorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+
                 data = ''
                 while "Hello!" not in data:
                     # Wait for and receive a message from the subwindow
