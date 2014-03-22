@@ -88,8 +88,13 @@ class ActuatorDisplayFrame(wx.Frame):
                 now = time.strftime("%H:%M:%S")
                 self.history_grid.SetCellValue(lastrow,i,now)
             else:
+                # make sure the proposition is initialized
+                prop_name = self.history_grid.GetColLabelValue(i).strip()
+                if prop_name not in self.currentValues:
+                    continue
+
                 # Actuator value column
-                v = self.currentValues[self.history_grid.GetColLabelValue(i).strip()]
+                v = self.currentValues[prop_name]
 
                 if int(v) == 0:
                     self.history_grid.SetCellValue(lastrow,i,"False")
