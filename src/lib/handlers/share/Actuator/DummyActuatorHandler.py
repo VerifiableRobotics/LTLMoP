@@ -19,7 +19,7 @@ class DummyActuatorHandler(handlerTemplates.ActuatorHandler):
 
     def _stop(self):
         if self.p_gui is not None:
-            print >>sys.__stderr__, "(SENS) Killing dummyactuator GUI..."
+            print >>sys.__stderr__, "(ACT) Killing dummyactuator GUI..."
             try:
                 self.p_gui.stdin.write(":QUIT\n")
                 self.p_gui.stdin.close()
@@ -30,7 +30,7 @@ class DummyActuatorHandler(handlerTemplates.ActuatorHandler):
     def setActuator(self, name, actuatorVal,initial):
         """
         Pretends to set actuator of name ``name`` to be in state ``val`` (bool).
-        
+
         name (string): Name of the actuator
         """
 
@@ -51,7 +51,7 @@ class DummyActuatorHandler(handlerTemplates.ActuatorHandler):
                     return
 
                 # Create a subprocess
-                print "(SENS) Starting actuatorHandler window..."
+                print "(ACT) Starting actuatorHandler window..."
                 self.p_gui = subprocess.Popen([sys.executable, "-u", os.path.join(self.proj.ltlmop_root,"lib","handlers","share","Actuator","_ActuatorHandler.py")], stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 
                 data = ''

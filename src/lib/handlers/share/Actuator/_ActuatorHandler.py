@@ -50,10 +50,10 @@ class ActuatorDisplayFrame(wx.Frame):
         UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         UDPSock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         UDPSock.sendto("Hello!\n",addr)
-        UDPSock.close()        
+        UDPSock.close()
 
     def _listen(self):
-        while True: 
+        while True:
             # Wait for and receive a message
             data = raw_input().strip()
 
@@ -85,7 +85,7 @@ class ActuatorDisplayFrame(wx.Frame):
             if i == 0:
                 # Time column
                 #now = time.strftime("%Y-%m-%d %H:%M:%S") 
-                now = time.strftime("%H:%M:%S") 
+                now = time.strftime("%H:%M:%S")
                 self.history_grid.SetCellValue(lastrow,i,now)
             else:
                 # Actuator value column
