@@ -296,20 +296,55 @@ class HandlerSubsystem:
                 return h
         return None
 
+    def getMainRobot(self):
+        """
+        Return the main robot of the current executing config
+        """
+        if self.executing_config == None:
+            raise ValueError("Cannot find executing config for handlersubsystem")
+        # get the main robot config
+        return self.executing_config.getRobotByName(self.executing_config.main_robot)
+
+    def getHandlerInstanceByType(self, handler_type_class, robot_name = ""):
+        """
+        Return the handler instance of the given handler type
+        When no robot_name is given, the handler is assumed to be of the main robot
+        When the handler type is either sensor or actuator, a robot_name is required
+        Return None if the handler instance cannot be found
+        """
+        if robot_name == "":
+            # no robot is specified
+            if handler_type_class in [ht.SensorHandler, ht.ActuatorHandler]:
+                raise ValueError("A robot name is required when looking for instance of sensor or actuator handler")
+            else:
+                # we assume it is asking for the handler of main robot
+                robot_config = self.getMainRobot()
+        else:
+            # find the robot config of the given name
+            robot_config = self.executing_config.getRobotByName(robot_name)
+
+        # now look for the handler instance of the given type
+        handler_instance = self.getHandlerInstanceByName(robot_config.getHandlerOfRobot(handler_type_class).name)
+
+        return handler_instance
+
     def getPose(self, cached=False):
         """
         A wrapper function that returns the pose from the pose handler of the main robot in the
         current executing config
         """
         # get the main robot config
-        robot_config = self.executing_config.getRobotByName(self.executing_config.main_robot)
+        robot_config = self.getMainRobot()
 
         # first make sure the coord transformation function is ready
         if self.coordmap_map2lab is None:
             self.coordmap_map2lab, self.coordmap_lab2map = robot_config.getCoordMaps()
             self.executor.proj.coordmap_map2lab, self.executor.proj.coordmap_lab2map = robot_config.getCoordMaps()
 
-        pose_handler_instance = self.getHandlerByName(robot_config.getHandlerOfRobot(ht.PoseHandler).name)
+        pose_handler_instance = self.getHandlerInstanceByType(ht.PoseHandler)
+
+        if pose_handler_instance is None:
+            raise ValueError("Cannot get current pose, because no pose handler instance is found for the main robot")
 
         return pose_handler_instance.getPose(cached)
 
