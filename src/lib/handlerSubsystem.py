@@ -288,7 +288,7 @@ class HandlerSubsystem:
         logging.error("Could not find robot of type '{0}'".format(t))
         return None
 
-    def getHandlerByName(self, handler_name):
+    def getHandlerInstanceByName(self, handler_name):
         """
         Return the instantiated handler object for a given name or None if it is not instantiated
         """
@@ -335,7 +335,7 @@ class HandlerSubsystem:
 
         # Check if we alreay instantiated the handler
         handler_name = handler_config.name
-        h = self.getHandlerByName(handler_name)
+        h = self.getHandlerInstanceByName(handler_name)
 
         if h is None:
             # we need to instantiate the handler
