@@ -34,6 +34,8 @@ while t != "src":
 sys.path.append(os.path.join(p,"src","lib"))
 
 import fsa, project
+import handlerSubsystem
+import strategy
 from copy import deepcopy
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 import xmlrpclib
@@ -115,6 +117,8 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         # Update with this new project
         self.proj = project.Project()
         self.proj.loadProject(filename)
+        self.hsub = handlerSubsystem.HandlerSubsystem(self, self.proj.project_root)
+
 
         # Tell GUI to load the spec file
         self.postEvent("SPEC", self.proj.getFilenamePrefix() + ".spec")
@@ -136,7 +140,7 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         if rfi is None:
             rfi = self.proj.rfi
 
-        pose = self.proj.coordmap_lab2map(self.proj.h_instance['pose'].getPose())
+        pose = self.hsub.coordmap_lab2map(self.hsub.getPose())
 
         region = next((i for i, r in enumerate(rfi.regions) if r.name.lower() != "boundary" and \
                         r.objectContainsPoint(*pose)), None)
@@ -213,15 +217,31 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         if self.proj.compile_options['decompose']:
             self.proj.rfi = self.proj.loadRegionFile(decomposed=True)
 
-        if self.proj.currentConfig is None:
+        if self.proj.current_config == "":
             logging.error("Can not simulate without a simulation configuration.")
             logging.error("Please create one by going to [Run] > [Configure Simulation...] in SpecEditor and then try again.")
             sys.exit(2)
 
+        logging.info("Setting current executing config...")
+        config, success = self.hsub.loadConfigFile(self.proj.current_config)
+        if success: self.hsub.configs.append(config)
+        self.hsub.setExecutingConfig(self.proj.current_config)
+
+        # make sure the coord transformation function is ready
+        # get the main robot config
+        robot_config = self.hsub.executing_config.getRobotByName(self.hsub.executing_config.main_robot)
+        self.hsub.coordmap_map2lab, self.hsub.coordmap_lab2map = robot_config.getCoordMaps()
+        self.proj.coordmap_map2lab, self.proj.coordmap_lab2map = robot_config.getCoordMaps()
+
+
         # Import the relevant handlers
         if firstRun:
-            logging.info("Importing handler functions...")
-            self.proj.importHandlers()
+            # Instantiate all handlers
+            logging.info("Instantiate all handlers...")
+            self.hsub.instantiateAllHandlers()
+
+            logging.info("Preparing proposition mapping...")
+            self.hsub.prepareMapping()
         else:
             #print "Reloading motion control handler..."
             #self.proj.importHandlers(['motionControl'])
@@ -253,16 +273,21 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         logging.info("Starting from initial region: " + init_region.name)
         init_prop_assignments = {"region": init_region}
 
+        # initialize all sensor and actuator methods
+        logging.info("Initializing sensor and actuator methods...")
+        self.hsub.initializeAllMethods()
+
+
         ## outputs
         if firstRun or self.strategy is None:
             # save the initial values of the actuators and the custom propositions
             for prop in self.proj.enabled_actuators + self.proj.all_customs:
-                self.current_outputs[prop] = (prop in self.proj.currentConfig.initial_truths)
+                self.current_outputs[prop] = (prop in self.hsub.executing_config.initial_truths)
 
         init_prop_assignments.update(self.current_outputs)
 
         ## inputs
-        init_prop_assignments.update(self.HSubGetSensorValue(self.proj.enabled_sensors))
+        init_prop_assignments.update(self.hsub.getSensorValue(self.proj.enabled_sensors))
 
         #search for initial state in the strategy
         init_state = new_strategy.searchForOneState(init_prop_assignments)
@@ -286,10 +311,7 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
         while self.alive.isSet():
             # Idle if we're not running
             if not self.runStrategy.isSet():
-                try:
-                    self.proj.h_instance['motionControl'].stop()
-                except AttributeError:
-                    self.proj.h_instance['drive'].setVelocity(0,0)
+                self.hsub.setVelocity(0,0)
 
                 # wait for either the FSA to unpause or for termination
                 while (not self.runStrategy.wait(0.1)) and self.alive.isSet():
@@ -318,8 +340,8 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
             # if show_gui and (timer_func() - last_gui_update_time > 0.05)
             avg_freq = 0.9 * avg_freq + 0.1 * 1 / (toc - tic) # IIR filter
             self.postEvent("FREQ", int(math.ceil(avg_freq)))
-            pose = self.proj.h_instance['pose'].getPose(cached=True)[0:2]
-            self.postEvent("POSE", tuple(map(int, self.proj.coordmap_lab2map(pose))))
+            pose = self.hsub.getPose(cached=True)[0:2]
+            self.postEvent("POSE", tuple(map(int, self.hsub.coordmap_lab2map(pose))))
 
             last_gui_update_time = self.timer_func()
 

@@ -36,7 +36,7 @@ class ExecutorStrategyExtensions(object):
 
                 # Run any actuator handlers if appropriate
                 if key in self.proj.enabled_actuators:
-                    self.HSubSetActuatorValue(key,output_val)
+                    self.hsub.setActuatorValue({key:output_val})
 
                 self.current_outputs[key] = output_val
 
@@ -48,7 +48,7 @@ class ExecutorStrategyExtensions(object):
         self.current_region = self.strategy.current_state.getPropValue('region')
 
         # Take a snapshot of our current sensor readings
-        sensor_state = self.HSubGetSensorValue(self.proj.enabled_sensors)
+        sensor_state = self.hsub.getSensorValue(self.proj.enabled_sensors)
 
         # Let's try to transition
         # TODO: set current state so that we don't need to call from_state
@@ -91,7 +91,7 @@ class ExecutorStrategyExtensions(object):
 
         if not self.arrived:
             # Move one step towards the next region (or stay in the same region)
-            self.arrived = self.motionControlGoToRegionWrapper(self.current_region, self.next_region)
+            self.arrived = self.hsub.gotoRegion(self.current_region, self.next_region)
 
         # Check for completion of motion
         if self.arrived and self.next_state != self.strategy.current_state:
