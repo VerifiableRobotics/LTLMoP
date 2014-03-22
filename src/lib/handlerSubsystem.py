@@ -328,6 +328,32 @@ class HandlerSubsystem:
 
         return handler_instance
 
+    def setVelocity(self, x, y):
+        """
+        a wrapper function that set the velocity to the drive handler of the main robot
+        """
+        # get the drive handler
+        drive_handler_instance = self.getHandlerInstanceByType(ht.DriveHandler)
+
+        if drive_handler_instance is None:
+            raise ValueError("Cannot set Velocity, because no drive handler instance is found for the main robot")
+
+        # set the velocity
+        drive_handler_instance.setVelocity(x, y)
+
+    def gotoRegion(self, current_region, next_region):
+        """
+        a wrapper function that set the target region to the motionControl handler of the main robot
+        """
+        # get the motionControl handler
+        motion_handler_instance = self.getHandlerInstanceByType(ht.MotionControlHandler)
+
+        if motion_handler_instance is None:
+            raise ValueError("Cannot set target region, because no motionControl handler instance is found for the main robot")
+
+        # set the target region
+        motion_handler_instance.gotoRegion(current_region, next_region)
+
     def getPose(self, cached=False):
         """
         A wrapper function that returns the pose from the pose handler of the main robot in the
