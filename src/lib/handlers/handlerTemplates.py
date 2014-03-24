@@ -103,9 +103,9 @@ class LoadingError(Exception):
 # a dictionary that maps handler type in str to handler type class object
 handler_type_mapping = OrderedDict([('Init', InitHandler), \
                         ('Pose', PoseHandler), \
-                        ('MotionControl', MotionControlHandler), \
-                        ('Drive', DriveHandler), \
                         ('LocomotionCommand', LocomotionCommandHandler), \
+                        ('Drive', DriveHandler), \
+                        ('MotionControl', MotionControlHandler), \
                         ('Sensor', SensorHandler), \
                         ('Actuator', ActuatorHandler)
                        ])
