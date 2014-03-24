@@ -32,9 +32,9 @@ def setupLogging(loggerLevel=None):
             if sys.platform in ['win32', 'cygwin']:
                 # Message with color is not yet supported in Windows
                 return string
-            elif not hasattr(sys.stderr, "isatty") or not sys.stderr.isatty():
-                # Only try to colorize if outputting to a terminal 
-                return string
+#             elif not hasattr(sys.stderr, "isatty") or not sys.stderr.isatty():
+#                 # Only try to colorize if outputting to a terminal 
+#                 return string
             else:
                 colors = {'ERROR': 91, 'WARNING': 93, 'INFO': 97, 'DEBUG': 94}
                 return "\033[{0}m{1}\033[0m".format(colors[level], string)
