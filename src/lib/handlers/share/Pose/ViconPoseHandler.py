@@ -12,7 +12,7 @@ import _pyvicon
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class ViconPoseHandler(handlerTemplates.PoseHandler):
-    def __init__(self, proj, shared_data,host,port,x_VICON_name,y_VICON_name,theta_VICON_name):
+    def __init__(self, executor, shared_data,host,port,x_VICON_name,y_VICON_name,theta_VICON_name):
         """
         Pose handler for VICON system
 
@@ -22,8 +22,8 @@ class ViconPoseHandler(handlerTemplates.PoseHandler):
         y_VICON_name (string): The name of the stream for y pose of the robot in VICON system (default="SubjectName:SegmentName <t-Y>")
         theta_VICON_name (string): The name of the stream for orintation of the robot in VICON system (default="SubjectName:SegmentName <a-Z>")
         """
-        
-        self.host = host    
+
+        self.host = host
         self.port = port
         self.x = x_VICON_name
         self.y = y_VICON_name
@@ -38,14 +38,14 @@ class ViconPoseHandler(handlerTemplates.PoseHandler):
 
         # Wait for first data to come in
         while self.s.getData() is None: pass
-    
+
     def _stop(self):
         print "Vicon pose handler quitting..."
         self.s.stopStreams()
         print "Terminated."
-        
+
     def getPose(self, cached=False):
-        
+
         (t, x, y, o) = self.s.getData()
         (t, x, y, o) = [t/100, x/1000, y/1000, o]
 

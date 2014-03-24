@@ -15,20 +15,20 @@ import time
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class HeatControllerHandler(handlerTemplates.MotionControlHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         """
         Heat motion planning controller
         """
-        self.drive_handler = proj.h_instance['drive']
-        self.pose_handler = proj.h_instance['pose']
-        self.fwd_coordmap = proj.coordmap_map2lab
-        self.rfi = proj.rfi
+        self.drive_handler = executor.hsub.getHandlerInstanceByType(handlerTemplates.DriveHandler)
+        self.pose_handler = executor.hsub.getHandlerInstanceByType(handlerTemplates.PoseHandler)
+        self.fwd_coordmap = executor.hsub.coordmap_map2lab
+        self.rfi = executor.proj.rfi
         self.last_warning = 0
 
     def gotoRegion(self, current_reg, next_reg, last=False):
         """
         If ``last`` is true, we will move to the center of the region.
-        
+
         Returns ``True`` if we are outside the supposed ``current_reg``
         """
 
@@ -44,10 +44,10 @@ class HeatControllerHandler(handlerTemplates.MotionControlHandler):
         [X, DqX, F, inside, J] = controller(mat(pose[0:2]).T)
 
         self.drive_handler.setVelocity(X[0,0], X[1,0], pose[2])
-        
+
         # Transform the region vertices into real coordinates
         pointArray = [self.fwd_coordmap(x) for x in self.rfi.regions[next_reg].getPoints()]
-        vertices = mat(pointArray).T 
+        vertices = mat(pointArray).T
 
         # Figure out whether we've reached the destination region
         if is_inside([pose[0], pose[1]], vertices):
@@ -60,7 +60,7 @@ class HeatControllerHandler(handlerTemplates.MotionControlHandler):
             # Figure out what region we think we stumbled into
             for r in self.rfi.regions:
                 pointArray = [self.fwd_coordmap(x) for x in r.getPoints()]
-                vertices = mat(pointArray).T 
+                vertices = mat(pointArray).T
 
                 if is_inside([pose[0], pose[1]], vertices):
                     print "I think I'm in " + r.name
@@ -85,7 +85,7 @@ class HeatControllerHandler(handlerTemplates.MotionControlHandler):
         # If not, create a space in the cache to put our new controller.
 
         cache[current] = {}
-        
+
         # Let's go get a controller!
 
         if last:
@@ -107,15 +107,15 @@ class HeatControllerHandler(handlerTemplates.MotionControlHandler):
                 if magsq > max_magsq:
                     transFaceIdx = i
                     max_magsq = magsq
-                
+
             if transFaceIdx is None:
                 print "ERROR: Unable to find transition face between regions %s and %s.  Please check the decomposition (try viewing projectname_decomposed.regions in RegionEditor or a text editor)." % (self.rfi.regions[current_reg].name, self.rfi.regions[next_reg].name)
-         
+
         # Transform the region vertices into real coordinates
         pointArray = [x for x in self.rfi.regions[current].getPoints()]
         pointArray = map(self.fwd_coordmap, pointArray)
-        vertices = mat(pointArray).T 
-        
+        vertices = mat(pointArray).T
+
         # Get a controller function
         controller = heatControllerHelper.getController(vertices, transFaceIdx, last)
 

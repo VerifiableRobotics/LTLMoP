@@ -12,21 +12,21 @@ import lib.handlers.handlerTemplates as handlerTemplates
 
 class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
     """
-    This class will tell the spider which gait to do and provide a means of 
+    This class will tell the spider which gait to do and provide a means of
     communicating with it. In addition, it will hold the current state of the
     spider in case something else needs to stop the process for some time.
     """
-    
-    def __init__(self, proj, shared_data):
+
+    def __init__(self, executor, shared_data):
         self.state = None           # ex. walking, stopped, standing, or sitting
         self.currentDir = None      # angle towards which we are heading
-    
+
         try:
             self.spiderSer = shared_data["SpiderSer"]
         except:
             print "(LOCO) ERROR: No connection to  Spider"
             exit(-1)
-            
+
         try:
             self.gaits = shared_data["Gaits"]
             self.walkingGaits = shared_data["WalkingGaits"]
@@ -37,11 +37,11 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
         except:
             print "(LOCO) ERROR: No shared data"
             exit(-1)
-            
-        
+
+
     def performGait(self, gaitName, angle = None):
         """
-        Performs a single gait. Raises an exception if it does not receive a 
+        Performs a single gait. Raises an exception if it does not receive a
         response from the spider.
         @param gaitName (string): The name of the gait to perform
         @param angle (int): The angle of the gait
@@ -55,34 +55,34 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
         except:
             print "(LOCO)", gaitName, "not found in the dictionary"
             return
-        
+
         self.sendAndVerify("PERFORM_GAIT")
         self.spiderSer.write(chr(index))
         self.spiderSer.write(chr(rotation))
-    
+
     def setWalkingGait(self, angle):
         """
         Looks through the available walking gaits and sets up the gait that
         will move towards the input angle
-        @param angle: The angle to move towards must be possible given the 
+        @param angle: The angle to move towards must be possible given the
                       available gaits
         """
         self.spiderSer.flushInput()
         if angle >= 360:
             angle -= 360
-            
+
         gaitNotPos = True
-        
+
         # Find the gait needed for the given angle
         for name in self.walkingGaits:
             possibleAngles = self.gaits[name].getPossibleAngles()
             if angle in possibleAngles:
                 gaitNotPos = False
                 break
-        
+
         if gaitNotPos:
-            return 
-                
+            return
+
         # Special cases of gaits that need preparing (be sure this corresponds
         # to which ever gaits are loaded on to the spider!)
         if ("walk1" in name) or ("walk2" in name):
@@ -90,17 +90,17 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
             if prepAngle >= 180:
                 prepAngle -= 180
             self.performGait(name + "Prepare", prepAngle)
-            
+
         index = self.gaitIndex[name]
         rot = self.gaits[name].getRotationTo(angle)
-            
+
         self.sendAndVerify("CHANGE_GAIT")
         self.spiderSer.write(chr(index))
         self.spiderSer.write(chr(rot))
-        
+
         self.currentDir = angle
-            
-                
+
+
     def sendAndVerify(self, cmd, trials = 3, timeout = 5):
         """
         Send a command to the spider and waits untill the spider echoes back
@@ -109,11 +109,11 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
         @param cmd (string): The key of the command to be sent to the spider
         @param trials: The number of attempts before giving up
         @param timeout: The timeout for each of the trials
-        """        
-        
+        """
+
         totalTime = trials * timeout + .2
         timeStart = time.clock()
-        
+
         try:
             command = chr(self.commands[cmd])
         except:
@@ -122,37 +122,37 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
 
         self.spiderSer.write(command)
         sentTime = time.clock()
-        
+
         serialTimeout = self.spiderSer.timeout
         self.spiderSer.timeout = .05
-                    
+
         while (time.clock() - timeStart) < totalTime:
             if (time.clock() - sentTime) > timeout: #resend command
                 self.spiderSer.write(command)
-                sentTime = time.clock() 
+                sentTime = time.clock()
             ret = self.spiderSer.read()
             if ret == command:  #got the return
                 self.spiderSer.timeout = serialTimeout
                 return
-        
+
         raise Exception("(LOCO) Spider did not respond")
-    
+
     def storeGait(self, thisGait, gaitIndex):
         """
-        Stores a new gait in the location of one of the Spider's prewritten 
+        Stores a new gait in the location of one of the Spider's prewritten
         gaits. Be sure that the gait you are storing is the same size as the
-        one you are overriding 
+        one you are overriding
         @param thisGait (Gait): The gait to store
-        @param gaitIndex: The index (on the arduino) of the gait to be overwritten 
+        @param gaitIndex: The index (on the arduino) of the gait to be overwritten
         """
         self.sendAndVerify("STORE_GAIT")
         self.spiderSer.write(chr(gaitIndex))
         self.spiderSer.flushInput()
-        
+
         for i in range(10):
-            checksum = 0        
+            checksum = 0
             allMoves = thisGait.moves
-            for moves in allMoves:  
+            for moves in allMoves:
                 for val in moves:
                     # send and calculate checksum
                     byte2 = val & 0xFF
@@ -161,7 +161,7 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
                     checksum = checksum & 0xFF
                     self.spiderSer.write(chr(byte1))
                     self.spiderSer.write(chr(byte2))
-                    
+
             checksum = ((checksum ^ 0xFF) + 1) & 0xFF
             resp = self.spiderSer.read()
             if resp == "" or ord(resp) != checksum:
@@ -173,32 +173,32 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
         #if all attempts failed then give up
         raise Exception("(LOCO) Did not recieve correnct checksum")
 
-            
+
     def streamGait(self, thisGait):
         """
-        Causes the Spider to perform a gait by streaming every servo command 
-        directly to the motor controller as opposed to the Arduino. Good if 
+        Causes the Spider to perform a gait by streaming every servo command
+        directly to the motor controller as opposed to the Arduino. Good if
         the gait is not used offten and thus not on the Arduino
         @param thisGait (Gait): The gait to be performed
         """
-        self.sendAndVerify("SEND_DIRECTLY")    
-        self.spiderSer.flushInput()    
+        self.sendAndVerify("SEND_DIRECTLY")
+        self.spiderSer.flushInput()
         for mov in thisGait.moves:
             comStr = self.getMoveCommand(mov)
             self.spiderSer.write(comStr)
             time.sleep(mov[18]/1000.0)    #wait for move to be performed
-        
-        #check for timed out 
+
+        #check for timed out
         timeout = self.spiderSer.timeout
         self.spiderSer.timeout = 0
         resp = self.spiderSer.read()
         self.spiderSer.timeout = timeout
         if resp != "" and ord(resp) == 0xFF:
             raise Exception("(LOCO) Spider's sendDirectly timed out")
-        
+
         self.sendAndVerify("STOP_SENDING_DIRECTLY")
-        self.currentDir = None            
-        
+        self.currentDir = None
+
     def getMoveCommand(self, move):
         """
         Gives the string that should be passed to the motor controller so that
@@ -213,18 +213,18 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
             pin = self.allServoMapping[i]
             pos = self.allServoOffset[i] + move[i]
             ret += "#" + str(pin) + "P" + str(pos)
-            
+
         ret += "T" + str(move[18])   # the time for the move
         ret += "\r"
         return ret
-        
-    
+
+
     def turnOffServos(self):
         """
-        Sends the signal to cut power to the servos 
+        Sends the signal to cut power to the servos
         """
         self.sendAndVerify("TURN_OFF_SERVOS", 5, 3)
-    
+
     def setMoving(self, moving=False):
         """
         @param moving (bool): True - set moving, False - stop moving
@@ -236,17 +236,17 @@ class SpiderLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
         else:
             self.sendAndVerify("STOP_MOVING", 5, 3)
             self.state = "stopped"
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-        
+
+
+
+
+
+
+
+
+
+
+
 
 
 

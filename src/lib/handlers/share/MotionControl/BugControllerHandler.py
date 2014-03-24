@@ -32,7 +32,7 @@ import threading
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class BugControllerHandler(handlerTemplates.MotionControlHandler):
-    def __init__(self, proj, shared_data,robot_type):
+    def __init__(self, executor, shared_data,robot_type):
         """
         Bug alogorithm motion planning controller
 
@@ -63,15 +63,15 @@ class BugControllerHandler(handlerTemplates.MotionControlHandler):
         self.PLOT_WINDOWS     = True
 
         # Get references to handlers we'll need to communicate with
-        self.drive_handler = proj.h_instance['drive']
-        self.pose_handler = proj.h_instance['pose']
+        self.drive_handler = executor.hsub.getHandlerInstanceByType(handlerTemplates.DriveHandler)
+        self.pose_handler = executor.hsub.getHandlerInstanceByType(handlerTemplates.PoseHandler) 
         if self.system == 1:
             self.robocomm = shared_data['robocomm']
 
         # Get information about regions
-        self.proj = proj
-        self.coordmap_map2lab = proj.coordmap_map2lab
-        self.coordmap_lab2map = proj.coordmap_lab2map
+        self.proj = executor.proj
+        self.coordmap_map2lab = self.hsub.coordmap_map2lab
+        self.coordmap_lab2map = self.hsub.coordmap_lab2map
         self.last_warning = 0
 
 

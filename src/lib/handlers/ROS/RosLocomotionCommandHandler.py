@@ -14,7 +14,7 @@ rosLocomotionCommand.py - ros Locomotion Command Handler
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class RosLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
-	def __init__(self, proj, shared_data, velocityTopic='/base_controller/command'):
+	def __init__(self, executor, shared_data, velocityTopic='/base_controller/command'):
 		"""
 		The ROS Locomotion Command Handler
 

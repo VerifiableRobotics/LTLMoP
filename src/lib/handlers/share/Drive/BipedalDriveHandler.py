@@ -16,7 +16,7 @@ import numpy
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class BipedalDriveHandler(handlerTemplates.DriveHandler):
-    def __init__(self, proj, shared_data,maxspeed,maxfreq,angcur,angfwd,minvel,silent):
+    def __init__(self, executor, shared_data,maxspeed,maxfreq,angcur,angfwd,minvel,silent):
         """
         Drive handler for bipedal robot
 
@@ -38,19 +38,19 @@ class BipedalDriveHandler(handlerTemplates.DriveHandler):
 
         try:
             # Get locomotion command handler to be called in setVelocity
-            self.loco = proj.h_instance['locomotionCommand']
+            self.loco = executor.hsub.getHandlerInstanceByType(handlerTemplates.LocomotionCommandHandler)
         except NameError:
             if not self.silent: print "(DRIVE) Locomotion Command Handler not found."
             exit(-1)
         try:
             # ?? Get pose handler (don't trust motion controller theta value??
-            self.pose = proj.h_instance['pose']
+            self.pose = executor.hsub.getHandlerInstanceByType(handlerTemplates.PoseHandler)
         except NameError:
             if not self.silent: print "(DRIVE) Pose Handler not found."
             exit(-1)
         try:
             # ?? Get map coordinate transformation method for printing ??
-            self.coordmap = proj.coordmap_lab2map
+            self.coordmap = executor.hsub.coordmap_lab2map
         except NameError:
             if not self.silent: print "(DRIVE) Calibration data not found."
             exit(-1)

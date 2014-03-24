@@ -11,7 +11,7 @@ from numpy import *
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class BasicSimPoseHandler(handlerTemplates.PoseHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         """
         Pose Handler for basic simulated robot
         """
@@ -30,5 +30,5 @@ class BasicSimPoseHandler(handlerTemplates.PoseHandler):
             # Get updated information
             self.last_pose = self.simulator.getPose()
         return self.last_pose
-    
+
 

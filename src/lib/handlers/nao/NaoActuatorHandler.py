@@ -13,7 +13,7 @@ import threading
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class NaoActuatorHandler(handlerTemplates.ActuatorHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         """
 
         """

@@ -8,7 +8,7 @@ naoSensors.py - Sensor handler for the Aldebaran Nao
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class NaoSensorHandler(handlerTemplates.SensorHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         self.naoInitHandler = shared_data['NAO_INIT_HANDLER']
 
         self.sttProxy = None

@@ -18,10 +18,10 @@ from numpy import matrix
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class IRobotCreateInitHandler(handlerTemplates.InitHandler):
-    def __init__(self,proj,listenIP = "0.0.0.0",broadCastIP = "192.168.1.120",createPort=8865,beaglePort=8866,artagPort=8844,sonarPort=8833,buffer=1024):
+    def __init__(self,executor,listenIP = "0.0.0.0",broadCastIP = "192.168.1.120",createPort=8865,beaglePort=8866,artagPort=8844,sonarPort=8833,buffer=1024):
         """
         Initialization handler for iRobotCreate robot
-        
+
         listenIP (string): the ip address of the device that is currently running LTLMoP (default="0.0.0.0")
         broadCastIP (string): The ip address of the iRobotCreate. Not sure? Log on to the Create router and checkout the ip address! (default="192.168.1.120")
         createPort (int): BeagleBoard's port for transferring commands directly to iCreate (default=8865)
@@ -30,17 +30,17 @@ class IRobotCreateInitHandler(handlerTemplates.InitHandler):
         sonarPort (int): BeagleBoard's port for streaming sonar data (default=8833)
         buffer (int): specifies the size of the buffer for the listener (default=1024)
         """
-        
+
         try:
             # Create proxies to access modules
-            self.robocomm = _iRobotCreateCommunicator(proj,listenIP,broadCastIP,createPort,beaglePort,artagPort,sonarPort,buffer)
+            self.robocomm = _iRobotCreateCommunicator(executor.proj,listenIP,broadCastIP,createPort,beaglePort,artagPort,sonarPort,buffer)
             self.robocomm.start()
             time.sleep(1)   # Give communicator time to start and receive first data
         except RuntimeError:
             self.robocomm.stop()
             print "(INIT) ERROR: Cannot connect to the robot."
             exit(-1)
-            
+
     def getSharedData(self):
         # Return dictionary of module proxies for other handlers to use
         return {'robocomm':self.robocomm}
@@ -48,12 +48,12 @@ class IRobotCreateInitHandler(handlerTemplates.InitHandler):
 ########################################################################
 ###                Main _iRobotCreateCommunicator Class               ###
 ########################################################################
-    
+
 class _iRobotCreateCommunicator:
 
     # Constructor
     def __init__(self,proj,listenIP,broadCastIP,createPort,beaglePort,artagPort,sonarPort,buffer):
-        
+
         # Communication parameters
         self.listenerIP = listenIP
         self.createPort = createPort
@@ -67,7 +67,7 @@ class _iRobotCreateCommunicator:
         self.beagleAddr = (self.broadcastIP,self.beaglePort)
         self.createAddr = (self.broadcastIP,self.createPort)
         self.beagleSock = socket(AF_INET,SOCK_STREAM)
-        self.createSock = socket(AF_INET,SOCK_STREAM)        
+        self.createSock = socket(AF_INET,SOCK_STREAM)
         # Communication threads
         self.listener = _RobotListener(self.listenerIP,self.artagPort,self.buffer)
         self.broadcaster = _RobotBroadcaster(proj,self.broadcastIP,self.beagleSock,self.createSock,self.beagleAddr,self.createAddr,self.buffer)
@@ -78,7 +78,7 @@ class _iRobotCreateCommunicator:
         self.arrived = False
 
         self.pickUpAttempt = 0
-        
+
     def start(self):
         """
         Open sockets for communication.
@@ -118,25 +118,25 @@ class _iRobotCreateCommunicator:
             return received
         else:
             self.broadcaster.sendCommand(data,response)
-            
+
     def broadcastToBeagle(self,data):
         self.broadcaster.sendToBeagle(data)
-        
+
     def runViconMarkerStream(self):
         if not self.viconMarkerListener.isAlive():
             self.viconMarkerListener.start()
-        
+
     def getViconMarkers(self):
         return self.viconMarkerListener.getViconMarkers()
 
     def setHasArrived(self,state):
         self.arrived = state
-        
+
     def hasArrived(self):
         self.targetMarker = None
         return self.arrived
-        
-        
+
+
     def updateViconMarkers(self,markers):
         self.viconMarkers = markers
 
@@ -152,22 +152,22 @@ class _iRobotCreateCommunicator:
 
     def updatePickUpAttempt(self):
         self.pickUpAttempt += 1
-    
-        
 
-        
+
+
+
 
 ########################################################################
 ###            _RobotListener Class for Processing ARTags             ###
-########################################################################        
-    
+########################################################################
+
 class _RobotListener(Thread):
-    
+
     def __init__(self,Host,ARTagSock,buff):
         super(_RobotListener,self).__init__()
         self.ARTagAddr = (Host,ARTagSock)
         self.ARTagUDPSock=socket(AF_INET,SOCK_DGRAM)
-        
+
         self.ARTagUDPSock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.ARTagUDPSock.bind(self.ARTagAddr)
         self.tagsReceived = {}
@@ -176,7 +176,7 @@ class _RobotListener(Thread):
         self.close = Event()
 
     def run(self):
-       
+
        print '(IROBOTCOMM)starting _RobotListener!'
        count = 0
        while not self.close.isSet():
@@ -186,7 +186,7 @@ class _RobotListener(Thread):
            self.lock.release()
            time.sleep(0.05)
        print '(IROBOTCOMM)Exiting Listener!'
-        
+
     def stop(self):
         self.close.set()
 
@@ -205,7 +205,7 @@ class _RobotListener(Thread):
                 if ID == -1:
                     break
                 xIndex = idIndex+4*(MAXARTAGSEEN)
-                #print [tags[xIndex-2],tags[xIndex-1],tags[xIndex],tags[xIndex+1],tags[xIndex+2],tags[xIndex+3],tags[xIndex+4],tags[xIndex+5],tags[xIndex+6],tags[xIndex+7],tags[xIndex+8]]          
+                #print [tags[xIndex-2],tags[xIndex-1],tags[xIndex],tags[xIndex+1],tags[xIndex+2],tags[xIndex+3],tags[xIndex+4],tags[xIndex+5],tags[xIndex+6],tags[xIndex+7],tags[xIndex+8]]
                 x = unpack('<f',tags[xIndex:xIndex+4])
                 x = x[0]
                 yIndex = xIndex+4*MAXARTAGSEEN
@@ -222,14 +222,14 @@ class _RobotListener(Thread):
             if len(self.tagsReceived)>0:
                 tag1 = self.tagsReceived[0]
                 print "ARTAG: ID = %s x = %s y = %s z = %s yaw = %s" % (str(tag1[0]), str(tag1[1]), str(tag1[2]), str(tag1[3]),str(tag1[4]))
-   
 
-   
+
+
 class _RobotBroadcaster:
     """
-    Class used to communicate from LTLMoP to a robot. 
+    Class used to communicate from LTLMoP to a robot.
     """
-   
+
     # Constructor
     def __init__(self,proj,ipAddress,beagleSock,createSock,beagleAddr,createAddr,bufferSize):
         # Communication parameters
@@ -237,8 +237,8 @@ class _RobotBroadcaster:
         self.beagleAddr = beagleAddr
         self.beagleSock = beagleSock
         self.createSock = createSock
-        self.proj = proj
-    
+        self.proj =proj
+
     # Disable communication
     def stop(self):
         """
@@ -272,9 +272,9 @@ class _RobotBroadcaster:
 
         time.sleep(0.5)
         self.createSock.send(pack('BB',141,1))         # sing it!!
-        
+
         print 'iRobot: I am alive if I just sang a song :D'
-        time.sleep(1) # why do I need to sleep again? 
+        time.sleep(1) # why do I need to sleep again?
 
 
     def sendDirection(self,direction):
@@ -288,10 +288,10 @@ class _RobotBroadcaster:
         """
         x,y = direction
         wheelVel = matrix([[1,0.129],[1,-0.129]])*matrix([[x],[y]])
-            
+
         rightWheelVel = min(max(500*wheelVel[0,0],-500),500)
         leftWheelVel = min(max(500*wheelVel[1,0],-500),500)
-                    
+
         data = pack('>Bhh',145,rightWheelVel,leftWheelVel)
         self.createSock.sendto(data,self.createAddr)
 
@@ -302,14 +302,14 @@ class _RobotBroadcaster:
             while len(received)<1:
                 received += self.createSock.recv(1024)
             return received
-        
+
     def sendToBeagle(self,data):
         self.beagleSock.sendto(data,self.beagleAddr)
 
 class _ViconMarkerListener(Thread):
     def __init__(self, freq=20.0, ip="0.0.0.0", port=7500):
         """Create the a socket to receive Vicon data.
-        
+
         freq - Update frequency in Hz.
         ip - IP address to listen on.
              Default is local computer.
@@ -340,7 +340,7 @@ class _ViconMarkerListener(Thread):
         self.close.clear()
         delay = 1.0 / self.updateFreq
         while not self.close.isSet():
-            
+
             self.lock.acquire()
             data = self.udpSock.recv(self.bufsize)
             self.lock.release()
@@ -353,7 +353,7 @@ class _ViconMarkerListener(Thread):
     def stop(self):
         """Close the socket to end UDP communication."""
         self.close.set()
-    
+
     # Deserialize and save data
     def ProcessData(self, data):
         """Extract marker positions and keep them.
@@ -374,13 +374,4 @@ class _ViconMarkerListener(Thread):
     def getViconMarkers(self):
         #print 'poses sent to sensor! ', len(self.poses)
         return self.poses
-        
 
-
-
-
-            
-        
-
-    
-    

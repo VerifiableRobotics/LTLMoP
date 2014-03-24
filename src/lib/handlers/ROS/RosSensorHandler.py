@@ -12,7 +12,7 @@ from sensor_msgs.msg import *
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class RosSensorHandler(handlerTemplates.SensorHandler):
-	def __init__(self, proj, shared_data):
+	def __init__(self, executor, shared_data):
 		"""
 		ROS Sensor Handler
 		"""
@@ -44,7 +44,7 @@ class RosSensorHandler(handlerTemplates.SensorHandler):
 			# There is already an initiated node for LTLMoP
 			# Otherwise we would create one
 			# This creates a subscriber for the given topic
-			# Pass the topic, messageType, the function to call, 
+			# Pass the topic, messageType, the function to call,
 			# and self (for global variable access)
 			rospy.Subscriber(self.topic, eval(self.messageType), processData, self)
 			# You must return boolean

@@ -13,17 +13,17 @@ from scipy.linalg import norm
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
 
-        self.iRobotCommunicator = proj.shared_data['robocomm']
-        self.pose_handler = proj.h_instance['pose']
-        self.proj = proj
+        self.iRobotCommunicator = shared_data['robocomm']
+        self.pose_handler = executor.hsub.getHandlerInstanceByType(handlerTemplates.PoseHandler)
+        self.hsub= executor.hsub
 
-        self.rfi = proj.rfi
+        self.rfi = executor.proj.rfi
 
     ###################################
     ### Available sensor functions: ###
-    ################################### 
+    ###################################
     def bump_left(self,initial=False):
         """
         returns the current state of the left bumper sensor on the iCreate
@@ -37,10 +37,10 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
                 print '(SENSOR ERROR): Sensor handler failed to received anything response from the robot![bump_left]'
                 return False
             else:
-                
+
                 temp = unpack('>B',data[0])
                 return bool(temp[0]&0x0002)
-        
+
     def bump_right(self,initial=False):
         """
         returns the current state of the right bumper sensor on the iCreate
@@ -56,7 +56,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0]&0x0001)
-    
+
     def wheelDrop_left(self,initial=False):
         if initial:
             return True
@@ -69,7 +69,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0]&0x0004)
-    
+
     def wheelDrop_right(self,initial=False):
         if initial:
             return True
@@ -82,7 +82,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0]&0x0003)
-    
+
     def wheelDrop_caster(self,initial=False):
         if initial:
             return True
@@ -95,7 +95,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0]&0x0005)
-    
+
     def wall(self,initial=False):
         if initial:
             return True
@@ -108,7 +108,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0])
-        
+
     def virtual_wall(self,initial=False):
         if initial:
             return True
@@ -121,7 +121,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0])
-    
+
     def cliffFront_left(self,initial=False):
         if initial:
             return True
@@ -134,7 +134,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0])
-    
+
     def cliffFront_right(self,initial=False):
         if initial:
             return True
@@ -147,7 +147,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0])
-    
+
     def cliff_right(self,initial=False):
         if initial:
             return True
@@ -160,7 +160,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0])
-    
+
     def cliff_left(self,initial=False):
         if initial:
             return True
@@ -173,7 +173,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0])
-    
+
     def button_play(self,initial=False):
         if initial:
             return True
@@ -186,7 +186,7 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             else:
                 temp = unpack('>B',data[0])
                 return bool(temp[0]&0x0001)
-    
+
     def button_advance(self,initial=False):
         if initial:
             return True
@@ -212,20 +212,20 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             self.iRobotCommunicator.runViconMarkerStream()
             return True
         else:
-            # get robot's current pose            
+            # get robot's current pose
             robotPose = self.pose_handler.getPose()
             regions = self.rfi.regions
             # get all the marker locations through Vicon
             rawStream = self.iRobotCommunicator.getViconMarkers()
             markers = self._getMarkersNearby(robotPose,regions,rawStream,detection_range)
             # update the communicator so actuator can use this information
-            
+
             self.iRobotCommunicator.updateViconMarkers(markers)
             target = self.iRobotCommunicator.getTargetMarker()
             if target is not None:
-                print 'marker:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(target)))
+                print 'marker:%d,%d' % tuple(map(int, self.hsub.coordmap_lab2map(target)))
             elif bool(len(markers)>0) and target is None:
-                print 'marker:%d,%d' % tuple(map(int, self.proj.coordmap_lab2map(markers[0])))
+                print 'marker:%d,%d' % tuple(map(int, self.hsub.coordmap_lab2map(markers[0])))
             return bool(len(markers)>0)
 
     def arrivedAtMarker(self,initial=False):
@@ -237,14 +237,14 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
             if arrived:
                 self.iRobotCommunicator.setHasArrived(False)
             return arrived
-    
+
     def _getMarkersNearby(self,pose,regions,raw,threshold):
         markers = []
         if len(raw) > 0:
             #print 'I see some markers in the raw vicon stream!'
             # first find current region
             curr_region = 0
-            map_pose = self.proj.coordmap_lab2map(pose[0:2])
+            map_pose = self.hsub.coordmap_lab2map(pose[0:2])
             for i in range(0,len(regions)):
                 if regions[i].objectContainsPoint(map_pose[0],map_pose[1]):
                     curr_region = i
@@ -253,10 +253,10 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
 
             for i in range(0,len(raw)):
                 p = raw[i]
-                map_p = self.proj.coordmap_lab2map([p[0],p[1]])
-                
+                map_p = self.hsub.coordmap_lab2map([p[0],p[1]])
+
                 #dist = abs(norm(array(raw[i])-array([pose[0],pose[1]])))
-                
+
                 if regions[curr_region].objectContainsPoint(map_p[0],map_p[1]):
                     dist = abs(norm(array(raw[i])-array(pose[0:2])))
                     #print 'Found a marker in the current region! Distance: ',dist
@@ -266,12 +266,3 @@ class IRobotCreateSensorHandler(handlerTemplates.SensorHandler):
 
 
         return markers
-        
-        
-            
-    
-    
-    
-    
-    
-           

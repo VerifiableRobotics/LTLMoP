@@ -17,15 +17,15 @@ rosPose.py - ROS Interface Pose Handler
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class RosPoseHandler(handlerTemplates.PoseHandler):
-	def __init__(self, proj, shared_data, modelName="pr2"):
+	def __init__(self, executor, shared_data, modelName="pr2"):
 		"""
-		Pose Handler for ROS and gazebo.  
+		Pose Handler for ROS and gazebo.
 
 		modelName (str): The model name of the robot in gazebo to get the pose information from (default="pr2")
 		"""
 
 		#GetModelState expects the arguments model_name and relative_entity_name
-		#In this case it is pr2 and world respectively but can be changed for different robots and environments	
+		#In this case it is pr2 and world respectively but can be changed for different robots and environments
 		self.model_name = modelName
 		self.relative_entity_name = 'world' #implies the gazebo global coordinates
 		self.last_pose = None
@@ -54,9 +54,9 @@ class RosPoseHandler(handlerTemplates.PoseHandler):
 			#  Use the tf module transforming quaternions to euler
 			try:
 				angles = euler_from_quaternion([self.or_x, self.or_y, self.or_z, self.or_w])
-				self.theta = angles[2]	
+				self.theta = angles[2]
 				shared=self.shared_data
-				#The following accounts for the maps offset in gazebo for 
+				#The following accounts for the maps offset in gazebo for
 				#initial region placement
 				self.last_pose = array([self.pos_x+shared.offset[0], self.pos_y+shared.offset[1], self.theta, self.pos_z])
 			except Exception:

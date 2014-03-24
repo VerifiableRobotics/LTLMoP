@@ -13,16 +13,16 @@ from math import sin, cos
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class RosDriveHandler(handlerTemplates.DriveHandler):
-    def __init__(self, proj, shared_data,d=0.6):
+    def __init__(self, executor, shared_data,d=0.6):
         """
         Initialization method of differential drive handler.
 
         d (float): Distance from front axle to point we are abstracting to [m] (default=0.6,max=0.8,min=0.2)
-        """   
+        """
 
         try:
-            self.loco = proj.h_instance['locomotionCommand']
-            self.coordmap = proj.coordmap_lab2map
+            self.loco = executor.hsub.getHandlerInstanceByType(handlerTemplates.LocomotionCommanHandler)
+            self.coordmap = executor.hsub.coordmap_lab2map
         except NameError:
             print "(DRIVE) Locomotion Command Handler not found."
             exit(-1)

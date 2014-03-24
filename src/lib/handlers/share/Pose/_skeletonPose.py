@@ -9,7 +9,7 @@ import sys, time
 from numpy import *
 
 class poseHandler:
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         # TODO: Initialize any network connections that might be necessary.
         #
         # This is only called once at the beginning of execution.

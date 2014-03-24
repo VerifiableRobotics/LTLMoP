@@ -14,7 +14,7 @@ import sys
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class DummySensorHandler(handlerTemplates.SensorHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         """
         Start up sensor handler subwindow and create a new thread to listen to it.
         """
@@ -22,7 +22,7 @@ class DummySensorHandler(handlerTemplates.SensorHandler):
         # Since we don't want to have to poll the subwindow for each request,
         # we need a data structure to cache sensor states:
         self.sensorValue = {}
-        self.proj = proj
+        self.proj = executor.proj
         self.sensorListenInitialized = False
         self._running = True
         self.p_sensorHandler = None

@@ -8,7 +8,7 @@ basicSimLocomotionCommand.py - Basic Simulation Locomotion Command Handler
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class BasicSimLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
-    def __init__(self, proj, shared_data,speed):
+    def __init__(self, executor, shared_data,speed):
         """
         LocomotionCommand Handler for basic simulated robot.
 
@@ -20,10 +20,10 @@ class BasicSimLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler
         except KeyError:
             print "(Loco) ERROR: Basic Simulator doesn't seem to be initialized!"
             sys.exit(-1)
-        
+
     def sendCommand(self, cmd):
 
         v = self.speed*cmd[0]
         w = self.speed*cmd[1]
         self.simulator.setVel([v,w])
-                       
+

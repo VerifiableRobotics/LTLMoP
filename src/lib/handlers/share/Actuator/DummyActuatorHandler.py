@@ -13,8 +13,8 @@ import sys
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class DummyActuatorHandler(handlerTemplates.ActuatorHandler):
-    def __init__(self, proj, shared_data):
-        self.proj = proj
+    def __init__(self, executor, shared_data):
+        self.proj = executor.proj
         self.p_gui = None
 
     def _stop(self):

@@ -13,7 +13,7 @@ from naoqi import ALProxy
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class NaoInitHandler(handlerTemplates.InitHandler):
-    def __init__(self, proj, ip='nao.local',port=9559):
+    def __init__(self, executor, ip='nao.local',port=9559):
         """
         Initialization handler for NAO robot.
 
@@ -23,9 +23,7 @@ class NaoInitHandler(handlerTemplates.InitHandler):
 
         try:
             # Get connection settings from robot configuration file
-            #self.naoIP = proj.robot_data['NaoIP'][0]             # IP address (string)
             self.naoIP = ip
-            #self.naoPort = int(proj.robot_data['NaoPort'][0])    # Port (number)
             self.naoPort = port
 
 

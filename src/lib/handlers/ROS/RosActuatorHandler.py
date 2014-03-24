@@ -41,12 +41,12 @@ from pr2_controllers_msgs.msg import SingleJointPositionAction, SingleJointPosit
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class RosActuatorHandler(handlerTemplates.ActuatorHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         """
         Actuator Handler for ROS type applications
         """
         self.rosInitHandler = shared_data['ROS_INIT_HANDLER']
-        self.loco = proj.h_instance['locomotionCommand']
+        self.loco = executor.hsub.getHandlerInstanceByType(handlerTemplates.LocomotionCommandHandler)
 
     #####################################
     ### Available actuator functions: ###
@@ -62,18 +62,18 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
         """
         if initial:
 
-            # this is the topic that the command should be published on 
+            # this is the topic that the command should be published on
             # to perform the action
-            # $(rostopic list) issued during a running scenario will 
+            # $(rostopic list) issued during a running scenario will
             # list all of the topics that can be published to
-            topic='r_gripper_controller/command' 
+            topic='r_gripper_controller/command'
 
             # this is the command type that is published on the topic
-            # $(rostopic info $topic) when used with a topic of your 
+            # $(rostopic info $topic) when used with a topic of your
             # choice will list the message type to use
             messageType='Pr2GripperCommand'
 
-            # this creates the publisher on the given topic with the 
+            # this creates the publisher on the given topic with the
             # given message type
             self.templateAction=rospy.Publisher(topic, eval(messageType))
 
@@ -91,13 +91,13 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
         else:
             if int(actuatorVal)==1:
                 # publish the message on the publisher created earlier
-                # a note: the message will only work if it has time to 
+                # a note: the message will only work if it has time to
                 # to complete the task before locomotion commands begin
                 # to send again.  Try the goal oriented action function
                 # if you want better completions
                 self.templateAction.publish(self.templateMessage)
-                
-                
+
+
     def pickUpObject(self, actuatorVal, initial=False):
         """
         Pick Up Object with the Gripper and sensor on pr2
@@ -131,16 +131,16 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
                 self.loco.sendCommand([-1,0,0])
                 time.sleep(3)
                 self.loco.sendCommand([0,0,0])
-    
-    def putDownObject(self, actuatorVal, initial=False,position=.6, max_effort=50.0):  
+
+    def putDownObject(self, actuatorVal, initial=False,position=.6, max_effort=50.0):
         """
         Put down Object in the Gripper
         position (float): The position the gripper should go to (default=.6)
         max_effort (float): The force the gripper should apply during this process (default=50.0)
         """
         if initial:
-            
-            topicLeft='l_gripper_controller/command'            
+
+            topicLeft='l_gripper_controller/command'
             topicRight='r_gripper_controller/command'
             messageType='Pr2GripperCommand'
             self.gripActionLeft=rospy.Publisher(topicLeft, eval(messageType))
@@ -148,8 +148,8 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
             self.gripMessage=Pr2GripperCommand()
             self.gripMessage.position=position
             self.gripMessage.max_effort=max_effort
-            
-            
+
+
 
         else:
             if int(actuatorVal)==1:
@@ -170,7 +170,7 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
                 self.gripActionLeft.publish(self.gripMessage)
                 self.gripActionRight.publish(self.gripMessage)
                 time.sleep(20)
-         
+
 
     def movePr2Gripper(self, actuatorVal, initial=False, whichHand='right', position=.2, max_effort=100.0):
         """
@@ -183,7 +183,7 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
         if initial:
 
             if whichHand=='left':
-                topic='l_gripper_controller/command' 
+                topic='l_gripper_controller/command'
             else:
                 topic='r_gripper_controller/command'
             messageType='Pr2GripperCommand'
@@ -204,13 +204,13 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
         """
         if initial:
             # this is the topic you want to publish the message on
-            # $(rostopic list) during a running session will list 
+            # $(rostopic list) during a running session will list
             # the available topics
             topic='torso_controller/position_joint_action'
 
-            # for goals, the messageType has two parts, the Action 
-            # and the Goal, in most cases it will be 
-            # messageType+'Action' for the action part and 
+            # for goals, the messageType has two parts, the Action
+            # and the Goal, in most cases it will be
+            # messageType+'Action' for the action part and
             # messageType+'Goal' for the goal part
             messageType='SingleJointPosition'
 
@@ -219,9 +219,9 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
             self.templateAction = actionlib.SimpleActionClient(topic, eval(messageType+'Action'))
 
             # this is the creation of the message, notice the message
-            # has a Goal format 
+            # has a Goal format
             self.templateMessage=eval(messageType+'Goal()')
-            
+
             # set the goal attributes of the message, here we just
             # have position (torso)
             self.templateMessage.position=position
@@ -241,7 +241,7 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
                 # to know
                 if not templateAction.get_state() == GoalStatus.SUCCEEDED:
                     print "Action failed"
-    
+
     def movePr2Torso(self, actuatorVal, position=0.2, initial=False):
         """
         This is a sample goal oriented actuation for moving the Pr2's torso
@@ -261,7 +261,7 @@ class RosActuatorHandler(handlerTemplates.ActuatorHandler):
                 self.torsoAction.wait_for_result()
                 if not self.torsoAction.get_state() == GoalStatus.SUCCEEDED:
                     print "Action failed"
-    
+
     def movePr2Head(self, actuatorVal, target_frame_id='r_gripper_tool_frame', target_x=0.0, target_y=0.0, target_z=0.0, min_duration=1.0, initial=False):
         """
         This is a sample goal oriented actuation for moving the Pr2's head
