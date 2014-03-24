@@ -350,11 +350,19 @@ class HandlerSubsystem:
         # get the motionControl handler
         motion_handler_instance = self.getHandlerInstanceByType(ht.MotionControlHandler)
 
+        # if the region is object, we need to find the index of it
+        if not isinstance(current_region, int):
+            current_region = self.executor.proj.rfi.regions.index(current_region)
+        if not isinstance(next_region, int):
+            next_region = self.executor.proj.rfi.regions.index(next_region)
+
         if motion_handler_instance is None:
             raise ValueError("Cannot set target region, because no motionControl handler instance is found for the main robot")
 
         # set the target region
-        motion_handler_instance.gotoRegion(current_region, next_region)
+        arrived = motion_handler_instance.gotoRegion(current_region, next_region)
+
+        return arrived
 
     def getPose(self, cached=False):
         """
@@ -414,7 +422,7 @@ class HandlerSubsystem:
             h_name, h_type, handler_class = HandlerConfig.loadHandlerClass(handler_module_path)
 
             # construct the arguments list
-            arg_dict = {"proj":self.executor.proj, "shared_data":self.executor.proj.shared_data}
+            arg_dict = {"executor":self.executor, "shared_data":self.executor.proj.shared_data}
             init_method = handler_config.getMethodByName("__init__")
             arg_dict = self.prepareArguments(init_method, arg_dict)
 

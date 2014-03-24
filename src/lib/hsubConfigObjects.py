@@ -314,7 +314,7 @@ class HandlerConfig(object):
         if self.methods is None:
             self.methods = []
         self.robot_type = robot_type    # type of the robot using this handler for robot specific handlers
-        self.ignore_parameter = ['self', 'initial', 'proj', 'shared_data', 'actuatorVal']
+        self.ignore_parameter = ['self', 'initial', 'executor', 'shared_data', 'actuatorVal']
                                         # list of name of parameter that should be ignored where parse the handler methods
 
     def __repr__(self):
