@@ -303,7 +303,7 @@ class SpecEditorFrame(wx.Frame):
         wxglade_tmp_menu.AppendMenu(MENU_COMPILECONFIG, "Compilation options", wxglade_tmp_menu_sub, "")
         wxglade_tmp_menu.AppendSeparator()
         wxglade_tmp_menu.Append(MENU_SIMULATE, "&Simulate\tF6", "", wx.ITEM_NORMAL)
-        wxglade_tmp_menu.Append(MENU_SIMCONFIG, "Confi&gure Simulation...\tShift-F6", "", wx.ITEM_NORMAL)
+        wxglade_tmp_menu.Append(MENU_SIMCONFIG, "Confi&gure Simulation...\tF7", "", wx.ITEM_NORMAL)
         self.frame_1_menubar.Append(wxglade_tmp_menu, "&Run")
         wxglade_tmp_menu = wx.Menu()
         wxglade_tmp_menu.Append(MENU_ANALYZE, "&Analyze\tF8", "", wx.ITEM_NORMAL)
@@ -1274,7 +1274,7 @@ class SpecEditorFrame(wx.Frame):
             # that configEditor could modify)
             other_proj = project.Project()
             other_proj.spec_data = other_proj.loadSpecFile(self.proj.getFilenamePrefix()+".spec")
-            self.proj.currentConfig = other_proj.current_config
+            self.proj.current_config= other_proj.current_config
             self.subprocess["Simulation Configuration"] = None
 
         self.subprocess["Simulation Configuration"] = WxAsynchronousProcessThread([sys.executable, "-u", "-m", "lib.configEditor", self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)

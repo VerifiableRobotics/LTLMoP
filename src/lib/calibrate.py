@@ -57,7 +57,7 @@ class CalibrateFrame(wx.Frame):
         self.proj.setSilent(True)
         self.proj.loadProject(sys.argv[1])
 
-        if self.proj.currentConfig.name != "calibrate":
+        if self.proj.current_config != "calibrate":
             print "(ERROR) Calibration can only be run on a specification file with a calibration configuration.\nPlease use ConfigEditor to calibrate a configuration."
             sys.exit(3)
 

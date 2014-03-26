@@ -140,6 +140,10 @@ class SimGUI_Frame(wx.Frame):
 
     def loadSpecFile(self, filename):
         self.proj.loadProject(filename)
+        self.hsub = handlerSubsystem.HandlerSubsystem(None, self.proj.project_root)
+        config, success = self.hsub.loadConfigFile(self.proj.current_config)
+        if success: self.hsub.configs.append(config)
+        self.hsub.setExecutingConfig(self.proj.current_config)
 
         self.Bind(wx.EVT_SIZE, self.onResize, self)
 
@@ -428,7 +432,7 @@ class SimGUI_Frame(wx.Frame):
 
         LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, results, responses, traceback = \
             _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList,
-                                           self.proj.currentConfig.region_tags)
+                                           self.hsub.executing_config.region_tags)
 
         from ltlbroom.dialog import DialogManager
         self.dialogueManager = DialogManager(traceback)

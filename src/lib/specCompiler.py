@@ -18,6 +18,7 @@ from parseEnglishToLTL import bitEncoding, replaceRegionName, createStayFormula
 import fsa
 from copy import deepcopy
 from cores.coreUtils import *
+import handlerSubsystem
 
 from asyncProcesses import AsynchronousProcessThread
 
@@ -40,6 +41,10 @@ class SpecCompiler(object):
         Load the project object
         """
         self.proj.loadProject(spec_filename)
+        self.hsub = handlerSubsystem.HandlerSubsystem(None, self.proj.project_root)
+        config, success = self.hsub.loadConfigFile(self.proj.current_config)
+        if success: self.hsub.configs.append(config)
+        self.hsub.setExecutingConfig(self.proj.current_config)
 
         # Check to make sure this project is complete
         if self.proj.rfi is None:
@@ -161,10 +166,10 @@ class SpecCompiler(object):
         # TODO: rename decomposition object to something other than 'parser'
         if self.proj.compile_options["parser"] == "slurp":
             # default to no region tags if no simconfig is defined, so we can compile without
-            if self.proj.currentConfig is None:
+            if self.proj.current_config == "":
                 region_tags = {}
             else:
-                region_tags = self.proj.currentConfig.region_tags
+                region_tags = self.hsub.executing_config.region_tags
 
             # Hack: We need to make sure there's only one of these
             global _SLURP_SPEC_GENERATOR
