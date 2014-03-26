@@ -48,28 +48,28 @@ class NaoActuatorHandler(handlerTemplates.ActuatorHandler):
             if self.ledProxy is None:
                 self.ledProxy = self.naoInitHandler.createProxy('ALLeds')
         else:
-            if actuatorVal == True:
-                if FaceLED == True:
+            if actuatorVal:
+                if FaceLED:
                     self.ledProxy.setIntensity('FaceLeds',1)
-                if EarLED == True:
+                if EarLED:
                     self.ledProxy.setIntensity('EarLeds',1)
-                if BrainLED == True:
+                if BrainLED:
                     self.ledProxy.setIntensity('BrainLeds',1)
-                if ChestLED == True:
+                if ChestLED:
                     self.ledProxy.setIntensity('ChestLeds',1)
-                if FeetLED == True:
+                if FeetLED:
                     self.ledProxy.setIntensity('FeetLeds',1)
 
             else:
-                if FaceLED == True:
+                if FaceLED:
                     self.ledProxy.setIntensity('FaceLeds',0)
-                if EarLED == True:
+                if EarLED:
                     self.ledProxy.setIntensity('EarLeds',0)
-                if BrainLED == True:
+                if BrainLED:
                     self.ledProxy.setIntensity('BrainLeds',0)
-                if ChestLED == True:
+                if ChestLED:
                     self.ledProxy.setIntensity('ChestLeds',0)
-                if FeetLED == True:
+                if FeetLED:
                     self.ledProxy.setIntensity('FeetLeds',0)
 
     def _countingThread(self, start, skip, period):
@@ -91,7 +91,7 @@ class NaoActuatorHandler(handlerTemplates.ActuatorHandler):
             countThread = threading.Thread(target = self._countingThread, args = (start, skip, period))
             countThread.start()
         else:
-            if actuatorVal == True:
+            if actuatorVal:
                 self.doCount = True
             else:
                 self.doCount = False
@@ -106,7 +106,7 @@ class NaoActuatorHandler(handlerTemplates.ActuatorHandler):
             if self.ttsProxy is None:
                 self.ttsProxy = self.naoInitHandler.createProxy('ALTextToSpeech')
         else:
-            if actuatorVal == True:
+            if actuatorVal:
                 self.ttsProxy.say(phrase)
 
     def playSoundFile(self, filename, actuatorVal, initial=False):
@@ -115,7 +115,7 @@ class NaoActuatorHandler(handlerTemplates.ActuatorHandler):
                 self.audioProxy = self.naoInitHandler.createProxy('ALAudioPlayer')
             self.audioFileIDs[filename] = self.audProxy.loadFile(filename)
         else:
-            if actuatorVal == True:
+            if actuatorVal:
                 self.audProxy.play(self.audioFileIDs[filename])
                 # TODO: Make this pause dynamic to the length of the clip
                 time.sleep(1)
@@ -160,7 +160,7 @@ class NaoActuatorHandler(handlerTemplates.ActuatorHandler):
                 self.asyncBehaviorThreads[startBehaviorName+","+endBehaviorName] = threading.Thread(target = actionThread, args = (self,))
                 self.asyncBehaviorThreads[startBehaviorName+","+endBehaviorName].start()
         else:
-            if actuatorVal == True:
+            if actuatorVal:
                 if repeat:
                     self.asyncBehaviorFlags[startBehaviorName+","+endBehaviorName] = True
                 else:
