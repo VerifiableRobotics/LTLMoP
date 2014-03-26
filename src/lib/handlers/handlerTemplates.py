@@ -9,7 +9,7 @@
 import re
 import logging
 from collections import OrderedDict
-import lib.globalConfig
+import globalConfig
 
 class Handler(object):
     """

@@ -8,6 +8,19 @@
 
 
 import os
+import sys
+
+# Climb the tree to find out where we are
+p = os.path.abspath(__file__)
+t = ""
+while t != "src":
+    (p, t) = os.path.split(p)
+    if p == "":
+        print "I have no idea where I am; this is ridiculous"
+        sys.exit(1)
+
+sys.path.append(os.path.join(p,"src","lib"))
+
 import re
 import time
 import fileMethods
@@ -15,9 +28,9 @@ from copy import deepcopy
 import project
 import ast
 import globalConfig, logging
-from lib.hsubConfigObjects import MethodParameterConfig,HandlerMethodConfig,\
+from hsubConfigObjects import MethodParameterConfig,HandlerMethodConfig,\
                                 HandlerConfig,RobotConfig,ExperimentConfig
-import lib.handlers.handlerTemplates as ht
+import handlers.handlerTemplates as ht
 
 # TODO: Get rid of this todo list
 # TODO: Move testing code to doctest

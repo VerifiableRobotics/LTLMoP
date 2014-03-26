@@ -6,7 +6,19 @@ Checks that all examples load and synthesize successfully.
 import unittest
 import glob
 import sys, os
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","lib"))
+
+# Climb the tree to find out where we are
+p = os.path.abspath(__file__)
+t = ""
+while "LTLMoP" not in t:
+    (p, t) = os.path.split(p)
+    if p == "":
+        print "I have no idea where I am; this is ridiculous"
+        sys.exit(1)
+
+sys.path.append(os.path.join(p,t,"src","lib"))
+print sys.path
+
 import specCompiler
 
 
