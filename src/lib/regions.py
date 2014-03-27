@@ -395,12 +395,22 @@ class RegionFileInterface(object):
         """
         Turns a regions file into a straight JSON file
         """
-        newFile = open(filename + ".json", 'w')
-        newRe = re.compile('[^a-zA-Z0-9_].*') # matches with non-alphanumeric character first ({,[,],},")
-        with open(filename, 'r') as f:
-            for line in f:
-                if newRe.match(line):
-                    newFile.write(line)
+        if not os.path.exists(filename):
+            raise IOError("path does not exist")
+
+        data = fileMethods.readFromFile(filename)
+
+        if data is None:
+            raise IOError("read from file failed")
+
+        rdata = data["Regions"]
+
+        try:
+            rdata = json.loads("\n".join(rdata))
+        except ValueError:
+            raise ValueError("json failed to load")
+
+        return rdata
                 
 
     def readFile(self, filename):
