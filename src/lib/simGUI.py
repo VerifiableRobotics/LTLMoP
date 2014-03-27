@@ -28,6 +28,7 @@ while t != "src":
 sys.path.append(os.path.join(p,"src","lib"))
 
 import project, mapRenderer, regions
+import handlerSubsystem
 import socket
 import copy
 import xmlrpclib
