@@ -26,15 +26,14 @@ import time
 import fileMethods
 from copy import deepcopy
 import project
-import ast
 import globalConfig, logging
 from hsubConfigObjects import MethodParameterConfig,HandlerMethodConfig,\
                                 HandlerConfig,RobotConfig,ExperimentConfig
 import handlers.handlerTemplates as ht
+from hsubParsingUtils import parseCallString
 
 # TODO: Get rid of this todo list
 # TODO: Move testing code to doctest
-# TODO: Replace regex with ast.parse
 # TODO: Implement motion handler wrapper
 # TODO: Group functions better
 # TODO: Robot type not recognized when not loaded
@@ -408,7 +407,7 @@ class HandlerSubsystem:
         # since we cannot distinguish the method for sensor and actuator
         # we will pass in arguments for both types of methods
         for method_config in self.method_configs:
-            method_config.execute({"initial":True, "actuatorVal":False})
+            method_config.execute(initial=True, actuatorVal=False)
 
     def prepareHandler(self, handler_config):
         """
@@ -487,7 +486,35 @@ class HandlerSubsystem:
             else:
                 raise ValueError("Proposition name {} is not recognized.".format(prop_name))
 
-            self.prop2func[prop_name] = self.handlerStringToFunction(func_string, mode)
+            self.prop2func[prop_name] = self.createPropositionMappingExecutionFunctionFromString(func_string, mode)
+
+    def _makeHandlerMethodConfigAndGetExecutionFunction(self, call_descriptor):
+        """ A helper function for createPropositionMappingFunctionFromString
+            that will get called as the string is parsed. """
+
+        # Sanity check the name
+        if len(call_descriptor.name) < 3:
+            raise SyntaxError("Handler method name {!r} too short.", ".".join(call_descriptor.name))
+
+        # Create a new HMC
+        hmc = self.createHandlerMethodConfig(*call_descriptor.name, kwargs=call_descriptor.args)
+
+        # Save it to a list so we can initialize it later
+        self.method_configs.add(hmc)
+
+        # Return a reference to this HMC's execute function
+        return hmc.execute
+
+    def createPropositionMappingExecutionFunctionFromString(self, func_string, mode):
+        """ Given a string description of the function(s) that some
+            proposition maps to, create the appropriate HandlerMethodConfigs
+            and return the function that will evaluate their execute() methods. """
+
+        # Call the parser with appropriate arguments
+        call_descriptors, eval_function = parseCallString(func_string, mode,
+                                                          self._makeHandlerMethodConfigAndGetExecutionFunction)
+        # Return the resulting function to be evaluated
+        return eval_function
 
     def instantiateAllHandlers(self):
         """
@@ -509,66 +536,6 @@ class HandlerSubsystem:
                 # this is a init handler, set the shared_data
                 self.executor.proj.shared_data = h.getSharedData()
 
-    def handlerStringToFunction(self, text, mode):
-        """ Mode is either 'sensor' or 'actuator' so we can make operands have
-            different meanings in those contexts. """
-
-        # Parse into AST
-        tree = ast.parse(text)
-        # Start the recursion from the first/only Expr (which itself is always
-        # wrapper in a top-level Module
-        assert isinstance(tree, ast.Module) and len(tree.body) == 1 and isinstance(tree.body[0], ast.Expr)
-        f = self.handlerTreeToFunction(tree.body[0].value, mode)
-        f.func_name = re.sub("\W", "_", text)  # TODO: hsub can give this a better name
-        f.__doc__ = text
-        return f
-
-    def handlerTreeToFunction(self, tree, mode):
-        if isinstance(tree, ast.BoolOp):
-            subfunctions = (handlerTreeToFunction(t, mode) for t in tree.values)
-            if isinstance(tree.op, ast.And):
-                if mode == "sensor":
-                    return lambda extra_args: all((f(extra_args) for f in subfunctions))
-                elif mode == "actuator":
-                    # For actuators, we treat "and" as "and next..."
-                    # We can return a list of the return values, but it's probably not useful
-                    return lambda extra_args: [f(extra_args) for f in subfunctions]
-            elif isinstance(tree.op, ast.Or):
-                if mode == "sensor":
-                    return lambda extra_args: any((f(extra_args) for f in subfunctions))
-                elif mode == "actuator":
-                    raise ValueError("OR operator is not permitted in actuators because it doesn't make sense.")
-        elif isinstance(tree, ast.Call):
-            # Calculate the full name of the function
-            name_parts = []
-            subtree = tree.func
-            while isinstance(subtree, ast.Attribute):
-                name_parts.insert(0, subtree.attr)
-                subtree = subtree.value
-            name_parts.insert(0, subtree.id)
-
-            if len(name_parts) != 3:
-                raise ValueError("Handler method call must be in form of robot.handler.method(...)")
-
-            robot_name, handler_name, method_name = name_parts
-
-            # Extract the function arguments using literal_eval
-            kwargs = {}
-            for kw in tree.keywords:
-                try:
-                    kwargs[kw.arg] =  ast.literal_eval(kw.value)
-                except ValueError:
-                    name = ".".join(name)
-                    raise ValueError("Invalid value for argument {!r} of handler name {!r}".format(kw.arg, name))
-
-            # Create a MethodConfigObject, to give it a chance to do typechecking, etc.
-            method_config = self.createHandlerMethodConfig(robot_name, handler_name, method_name, kwargs)
-            self.method_configs.add(method_config)
-
-            # Return a function that calls the MethodConfigObject's execute() function
-            return lambda extra_args:method_config.execute(extra_args)
-        else:
-            raise ValueError("Encountered unexpected node of type {}".format(type(tree)))
 
     def createHandlerMethodConfig(self, robot_name, handler_name, method_name, kwargs):
         """
@@ -721,8 +688,7 @@ class HandlerSubsystem:
             if prop_name not in self.prop2func.keys():
                 raise ValueError("Cannot find proposition {} in the given proposition mapping".format(prop_name))
             else:
-                arg_dict = {"initial":False}
-                sensor_state[prop_name] = self.prop2func[prop_name](arg_dict)
+                sensor_state[prop_name] = self.prop2func[prop_name](initial=False)
 
         return sensor_state
 
@@ -736,8 +702,8 @@ class HandlerSubsystem:
             if prop_name not in self.prop2func.keys():
                 raise ValueError("Cannot find proposition {} in the given proposition mapping".format(prop_name))
             else:
-                arg_dict = {"initial":False, "actuatorVal":actuator_value}
-                self.prop2func[prop_name](arg_dict)
+                self.prop2func[prop_name](initial=False,
+                                          actuatorVal=actuator_value)
 
     def saveAllConfigFiles(self):
         # save all config object

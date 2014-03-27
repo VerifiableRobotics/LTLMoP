@@ -221,7 +221,7 @@ class HandlerMethodConfig(object):
             para_config = self.getParaByName(para_name)
             para_config.setValue(para_value)
 
-    def execute(self, extra_args={}):
+    def execute(self, **extra_args):
         """
         call the reference of this method with stored parameter values
         value of extra argument can be given by extra_args
