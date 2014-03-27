@@ -391,6 +391,18 @@ class RegionFileInterface(object):
 
         return True
 
+    def extractJSONFromRegions(self, filename):
+        """
+        Turns a regions file into a straight JSON file
+        """
+        newFile = open(filename + ".json", 'w')
+        newRe = re.compile('[^a-zA-Z0-9_].*') # matches with non-alphanumeric character first ({,[,],},")
+        with open(filename, 'r') as f:
+            for line in f:
+                if newRe.match(line):
+                    newFile.write(line)
+                
+
     def readFile(self, filename):
         """
         For file format information, refer to writeFile() above.
