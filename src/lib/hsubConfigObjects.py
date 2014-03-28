@@ -21,6 +21,7 @@ import traceback
 import globalConfig, logging
 import importlib
 import handlers.handlerTemplates as ht
+from hsubParsingUtils import parseCallString
 
 
 ###################################################
@@ -32,6 +33,51 @@ class MethodParameterConfig(object):
     Contains name, description, type, value, and default as determined
     by performing introspection on the individual handler modules
     """
+
+    @classmethod
+    def fromString(cls, para_string):
+        """
+        Create a MethodParameterConfig from a single line of a comment from a
+        handler method.
+
+        para_string: string specifying the properties of the parameter
+        """
+
+        # Regular expression to help us out
+        # NOTE: The description does not permit parentheses
+        argRE = re.compile('^\s*(?P<argName>\w+)\s*\(\s*(?P<type>\w+)\s*\)\s*:\s*(?P<description>[^\(]+)\s*(?P<settings>\(.+\))?\s*$', re.IGNORECASE)
+
+        # Try to match
+        m = argRE.search(para_string)
+
+        if m is None:
+            raise ValueError("Not a properly-formatted parameter description.")
+
+        new_obj = cls(name=m.group('argName'),
+                      para_type=m.group('type'),
+                      desc=m.group('description'))
+
+        if m.group('settings') is not None:
+            # To make valid Python syntax, we just need to prepend
+            # a dummy function name before the settings string
+            try:
+                call_desc, _ = parseCallString("dummy_function"+m.group("settings"),
+                                               mode="single")
+            except SyntaxError as e:
+                raise SyntaxError("Error while parsing settings for parameter {!r}: {}".format(m.group('argName'), e))
+
+            settings = call_desc[0].args
+
+            # Set all of the settings
+            for k, v in settings.iteritems():
+                if k.lower() not in ['default', 'min_val', 'max_val', 'options', 'min', 'max']:
+                    raise SyntaxError("Unrecognized setting name {!r} for parameter {!r}".format(k.lower(), m.group('argName')))
+
+                setattr(new_obj, k.lower(), v)
+
+        new_obj.resetValue()
+
+        return new_obj
 
     def __init__(self, name="", para_type="", desc="", default=None, max_val=None, min_val=None, value=None):
         self.name = name                # name of the parameter
@@ -112,42 +158,6 @@ class MethodParameterConfig(object):
         else:
             self.setValue(self.default)
 
-    def fromString(self, para_string, method_config):
-        """
-        Create a MethodParameterConfig from a line of comments in the method object
-
-        para_string : a line of comments in the method object specifies the properties of the parameter
-        method_config: a HandlerMethodConfig object where the parameter exists
-        """
-        # Regular expressions to help us out
-        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?', re.IGNORECASE)
-        settingRE = re.compile(r"""(?x)
-                                   (?P<key>\w+)
-                                   \s*=\s*
-                                   (?P<val>
-                                       "[^"]*" | # double-quoted string
-                                       \[[^\]]*\] | # array
-                                       [^,\s]*    # other
-                                    )""")
-
-        # update the parameter object
-        m = argRE.search(para_string)
-        self.para_type = m.group('type')
-        self.desc = m.group('description')
-        if m.group('range') is not None:
-            try:
-                for k, v in settingRE.findall(m.group('range')):
-                    if k.lower() not in ['default', 'min_val', 'max_val', 'options', 'min', 'max']:
-                        logging.warning('Unrecognized setting name "{0}" for parameter "{1}" of method "{2}"'.format(k.lower(), m.group('argName'), method_config.name))
-                        continue
-
-                    setattr(self, k.lower(), json.loads(v.lower()))
-            except ValueError:
-                # LOG AN ERROR HERE
-                logging.warning('Could not parse settings for parameter "{0}" of method "{1}"'.format(m.group('argName'), method_config.name))
-
-            self.resetValue()
-
 
 class HandlerMethodConfig(object):
     """
@@ -221,6 +231,15 @@ class HandlerMethodConfig(object):
             para_config = self.getParaByName(para_name)
             para_config.setValue(para_value)
 
+    def getArgDict(self):
+        """
+        Prepare a dictionary {arg_name:arg_value} based on the method_config.
+
+        return a dictionary that holds the argument name and value
+        """
+
+        return {p.name: p.getValue() for p in self.para}
+
     def execute(self, **extra_args):
         """
         call the reference of this method with stored parameter values
@@ -229,22 +248,13 @@ class HandlerMethodConfig(object):
         if self.method_reference is None:
             raise ValueError("No reference of method {} is set.".format(self.name))
 
-        # construct the arguments list
-        # starts with LTLMoP internal arguments
-        arg_dict = {}
+        # Get the args we store internally
+        arg_dict = self.getArgDict()
 
-        for para_config in self.para:
-            if para_config.name in extra_args:
-                arg_dict[para_config.name] = extra_args[para_config.name]
-            else:
-                arg_dict[para_config.name] = para_config.getValue()
-
-        for para_name in self.omit_para:
-            if para_name in extra_args:
-                arg_dict[para_name] = extra_args[para_name]
+        # Add any extra args
+        arg_dict.update(extra_args)
 
         return self.method_reference(**arg_dict)
-
 
     def fromMethod(self, method, handler_config):
         """
@@ -253,20 +263,9 @@ class HandlerMethodConfig(object):
         method: python method object
         handler_config: instance of HandlerConfig where this HandlerMethodConfig locates
         """
-        # Regular expressions to help us out
-        argRE = re.compile('(?P<argName>\w+)(\s*\((?P<type>\w+)\s*\))(\s*:\s*)(?P<description>[^\(]+)(\s*\((?P<range>.+)\s*\))?', re.IGNORECASE)
 
         self.name = method.__name__
         self.handler = handler_config
-
-        # parsing parameters of the method
-        for para_name in inspect.getargspec(method)[0]:
-            # create a parameter object if the parameter is not ignorable
-            if para_name not in self.handler.ignore_parameter:
-                para_config = MethodParameterConfig(para_name)
-                self.para.append(para_config)
-            else:
-                self.omit_para.append(para_name)
 
         # parse the description of the function
         doc = inspect.getdoc(method)
@@ -282,25 +281,23 @@ class HandlerMethodConfig(object):
                     line = re.sub('\n$', '', line)
 
                 # If the line defines an argument variable
-                if argRE.search(line):
-                    m = argRE.search(line)
-                    for para_config in self.para:
-                        # match the definition of a parameter and a parameter object with their names
-                        if para_config.name.lower() == m.group('argName').strip().lower():
-                            # update the parameter config
-                            para_config.fromString(line, self)
-
-                # If the line comments the function
-                else:
+                try:
+                    self.para.append(MethodParameterConfig.fromString(line))
+                except ValueError:
+                    # If the line comments the function
                     self.comment += line + "\n"
+                except SyntaxError as e:
+                    raise SyntaxError("Error parsing parameter description in method {!r}: {}".format(self.name, e))
+
         self.comment = self.comment.strip()
 
-        # remove the parameter that has no definition
-        argToRemove = []
-        for para_config in self.para:
-            if para_config.desc == "":
-                argToRemove.append(para_config)
-        map(self.para.remove, argToRemove)
+        # check what Python thinks are the parameters of the method
+        para_names = set(inspect.getargspec(method)[0])
+
+        # make sure we have a description for every non-ignored parameter
+        for n in para_names - self.handler.ignore_parameters:
+            if self.getParaByName(n) is None:
+                raise SyntaxError("Parameter {!r} of method {!r} is missing definition in method comment.".format(n, self.name))
 
 class HandlerConfig(object):
     """
@@ -314,7 +311,7 @@ class HandlerConfig(object):
         if self.methods is None:
             self.methods = []
         self.robot_type = robot_type    # type of the robot using this handler for robot specific handlers
-        self.ignore_parameter = ['self', 'initial', 'executor', 'shared_data', 'actuatorVal']
+        self.ignore_parameters = set(['self', 'initial', 'executor', 'shared_data', 'actuatorVal'])
                                         # list of name of parameter that should be ignored where parse the handler methods
 
     def __repr__(self):

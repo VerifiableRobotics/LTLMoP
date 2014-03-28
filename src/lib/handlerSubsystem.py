@@ -163,7 +163,7 @@ class HandlerSubsystem:
             # if the h_type is a handler type class object, translate it into a str
             if h_type is None:
                 h_type =  self.findHandlerTypeStringFromName(h_name)
-            if not isinstance(h_type, str):
+            if not isinstance(h_type, basestring):
                 h_type = ht.getHandlerTypeName(h_type)
             handler_module = '.'.join(['lib', 'handlers', r_type, h_type, h_name])
         else:
@@ -171,7 +171,11 @@ class HandlerSubsystem:
             handler_module = '.'.join(['lib', 'handlers', r_type, h_name])
 
         try:
-            handler_config.loadHandlerMethod(handler_module)
+            if h_type in ("Sensor", "Actuator"):
+                handler_config.loadHandlerMethod(handler_module)
+            else:
+                handler_config.loadHandlerMethod(handler_module, onlyLoadInit=True)
+
             handler_config.robot_type = r_type
         except ImportError as import_error:
             # TODO: Log an error here if the handler is necessary
@@ -407,7 +411,12 @@ class HandlerSubsystem:
         # since we cannot distinguish the method for sensor and actuator
         # we will pass in arguments for both types of methods
         for method_config in self.method_configs:
-            method_config.execute(initial=True, actuatorVal=False)
+            if method_config.handler.h_type is ht.SensorHandler:
+                method_config.execute(initial=True)
+            elif method_config.handler.h_type is ht.ActuatorHandler:
+                method_config.execute(initial=True, actuatorVal=False)
+            else:
+                raise TypeError("Handler mappings must contain only Sensor or Actuator handlers")
 
     def prepareHandler(self, handler_config):
         """
@@ -433,10 +442,18 @@ class HandlerSubsystem:
             # find the handler class object
             h_name, h_type, handler_class = HandlerConfig.loadHandlerClass(handler_module_path)
 
-            # construct the arguments list
-            arg_dict = {"executor":self.executor, "shared_data":self.executor.proj.shared_data}
-            init_method = handler_config.getMethodByName("__init__")
-            arg_dict = self.prepareArguments(init_method, arg_dict)
+            # get the HMC for the init_method
+            init_method_config = handler_config.getMethodByName("__init__")
+
+            # construct the arguments list; everyone gets a reference to executor
+            arg_dict = {"executor": self.executor}
+
+            # everyone except for InitHandler gets shared_data too
+            if not isinstance(h_type, ht.InitHandler):
+                arg_dict.update({"shared_data":self.executor.proj.shared_data})
+
+            # add any arguments specific to this method
+            arg_dict.update(init_method_config.getArgDict())
 
             # instantiate the handler
             try:
@@ -446,30 +463,6 @@ class HandlerSubsystem:
             else:
                 self.handler_instance.append(h)
         return h
-
-    def prepareArguments(self, method_config, arg_dict={}):
-        """
-        Prepare a dictionary {arg_name:arg_value} based on the method_config given.
-        Extra argment setting can be given with the arg_dict
-
-        return a dictionary that holds the argument name and value
-        """
-
-        # construct the arguments list
-        # starts with LTLMoP internal arguments
-        output_arg_dict = {}
-
-        for para_config in method_config.para:
-            if para_config.name in arg_dict:
-                output_arg_dict[para_config.name] = arg_dict[para_config.name]
-            else:
-                output_arg_dict[para_config.name] = para_config.getValue()
-
-        for para_name in method_config.omit_para:
-            if para_name in arg_dict:
-                output_arg_dict[para_name] = arg_dict[para_name]
-
-        return output_arg_dict
 
     def prepareMapping(self):
         """
