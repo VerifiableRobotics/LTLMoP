@@ -456,7 +456,7 @@ class RobotConfig(object):
         if self.handlers is None:
             self.handlers = {}
         self.calibration_matrix = None  # 3x3 matrix for converting coordinates, stored as lab->map
-        self.successfully_loaded = ""   # a string either empty or " (Not successfully loaded)"
+        self.successfully_loaded = True
 
     def __repr__(self):
         """
@@ -523,14 +523,12 @@ class RobotConfig(object):
 
         return coordmap_map2lab, coordmap_lab2map
 
-    def _setSuccess(self, success = False):
+    def _setLoadFailureFlag(self):
         """
-        Set whether if this robot is successfully loaded or not
+        Set that this robot has not been successfully loaded
         """
-        if success:
-            self.successfully_loaded = ""
-        else:
-            self.successfully_loaded = " (Not successfully loaded)"
+
+        self.successfully_loaded = False
 
     def fromFile(self, file_path, hsub = None):
         """
@@ -544,7 +542,7 @@ class RobotConfig(object):
             robot_data = fileMethods.readFromFile(file_path)
         except IOError:
             ht.LoadingError("Cannot load the information")
-            self._setSuccess()
+            self._setLoadFailureFlag()
         else:
             # now load the robot config from the dictionary data
             self.fromData(robot_data, hsub)
@@ -564,13 +562,13 @@ class RobotConfig(object):
             self.name = robot_data['RobotName'][0]
         except (KeyError, IndexError):
             raise ht.LoadingError("Cannot find robot name")
-            self._setSuccess()
+            self._setLoadFailureFlag()
 
         try:
             self.r_type = robot_data['Type'][0]
         except (KeyError, IndexError):
             raise ht.LoadingError("Cannot find robot type")
-            self._setSuccess()
+            self._setLoadFailureFlag()
 
         # update robot calibration matrix
         try:
@@ -591,7 +589,7 @@ class RobotConfig(object):
                 if mat_str == "None" or mat_str == "": self.calibration_matrix = array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]])
             except SyntaxError:
                 raise ht.LoadingError("Invalid calibration data found for robot {0}({1})".format(self.name, self.r_type))
-                self._setSuccess()
+                self._setLoadFailureFlag()
 
         # load handler configs
         for key, val in robot_data.iteritems():
@@ -601,7 +599,7 @@ class RobotConfig(object):
                     handler_type = ht.getHandlerTypeClass(key)
                 except KeyError:
                     logging.warning('Cannot recognize handler type {!r} for robot {}({})'.format(key, self.name, self.r_type))
-                    self._setSuccess()
+                    self._setLoadFailureFlag()
                     continue
 
                 # use regex to help us parse the string
@@ -631,7 +629,7 @@ class RobotConfig(object):
                             except KeyError:
                                 logging.warning('Cannot recognize handler type {!r} in config description: \n \t {!r} \n \
                                                 for robot {}({})'.format(result.group('h_type'), handler_config_str, self.name, self.r_type))
-                                self._setSuccess()
+                                self._setLoadFailureFlag()
                                 continue
                             if handler_type_from_str != handler_type:
                                 # the handler type from the description does not match the one from section name
@@ -644,7 +642,7 @@ class RobotConfig(object):
                             # This is a shared handler but no handler type information is given
                             logging.warning('Handler type info missing for {!r} handler in config description: \n \t {!r} \n \
                                             for robot {}({})'.format(robot_type, handler_config_str, self.name, self.r_type))
-                            self._setSuccess()
+                            self._setLoadFailureFlag()
                             continue
 
                         handler_name = result.group('h_name')
@@ -654,7 +652,7 @@ class RobotConfig(object):
 
                         # if it is successfully fetched, we save it at the corresponding handler type of this robot
                         if handler_config is None:
-                            self._setSuccess()
+                            self._setLoadFailureFlag()
                             continue
 
                         # TODO: is it necessary to check if self.handlers is a dict
@@ -681,7 +679,7 @@ class RobotConfig(object):
                     else:
                         logging.warning('Cannot recognize handler config description: \n \t {!r} \n \
                                         for handler type {!r} of robot {}({})'.format(handler_config_str, key, self.name, self.r_type))
-                        self._setSuccess()
+                        self._setLoadFailureFlag()
                         continue
 
 class ExperimentConfig(object):

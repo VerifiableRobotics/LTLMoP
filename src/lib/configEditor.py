@@ -1000,7 +1000,7 @@ class addRobotDialog(wx.Dialog):
         self.combo_box_robottype.Clear()
 
         for r in self.parent.hsub.robot_configs:
-            self.combo_box_robottype.Append(r.r_type + r.successfully_loaded)
+            self.combo_box_robottype.Append(r.r_type + (" (Not successfully loaded)" if not self.robot.successfully_loaded else ""))
 
     def _populateHandlerCombos(self):
         # Populate based on current robot type
@@ -1061,7 +1061,7 @@ class addRobotDialog(wx.Dialog):
         self.robot = robot
         if original:
             self.original_robot = deepcopy(robot)
-        self.combo_box_robottype.SetStringSelection(self.robot.r_type + self.robot.successfully_loaded)
+        self.combo_box_robottype.SetStringSelection(self.robot.r_type + (" (Not successfully loaded)" if not self.robot.successfully_loaded else ""))
         self.text_ctrl_robotname.SetValue(self.robot.name)
         self._populateHandlerCombos()
 
