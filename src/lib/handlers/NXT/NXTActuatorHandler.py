@@ -15,13 +15,13 @@ MIN = 60
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class NXTActuatorHandler(handlerTemplates.ActuatorHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         """
         LEGO Mindstorms NXT Actuator Handler
         """
         self.nxt = shared_data['NXT_INIT_HANDLER']
-        self.pose = proj.h_instance['pose'] # pose data is useful for dead reckoning
-        self.loco = proj.h_instance['locomotionCommand']
+        self.pose = executor.hsub.getHandlerInstanceByType(handlerTemplates.PoseHandler) # pose data is useful for dead reckoning
+        self.loco = executor.hsub.getHandlerInstanceByType(handlerTemplates.LocomotionCommandHandler) 
         
         self.actuatorMotorOn=False
         

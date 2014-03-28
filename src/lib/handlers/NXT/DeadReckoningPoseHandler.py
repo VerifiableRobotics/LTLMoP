@@ -17,7 +17,7 @@ from nxt.motor import Motor, PORT_A, PORT_B, PORT_C
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class DeadReckoningPoseHandler(handlerTemplates.PoseHandler):
-    def __init__(self, proj, shared_data, compareAgainstVicon=False, track=.119, wheelBase=.178, driveWheelTeeth=1, driveMotorTeeth=1, wheelDiameter=.0415, startX=0.0, startY=0.0, startTheta=1.5708):
+    def __init__(self, executor, shared_data, compareAgainstVicon=False, track=.119, wheelBase=.178, driveWheelTeeth=1, driveMotorTeeth=1, wheelDiameter=.0415, startX=0.0, startY=0.0, startTheta=1.5708):
         """
         Pose handler for dead reckoning
 
@@ -33,7 +33,7 @@ class DeadReckoningPoseHandler(handlerTemplates.PoseHandler):
         """
         
         # definition of globals
-        self.proj=proj
+        self.executor = executor
         
         self.x = startX
         self.y = startY
@@ -56,9 +56,6 @@ class DeadReckoningPoseHandler(handlerTemplates.PoseHandler):
             self.s.startStreams()
             while self.s.getData() is None: pass
             self.vPose = self.s.getData()
-        
-        #know if actuation is causing movement
-        self.act=proj.h_instance['actuator']
         
         #to clarify when actuating movement is happening
         self.actuating=False
@@ -83,7 +80,7 @@ class DeadReckoningPoseHandler(handlerTemplates.PoseHandler):
         from the tachometers on the motors
         """
         #get motor setup from locomotion
-        self.loco=self.proj.h_instance['locomotionCommand']
+        self.loco = self.executor.hsub.getHandlerInstanceByType(handlerTemplates.LocomotionCommandHandler)
         self.driveMotors=self.loco.driveMotors
         self.steerMotor=self.loco.steerMotor
         self.direction=self.loco.leftForward

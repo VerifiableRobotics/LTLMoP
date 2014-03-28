@@ -13,14 +13,14 @@ from math import sin, cos, atan2
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class NXTDriveHandler(handlerTemplates.DriveHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         """
         Initialization method of drive handler for any NXT.
         """   
 
         try:
-            self.loco = proj.h_instance['locomotionCommand']
-            self.coordmap = proj.coordmap_lab2map
+            self.loco = executor.hsub.getHandlerInstanceByType(handlerTemplates.LocomotionCommandHandler) 
+            self.coordmap = executor.hsub.coordmap_lab2map
         except NameError:
             print "(DRIVE) Locomotion Command Handler not found."
             exit(-1)

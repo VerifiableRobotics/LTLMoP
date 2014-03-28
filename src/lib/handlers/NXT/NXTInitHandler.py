@@ -15,7 +15,7 @@ from nxt.motor import Motor, PORT_A, PORT_B, PORT_C
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class NXTInitHandler(handlerTemplates.InitHandler):
-    def __init__(self, proj, brick='NXT', brickMAC='00:16:53:14:1B:33'):
+    def __init__(self, executor, brick='NXT', brickMAC='00:16:53:14:1B:33'):
         """
         Initialization handler for NXT robots.  If you are unsure of the mac address, please pass brickMac='none'.
         Your NXT Device will be located.

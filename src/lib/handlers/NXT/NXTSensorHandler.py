@@ -13,13 +13,13 @@ from math import pi
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class NXTSensorHandler(handlerTemplates.SensorHandler):
-    def __init__(self, proj, shared_data):
+    def __init__(self, executor, shared_data):
         """
         LEGO Mindstorms NXT Sensor handler
         """
         
         self.nxt = shared_data['NXT_INIT_HANDLER'] 
-        self.pose = proj.h_instance['pose']
+        self.pose = executor.hsub.getHandlerInstanceByType(handlerTemplates.PoseHandler) 
         
             
     ###################################

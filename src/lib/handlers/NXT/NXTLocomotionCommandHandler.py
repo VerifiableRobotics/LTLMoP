@@ -28,7 +28,7 @@ LOW=0
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class NXTLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
-    def __init__(self, proj, shared_data, leftDriveMotor='PORT_B', rightDriveMotor='PORT_C', steeringMotor='none', steeringGearRatio=1.0, leftForward=True, rightForward=True):
+    def __init__(self, executor, shared_data, leftDriveMotor='PORT_B', rightDriveMotor='PORT_C', steeringMotor='none', steeringGearRatio=1.0, leftForward=True, rightForward=True):
         """
         Locomotion Command handler for NXT Mindstorms.
         
@@ -41,8 +41,7 @@ class NXTLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
         """
             
         self.nxt = shared_data['NXT_INIT_HANDLER'] # shared data is the nxt and its functions in this case
-        self.pose = proj.h_instance['pose'] # pose data is useful for travel
-        self.actuator = proj.h_instance['actuator']
+        self.pose = executor.hsub.getHandlerInstanceByType(handlerTemplates.PoseHandler) # pose data is useful for travel
         
         # The following creates a tuple of the drive motors based on user input
         # It also derives the left and right motors as well as a steering motor if used
