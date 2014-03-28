@@ -13,7 +13,7 @@
 import os, sys, re
 import fileMethods
 import inspect, types
-from numpy import linalg, array, finfo, mat
+from numpy import linalg, array, finfo, mat, eye
 from copy import deepcopy
 import ast
 import json
@@ -547,7 +547,27 @@ class RobotConfig(object):
             # now load the robot config from the dictionary data
             self.fromData(robot_data, hsub)
 
-    def fromData(self, robot_data, hsub = None):
+    def _getCalibrationMatrixFromString(self, calib_mat_str):
+        calib_mat_str = calib_mat_str.strip()
+
+        # Convert the string into an array. Using `literal_eval` instead of
+        # `eval` just so people can't put arbitrary code into the config
+        # file and trick us into a running it.
+        calib_mat_str = calib_mat_str.replace("array(", "")
+        calib_mat_str = calib_mat_str.replace("matrix(", "")
+        calib_mat_str = calib_mat_str.replace(")", "")
+
+        # If empty or undefined, just return an identity matrix
+        if calib_mat_str == "None" or calib_mat_str == "":
+            return eye(3)
+
+        try:
+           return array(ast.literal_eval(calib_mat_str))
+        except SyntaxError:
+            self._setLoadFailureFlag()
+            raise ht.LoadingError("Invalid calibration data found for robot {0}({1})".format(self.name, self.r_type))
+
+    def fromData(self, robot_data, hsub=None):
         """
         Given a dictionary of robot handler information, returns a robot object holding all the information
         The dictionary is in the format returned by the readFromFile function
@@ -571,25 +591,8 @@ class RobotConfig(object):
             self._setLoadFailureFlag()
 
         # update robot calibration matrix
-        try:
-            mat_str = ''.join(robot_data['CalibrationMatrix'])
-            if mat_str.strip() == "": raise KeyError()
-        except KeyError:
-            # Some robot does not have calibration matrix
-            pass
-        else:
-            try:
-                # Convert the string into an array. Using `literal_eval` instead of
-                # `eval` just so people can't put arbitrary code into the config
-                # file and trick us into a running it.
-                mat_str = mat_str.replace("array(", "")
-                mat_str = mat_str.replace("matrix(", "")
-                mat_str = mat_str.replace(")", "")
-                self.calibration_matrix = array(ast.literal_eval(mat_str))
-                if mat_str == "None" or mat_str == "": self.calibration_matrix = array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]])
-            except SyntaxError:
-                raise ht.LoadingError("Invalid calibration data found for robot {0}({1})".format(self.name, self.r_type))
-                self._setLoadFailureFlag()
+        if 'CalibrationMatrix' in robot_data:
+            self.calibration_matrix = self._getCalibrationMatrixFromString(''.join(robot_data['CalibrationMatrix']))
 
         # load handler configs
         for key, val in robot_data.iteritems():
