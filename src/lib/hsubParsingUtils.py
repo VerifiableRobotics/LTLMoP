@@ -10,9 +10,22 @@ import re
 import types
 from collections import namedtuple
 import logging
+import globalConfig
 from itertools import chain
 
-CallDescriptor = namedtuple("CallDescriptor", "name, args, start_pos, end_pos")
+class CallDescriptor(namedtuple("CallDescriptor",
+                                "name, args, start_pos, end_pos")):
+    """
+    A lightweight class for storing information about method calls
+    contained in a string.
+      - `name` is a list of the subparts of the called method's name (i.e. the
+        full name, split at periods)
+      - `args` is a dict of the keyword args passed to the method
+      - `start_pos` and `end_pos` are the indices in the input string where the
+      call text starts and ends, respectively.
+    """
+    pass
+
 
 def parseCallString(text, mode="single", make_call_function=None):
     """ Inputs: 
@@ -27,11 +40,16 @@ def parseCallString(text, mode="single", make_call_function=None):
           and returns a boolean result.
 
         Outputs:
-        - A list of CallDescriptors (in the order they appeared in the input string)
+        - A list of CallDescriptors (in the order they appeared in the input string).
+          See the CallDescriptor definition, and the doctests for examples.
         - A function that returns the boolean result of effectively evaluating
           the original input string with `make_call_function` applied to each call.
           Any kwargs passed to this function will be passed to each subfunction.
           If `make_call_function` is `None`, this function will be `None`.
+
+        Example:
+        >>> parseCallString("a.b(c=1, d=2)")
+        ([CallDescriptor(name=['a', 'b'], args={'c': 1, 'd': 2}, start_pos=0, end_pos=12)], None)
     """
 
     # Parse into AST
@@ -151,6 +169,11 @@ def parseCallTree(tree, mode, make_call_function):
         raise SyntaxError("Encountered unexpected node of type {}".format(type(tree)))
 
 if __name__ == "__main__":
+    logging.info("Running doctests...")
+    import doctest
+    doctest.testmod()
+
+    logging.info("Running other tests...")
     def make_fake_function(cd):
         print "making {}".format(cd.name)
         def fake_function(**kwargs):
