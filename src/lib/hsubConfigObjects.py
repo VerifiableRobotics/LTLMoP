@@ -581,8 +581,11 @@ class RobotConfig(object):
             pass
         else:
             try:
-                # Convert the string form array to array. Trying not to use eval for security problem
+                # Convert the string into an array. Using `literal_eval` instead of
+                # `eval` just so people can't put arbitrary code into the config
+                # file and trick us into a running it.
                 mat_str = mat_str.replace("array(", "")
+                mat_str = mat_str.replace("matrix(", "")
                 mat_str = mat_str.replace(")", "")
                 self.calibration_matrix = array(ast.literal_eval(mat_str))
                 if mat_str == "None" or mat_str == "": self.calibration_matrix = array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]])
