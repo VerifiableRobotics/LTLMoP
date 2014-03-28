@@ -203,11 +203,10 @@ class HandlerMethodConfig(object):
 
     def getParaByName(self, name):
         # get the parameter object with given name
-        for p in self.para:
-            if p.name == name:
-                return p
-        logging.error("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
-        return None
+        try:
+            return next(p for p in self.para if p.name == name)
+        except StopIteration:
+            raise ValueError("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
 
     def updateParaFromString(self, para_str):
         """
@@ -296,7 +295,9 @@ class HandlerMethodConfig(object):
 
         # make sure we have a description for every non-ignored parameter
         for n in para_names - self.handler.ignore_parameters:
-            if self.getParaByName(n) is None:
+            try:
+                self.getParaByName(n)
+            except ValueError:
                 raise SyntaxError("Parameter {!r} of method {!r} is missing definition in method comment.".format(n, self.name))
 
 class HandlerConfig(object):
@@ -435,7 +436,11 @@ class HandlerConfig(object):
             # only parse the __init__ method if required
             if ((not onlyLoadInit and (not str(method_name).startswith('_')) or str(method_name)=='__init__') ):
                 method_config = HandlerMethodConfig(name=method_name)
-                method_config.fromMethod(method, self)
+                try:
+                    method_config.fromMethod(method, self)
+                except SyntaxError as e:
+                    raise ht.LoadingError("Error while inspecting method {!r} of handler {!r}: {}".format(method_name, handler_module_path, e))
+
                 # add this method into the method list of the handler
                 self.methods.append(method_config)
 
