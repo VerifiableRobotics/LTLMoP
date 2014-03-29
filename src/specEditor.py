@@ -1090,7 +1090,13 @@ class SpecEditorFrame(wx.Frame):
             wx.CallAfter(self.appendLog, "\t"+text)
 
         # Kick off the synthesis
-        compiler._synthesizeAsync(onLog)
+        try:
+            compiler._synthesizeAsync(onLog)
+        except RuntimeError as e:
+            wx.MessageBox(e.message, "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            busy_dialog.Destroy()
+            return
 
         while not compiler.synthesis_complete.isSet():
             # Keep the progress bar spinning and check if the Abort button has been pressed
@@ -1378,9 +1384,16 @@ class SpecEditorFrame(wx.Frame):
         redir = RedirectText(self, self.text_ctrl_log)
         sys.stdout = redir
         sys.stderr = redir
-        (realizable, self.unsat, nonTrivial, self.to_highlight, output) = self.compiler._analyze()
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
+
+        try:
+            (realizable, self.unsat, nonTrivial, self.to_highlight, output) = self.compiler._analyze()
+        except RuntimeError as e:
+            wx.MessageBox(e.message, "Error",
+                        style = wx.OK | wx.ICON_ERROR)
+            return
+        finally:
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
 
         # Remove lines about garbage collection from the output and remove extraenous lines
         output_lines = [line for line in output.split('\n') if line.strip() and
