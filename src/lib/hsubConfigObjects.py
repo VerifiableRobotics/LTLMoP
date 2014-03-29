@@ -538,15 +538,12 @@ class RobotConfig(object):
             self._setLoadFailureFlag()
             raise ht.LoadingError("Invalid calibration data found for robot {0}({1})".format(self.name, self.r_type))
 
-    def fromData(self, robot_data, hsub=None):
+    def fromData(self, robot_data, hsub):
         """
         Given a dictionary of robot handler information, returns a robot object holding all the information
         The dictionary is in the format returned by the readFromFile function
         If the necessary handler of the robot is not specified or can't be loaded, return None
         """
-        # make sure we have an instance of handlerSubsystem
-        if hsub is None:
-            raise TypeError("Need an instance of handlerSubsystem to parse robot data")
 
         # update robot name and type
         try:
@@ -567,94 +564,105 @@ class RobotConfig(object):
 
         # load handler configs
         for key, val in robot_data.iteritems():
-            if key.endswith('Handler'):
-                # find which type of the handler
+            # Ignore config sections that aren't for handlers
+            if not key.endswith('Handler'):
+                continue
+
+            # Find the intended type of the handler
+            try:
+                handler_type = ht.getHandlerTypeClass(key)
+            except KeyError:
+                logging.warning('Cannot recognize handler type {!r} for robot {}({})'.format(key, self.name, self.r_type))
+                self._setLoadFailureFlag()
+                continue
+
+            # Go through the handler listings for this type
+            for handler_config_str in val:
+                # Parse this line
                 try:
-                    handler_type = ht.getHandlerTypeClass(key)
-                except KeyError:
-                    logging.warning('Cannot recognize handler type {!r} for robot {}({})'.format(key, self.name, self.r_type))
+                    call_descriptors, _ = parseCallString(handler_config_str, mode="single")
+                except SyntaxError:
+                    # This is an invalid handler config description
+                    logging.exception('Cannot recognize handler config description: \n \t {!r} \n \
+                                    for handler type {!r} of robot {}({})'.format(handler_config_str, key, self.name, self.r_type))
                     self._setLoadFailureFlag()
                     continue
 
-                # use regex to help us parse the string
-                handler_re = re.compile(r"(?P<robot>\w+)\.((?P<h_type>\w+)\.)?(?P<h_name>\w+)\((?P<args>[^\)]*)\)")
+                # Figure out how to interpret the different parts of the CallDescriptor name
+                if len(call_descriptors[0].name) == 3:
+                    robot_type, h_type, handler_name = call_descriptors[0].name
+                    # 3-part name is only valid for shared handlers
+                    if robot_type != 'share':
+                        raise SyntaxError("Name must be in form of 'share.<handler_type>.<handler_name>' or '<robot_type>.<handler_name>'")
+                elif len(call_descriptors[0].name) == 2:
+                    robot_type, handler_name = call_descriptors[0].name
+                    h_type = None
+                else:
+                    raise SyntaxError("Name must be in form of 'share.<handler_type>.<handler_name>' or '<robot_type>.<handler_name>'")
 
-                for handler_config_str in val:
-                    result = handler_re.match(handler_config_str)
-                    if result:
-                        # this is a valid handler config description
+                # Check that this handler belongs to this robot (it's kind of redundant that the `robot_type` must be
+                # specified if we're only going to let it be one value...)
+                if (robot_type != 'share') and (robot_type.lower() != self.r_type.lower()):
+                    # this is a handler for a wrong robot
+                    logging.warning('The handler config description: \n \t {!r} \n \
+                                    is for robot {}, but is located in data for robot {}({})' \
+                                    .format(handler_config_str, robot_type, self.name, self.r_type))
+                    self._setLoadFailureFlag()
+                    continue
 
-                        # since the robot part of the handler description can be either a robot type or name
-                        # set the robot type of the handler to be this robot type if the robot name matches
-                        robot_type = self.r_type if result.group('robot') == self.name else result.group('robot')
-                        if (robot_type != 'share') and (robot_type.lower() != self.r_type.lower()):
-                            # this is a handler for a wrong robot
-                            logging.warning('The handler config description: \n \t {!r} \n \
-                                            is for robot {}, but is located in data for robot {}({})' \
-                                            .format(handler_config_str, robot_type, self.name, self.r_type))
-                            continue
-
-                        # if the description also specifies the handler type in it
-                        # we need to make sure it matches with the handler type we get from section name
-                        if result.group('h_type'):
-                            # get the handler type as class object
-                            try:
-                                handler_type_from_str = ht.getHandlerTypeClass(result.group('h_type'))
-                            except KeyError:
-                                logging.warning('Cannot recognize handler type {!r} in config description: \n \t {!r} \n \
-                                                for robot {}({})'.format(result.group('h_type'), handler_config_str, self.name, self.r_type))
-                                self._setLoadFailureFlag()
-                                continue
-                            if handler_type_from_str != handler_type:
-                                # the handler type from the description does not match the one from section name
-                                logging.warning('Misplaced handler description: \n \t {!r} \n \
-                                                in handler type {!r} for robot {}({})' \
-                                                .format(result.group(handler_config_str, handler_type, self.name, self.r_type)))
-                                # we still want to put this handler config into the right type
-                                handler_type = handler_type_from_str
-                        elif robot_type == 'share':
-                            # This is a shared handler but no handler type information is given
-                            logging.warning('Handler type info missing for {!r} handler in config description: \n \t {!r} \n \
-                                            for robot {}({})'.format(robot_type, handler_config_str, self.name, self.r_type))
-                            self._setLoadFailureFlag()
-                            continue
-
-                        handler_name = result.group('h_name')
-                        # now let's get the handler config object based on the info we have got
-
-                        handler_config = hsub.getHandlerConfigDefault(robot_type, handler_type, handler_name)
-
-                        # if it is successfully fetched, we save it at the corresponding handler type of this robot
-                        if handler_config is None:
-                            self._setLoadFailureFlag()
-                            continue
-
-                        # TODO: is it necessary to check if self.handlers is a dict
-                        if not isinstance(self.handlers, dict): self.handlers = {}
-
-                        # load all parameter values and overwrite the ones in the __init__ method of default handler config object
-                        try:
-                            init_method_config = handler_config.getMethodByName('__init__')
-                        except ValueError:
-                            logging.warning('Cannot update default parameters of default handler config {!r}'.format(handler_config.name))
-                        else:
-                            init_method_config.updateParaFromString(result.group('args'))
-
-                        # save it into the dictionary
-                        if handler_type not in self.handlers.keys():
-                            # This type of handler has not been loaded yet
-                            self.handlers[handler_type] = handler_config
-                        else:
-                            # This type of handler has been loaded, for now, we will NOT overwrite it with new entry
-                            # A warning will be shown
-                            logging.warning('Multiple handler configs are detected for handler type {!r} of robot {}({}). \
-                                    Will only load the first one.'.format(key, self.name, self.r_type))
-                            break
-                    else:
-                        logging.warning('Cannot recognize handler config description: \n \t {!r} \n \
-                                        for handler type {!r} of robot {}({})'.format(handler_config_str, key, self.name, self.r_type))
+                # if the description also specifies the handler type in it
+                # we need to make sure it matches with the handler type we get from section name
+                if h_type is not None:
+                    # get the handler type as class object
+                    try:
+                        handler_type_from_str = ht.getHandlerTypeClass(h_type)
+                    except KeyError:
+                        logging.warning('Cannot recognize handler type {!r} in config description: \n \t {!r} \n \
+                                        for robot {}({})'.format(h_type, handler_config_str, self.name, self.r_type))
                         self._setLoadFailureFlag()
                         continue
+
+                    if handler_type_from_str != handler_type:
+                        # the handler type from the description does not match the one from section name
+                        logging.warning('Misplaced handler description: \n \t {!r} \n \
+                                        in handler type {!r} for robot {}({})' \
+                                        .format(handler_config_str, handler_type, self.name, self.r_type))
+                        # we still want to put this handler config into the right type
+                        handler_type = handler_type_from_str
+
+                if robot_type == 'share' and h_type is None:
+                    # This is a shared handler but no handler type information is given
+                    logging.warning('Handler type info missing for {!r} handler in config description: \n \t {!r} \n \
+                                    for robot {}({})'.format(robot_type, handler_config_str, self.name, self.r_type))
+                    self._setLoadFailureFlag()
+                    continue
+
+                # now let's get the handler config object based on the info we have got
+                handler_config = hsub.getHandlerConfigDefault(robot_type, handler_type, handler_name)
+
+                # make sure it successfully loaded
+                if handler_config is None:
+                    self._setLoadFailureFlag()
+                    continue
+
+                # load all parameter values and overwrite the ones in the __init__ method of default handler config object
+                try:
+                    init_method_config = handler_config.getMethodByName('__init__')
+                except ValueError:
+                    logging.warning('Cannot update default parameters of default handler config {!r}'.format(handler_config.name))
+                else:
+                    init_method_config.updateParaFromDict(call_descriptors[0].args)
+
+                # if it is successfully fetched, we save it at the corresponding handler type of this robot
+                if handler_type not in self.handlers:
+                    # This type of handler has not been loaded yet
+                    self.handlers[handler_type] = handler_config
+                else:
+                    # This type of handler has been loaded, for now, we will NOT overwrite it with new entry
+                    # A warning will be shown
+                    logging.warning('Multiple handler configs are detected for handler type {!r} of robot {}({}). \
+                            Will only load the first one.'.format(key, self.name, self.r_type))
+                    break
 
 class ExperimentConfig(object):
     """
