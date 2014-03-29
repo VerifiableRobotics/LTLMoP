@@ -94,7 +94,8 @@ def parseCallString(text, mode="single", make_call_function=None):
             end_pos -= 1
         
         # Weird result of using namedtuples
-        call_list[k] = call_list[k]._replace(end_pos=end_pos)
+        # Note that we add 1 to mimic the way regex groups give end()
+        call_list[k] = call_list[k]._replace(end_pos=end_pos+1)
 
     return call_list, f
 
@@ -187,7 +188,7 @@ if __name__ == "__main__":
     for s in test_strings:
         cds, f = parseCallString(s, mode="sensor", make_call_function=make_fake_function)
         print cds
-        print [s[cd.start_pos:cd.end_pos+1] for cd in cds]
+        print [s[cd.start_pos:cd.end_pos] for cd in cds]
         print f
         print f(initial=True)
 
