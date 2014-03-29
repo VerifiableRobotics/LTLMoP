@@ -143,10 +143,9 @@ class HandlerMethodConfig(object):
         self.omit_para = omit_para  # list of parameter names that are omitted
         self.method_reference = None # a reference to this method
 
-        # To avoid recursive setting
         if self.para is None:
             self.para = []
-        # To avoid recursive setting
+
         if self.omit_para is None:
             self.omit_para = []
 
@@ -279,7 +278,6 @@ class HandlerConfig(object):
         self.name = name                # name of the handler
         self.h_type = h_type            # type of the handler e.g. motionControl or drive
         self.methods = methods          # list of method objects in this handler
-        # To avoid recursive setting
         if self.methods is None:
             self.methods = []
         self.robot_type = robot_type    # type of the robot using this handler for robot specific handlers
@@ -423,7 +421,6 @@ class RobotConfig(object):
         self.name = r_name              # name of the robot
         self.r_type = r_type            # type of the robot
         self.handlers = handlers        # dictionary of handler object for this robot
-        # To avoid recursive setting
         if self.handlers is None:
             self.handlers = {}
         self.calibration_matrix = None  # 3x3 matrix for converting coordinates, stored as lab->map
@@ -677,10 +674,9 @@ class ExperimentConfig(object):
         self.region_tags = region_tags      # dictionary mapping tag names to region groups, for quantification
         self.file_name = file_name          # full path filename of the config
 
-        # To avoid recursive setting
         if self.robots is None:
             self.robots = []
-        # To avoid recursive setting
+
         if self.initial_truths is None:
             self.initial_truths = []
 
@@ -715,7 +711,7 @@ class ExperimentConfig(object):
             reprString = "\n".join(strRepr)
         return "Config Object -- \n" + reprString + "\n"
 
-    def getRobotByName(self,  name):
+    def getRobotByName(self, name):
         for r in self.robots:
             if r.name == name:
                 return r
