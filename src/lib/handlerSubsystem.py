@@ -57,9 +57,6 @@ class HandlerSubsystem:
     Interface dealing with configuration files and handlers
     """
 
-    # Set the pattern for regex to match the functions in proposition mapping
-    handler_function_RE = r"(?P<robot_name>\w+)\.(?P<handler_name>\w+)\.(?P<method_name>\w+)\((?P<para_info>.*?)\)"
-
     def __init__(self, executor, project_root_dir):
         self.executor = executor
 
@@ -588,26 +585,21 @@ class HandlerSubsystem:
             logging.error("Cannot find handler_configs dictionary, please load all handlers first.")
             return None
 
-        # construct regex for identify each parts
-        method_RE = re.compile(HandlerSubsystem.handler_function_RE)
-
-        result = method_RE.search(method_string)
-
-        if not result:
-            logging.error("Cannot parse setting {!r}".format(method_string))
+        try:
+            call_descriptors, _ = parseCallString(method_string, mode="single")
+            if len(call_descriptors[0].name) != 3:
+                raise SyntaxError("Name must be in form of '<robot_name>.<handler_name>.<method_name>'")
+        except SyntaxError:
+            logging.exception("Cannot parse setting {!r}".format(method_string))
             return None
 
-        # parse each part
-        robot_name = result.group("robot_name")
-        handler_name = result.group("handler_name")
-        method_name = result.group("method_name")
-        para_info = result.group("para_info")
+        robot_name, handler_name, method_name = call_descriptors[0].name
 
         # find which handler does this method belongs to
         handler_config = None
 
         if robot_name == "share":
-            # this ia a dummy sensor/actuator
+            # this is a dummy sensor/actuator
             for h in self.handler_configs["share"][ht.SensorHandler] + \
                      self.handler_configs["share"][ht.ActuatorHandler]:
                 if h.name == handler_name:
@@ -633,7 +625,7 @@ class HandlerSubsystem:
             return None
 
         # update parameters of this method
-        method_config.updateParaFromString(para_info)
+        method_config.updateParaFromDict(call_descriptors[0].args)
 
         return method_config
 
@@ -645,9 +637,11 @@ class HandlerSubsystem:
         if not self.handler_configs:
             logging.error("Cannot find handler dictionary, please load all handler first.")
             return
+
         if not isinstance(method_config,HandlerMethodConfig):
             logging.error("Input is not a valid method config.")
             return
+
         if robot_name=='':
             logging.error("Needs robot name for method2String")
             return
@@ -656,19 +650,10 @@ class HandlerSubsystem:
         method_name = method_config.name
 
         # convert all parameter object into string
-        para_list = []
-        for para_config in method_config.para:
-            if para_config.value is None:
-                para_list.append( para_config.name+'='+str(para_config.default))
-            else:
-                if para_config.para_type.lower() in ['str', 'string', 'region']:
-                    para_list.append( para_config.name+'=\"'+str(para_config.value)+'\"')
-                else:
-                    para_list.append( para_config.name+'='+str(para_config.value))
+        para_info = ', '.join("{}={!r}".format(k, v)
+                              for k, v in method_config.getArgDict().iteritems())
 
-        para_info = ','.join(para_list)
-
-        return '.'.join([robot_name,handler_name,method_name])+'('+para_info+')'
+        return '.'.join([robot_name, handler_name, method_name])+'('+para_info+')'
 
     def getSensorValue(self, prop_name_list):
         """
