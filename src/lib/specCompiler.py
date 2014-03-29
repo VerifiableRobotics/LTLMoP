@@ -508,7 +508,7 @@ class SpecCompiler(object):
         # Check that GROneMain, etc. is compiled
         if not os.path.exists(os.path.join(jtlv_path, "GROne", "GROneMain.class")):
             # TODO: automatically compile for the user
-            raise RuntimeError("Please compile the synthesis Java code first.  For instructions, see etc/jtlv/JTLV_INSTRUCTIONS.")
+            raise RuntimeError("The Java synthesis code does not appear to be compiled yet.  Please run dist/setup.py before using LTLMoP.")
 
         # Windows uses a different delimiter for the java classpath
         delim = ";" if os.name == "nt" else ":"
