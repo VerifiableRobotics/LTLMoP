@@ -10,7 +10,7 @@ DriveHandler: # Robot default drive handler with default argument values
 share.Drive.HolonomicDriveHandler(multiplier=50.0,maxspeed=999.0)
 
 InitHandler: # Robot default init handler with default argument values
-basicSim.BasicSimInitHandler(init_region=None)
+basicSim.BasicSimInitHandler()
 
 LocomotionCommandHandler: # Robot locomotion command actuator handler with default argument values
 basicSim.BasicSimLocomotionCommandHandler(speed=1.0)
