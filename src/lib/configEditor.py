@@ -18,15 +18,15 @@ sys.path.append(os.path.join(p,"src","lib"))
 
 import project
 from copy import deepcopy
-from handlerSubsystem import *
 from numpy import *
 import subprocess
 import socket
 
 import handlerSubsystem
+from hsubParsingUtils import parseCallString
 import lib.handlers.handlerTemplates as ht
 import lib.globalConfig
-from lib.hsubConfigObjects import ExperimentConfig
+from lib.hsubConfigObjects import ExperimentConfig, RobotConfig
 # begin wxGlade: extracode
 # end wxGlade
 
@@ -121,16 +121,8 @@ def drawParamConfigPane(target, method, proj):
             # Ignore; from another control (e.g. calib matrix)
             return
 
-        if this_param.para_type.lower() == "region":
-            this_param.setValue(param_controls[this_param].GetValue())
-        elif this_param.para_type.lower().startswith("bool"):
-            this_param.setValue(str(param_controls[this_param].GetValue()))
-        elif this_param.para_type.lower().startswith("int"):
-            this_param.setValue(str(param_controls[this_param].GetValue()))
-        else:
-            this_param.setValue(param_controls[this_param].GetValue())
+        this_param.setValue(param_controls[this_param].GetValue())
 
-        #print this_param.name, this_param.value
     target.Bind(wx.EVT_TEXT, paramPaneCallback)
     target.Bind(wx.EVT_COMBOBOX, paramPaneCallback)
     target.Bind(wx.EVT_CHECKBOX, paramPaneCallback)
@@ -532,11 +524,6 @@ class simSetupDialog(wx.Dialog):
         self.proj = project.Project()
         self.proj.loadProject(sys.argv[1])
         self.hsub = handlerSubsystem.HandlerSubsystem(None, self.proj.project_root)
-
-        # Create configs/ directory for project if it doesn't exist already
-#        config_dir = os.path.join(self.proj.project_root, "configs")
-#        if not os.path.exists(config_dir):
-#            os.mkdir(config_dir)
 
         # Set up the list of configs
         self.list_box_experiment_name.Clear()
@@ -1168,7 +1155,7 @@ class addRobotDialog(wx.Dialog):
         for h_type, handler in self.robot.handlers.iteritems():
             for param in handler.getMethodByName("__init__").para:
                 if param.getValue() is None:
-                    incomplete_params.append((handler[0].name, param.name))
+                    incomplete_params.append((handler.name, param.name))
 
         if len(incomplete_params) > 0:
             wx.MessageBox("The following parameters need to be specified:\n" + \
@@ -1456,6 +1443,10 @@ class propMappingDialog(wx.Dialog):
 
         s = self.text_ctrl_mapping.GetValue()
 
+        # Don't bother going any further if it's blank
+        if s.strip() == "":
+            return
+
         start, end = self.text_ctrl_mapping.GetSelection()
         if start >= 0:
             # If something is selected, check to make sure neither side is inside a methodstring
@@ -1464,21 +1455,28 @@ class propMappingDialog(wx.Dialog):
             # Otherwise just make sure the insertion point hasn't moved inside a methodstring
             check_pts = [i]
 
-        p = re.compile(HandlerSubsystem.handler_function_RE)
-        m_local = None
+        try:
+            cds, _ = parseCallString(s, mode="sensor")  # Sensor mode is more lenient than actuator
+        except SyntaxError:
+            # If there was a parsing error, it's not a proper methodstring anyways
+            return
 
-        for m in p.finditer(s):
-            if any([i > m.start() and i < m.end() for i in check_pts]):
-                m_local = m
+        cd_local = None
+
+        for cd in cds:
+            if any([i > cd.start_pos and i < cd.end_pos for i in check_pts]):
+                cd_local = cd
                 break
 
-        if m_local is None:
+        if cd_local is None:
             return
-        else:
-            m = m_local
+
+        # Make sure the name is the correct length
+        if len(cd_local.name) != 3:
+            return
 
         # Make sure the robot name is valid
-        rname = m.group("robot_name")
+        rname = cd_local.name[0]
         if rname == "share":
             rname = "(Simulated)"
         corresponding_robots = [n for n in self.list_box_robots.GetItems() if n.startswith(rname)]
@@ -1488,22 +1486,21 @@ class propMappingDialog(wx.Dialog):
             return
 
         # Force selection of the entire keyword, and place insertion caret as appropriate
-        self.text_ctrl_mapping.SetSelection(m.start(),m.end())
+        self.text_ctrl_mapping.SetSelection(cd_local.start_pos, cd_local.end_pos)
 
         if event is not None:
             if event.GetEventType() in [wx.wxEVT_KEY_DOWN, wx.wxEVT_KEY_UP]:
                 if event.GetKeyCode() in [wx.WXK_LEFT, wx.WXK_HOME, wx.WXK_UP, wx.WXK_NUMPAD_LEFT, wx.WXK_NUMPAD_UP]:
-                    self.text_ctrl_mapping.MoveCaret(m.start()-1)
+                    self.text_ctrl_mapping.MoveCaret(cd_local.start_pos-1)
                 elif event.GetKeyCode() in [wx.WXK_RIGHT, wx.WXK_END, wx.WXK_DOWN, wx.WXK_NUMPAD_RIGHT, wx.WXK_NUMPAD_DOWN]:
-                    self.text_ctrl_mapping.MoveCaret(m.end()-1)
+                    self.text_ctrl_mapping.MoveCaret(cd_local.end_pos-1)
 
         # Load detailed view of keyword below
         self.list_box_robots.SetStringSelection(corresponding_robots[0])
         self.onSelectRobot(None)
-        self.list_box_functions.SetStringSelection(m.group("method_name"))
+        self.list_box_functions.SetStringSelection(cd_local.name[2])
 
-        #print "matched: ", m.group()
-        self.tempMethod = self.hsub.string2Method(m.group(), self.robots)
+        self.tempMethod = self.hsub.string2Method(s[cd_local.start_pos:cd_local.end_pos], self.robots)
         drawParamConfigPane(self.panel_method_cfg, self.tempMethod, self.proj)
         self.Layout()
 
