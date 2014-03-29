@@ -106,46 +106,17 @@ class MethodParameterConfig(object):
         This function makes sure all parameter are set according to the desired type
         """
 
-        # Change None para_type to empty string to avoid None.lower()
-        if self.para_type == None: self.para_type = ""
+        valid_types = dict([(k, float) for k in ('float', 'double', 'choice')] +
+                           [(k, int) for k in ('integer', 'int', 'choice')] +
+                           [(k, bool) for k in ('bool', 'boolean', 'choice')] +
+                           [(k, basestring) for k in ('region', 'str', 'string', 'choice')] +
+                           [(k, list) for k in ('multichoice',)])
 
-        if self.para_type.lower() in ['float', 'double']:
-            try:
-                self.value = float(value)
-            except ValueError:
-                logging.error("Invalid float value: {0} for parameter {1}".format(value, self.name))
-        elif self.para_type.lower() in ['int', 'integer']:
-            try:
-                self.value = int(value)
-            except ValueError:
-                logging.error("Invalid int value: {0} for parameter {1}".format(value, self.name))
-        elif self.para_type.lower() == 'bool' or self.para_type.lower() == 'boolean':
-            if str(value).lower() in ['1', 'true', 't']:
-                self.value = True
-            elif str(value).lower() in ['0', 'false', 'f']:
-                self.value = False
-        elif self.para_type.lower() == 'region':
-            try:
-                self.value = value.strip("'\"")
-            except ValueError:
-                logging.error("Invalid region value: {0} for parameter {1}".format(value, self.name))
-        elif self.para_type.lower() in ['str', 'string']:
-            try:
-                self.value = str(value).strip('\"\'')
-            except ValueError:
-                logging.error("Invalid string value: {0} for parameter {1}".format(value, self.name))
-        elif self.para_type.lower() == 'choice':
-            try:
-                self.value = ast.literal_eval(value)
-            except ValueError:
-                logging.error("Invalid choice value: {0} for parameter {1}".format(value, self.name))
-        elif self.para_type.lower() == 'multichoice':
-            try:
-                self.value = ast.literal_eval(value)
-            except ValueError:
-                logging.error("Invalid multichoice value: {0} for parameter {1}".format(value, self.name))
-        else:
-            logging.error("Cannot set the value of parameter {0}, because its type {1} cannot be recognized.".format(self.name, self.para_type))
+        if not isinstance(value, valid_types[self.para_type.lower()]):
+            raise ValueError("Invalid {} value: {!r} for parameter {!r}".format(self.para_type, value, self.name))
+            return
+
+        self.value = value
 
     def getValue(self):
         return self.value
