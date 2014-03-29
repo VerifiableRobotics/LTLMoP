@@ -178,19 +178,6 @@ class HandlerMethodConfig(object):
         except StopIteration:
             raise ValueError("Could not find parameter of name '{0}' in method '{1}'".format(name, self.name))
 
-    def updateParaFromString(self, para_str):
-        """
-        update all parameter config object of this method config object with info from given string
-        """
-        # if the input string has parentheses around it
-        para_str = para_str.strip('\(\)')
-
-        # parse the string and set the value accordingly
-        for para_name, para_value in re.findall(r'(?P<key>\w+)\s*=\s*(?P<val>"[^"]*"|\'[^\']*\'|[^,]+)', para_str):
-            para_value = para_value.strip("\"\'")
-            para_config = self.getParaByName(para_name)
-            para_config.setValue(para_value)
-
     def updateParaFromDict(self, para_dict):
         """
         update all parameter config object of this method config object with info from given dictionary
