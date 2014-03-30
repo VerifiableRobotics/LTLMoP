@@ -174,7 +174,7 @@ class AnalysisResultsDialog(wx.Dialog):
         self.text_ctrl_summary.WriteText(text)
         self.text_ctrl_summary.EndTextColour()
         self.text_ctrl_summary.ShowPosition(self.text_ctrl_summary.GetLastPosition())
-        wx.Yield() # Ensure update
+        wx.GetApp().Yield(True) # Ensure update
                 
     def onButtonClose(self, event): # wxGlade: AnalysisResultsDialog.<event_handler>
         self.Hide()
@@ -1109,7 +1109,7 @@ class SpecEditorFrame(wx.Frame):
             # Let wx and the OS have some time
             # We are updating here instead of in the log callback because log output
             # may be very infrequent
-            wx.Yield()
+            wx.GetApp().Yield(True)
             time.sleep(0.1)
 
         # Done! Close the dialog.
@@ -1147,7 +1147,7 @@ class SpecEditorFrame(wx.Frame):
         #self.text_ctrl_log.EndBold()
         self.text_ctrl_log.EndTextColour()
         self.text_ctrl_log.ShowPosition(self.text_ctrl_log.GetLastPosition())
-        wx.Yield() # Ensure update
+        wx.GetApp().Yield(True) # Ensure update
 
     def onMenuSimulate(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """ Run the simulation with current experiment configuration. """
