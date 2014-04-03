@@ -267,6 +267,10 @@ class SpecEditorFrame(wx.Frame):
         global MENU_PARSERMODE_SLURP; MENU_PARSERMODE_SLURP = wx.NewId()
         global MENU_PARSERMODE_STRUCTURED; MENU_PARSERMODE_STRUCTURED = wx.NewId()
         global MENU_PARSERMODE_LTL; MENU_PARSERMODE_LTL = wx.NewId()
+        global MENU_SYNTHESIZER; MENU_SYNTHESIZER = wx.NewId()
+        global MENU_SYNTHESIZER_JTLV; MENU_SYNTHESIZER_JTLV = wx.NewId()
+        global MENU_SYNTHESIZER_SLUGS; MENU_SYNTHESIZER_SLUGS = wx.NewId()
+        global MENU_SYMBOLIC; MENU_SYMBOLIC = wx.NewId()
         global MENU_SIMULATE; MENU_SIMULATE = wx.NewId()
         global MENU_SIMCONFIG; MENU_SIMCONFIG = wx.NewId()
         global MENU_ANALYZE; MENU_ANALYZE = wx.NewId()
@@ -300,6 +304,11 @@ class SpecEditorFrame(wx.Frame):
         wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_STRUCTURED, "Structured English", "", wx.ITEM_RADIO)
         wxglade_tmp_menu_sub_sub.Append(MENU_PARSERMODE_LTL, "LTL", "", wx.ITEM_RADIO)
         wxglade_tmp_menu_sub.AppendMenu(MENU_PARSERMODE, "Parser mode", wxglade_tmp_menu_sub_sub, "")
+        wxglade_tmp_menu_sub_sub = wx.Menu()
+        wxglade_tmp_menu_sub_sub.Append(MENU_SYNTHESIZER_JTLV, "JTLV", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub_sub.Append(MENU_SYNTHESIZER_SLUGS, "Slugs", "", wx.ITEM_RADIO)
+        wxglade_tmp_menu_sub.AppendMenu(MENU_SYNTHESIZER, "Synthesizer", wxglade_tmp_menu_sub_sub, "")
+        wxglade_tmp_menu_sub.Append(MENU_SYMBOLIC, "Use symbolic strategy", "", wx.ITEM_CHECK)
         wxglade_tmp_menu.AppendMenu(MENU_COMPILECONFIG, "Compilation options", wxglade_tmp_menu_sub, "")
         wxglade_tmp_menu.AppendSeparator()
         wxglade_tmp_menu.Append(MENU_SIMULATE, "&Simulate\tF6", "", wx.ITEM_NORMAL)
@@ -369,6 +378,9 @@ class SpecEditorFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_SLURP)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_STRUCTURED)
         self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_PARSERMODE_LTL)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_SYNTHESIZER_JTLV)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_SYNTHESIZER_SLUGS)
+        self.Bind(wx.EVT_MENU, self.onMenuSetCompileOptions, id=MENU_SYMBOLIC)
         self.Bind(wx.EVT_MENU, self.onMenuSimulate, id=MENU_SIMULATE)
         self.Bind(wx.EVT_MENU, self.onMenuConfigSim, id=MENU_SIMCONFIG)
         self.Bind(wx.EVT_MENU, self.onMenuAnalyze, id=MENU_ANALYZE)
@@ -491,15 +503,9 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_SAFE)
         self.text_ctrl_spec.MarkerDeleteAll(MARKER_LIVE)
         self.text_ctrl_log.Clear()
-        self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
-        self.frame_1_menubar.Check(MENU_BITVECTOR, self.proj.compile_options["use_region_bit_encoding"])
-        self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
-        if self.proj.compile_options["parser"] == "slurp":
-            self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
-        elif self.proj.compile_options["parser"] == "structured":
-            self.frame_1_menubar.Check(MENU_PARSERMODE_STRUCTURED, True)
-        elif self.proj.compile_options["parser"] == "ltl":
-            self.frame_1_menubar.Check(MENU_PARSERMODE_LTL, True)
+
+        # Set options menu status based on proj options
+        self.updateMenusFromProjectOptions()
 
         self.SetTitle("Specification Editor - Untitled")
 
@@ -898,9 +904,15 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.EmptyUndoBuffer()
 
         # Set compilation option checkboxes
-        self.frame_1_menubar.Check(MENU_BITVECTOR, self.proj.compile_options["use_region_bit_encoding"])
+        self.updateMenusFromProjectOptions()
+
+        self.dirty = False
+
+    def updateMenusFromProjectOptions(self):
         self.frame_1_menubar.Check(MENU_CONVEXIFY, self.proj.compile_options["convexify"])
+        self.frame_1_menubar.Check(MENU_BITVECTOR, self.proj.compile_options["use_region_bit_encoding"])
         self.frame_1_menubar.Check(MENU_FASTSLOW, self.proj.compile_options["fastslow"])
+        self.frame_1_menubar.Check(MENU_SYMBOLIC, self.proj.compile_options["symbolic"])
 
         if self.proj.compile_options["parser"] == "slurp":
             self.frame_1_menubar.Check(MENU_PARSERMODE_SLURP, True)
@@ -908,8 +920,11 @@ class SpecEditorFrame(wx.Frame):
             self.frame_1_menubar.Check(MENU_PARSERMODE_STRUCTURED, True)
         elif self.proj.compile_options["parser"] == "ltl":
             self.frame_1_menubar.Check(MENU_PARSERMODE_LTL, True)
-    
-        self.dirty = False
+
+        if self.proj.compile_options["synthesizer"] == "jtlv":
+            self.frame_1_menubar.Check(MENU_SYNTHESIZER_JTLV, True)
+        elif self.proj.compile_options["synthesizer"] == "slugs":
+            self.frame_1_menubar.Check(MENU_SYNTHESIZER_SLUGS, True)
 
     def doClose(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         """
@@ -1639,12 +1654,20 @@ class SpecEditorFrame(wx.Frame):
         self.proj.compile_options["convexify"] = self.frame_1_menubar.IsChecked(MENU_CONVEXIFY)
         self.proj.compile_options["fastslow"] = self.frame_1_menubar.IsChecked(MENU_FASTSLOW)
         self.proj.compile_options["use_region_bit_encoding"] = self.frame_1_menubar.IsChecked(MENU_BITVECTOR)
+        self.proj.compile_options["symbolic"] = self.frame_1_menubar.IsChecked(MENU_SYMBOLIC)
+
         if self.frame_1_menubar.IsChecked(MENU_PARSERMODE_SLURP):
             self.proj.compile_options["parser"] = "slurp"
         elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_STRUCTURED):
             self.proj.compile_options["parser"] = "structured"
         elif self.frame_1_menubar.IsChecked(MENU_PARSERMODE_LTL):
             self.proj.compile_options["parser"] = "ltl"
+
+        if self.frame_1_menubar.IsChecked(MENU_SYNTHESIZER_JTLV):
+            self.proj.compile_options["synthesizer"] = "jtlv"
+        elif self.frame_1_menubar.IsChecked(MENU_SYNTHESIZER_SLUGS):
+            self.proj.compile_options["synthesizer"] = "slugs"
+
         self.dirty = True
 
     def onRegionLabelStyleChange(self, event):  # wxGlade: SpecEditorFrame.<event_handler>
