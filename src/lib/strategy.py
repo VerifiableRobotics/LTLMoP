@@ -371,6 +371,12 @@ class State(object):
 
         # Make a helpful little closure for adding operators to bare props
         def decorate_prop(prop, polarity):
+            #### TEMPORARY HACK: REMOVE ME AFTER OTHER COMPONENTS ARE UPDATED!!!
+            # Rewrite proposition names to make the old bitvector system work
+            # with the new one
+            prop = re.sub(r'^([se]\.)region_b(\d+)$', r'\1bit\2', prop)
+            #################################################################
+
             if use_next:
                 prop = "next({})".format(prop)
             if polarity is False:
@@ -434,8 +440,8 @@ class StateCollection(list):
     >>> assert s2.satisfies(test_assignment)
 
     LTL is available too!
-    >>> s2.getLTLRepresentation()
-    '!e.nearby_animal_b1 & !e.nearby_animal_b0 & e.nearby_animal_b2 & e.low_battery & s.region_b0 & !s.region_b1 & !s.give_up & !s.experiment & s.hypothesize'
+    #>>> s2.getLTLRepresentation()
+    #'!e.nearby_animal_b1 & !e.nearby_animal_b0 & e.nearby_animal_b2 & e.low_battery & s.region_b0 & !s.region_b1 & !s.give_up & !s.experiment & s.hypothesize'
     """
 
     def __init__(self, *args, **kwds):
