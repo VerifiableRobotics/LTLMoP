@@ -67,6 +67,16 @@ class AsynchronousProcessThread(threading.Thread):
             # Output to either a RichTextCtrl or the console
             if self.logFunction is not None:
                 output = self.process.stdout.readline() # Blocking :(
+
+                # Check for EOF (indicated by an empty string). We really
+                # shouldn't have to do this, because we are polling for the
+                # returncode once per readline, but for some reason on Windows
+                # we will get a couple hundred EOFs before the process is marked
+                # as completed.
+
+                if output == '':
+                    break
+
                 self.logFunction(output)
 
             # Check the status of the process
