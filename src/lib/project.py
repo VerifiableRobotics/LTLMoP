@@ -46,6 +46,7 @@ class Project:
                                 "symbolic": False,  # Use BDDs instead of explicit-state strategies
                                 "decompose": True,  # Create regions for free space and region overlaps (required for Locative Preposition support)
                                 "use_region_bit_encoding": True, # Use a vector of "bitX" propositions to represent regions, for efficiency
+                                "synthesizer": "jtlv", # Name of synthesizer to use ("jtlv" or "slugs")
                                 "parser": "structured"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
 
         self.ltlmop_root = globalConfig.get_ltlmop_root()
@@ -134,7 +135,7 @@ class Project:
                     continue
 
                 k,v = l.split(":", 1)
-                if k.strip().lower() == "parser":
+                if k.strip().lower() in ("parser", "synthesizer"):
                     self.compile_options[k.strip().lower()] = v.strip().lower()
                 else:
                     # convert to boolean if not a parser type
