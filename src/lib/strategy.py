@@ -17,7 +17,6 @@ import collections
 import copy
 import globalConfig
 
-# TODO: make sure this works with mopsy
 # TODO: generalize notion of sets of states in a way transparent to both BDD and
 # FSA, so we don't end up unnecessarily creating and iterating over state
 # objects for things that can be done with a single BDD op
@@ -358,11 +357,12 @@ class State(object):
         for prop_name, prop_value in prop_assignments.iteritems():
             self.setPropValue(prop_name, prop_value)
 
-    def getLTLRepresentation(self, mark_players=True, use_next=False, include_inputs=True):
+    def getLTLRepresentation(self, mark_players=True, use_next=False, include_inputs=True, swap_players=False):
         """ Returns an LTL formula representing this state.
 
             If `mark_players` is True, input propositions are prepended with
-            "e.", and output propositions are prepended with "s.".
+            "e.", and output propositions are prepended with "s.". (If `swap_players`
+            is True, these labels will be reversed [this feature is used by Mopsy])
 
             If `use_next` is True, all propositions will be modified by a single
             "next()" operator.  `include_env`, which defaults to True,
@@ -383,11 +383,16 @@ class State(object):
                 prop = "!"+prop
             return prop
 
-        sys_state = " & ".join((decorate_prop("s."+p, v) for p, v in \
+        if swap_players:
+            env_label, sys_label = "s.", "e."
+        else:
+            env_label, sys_label = "e.", "s."
+
+        sys_state = " & ".join((decorate_prop(sys_label+p, v) for p, v in \
                                 self.getOutputs(expand_domains=True).iteritems()))
 
         if include_inputs:
-            env_state = " & ".join((decorate_prop("e."+p, v) for p, v in \
+            env_state = " & ".join((decorate_prop(env_label+p, v) for p, v in \
                                     self.getInputs(expand_domains=True).iteritems()))
             return " & ".join([env_state, sys_state])
         else:
