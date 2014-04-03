@@ -143,8 +143,10 @@ def stripLTLLine(line, useNext=False):
         return line
         
 def subprocessReadThread(fd, out):
-            for line in fd:                                                                              
-               out.append(line) 
+    for line in fd:
+        out.append(line)
+        if "expected" in line:
+            logging.error(line)
                 
         
 def findGuiltyLTLConjunctsWrapper(x):        
