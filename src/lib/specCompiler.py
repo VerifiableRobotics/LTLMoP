@@ -883,6 +883,9 @@ class SpecCompiler(object):
             if self.proj.compile_options["symbolic"]:
                 cmd.append("--symbolic")
 
+            REALIZABLE_MESSAGE = "Specification is synthesizable!"
+            REALIZABLE_FS_MESSAGE = "Specification is synthesizable under fast/slow!"
+
         elif self.proj.compile_options["synthesizer"].lower() == "slugs":
             # Find the synthesis tool
             cmd = self._getSlugsCommand()
@@ -894,6 +897,9 @@ class SpecCompiler(object):
             # Create proper input for Slugs
             logging.info("Preparing Slugs input...")
             self.prepareSlugsInput()
+
+            REALIZABLE_MESSAGE = "RESULT: Specification is realizable"
+            REALIZABLE_FS_MESSAGE = None
         else:
             raise RuntimeError("Invalid synthesizer: {!r}".format(self.proj.compile_options["synthesizer"]))
 
@@ -905,9 +911,9 @@ class SpecCompiler(object):
         def onLog(text):
             """ Intercept log callbacks to check for realizability status. """
 
-            if "Specification is synthesizable!" in text:
+            if REALIZABLE_MESSAGE in text:
                 self.realizable = True
-            if "Specification is synthesizable under fast/slow!" in text:
+            if REALIZABLE_FS_MESSAGE is not None and REALIZABLE_FS_MESSAGE in text:
                 self.realizableFS = True
 
             # You'll pass this on, won't you
