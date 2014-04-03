@@ -136,7 +136,7 @@
                         <handler>onMenuSimulate</handler>
                     </item>
                     <item>
-                        <label>Confi&amp;gure Simulation...\tShift-F6</label>
+                        <label>Confi&amp;gure Simulation...\tF7</label>
                         <id>MENU_SIMCONFIG=wx.NewId()</id>
                         <handler>onMenuConfigSim</handler>
                     </item>
