@@ -446,7 +446,7 @@ class HandlerSubsystem:
             arg_dict = {"executor": self.executor}
 
             # everyone except for InitHandler gets shared_data too
-            if not isinstance(h_type, ht.InitHandler):
+            if h_type is not ht.InitHandler:
                 arg_dict.update({"shared_data":self.executor.proj.shared_data})
 
             # add any arguments specific to this method
