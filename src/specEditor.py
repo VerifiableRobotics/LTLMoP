@@ -29,7 +29,7 @@ sys.path.append(os.path.join(p,"lib","cores"))
 
 from regions import *
 import project
-import fsa
+import strategy
 import mapRenderer
 from specCompiler import SpecCompiler
 from asyncProcesses import AsynchronousProcessThread
@@ -1301,18 +1301,13 @@ class SpecEditorFrame(wx.Frame):
         self.subprocess["Simulation Configuration"] = WxAsynchronousProcessThread([sys.executable, "-u", "-m", "lib.configEditor", self.proj.getFilenamePrefix()+".spec"], simConfigCallback, None)
 
     def _exportDotFile(self):
-        proj_copy = deepcopy(self.proj)
-        proj_copy.rfi = self.decomposedRFI
-        proj_copy.sensor_handler = None
-        proj_copy.actuator_handler = None
-        proj_copy.h_instance = None
+        region_domain = strategy.Domain("region",  self.decomposedRFI.regions, strategy.Domain.B0_IS_MSB)
+        strat = strategy.createStrategyFromFile(self.proj.getStrategyFilename(),
+                                                self.proj.enabled_sensors,
+                                                self.proj.enabled_actuators + self.proj.all_customs +  [region_domain])
 
-        aut = fsa.Automaton(proj_copy)
-
-        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)
-        aut.writeDot(self.proj.getFilenamePrefix()+".dot")
-        
-        
+        strat.exportAsDotFile(self.proj.getFilenamePrefix()+".dot") 
+      
     def _exportSMVFile(self):              
         aut.writeSMV(self.proj.getFilenamePrefix()+"MC.smv")
         
