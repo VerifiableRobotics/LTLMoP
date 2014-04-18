@@ -172,7 +172,9 @@ class RegionFileInterface(object):
         for i, region in enumerate(self.regions):
             if region.name.lower() == name.lower():
                 return i
-        print 'WARNING: Region "' + name + '" not found.'
+        # only show error message if it is not boundary
+        if name != "boundary":
+            print 'WARNING: Region "' + name + '" not found.'
         return -1
 
     def getCalibrationPoints(self):
