@@ -546,7 +546,7 @@ class simSetupDialog(wx.Dialog):
             cfg = ExperimentConfig()
             # TODO: Check for existing untitleds and add a number at the end (steal from reged)
             cfg.name = "Untitled configuration"
-            cfg.fileName = os.path.join(self.hsub.config_path,cfg.name.replace(' ','_'))
+            cfg.file_name = os.path.join(self.hsub.config_path,cfg.name.replace(' ','_'))
             # since this config is not loaded, we assume it is complete
             self.hsub.configs.append(cfg)
             self.list_box_experiment_name.Append(cfg.name, cfg)
