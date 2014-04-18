@@ -294,6 +294,7 @@ class handlerConfigDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.onClickDefaults, self.button_defaults)
         # end wxGlade
 
+        self.hsub = parent.hsub
         self.proj = parent.proj
         self.robot = parent.robot
 
@@ -322,7 +323,7 @@ class handlerConfigDialog(wx.Dialog):
     def _onCalibEdit(self, event):
         r = event.GetRow()
         c = event.GetCol()
-        self.robot.calibrationMatrix[r,c] = self.sheet.GetCellValue(r,c)
+        self.robot.calibration_matrix[r,c] = self.sheet.GetCellValue(r,c)
         event.Skip()
 
     def _onClickCalibrate(self, event):
@@ -389,7 +390,7 @@ class handlerConfigDialog(wx.Dialog):
                 wx.Yield()
             else:
                 try:
-                    self.robot.calibrationMatrix = eval(data)
+                    self.robot.calibration_matrix = eval(data)
                 except SyntaxError:
                     print "ERROR: Received invalid data from calibration tool."
                 else:
@@ -415,10 +416,10 @@ class handlerConfigDialog(wx.Dialog):
         drawParamConfigPane(self.panel_configs, methodObj, self.proj)
 
         # Add in calibration configuration pane for pose handler
-        if handler.h_type == "pose":
+        if handler.h_type is ht.PoseHandler:
             # Default to identity matrix
-            if self.robot.calibrationMatrix is None:
-                self.robot.calibrationMatrix = eye(3)
+            if self.robot.calibration_matrix is None:
+                self.robot.calibration_matrix = eye(3)
 
             label = wx.StaticText(self.panel_configs, -1, "Calibration Matrix:")
             self.sheet = wx.grid.Grid(self.panel_configs)
@@ -428,7 +429,7 @@ class handlerConfigDialog(wx.Dialog):
             for x in range(0,3):
                 self.sheet.SetColFormatFloat(x)
                 for y in range(0,3):
-                    self.sheet.SetCellValue(x, y, str(self.robot.calibrationMatrix[x,y]))
+                    self.sheet.SetCellValue(x, y, str(self.robot.calibration_matrix[x,y]))
 
             button_calibrate = wx.Button(self.panel_configs, -1, "Run calibration tool...")
 
@@ -439,7 +440,7 @@ class handlerConfigDialog(wx.Dialog):
             self.Bind(wx.EVT_BUTTON, self._onClickCalibrate, button_calibrate)
 
             # If this robot has a pre-defined calibration matrix, don't allow for calibration
-            if self.hsub.getRobotByType(self.robot.r_type).calibrationMatrix is not None:
+            if self.hsub.getRobotByType(self.robot.r_type).calibration_matrix is not None:
                 button_calibrate.SetLabel("Calibration is pre-defined by simulator.")
                 button_calibrate.Enable(False)
 
@@ -998,6 +999,7 @@ class addRobotDialog(wx.Dialog):
         # end wxGlade
 
         self.parent = parent
+        self.hsub = parent.hsub
         self.proj = parent.proj
         self.robot = RobotConfig()
         self.original_robot = RobotConfig()
