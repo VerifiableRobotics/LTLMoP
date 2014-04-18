@@ -41,10 +41,6 @@ class SpecCompiler(object):
         Load the project object
         """
         self.proj.loadProject(spec_filename)
-        self.hsub = handlerSubsystem.HandlerSubsystem(None, self.proj.project_root)
-        config, success = self.hsub.loadConfigFile(self.proj.current_config)
-        if success: self.hsub.configs.append(config)
-        self.hsub.setExecutingConfig(self.proj.current_config)
 
         # Check to make sure this project is complete
         if self.proj.rfi is None:
@@ -169,6 +165,11 @@ class SpecCompiler(object):
             if self.proj.current_config == "":
                 region_tags = {}
             else:
+                self.hsub = handlerSubsystem.HandlerSubsystem(None, self.proj.project_root)
+                config, success = self.hsub.loadConfigFile(self.proj.current_config)
+                if success: self.hsub.configs.append(config)
+                self.hsub.setExecutingConfig(self.proj.current_config)
+
                 region_tags = self.hsub.executing_config.region_tags
 
             # Hack: We need to make sure there's only one of these
