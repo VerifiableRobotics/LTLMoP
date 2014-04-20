@@ -705,6 +705,20 @@ class ExperimentConfig(object):
         logging.error("Could not find robot of name '{0}' in config '{1}'.".format(name, self.name))
         return None
 
+    def normalizePropMapping(self, default_prop_mapping):
+        """
+        Clean up the proposition mapping of this experiment config based on given default mapping
+
+        If the proposition mapping is not set, fill it up with default one
+        If the proposition is not in the default one, delete the mapping
+        """
+        mapping = deepcopy(default_prop_mapping)
+        for p, func in mapping.iteritems():
+            if p in self.prop_mapping:
+                mapping[p] = self.prop_mapping[p]
+
+        self.prop_mapping = mapping
+
     def fromFile(self, file_path, hsub = None):
         """
         Given an experiment config file, load the info

@@ -849,41 +849,6 @@ class simSetupDialog(wx.Dialog):
         dlg.Destroy()
         event.Skip()
 
-    def getDefaultPropMapping(self):
-        """
-        Return the default proposition mapping based on the propositions in project
-        """
-        prop_mapping = {}
-        for p in self.proj.all_sensors:
-            m = deepcopy(self.hsub.handler_configs["share"][ht.SensorHandler][0].getMethodByName("buttonPress"))
-            para = m.getParaByName("button_name")
-            para.setValue(p)
-            prop_mapping[p] = self.hsub.method2String(m, "share")
-
-        for p in self.proj.all_actuators:
-            m = deepcopy(self.hsub.handler_configs["share"][ht.ActuatorHandler][0].getMethodByName("setActuator"))
-            para = m.getParaByName("name")
-            para.setValue(p)
-            prop_mapping[p] = self.hsub.method2String(m, "share")
-
-        return prop_mapping
-
-    def normalizePropMapping(self, config_obj):
-        """
-        Clean up the proposition mapping of the given experiment config
-
-        If the proposition mapping is not set, fill it up with default ones
-        If the proposition is not in project, delete the mapping
-
-        return the prop_mapping after cleanup
-        """
-
-        mapping = self.getDefaultPropMapping()
-        for p, func in mapping.iteritems():
-            if p in config_obj.prop_mapping:
-                mapping[p] = config_obj.prop_mapping[p]
-
-        return mapping
 
     def onClickApply(self, event): # wxGlade: simSetupDialog.<event_handler>
 
@@ -910,7 +875,8 @@ class simSetupDialog(wx.Dialog):
             return
 
         # clean up prop_mapping of the current executing config
-        self.hsub.executing_config.prop_mapping = self.normalizePropMapping(self.hsub.executing_config)
+        default_prop_mapping = self.hsub.getDefaultPropMapping(self.proj.all_sensors, self.proj.all_actuators)
+        self.hsub.executing_config.normalizePropMapping(default_prop_mapping)
 
         # Save the config files
         self.hsub.saveAllConfigFiles()
