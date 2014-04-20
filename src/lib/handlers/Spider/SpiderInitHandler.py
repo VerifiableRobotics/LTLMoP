@@ -79,8 +79,8 @@ class SpiderInitHandler(handlerTemplates.InitHandler):
             exit(-1)
 
         try:
-            path = os.path.join(executor.proj.ltlmop_root, "lib", "handlers", "robots",
-                                "Spider", "SpiderGaits.txt")
+            # assuming the gaits file is in the same directory of this init handler
+            path = os.path.join(os.path.dirname(__file__), "SpiderGaits.txt")
             p = _Parser(path)
             self.gaits = p.gaits
         except:
