@@ -546,7 +546,7 @@ class HandlerSubsystem:
                         self.executor.proj.shared_data = h.getSharedData()
             else:
                 # this is a non-main robot
-                h = self.prepareHandler(robot_config.getHandlerOfRobot(ht.InitHandler))
+                h = self.prepareHandler(robot.getHandlerOfRobot(ht.InitHandler))
                 # this is a init handler, set the shared_data
                 self.executor.proj.shared_data = h.getSharedData()
 
