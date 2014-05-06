@@ -149,7 +149,7 @@ def parseCallTree(tree, mode, make_call_function):
             try:
                 kwargs[kw.arg] =  ast.literal_eval(kw.value)
             except ValueError:
-                name = ".".join(name)
+                name = ".".join(name_parts)
                 raise ValueError("Invalid value for argument {!r} of handler/method named {!r}".format(kw.arg, name))
 
         # Make a CallDescriptor
@@ -158,7 +158,7 @@ def parseCallTree(tree, mode, make_call_function):
                             start_pos=tree.col_offset,
                             end_pos=None) # We can't get end_pos from AST
                                           # so we'll calculate this later
- 
+
         if make_call_function is not None:
             # Let's get the function call for this CallDescriptor
             f = make_call_function(cd)
