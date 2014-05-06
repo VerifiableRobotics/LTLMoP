@@ -400,7 +400,8 @@ class HandlerConfig(object):
                 try:
                     method_config.fromMethod(method, self)
                 except SyntaxError as e:
-                    raise ht.LoadingError("Error while inspecting method {!r} of handler {!r}: {}".format(method_name, handler_module_path, e))
+#                     raise ht.LoadingError("Error while inspecting method {!r} of handler {!r}: {}".format(method_name, handler_module_path, e))
+                    logging.warning("Error while inspecting method {!r} of handler {!r}: {}".format(method_name, handler_module_path, e))
 
                 # add this method into the method list of the handler
                 self.methods.append(method_config)
