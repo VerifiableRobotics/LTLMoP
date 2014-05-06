@@ -543,12 +543,12 @@ class HandlerSubsystem:
                         h = self.prepareHandler(robot.handlers[handler_type_class])
                     # if this is a init handler, set the shared_data
                     if handler_type_class == ht.InitHandler:
-                        self.executor.proj.shared_data = h.getSharedData()
+                        self.executor.proj.shared_data.update(h.getSharedData())
             else:
                 # this is a non-main robot
                 h = self.prepareHandler(robot.getHandlerOfRobot(ht.InitHandler))
                 # this is a init handler, set the shared_data
-                self.executor.proj.shared_data = h.getSharedData()
+                self.executor.proj.shared_data.update(h.getSharedData())
 
 
     def createHandlerMethodConfig(self, robot_name, handler_name, method_name, kwargs):
