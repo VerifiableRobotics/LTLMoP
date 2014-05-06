@@ -383,6 +383,11 @@ class HandlerConfig(object):
         self.name = name
         self.h_type = h_type
 
+        if self.h_type in [ht.SensorHandler, ht.ActuatorHandler]:
+            onlyLoadInit = False
+        else:
+            onlyLoadInit = True
+
         # get all methods in this handler
         handler_methods = inspect.getmembers(handler_class, inspect.ismethod)
 
