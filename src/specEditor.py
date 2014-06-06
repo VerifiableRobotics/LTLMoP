@@ -154,7 +154,7 @@ class AnalysisResultsDialog(wx.Dialog):
         jx_this = -1 # debug output is 0-indexed
 
         for f,obj in self.statements[agent]:
-            if "[]<>" in f: 
+            if "[]<>" in f:
                 ftype = "goals"
                 jx_this += 1
             elif "[]" in f:
@@ -168,14 +168,14 @@ class AnalysisResultsDialog(wx.Dialog):
                 elif section != "goals":
                     self.tree_ctrl_traceback.SetItemBackgroundColour(obj,"#FE9A2E") # pale orange
                 self.tree_ctrl_traceback.Expand(obj)
-                
+
     def appendLog(self, text, color="BLACK"):
         self.text_ctrl_summary.BeginTextColour(color)
         self.text_ctrl_summary.WriteText(text)
         self.text_ctrl_summary.EndTextColour()
         self.text_ctrl_summary.ShowPosition(self.text_ctrl_summary.GetLastPosition())
         wx.GetApp().Yield(True) # Ensure update
-                
+
     def onButtonClose(self, event): # wxGlade: AnalysisResultsDialog.<event_handler>
         self.Hide()
         event.Skip()
@@ -254,7 +254,7 @@ class SpecEditorFrame(wx.Frame):
         # begin wxGlade: SpecEditorFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        
+
         # Menu Bar
         self.frame_1_menubar = wx.MenuBar()
         global MENU_IMPORT_REGION; MENU_IMPORT_REGION = wx.NewId()
@@ -443,7 +443,7 @@ class SpecEditorFrame(wx.Frame):
         self.text_ctrl_spec.SetWrapMode(wx.stc.STC_WRAP_WORD)
 
         #self.text_ctrl_spec.SetEOLMode(wx.stc.STC_EOL_LF)
-        
+
         # Listen for changes to the text (except for style and marker changes)
         self.text_ctrl_spec.SetModEventMask(self.text_ctrl_spec.GetModEventMask() \
                                             & ~(wx.stc.STC_MOD_CHANGESTYLE | wx.stc.STC_MOD_CHANGEMARKER))
@@ -469,7 +469,7 @@ class SpecEditorFrame(wx.Frame):
 
         if pos == -1:
             return
-        
+
         if self.response is not None:
             self.text_ctrl_spec.CallTipShow( pos, "Response: {}".format(self.response[line]))
 
@@ -818,7 +818,7 @@ class SpecEditorFrame(wx.Frame):
             default = self.proj.getFilenamePrefix() + ".spec"
 
         # Get a filename
-        filename = wx.FileSelector("Save File As", 
+        filename = wx.FileSelector("Save File As",
                                   default_path=os.path.dirname(default),
                                   default_filename=os.path.basename(default),
                                   default_extension="spec",
@@ -1053,7 +1053,7 @@ class SpecEditorFrame(wx.Frame):
         self.appendLog("Creating LTL...\n", "BLUE")
 
         spec, self.tracebackTree, self.response = compiler._writeLTLFile()
-        
+
         # Add any auto-generated propositions to the list
         # TODO: what about removing old ones?
         for p in compiler.proj.internal_props:
@@ -1306,14 +1306,14 @@ class SpecEditorFrame(wx.Frame):
                                                 self.proj.enabled_sensors,
                                                 self.proj.enabled_actuators + self.proj.all_customs +  [region_domain])
 
-        strat.exportAsDotFile(self.proj.getFilenamePrefix()+".dot") 
-      
-    def _exportSMVFile(self):              
-        aut.writeSMV(self.proj.getFilenamePrefix()+"MC.smv")
-        
-        
+        strat.exportAsDotFile(self.proj.getFilenamePrefix()+".dot", self.proj.regionMapping)
 
-        
+    def _exportSMVFile(self):
+        aut.writeSMV(self.proj.getFilenamePrefix()+"MC.smv")
+
+
+
+
 
     def onMenuViewAut(self, event): # wxGlade: SpecEditorFrame.<event_handler>
         if not os.path.isfile(self.proj.getFilenamePrefix()+".aut"):
@@ -1381,13 +1381,13 @@ class SpecEditorFrame(wx.Frame):
             self.analysisDialog.label_traceback.Show()
             self.analysisDialog.tree_ctrl_traceback.Show()
             if self.tracebackTree is not None:
-                self.analysisDialog.populateTree(self.tracebackTree) 
+                self.analysisDialog.populateTree(self.tracebackTree)
 
             self.analysisDialog.tree_ctrl_traceback.ExpandAll()
         else:
             self.analysisDialog.label_traceback.Hide()
             self.analysisDialog.tree_ctrl_traceback.Hide()
-        
+
         self.appendLog("Running analysis...\n","BLUE")
 
         # Redirect all output to the log
@@ -1420,9 +1420,9 @@ class SpecEditorFrame(wx.Frame):
         else:
             self.analysisDialog.appendLog(output.rstrip(), "RED")
         self.analysisDialog.appendLog('\n')
-                
+
         #highlight guilty sentences
-        #special treatment for goals: we already know which one to highlight                
+        #special treatment for goals: we already know which one to highlight
         if self.proj.compile_options["parser"] == "structured":
             for h_item in self.to_highlight:
                 tb_key = h_item[0].title() + h_item[1].title()
@@ -1448,12 +1448,12 @@ class SpecEditorFrame(wx.Frame):
             self.analysisDialog.button_refine.Enable(False)
             self.analysisDialog.button_refine.SetLabel("No further analysis available.")
             self.analysisDialog.Layout()
-                
-    def refineAnalysis(self): 
+
+    def refineAnalysis(self):
         self.appendLog("Please wait; refining analysis...\n", "BLUE")
-    
+
         guilty = self.compiler._coreFinding(self.to_highlight, self.unsat, self.badInit)
-    
+
         self.highlightCores(guilty, self.compiler)
 
         self.appendLog("Final analysis complete.\n", "BLUE")
@@ -1486,7 +1486,7 @@ class SpecEditorFrame(wx.Frame):
                         guilty_clean.extend([v for k,v in compiler.reversemapping.iteritems() if "[]" not in v])
                     else:
                         print "WARNING: LTL fragment {!r} not found in spec->LTL mapping".format(canonical_ltl_frag)
-                    
+
             print guilty_clean
             # Add SLURP to path for import
             p = os.path.dirname(os.path.abspath(__file__))
@@ -1496,7 +1496,7 @@ class SpecEditorFrame(wx.Frame):
             # Reprocess the traceback tree
             self.analysisDialog.populateTree(highlight_tree)
             self.analysisDialog.appendLog(msg)
-    
+
     def highlight(self, l, type):
         if type == "init":
            self.text_ctrl_spec.MarkerAdd(l-1, MARKER_INIT)
@@ -1524,7 +1524,7 @@ class SpecEditorFrame(wx.Frame):
                 desired_jx = frag[2]
                 break
 
-        if desired_jx is None: 
+        if desired_jx is None:
             wx.MessageBox("No goal was found to be involved in unrealizability.\nThere is no need to run Mopsy.", "Mopsy irrelevant",
                         style = wx.OK | wx.ICON_ERROR)
             return
