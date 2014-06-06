@@ -613,7 +613,7 @@ class Strategy(object):
 
         return next(self.searchForStates(prop_assignments, state_list), None)
 
-    def exportAsDotFile(self, filename, starting_states=None):
+    def exportAsDotFile(self, filename, regionMapping, starting_states=None):
         """ Output an explicit-state strategy to a .dot file of name `filename`.
             (For use with GraphViz.) """
 
@@ -640,8 +640,11 @@ class Strategy(object):
                 if isinstance(val, bool):
                     return name if val else "!"+name
                 elif isinstance(val, regions.Region):
-                    val = val.name + " ()" # TODO: parent region
-
+                    # annotate any pXXX region names with their human-friendly name
+                    for rname, subregs in regionMapping.iteritems():
+                        if val.name in subregs:
+                            break
+                    val = val.name + " ("+ rname +")" #parent region
                 return "{} = {}".format(name, val)
 
             while states_to_process:
