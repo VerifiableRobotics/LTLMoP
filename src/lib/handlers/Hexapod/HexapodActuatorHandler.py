@@ -13,7 +13,7 @@ class HexapodActuatorHandler(handlerTemplates.ActuatorHandler):
         """
         Acutator handler for hexapod
         """
-        
+
         # get serial port of hexapod
         try:
             self.hexapodSer = shared_data["hexapodSer"]
@@ -33,9 +33,9 @@ class HexapodActuatorHandler(handlerTemplates.ActuatorHandler):
             self.hexapodSer.write(cmd)
             x = self.hexapodSer.read()
         self.hexapodSer.flush()
-       
+
         time.sleep(0.1)
-    
+
     def standUp(self, actuatorVal, initial=False):
         """
         tells robot to go up
@@ -61,7 +61,7 @@ class HexapodActuatorHandler(handlerTemplates.ActuatorHandler):
     def pincers(self, actuatorVal, initial=False):
         """
         open or close pincers
-        
+
         open of actuatorVal = true
         close if actuatorVal = false
         """
@@ -71,7 +71,7 @@ class HexapodActuatorHandler(handlerTemplates.ActuatorHandler):
             self._sendCommand('h')
         else:
             self._sendCommand('g')
-        
+
     def nod(self, actuatorVal, initial=False):
         """
         nods head
@@ -82,7 +82,7 @@ class HexapodActuatorHandler(handlerTemplates.ActuatorHandler):
             self._sendCommand('i')
         else:
             self._sendCommand('b')
-            
+
     def shake(self, actuatorVal, initial=False):
         """
         shakes head

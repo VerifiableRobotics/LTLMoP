@@ -11,7 +11,7 @@ class HexapodLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler)
         """
         Locomotion handler for Hexapod
         """
-    
+
         # get serial port of hexapod
         try:
             self.hexapodSer = shared_data["hexapodSer"]
@@ -47,9 +47,9 @@ class HexapodLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler)
     def turnClockwise(self):
         """
         tells robot to turn
-        """      
+        """
         self.sendCommand('c')
-        
+
     def turnCounterclockwise(self):
         """
         tells robot to turn

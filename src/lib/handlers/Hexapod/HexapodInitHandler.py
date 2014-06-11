@@ -9,8 +9,6 @@ import serial
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class HexapodInitHandler(handlerTemplates.InitHandler):
-
-    
     def __init__(self, executor, comPort):
         """
         The init handler of Hexapod
@@ -26,7 +24,7 @@ class HexapodInitHandler(handlerTemplates.InitHandler):
         try:
             self.hexapodSer = serial.Serial(port = comPort, baudrate =
                                            self.baud, timeout = self.timeout)
-                                           
+
             # set robot to neutral position
             self.hexapodSer.write("b")
             self.hexapodSer.flush()
@@ -42,7 +40,7 @@ class HexapodInitHandler(handlerTemplates.InitHandler):
     def _stop(self):
         print "(INIT) Shutting down serial port!"
         self.hexapodSer.close()
-       
+
     def getSharedData(self):
         # TODO: Return a dictionary of any objects that will need to be shared with
         # other handlers

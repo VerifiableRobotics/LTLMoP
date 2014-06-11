@@ -5,6 +5,7 @@ HexapodSensorHandler.py - The Hexapod's Sensor Handler
 """
 
 import time
+
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class HexapodSensorHandler(handlerTemplates.SensorHandler):
@@ -12,14 +13,14 @@ class HexapodSensorHandler(handlerTemplates.SensorHandler):
         """
         Sensor handler for hexapod
         """
-        
+
         # get serial port of hexapod
         try:
             self.hexapodSer = shared_data["hexapodSer"]
         except:
             print "(ACTUATOR) ERROR: No connection to  hexapod"
             exit(-1)
-           
+
     def _sendCommand(self, cmd):
         """
         Send locomotion command ``cmd`` to the robot
@@ -36,13 +37,13 @@ class HexapodSensorHandler(handlerTemplates.SensorHandler):
                 return -1
         reading = self.hexapodSer.read(2)                    #read analog value from force sensors
         return reading
-    
+
     def _checkLeft(self):
         """
         check left force sensor
         """
 
-        orientation = False    
+        orientation = False
         while not orientation:
             y = self._sendCommand('k')            #send command to Arduino to make reading from force sensor
             if y == -1:                            #if no reading, continue to try reading
@@ -50,14 +51,14 @@ class HexapodSensorHandler(handlerTemplates.SensorHandler):
             if y[0] == 'l':                        #if char 'l' is retrieved, next byte retrieved is reading from left force sensor
                 orientation = True
                 leftSensor = y[1]
-        
+
         return ord(leftSensor)                    #return integer value of left sensor
-        
+
     def _checkRight(self):
         """
         check right force sensor
         """
-       
+
         orientation = False
         while not orientation:
             y = self._sendCommand('l')            #send command to Arduino to make reading from force sensor
@@ -69,13 +70,12 @@ class HexapodSensorHandler(handlerTemplates.SensorHandler):
 
         return ord(rightSensor)                                #return integer value of right sensor
 
-    
     def isObjectDetect(self, thresh, initial = False):
         """
         Uses the force sensor on the hexapod to detect objects in gripper
-        
+
         thresh (int): The threshold for amount of force (default=50)
-        """  
+        """
         if initial:
             return False
         else:
