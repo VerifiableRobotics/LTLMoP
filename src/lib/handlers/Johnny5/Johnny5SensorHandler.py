@@ -11,7 +11,6 @@ import logging
 import globalConfig
 
 import lib.handlers.handlerTemplates as handlerTemplates
-import lib.handlers.share.Pose._pyvicon as _pyvicon
 
 class Johnny5SensorHandler(handlerTemplates.SensorHandler):
     def __init__(self, executor, shared_data):
@@ -26,35 +25,9 @@ class Johnny5SensorHandler(handlerTemplates.SensorHandler):
             logging.exception("No connection to Johnny 5")
             sys.exit(-1)
 
-        self.pose_handler = executor.hsub.getHandlerInstanceByType(handlerTemplates.PoseHandler)
-
     ###################################
     ### Available sensor functions: ###
     ###################################
-    def findPoint(self, initial=False):
-
-        if initial:
-            print "Connecting to Vicon server..."
-            self.viconServer = _pyvicon.ViconStreamer()
-            self.viconServer.connect("10.0.0.102", 800)
-
-            model_name = "GPSReceiverHelmet-goodaxes:GPSReceiverHelmet01"
-            self.viconServer.selectStreams(["Time"] + ["{} <{}>".format(model_name, s) for s in ("t-X", "t-Y")])
-            self.viconServer.startStreams()
-
-            # Wait for first data to come in
-            while self.viconServer.getData() is None:
-                pass
-        else:
-            (t, x, y) = self.viconServer.getData()
-            (t, x, y) = [t/100, x/1000, y/1000]
-
-            # Find our current configuration
-            pose = self.pose_handler.getPose()
-
-            range = 0.7
-            # Return true if robot is within range of helmet
-            return math.sqrt((pose[0]-x)**2+(pose[1]-y)**2)<range
 
     def itemInHand(self, hand, threshold, initial=False):
         """
