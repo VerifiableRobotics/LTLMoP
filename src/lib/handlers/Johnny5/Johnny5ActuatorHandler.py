@@ -96,7 +96,7 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
 
     def liftArm(self, actuatorVal, arm, initial=False):
         """
-        lift/down Johnny 5 arm using designated arm
+        lift up/put down Johnny 5 arm using designated arm when the actuatorVal is True/False
 
         arm (string): The arm to use, left or right
         """
@@ -120,6 +120,7 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                     logging.error('Cannot recognize arm with value {!r}'.format(arm))
             # put down designated arm
             else:
+                # send out servo commands
                 if arm=='left':
                     # put down left arm
                     self.johnny5Serial.write('#3 P1576 T1000\r')
