@@ -5,6 +5,8 @@ HexapodInitHandler.py - The Hexapod's Init Handler
 """
 
 import serial
+import logging
+import globalConfig
 
 import lib.handlers.handlerTemplates as handlerTemplates
 
@@ -34,11 +36,11 @@ class HexapodInitHandler(handlerTemplates.InitHandler):
             while init_response == '':
                 init_response = self.hexapodSer.read()
         except:
-            print ("(INIT) ERROR: Couldn't connect to hexapod")
+            logging.exception("Couldn't connect to Hexapod")
             exit(-1)
 
     def _stop(self):
-        print "(INIT) Shutting down serial port!"
+        logging.info("Shutting down serial port!")
         self.hexapodSer.close()
 
     def getSharedData(self):

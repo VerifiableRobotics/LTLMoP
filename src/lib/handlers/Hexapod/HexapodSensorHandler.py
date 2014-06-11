@@ -5,6 +5,8 @@ HexapodSensorHandler.py - The Hexapod's Sensor Handler
 """
 
 import time
+import logging
+import globalConfig
 
 import lib.handlers.handlerTemplates as handlerTemplates
 
@@ -18,7 +20,7 @@ class HexapodSensorHandler(handlerTemplates.SensorHandler):
         try:
             self.hexapodSer = shared_data["hexapodSer"]
         except:
-            print "(ACTUATOR) ERROR: No connection to  hexapod"
+            logging.exception("Couldn't connect to Hexapod")
             exit(-1)
 
     def _sendCommand(self, cmd):
@@ -33,7 +35,7 @@ class HexapodSensorHandler(handlerTemplates.SensorHandler):
             byte0 = byte1                                        #if true, then read in analog value from force sensor
             byte1 = self.hexapodSer.read()
             if not byte1:                                        #if false, then sending has failed and keep looping
-                print 'failed'
+                logging.debug('failed')
                 return -1
         reading = self.hexapodSer.read(2)                    #read analog value from force sensors
         return reading

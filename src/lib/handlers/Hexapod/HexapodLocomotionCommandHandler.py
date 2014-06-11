@@ -4,6 +4,9 @@ HexapodLocomotionCommandHandler.py - The Hexapod's Locomotion Command Handler
 ================================================================================
 """
 
+import logging
+import globalConfig
+
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class HexapodLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler):
@@ -16,7 +19,7 @@ class HexapodLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler)
         try:
             self.hexapodSer = shared_data["hexapodSer"]
         except:
-            print "(LOCO) ERROR: No connection to  hexapod"
+            logging.exception("Couldn't connect to Hexapod")
             exit(-1)
 
     def sendCommand(self, cmd):
@@ -28,7 +31,7 @@ class HexapodLocomotionCommandHandler(handlerTemplates.LocomotionCommandHandler)
 
         x = self.hexapodSer.read()
         while x != 'q':
-            print "received invalid ack: ", repr(x)
+            logging.debug("received invalid ack: {}".format(x))
             self.hexapodSer.write(cmd)
             x = self.hexapodSer.read()
 

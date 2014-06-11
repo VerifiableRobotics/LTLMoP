@@ -5,6 +5,8 @@ HexapodActuatorHandler.py - The Hexapod's Actuator Handler
 """
 
 import time
+import logging
+import globalConfig
 
 import lib.handlers.handlerTemplates as handlerTemplates
 
@@ -18,7 +20,7 @@ class HexapodActuatorHandler(handlerTemplates.ActuatorHandler):
         try:
             self.hexapodSer = shared_data["hexapodSer"]
         except:
-            print "(ACTUATOR) ERROR: No connection to  hexapod"
+            logging.exception("Couldn't connect to Hexapod")
             exit(-1)
 
     def _sendCommand(self, cmd):
@@ -29,7 +31,7 @@ class HexapodActuatorHandler(handlerTemplates.ActuatorHandler):
         self.hexapodSer.write(cmd)
         x = self.hexapodSer.read()
         while x != 'q':
-            print "received invalid ack: ", repr(x)
+            logging.debug("received invalid ack: {}".format(x))
             self.hexapodSer.write(cmd)
             x = self.hexapodSer.read()
         self.hexapodSer.flush()
