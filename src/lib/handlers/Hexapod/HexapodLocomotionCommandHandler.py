@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: cp1252 -*-
 """
 ================================================================================
 HexapodLocomotionCommandHandler.py - The Hexapod's Locomotion Command Handler
