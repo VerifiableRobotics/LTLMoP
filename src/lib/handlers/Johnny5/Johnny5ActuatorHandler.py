@@ -117,7 +117,7 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                     self.johnny5Serial.write('#10 P500 T1000\r')
                     self.johnny5Serial.write('#11 P2000 T1000\r')
                 else:
-                    logging.error('Cannot recognize arm with value {!r}'.format(arm))
+                    raise ValueError('Cannot recognize arm with value {!r}'.format(arm))
             # put down designated arm
             else:
                 # send out servo commands
@@ -132,7 +132,7 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                     self.johnny5Serial.write('#10 P1388 T1000\r')
                     self.johnny5Serial.write('#11 P1465 T1000\r')
                 else:
-                    logging.error('Cannot recognize arm with value {!r}'.format(arm))
+                    raise ValueError('Cannot recognize arm with value {!r}'.format(arm))
 
             # Pause to let the action complete, will block the locomotion cmd
             # TODO: make this non-blocking
@@ -158,7 +158,7 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                     # servo value when right hand is fully closed
                     self.johnny5Serial.write('#12 P1300 T3000\r')
                 else:
-                    logging.error('Cannot recognize hand with value {!r}'.format(hand))
+                    raise ValueError('Cannot recognize hand with value {!r}'.format(hand))
 
             # open up designated hands
             else:
@@ -169,7 +169,7 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                     # servo value when right hand is fully opened
                     self.johnny5Serial.write('#12 P1800 T3000\r')
                 else:
-                    logging.error('Cannot recognize hand with value {!r}'.format(hand))
+                    raise ValueError('Cannot recognize hand with value {!r}'.format(hand))
 
             # Pause to let the action complete, will block the locomotion cmd
             # TODO: make this non-blocking
