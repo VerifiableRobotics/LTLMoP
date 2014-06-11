@@ -59,6 +59,8 @@ class Johnny5SensorHandler(handlerTemplates.SensorHandler):
             left = sensorData[2]+sensorData[3]
             left = int(left,16)
 
+            if hand not in ['left', 'right']:
+                raise ValueError('Cannot recognize hand with value {!r}'.format(hand))
             if hand=='left' and left>=threshold:
                 return True
             if hand=='right' and right>=threshold:
