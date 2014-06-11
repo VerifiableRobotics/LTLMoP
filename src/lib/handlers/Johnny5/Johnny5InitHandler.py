@@ -28,6 +28,7 @@ import sys
 import os
 import serial
 import logging
+import globalConfig
 
 import lib.handlers.handlerTemplates as handlerTemplates
 

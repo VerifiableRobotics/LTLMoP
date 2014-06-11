@@ -7,6 +7,8 @@ Johnny5SensorHandler.py - Johnny 5 Robot Sensor Handler
 
 import time
 import math
+import logging
+import globalConfig
 
 import lib.handlers.handlerTemplates as handlerTemplates
 import lib.handlers.share.Pose._pyvicon as _pyvicon
