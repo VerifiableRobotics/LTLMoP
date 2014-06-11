@@ -33,10 +33,6 @@ import globalConfig
 import lib.handlers.handlerTemplates as handlerTemplates
 
 class Johnny5InitHandler(handlerTemplates.InitHandler):
-    #Defaults
-    baud = 115200
-    timeout = 1         #in seconds
-
     def __init__(self, executor, comPort):
         """
         The initialization for Johnny 5
@@ -44,6 +40,10 @@ class Johnny5InitHandler(handlerTemplates.InitHandler):
         comPort (string): The comport to connect to (default='/dev/tty.usbserial-A600eIiI')
         """
         self.johnny5Serial = None   # serial port to Johnny 5
+
+        #Defaults
+        self.baud = 115200
+        self.timeout = 1         #in seconds
 
         try:
             self.johnny5Serial = serial.Serial(port = comPort, baudrate =
