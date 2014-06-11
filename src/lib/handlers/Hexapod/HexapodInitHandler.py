@@ -44,8 +44,6 @@ class HexapodInitHandler(handlerTemplates.InitHandler):
         self.hexapodSer.close()
 
     def getSharedData(self):
-        # TODO: Return a dictionary of any objects that will need to be shared with
-        # other handlers
         return {"hexapodSer":self.hexapodSer}
 
 if __name__ == "__main__":
