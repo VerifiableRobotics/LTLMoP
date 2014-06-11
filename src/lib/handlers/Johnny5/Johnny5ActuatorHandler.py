@@ -16,33 +16,33 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
         """
         Johnny 5 Robot Actuator Handler
         """
-        
+
         # find johnny5 serial port
         try:
             self.johnny5Serial = shared_data["Johnny5Serial"]
         except:
             logging.exception("No connection to Johnny 5")
             sys.exit(-1)
-            
+
         # load config info
         self.config = shared_data['DefaultConfig']
-        
-    
+
+
     def _runSequencer(self, FileName):
         """
         .csv file is exported form Sequencer project
         Useful data start from second row
         Column 3:18 shows corresponding servo degree(servo #0-15)
         Column 35:50 shows corresponding servo time(servo #0-15)
-        
+
         Generate servo commands in format:
         #'Servo Num' + P'Servo Val' + T'Time in ms' + \r
-        
+
         Between each step, sleep for maximum servo Time in that step sequence
         """
         # save all Sequencer .csv files in foler SequencerFiles under Johnny5 folder
         csvFileName = os.path.join(os.path.dirname(__file__),'SequencerFiles',FileName)
-        
+
         move = [data.strip('\r\n') for data in open(csvFileName)]
         # Convert .csv file into 2D array "move"
         for i in range(len(move)):
@@ -93,11 +93,11 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                 self._runSequencer('HighFive.csv')
             else:
                 self._runSequencer('StandUp.csv')
-                    
+
     def liftArm(self, actuatorVal, arm, initial=False):
         """
         lift/down Johnny 5 arm using designated arm
-        
+
         arm (string): The arm to use, left or right
         """
         if initial:
@@ -132,16 +132,16 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                     self.johnny5Serial.write('#11 P1465 T1000\r')
                 else:
                     logging.error('Cannot recognize arm with value {!r}'.format(arm))
-            
+
             # Pause to let the action complete, will block the locomotion cmd
             # TODO: make this non-blocking
-            time.sleep(1)       
+            time.sleep(1)
 
 
     def closeHand(self, actuatorVal, hand, initial=False):
         """
         Close Johnny 5 hand using designated hand, open the hand if actuatorVal is False
-        
+
         hand (string): The hand to use, left or right
         """
         if initial:
@@ -158,7 +158,7 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                     self.johnny5Serial.write('#12 P1300 T3000\r')
                 else:
                     logging.error('Cannot recognize hand with value {!r}'.format(hand))
-                 
+
             # open up designated hands
             else:
                 if hand=='left':
@@ -169,15 +169,8 @@ class Johnny5ActuatorHandler(handlerTemplates.ActuatorHandler):
                     self.johnny5Serial.write('#12 P1800 T3000\r')
                 else:
                     logging.error('Cannot recognize hand with value {!r}'.format(hand))
-                    
+
             # Pause to let the action complete, will block the locomotion cmd
             # TODO: make this non-blocking
             time.sleep(3)
-
-
-
-
-
-
-
 
