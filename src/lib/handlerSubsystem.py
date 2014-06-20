@@ -244,6 +244,7 @@ class HandlerSubsystem:
     def setExecutingConfig(self, config_object_name):
         """
         set the current executing config to the experiment config with the given name
+        if the given config cannot be found, try to load it first
         """
         self.executing_config = None
         for config_object in self.configs:
@@ -251,7 +252,12 @@ class HandlerSubsystem:
                 self.executing_config = config_object
 
         if self.executing_config is None:
-            logging.error("Cannot find the config with name {}".format(config_object_name))
+            config, success = self.loadConfigFile(config_object_name)
+            if success:
+                self.configs.append(config)
+                self.setExecutingConfig(config_object_name)
+            else:
+                logging.error("Cannot find the config with name {}".format(config_object_name))
 
     def loadAllConfigFiles(self):
         """

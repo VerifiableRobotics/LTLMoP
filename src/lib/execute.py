@@ -223,8 +223,6 @@ class LTLMoPExecutor(ExecutorStrategyExtensions,ExecutorResynthesisExtensions, o
             sys.exit(2)
 
         logging.info("Setting current executing config...")
-        config, success = self.hsub.loadConfigFile(self.proj.current_config)
-        if success: self.hsub.configs.append(config)
         self.hsub.setExecutingConfig(self.proj.current_config)
 
         # make sure the coord transformation function is ready
