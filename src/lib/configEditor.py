@@ -350,14 +350,17 @@ class handlerConfigDialog(wx.Dialog):
         robot = deepcopy(self.robot)
 
         cfg.name = 'calibrate'
-        cfg.fileName = os.path.join(proj_copy.project_root, 'configs', 'calibrate.config')
+        cfg.file_name = os.path.join(proj_copy.project_root, 'configs', 'calibrate.config')
         cfg.complete = True
         robot.name = "calibrate"
         robot.handlers[ht.PoseHandler] = self.handler
 
         # If the inithandler takes an init_region argument (i.e. playerstage, ODE), set it to the origin
-        p = robot.handlers[ht.InitHandler].getMethodByName("__init__").getParaByName("init_region")
-        if p is not None:
+        try:
+            p = robot.handlers[ht.InitHandler].getMethodByName("__init__").getParaByName("init_region")
+        except ValueError:
+            pass
+        else:
             p.setValue("__origin__")
 
         cfg.main_robot = robot.name
@@ -365,10 +368,10 @@ class handlerConfigDialog(wx.Dialog):
         proj_copy.current_config = cfg.name
 
         proj_copy.writeSpecFile(proj_copy.getFilenamePrefix()+".spec_calibtmp")
-        cfg.saveConfigFile()
+        cfg.saveConfig()
 
         print "Running calibration tool..."
-        proc = subprocess.Popen(["python", "-u", os.path.join("lib","calibrate.py"), proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
+        proc = subprocess.Popen(["python", "-u", "-m", "lib.calibrate", proj_copy.getFilenamePrefix() + ".spec_calibtmp", str(CALIB_PORT)])
 
         # Listen on socket for return value
         host = 'localhost'
