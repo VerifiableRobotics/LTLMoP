@@ -658,7 +658,7 @@ class ExperimentConfig(object):
     """
     A config file object!
     """
-    def __init__(self, name="", robots = None, prop_mapping = {}, initial_truths = None , main_robot = "", region_tags = {}, file_name = ""):
+    def __init__(self, name="", robots = None, prop_mapping = None, initial_truths = None , main_robot = "", region_tags = {}, file_name = ""):
         self.name = name                    # name of the config file
         self.robots = robots                # list of robot object used in this config file
         self.prop_mapping = prop_mapping    # dictionary for storing the propositions mapping
@@ -672,6 +672,9 @@ class ExperimentConfig(object):
 
         if self.initial_truths is None:
             self.initial_truths = []
+
+        if self.prop_mapping is None:
+            self.prop_mapping = {}
 
     def __repr__(self):
         """
