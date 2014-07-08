@@ -339,8 +339,8 @@ class State(object):
         # Make sure that the value makes sense
         domain = self.context.getDomainByName(prop_name)
         if domain is None:
-            if not isinstance(prop_value, bool):
-                raise ValueError("Invalid value of {!r} for proposition {!r}: can only assign boolean values to non-Domain propositions".format(prop_value, prop_name))
+            if not (prop_value is None or isinstance(prop_value, bool)):
+                raise ValueError("Invalid value of {!r} for proposition {!r}: can only assign boolean or None values to non-Domain propositions".format(prop_value, prop_name))
         else:
             if prop_value not in domain.value_mapping:
                 raise ValueError("Invalid value of {!r} for domain {!r}.  Acceptable values: {!r}".format(prop_value, prop_name, domain.value_mapping))
