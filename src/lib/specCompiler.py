@@ -16,6 +16,7 @@ import parseLP
 from createJTLVinput import createLTLfile, createSMVfile, createTopologyFragment, createInitialRegionFragment
 from parseEnglishToLTL import bitEncoding, replaceRegionName, createStayFormula
 import fsa
+import strategy
 from copy import deepcopy
 from cores.coreUtils import *
 import handlerSubsystem
@@ -649,20 +650,22 @@ class SpecCompiler(object):
         proj_copy.actuator_handler = None
         proj_copy.h_instance = None
 
-        num_bits = int(numpy.ceil(numpy.log2(len(self.parser.proj.rfi.regions))))  # Number of bits necessary to encode all regions
-        region_props = ["bit" + str(n) for n in xrange(num_bits)]
+        if self.proj.compile_options["decompose"]:
+            regions = self.parser.proj.rfi.regions
+        else:
+            regions = self.proj.rfi.regions
 
-        aut = fsa.Automaton(proj_copy)
-        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_actuators + self.proj.all_customs + region_props, self.proj.enabled_sensors, [])
-
+        region_domain = strategy.Domain("region", regions, strategy.Domain.B0_IS_MSB)
+        strat = strategy.createStrategyFromFile(self.proj.getStrategyFilename(),
+                                                self.proj.enabled_actuators + self.proj.all_customs + [region_domain],
+                                                self.proj.enabled_sensors)
 
         #find deadlocked states in the automaton (states with no out-transitions)
-        deadStates = [s for s in aut.states if not s.transitions]
+        deadStates = [s for s in strat.states if not strat.findTransitionableStates({}, from_state = s)]
         #find states that can be forced by the environment into the deadlocked set
-        forceDeadStates = [(s, e) for s in aut.states for e in deadStates if e in s.transitions]
+        forceDeadStates = [(s, e) for s in strat.states for e in deadStates if e in strat.findTransitionableStates({}, from_state = s)]
         #LTL representation of these states and the deadlock-causing environment move in the next time step
-        forceDeadlockLTL = map(lambda (s,e): " & ".join([stateToLTL(s), stateToLTL(e, 1, 1, True)]), forceDeadStates)
-
+        forceDeadlockLTL = map(lambda (s,e): " & ".join([s.getLTLRepresentation(), e.getLTLRepresentation(use_next=True,  swap_players=True)]), forceDeadStates)
 
         #find livelocked goal and corresponding one-step propositional formula (by stripping LTL operators)
         desiredGoal = [h_item[2] for h_item in to_highlight if h_item[1] == "goals"]
@@ -676,7 +679,7 @@ class SpecCompiler(object):
 
 
         def preventsDesiredGoal(s):
-                rank_str = s.transitions[0].rank
+                rank_str = strat.findTransitionableStates({}, from_state = s)[0].goal_id #originally rank
                 m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
                 if m is None:
                     logging.error("Error parsing jx in automaton.  Are you sure the spec is unrealizable?")
@@ -686,16 +689,14 @@ class SpecCompiler(object):
 
 
         #find livelocked states in the automaton (states with desired sys rank)
-        livelockedStates = filter(preventsDesiredGoal, [s for s in aut.states if s.transitions])
+        livelockedStates = filter(preventsDesiredGoal, [s for s in strat.states if strat.findTransitionableStates({}, from_state = s)])
         #find states that can be forced by the environment into the livelocked set
-        forceLivelockedStates = [(fro, to) for fro in aut.states for to in livelockedStates if to in s.transitions]
+        forceLivelockedStates = [(fro, to) for fro in strat.states for to in livelockedStates if to in strat.findTransitionableStates({}, from_state = s)]
 
         #LTL representation of these states and the livelocked goal
-        #forceLivelockLTL = map(lambda s: " & ".join([stateToLTL(s), desiredGoalLTL]), livelockedStates) ###Don't actually need to add goal -- will be added in 'conjuncts'
-        forceLivelockLTL = map(lambda (s1,s2): " & ".join([stateToLTL(s1, 1, 1), stateToLTL(s2, 1, 0, True)]), forceLivelockedStates)
-        #forceLivelockLTL = map(stateToLTL, livelockedStates)
+        forceLivelockLTL = map(lambda (s1,s2): " & ".join([s1.getLTLRepresentation(use_next=True), s2.getLTLRepresentation(use_next=True, include_inputs=False, swap_players=True)]), forceLivelockedStates)
 
-        numStates = len(aut.states)
+        numStates = len(strat.states)
         numRegions = len(self.parser.proj.rfi.regions)
 
         if forceDeadlockLTL:
