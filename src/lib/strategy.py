@@ -413,6 +413,15 @@ class State(object):
     def __repr__(self):
         return "<State with assignment: inputs = {}, outputs = {} (goal_id = {})>".format(self.getInputs(), self.getOutputs(), self.goal_id)
 
+    def __deepcopy__(self, memo):
+        """ Implement a 'medium' copy so that we make a true copy of the assignment dictionary,
+            but don't accidentally make copies of proposition values (e.g. region objects). """
+
+        new_state = copy.copy(self)
+        new_state.assignment = copy.copy(self.assignment)
+
+        return new_state
+
 class StateCollection(list):
     """
     StateCollection is a simple extension of list, to allow for keeping track of

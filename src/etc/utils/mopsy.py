@@ -30,9 +30,6 @@ from specCompiler import SpecCompiler
 # end wxGlade
 
 # TODO: don't use separate *_region variables, just use states
-# TODO: initial log seems off
-# TODO: there is lag in log (state off by one or something)
-# TODO: map updates wrong time?
 # TODO: fix len(inputs)==0 thing
 # TODO: togling actuator too fast puts cores in weird state
 
@@ -338,7 +335,7 @@ class MopsyFrame(wx.Frame):
         # TODO: support SLURP parser
 
         ltl_current = self.env_strat.current_state.getLTLRepresentation(swap_players=True).strip()
-        next_state = copy.copy(self.env_strat.findTransitionableStates({})[0])
+        next_state = copy.deepcopy(self.env_strat.findTransitionableStates({})[0])
         next_state.setPropValues(self.actuatorStates)
         next_state.setPropValue("region", self.dest_region)
         ltl_next = next_state.getLTLRepresentation(swap_players=True, use_next=True).strip()
