@@ -17,7 +17,6 @@ import collections
 import copy
 import globalConfig
 
-# TODO: make sure this works with mopsy
 # TODO: generalize notion of sets of states in a way transparent to both BDD and
 # FSA, so we don't end up unnecessarily creating and iterating over state
 # objects for things that can be done with a single BDD op
@@ -358,11 +357,12 @@ class State(object):
         for prop_name, prop_value in prop_assignments.iteritems():
             self.setPropValue(prop_name, prop_value)
 
-    def getLTLRepresentation(self, mark_players=True, use_next=False, include_inputs=True):
+    def getLTLRepresentation(self, mark_players=True, use_next=False, include_inputs=True, swap_players=False):
         """ Returns an LTL formula representing this state.
 
             If `mark_players` is True, input propositions are prepended with
-            "e.", and output propositions are prepended with "s.".
+            "e.", and output propositions are prepended with "s.". (If `swap_players`
+            is True, these labels will be reversed [this feature is used by Mopsy])
 
             If `use_next` is True, all propositions will be modified by a single
             "next()" operator.  `include_env`, which defaults to True,
@@ -371,17 +371,28 @@ class State(object):
 
         # Make a helpful little closure for adding operators to bare props
         def decorate_prop(prop, polarity):
+            #### TEMPORARY HACK: REMOVE ME AFTER OTHER COMPONENTS ARE UPDATED!!!
+            # Rewrite proposition names to make the old bitvector system work
+            # with the new one
+            prop = re.sub(r'^([se]\.)region_b(\d+)$', r'\1bit\2', prop)
+            #################################################################
+
             if use_next:
                 prop = "next({})".format(prop)
             if polarity is False:
                 prop = "!"+prop
             return prop
 
-        sys_state = " & ".join((decorate_prop("s."+p, v) for p, v in \
+        if swap_players:
+            env_label, sys_label = "s.", "e."
+        else:
+            env_label, sys_label = "e.", "s."
+
+        sys_state = " & ".join((decorate_prop(sys_label+p, v) for p, v in \
                                 self.getOutputs(expand_domains=True).iteritems()))
 
         if include_inputs:
-            env_state = " & ".join((decorate_prop("e."+p, v) for p, v in \
+            env_state = " & ".join((decorate_prop(env_label+p, v) for p, v in \
                                     self.getInputs(expand_domains=True).iteritems()))
             return " & ".join([env_state, sys_state])
         else:
@@ -401,6 +412,15 @@ class State(object):
 
     def __repr__(self):
         return "<State with assignment: inputs = {}, outputs = {} (goal_id = {})>".format(self.getInputs(), self.getOutputs(), self.goal_id)
+
+    def __deepcopy__(self, memo):
+        """ Implement a 'medium' copy so that we make a true copy of the assignment dictionary,
+            but don't accidentally make copies of proposition values (e.g. region objects). """
+
+        new_state = copy.copy(self)
+        new_state.assignment = copy.copy(self.assignment)
+
+        return new_state
 
 class StateCollection(list):
     """
@@ -434,8 +454,8 @@ class StateCollection(list):
     >>> assert s2.satisfies(test_assignment)
 
     LTL is available too!
-    >>> s2.getLTLRepresentation()
-    '!e.nearby_animal_b1 & !e.nearby_animal_b0 & e.nearby_animal_b2 & e.low_battery & s.region_b0 & !s.region_b1 & !s.give_up & !s.experiment & s.hypothesize'
+    #>>> s2.getLTLRepresentation()
+    #'!e.nearby_animal_b1 & !e.nearby_animal_b0 & e.nearby_animal_b2 & e.low_battery & s.region_b0 & !s.region_b1 & !s.give_up & !s.experiment & s.hypothesize'
     """
 
     def __init__(self, *args, **kwds):
