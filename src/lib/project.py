@@ -10,24 +10,11 @@
 
 # TODO: Document better
 
-def get_ltlmop_root():
-    # Climb the tree to find out where we are
-    p = os.path.abspath(__file__)
-    t = ""
-    while t != "src":
-        (p, t) = os.path.split(p)
-        if p == "" or p == "/":
-            print "I have no idea where I am; this is ridiculous"
-            return None
-
-    return os.path.join(p, "src")
-
 import os, sys
 import fileMethods, regions
 from numpy import *
-import handlerSubsystem
-import inspect
 import logging
+import globalConfig
 
 class Project:
     """
@@ -48,7 +35,7 @@ class Project:
         self.enabled_actuators = []
         self.all_customs = []
         self.internal_props = []
-        self.currentConfig = None
+        self.current_config = ""
         self.shared_data = {}  # This is for storing things like server connection objects, etc.
 
         self.h_instance = {'init':{},'pose':None,'locomotionCommand':None,'motionControl':None,'drive':None,'sensor':{},'actuator':{}}
@@ -56,20 +43,13 @@ class Project:
         # Compilation options (with defaults)
         self.compile_options = {"convexify": True,  # Decompose workspace into convex regions
                                 "fastslow": False,  # Enable "fast-slow" synthesis algorithm
+                                "symbolic": False,  # Use BDDs instead of explicit-state strategies
                                 "decompose": True,  # Create regions for free space and region overlaps (required for Locative Preposition support)
                                 "use_region_bit_encoding": True, # Use a vector of "bitX" propositions to represent regions, for efficiency
-                                "parser": "structured"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), structured English via NTLK ("nltk"), or LTL ("ltl")
+                                "synthesizer": "jtlv", # Name of synthesizer to use ("jtlv" or "slugs")
+                                "parser": "structured"}  # Spec parser: SLURP ("slurp"), structured English ("structured"), or LTL ("ltl")
 
-        # Climb the tree to find out where we are
-        p = os.path.abspath(__file__)
-        t = ""
-        while t != "src":
-            (p, t) = os.path.split(p)
-            if p == "" or p == "/":
-                print "I have no idea where I am; this is ridiculous"
-                return None
-
-        self.ltlmop_root = get_ltlmop_root()
+        self.ltlmop_root = globalConfig.get_ltlmop_root()
 
     def setSilent(self, silent):
         self.silent = silent
@@ -130,32 +110,6 @@ class Project:
 
         return rfi
 
-    def getCoordMaps(self):
-        """
-        Returns forward (map->lab) and reverse (lab->map) coordinate mapping functions, in that order
-        """
-
-        if self.currentConfig is None:
-            return (None, None)
-
-        r = self.currentConfig.getRobotByName(self.currentConfig.main_robot)
-        if r.calibrationMatrix is None:
-            logging.warning("Main robot has no calibration data.  Using identity matrix.")
-            T = eye(3)
-        else:
-            T = r.calibrationMatrix
-
-        # Check for singular matrix
-        if abs(linalg.det(T)) < finfo(float).eps:
-            logging.warning("Singular calibration matrix.  Ignoring, and using identity matrix.")
-            T = eye(3)
-
-        #### Create the coordmap functions
-        coordmap_map2lab = lambda pt: (linalg.inv(T) * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
-        coordmap_lab2map = lambda pt: (T * mat([pt[0], pt[1], 1]).T).T.tolist()[0][0:2]
-
-        return coordmap_map2lab, coordmap_lab2map
-
     def loadSpecFile(self, spec_file):
         # Figure out where we should be looking for files, based on the spec file name & location
         self.project_root = os.path.abspath(os.path.dirname(spec_file))
@@ -181,7 +135,7 @@ class Project:
                     continue
 
                 k,v = l.split(":", 1)
-                if k.strip().lower() == "parser":
+                if k.strip().lower() in ("parser", "synthesizer"):
                     self.compile_options[k.strip().lower()] = v.strip().lower()
                 else:
                     # convert to boolean if not a parser type
@@ -210,11 +164,11 @@ class Project:
                             "Actions": [p + ", " + str(int(p in self.enabled_actuators)) for p in self.all_actuators],
                             "Customs": self.all_customs}
 
-        if self.currentConfig is not None:
-            data['SETTINGS']['CurrentConfigName'] = self.currentConfig.name
+        if self.current_config is not "":
+            data['SETTINGS']['CurrentConfigName'] = self.current_config
 
         data['SETTINGS']['CompileOptions'] = "\n".join(["%s: %s" % (k, str(v)) for k,v in self.compile_options.iteritems()])
-    
+
         if self.rfi is not None:
             # Save the path to the region file as relative to the spec file
             # FIXME: relpath has case sensitivity problems on OS X
@@ -231,28 +185,6 @@ class Project:
 
         fileMethods.writeToFile(filename, data, comments)
 
-    def loadConfig(self, name=None):
-        """
-        Load the config object with name ``name`` (case-insensitive).  If no name is specified, load the one defined as currently selected.
-        """
-
-        self.hsub = handlerSubsystem.HandlerSubsystem(self)
-        self.hsub.loadAllConfigFiles()
-
-        if name is None:
-            try:
-                name = self.spec_data['SETTINGS']['CurrentConfigName'][0]
-            except (KeyError, IndexError):
-                logging.warning("No experiment configuration defined")
-                return None
-
-        for c in self.hsub.configs:
-            if c.name.lower() == name.lower():
-                return c
-
-        logging.warning("Default experiment configuration of name '%s' could not be found in configs/ directory." % name)
-
-        return None
 
     def loadProject(self, spec_file):
         """
@@ -265,10 +197,13 @@ class Project:
         if self.spec_data is None:
             return False
 
-        self.currentConfig = self.loadConfig()
+        try:
+            self.current_config = self.spec_data['SETTINGS']['CurrentConfigName'][0]
+        except (KeyError, IndexError):
+            logging.warning("No experiment configuration defined")
+
         self.regionMapping = self.loadRegionMapping()
         self.rfi = self.loadRegionFile()
-        self.coordmap_map2lab, self.coordmap_lab2map = self.getCoordMaps()
         self.determineEnabledPropositions()
 
         return True
@@ -307,42 +242,8 @@ class Project:
         """
         return os.path.join(self.project_root, self.project_basename)
 
-    def importHandlers(self, all_handler_types=None):
-        """
-        Figure out which handlers we are going to use, based on the different configurations file settings
-        Only one motion/pose/drive/locomotion handler per experiment
-        Multiple init/sensor/actuator handlers per experiment, one for each robot (if any)
-        Load in specified handlers.  If no list is given, *all* handlers will be loaded.
-        Note that the order of loading is important, due to inter-handler dependencies.
-        """
+    def getStrategyFilename(self):
+        """ Returns the full path of the file that should contain the strategy
+            for this specification. """
 
-        if all_handler_types is None:
-            all_handler_types = ['init','pose','locomotionCommand','drive','motionControl','sensor','actuator']
-
-        if self.currentConfig is None:
-            logging.error("Could not import handlers because no simulation configuration is defined.")
-            return
-
-        self.hsub.importHandlers(self.currentConfig, all_handler_types)
-
-        logging.info("Initializing sensor/actuator methods...")
-
-        # initialize all sensor and actuators
-        for prop,codes in self.sensor_handler['initializing_handler'].iteritems():
-            if prop in self.enabled_sensors:
-                for code in codes:
-                    eval(code, {'self':self,'initial':True})
-
-        # Figure out our initially true outputs
-        init_outputs = []
-        for prop in self.currentConfig.initial_truths:
-            if prop not in self.enabled_sensors:
-                init_outputs.append(prop)
-
-        for prop,codes in self.actuator_handler['initializing_handler'].iteritems():
-            if prop in self.enabled_actuators:
-                new_val = prop in init_outputs
-                for code in codes:
-                    eval(code, {'self':self,'initial':True,'new_val':new_val})
-
-        logging.debug("(POSE) Initial pose: " + str(self.h_instance['pose'].getPose()))
+        return self.getFilenamePrefix() + ('.bdd' if self.compile_options["symbolic"] else '.aut')

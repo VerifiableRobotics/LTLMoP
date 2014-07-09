@@ -18,6 +18,11 @@ from parseEnglishToLTL import bitEncoding, replaceRegionName, createStayFormula
 import fsa
 from copy import deepcopy
 from cores.coreUtils import *
+import handlerSubsystem
+
+from asyncProcesses import AsynchronousProcessThread
+
+import strategy
 
 # Hack needed to ensure there's only one
 _SLURP_SPEC_GENERATOR = None
@@ -26,6 +31,7 @@ _SLURP_SPEC_GENERATOR = None
 class SpecCompiler(object):
     def __init__(self, spec_filename=None):
         self.proj = project.Project()
+        self.synthesis_subprocess = None
 
         if spec_filename is not None:
             self.loadSpec(spec_filename)
@@ -40,7 +46,7 @@ class SpecCompiler(object):
         if self.proj.rfi is None:
             logging.warning("Please define regions before compiling.")
             return
-    
+
         # Remove comments
         self.specText = re.sub(r"#.*$", "", self.proj.specText, flags=re.MULTILINE)
 
@@ -51,7 +57,7 @@ class SpecCompiler(object):
     def loadSimpleSpec(self,text="", regionList=[], sensors=[], actuators=[], customs=[], adj=[], outputfile=""):
         """
         Load a simple spec given by the arguments without reading from a spec file
-        
+
         For Slurp
 
         region, sensors, actuators, customs are lists of strings representing props
@@ -95,7 +101,7 @@ class SpecCompiler(object):
                     del self.parser.proj.rfi.regions[self.parser.proj.rfi.indexOfRegionWithName(sub_r)]
 
                     # Remove decomposed region from any overlapping mappings
-                    for k,v in self.parser.proj.regionMapping.iteritems(): 
+                    for k,v in self.parser.proj.regionMapping.iteritems():
                         if k == r.name: continue
                         if sub_r in v:
                             v.remove(sub_r)
@@ -104,7 +110,7 @@ class SpecCompiler(object):
                 del self.parser.proj.regionMapping[r.name]
 
         #self.proj.rfi.regions = filter(lambda r: not (r.isObstacle or r.name == "boundary"), self.proj.rfi.regions)
-                    
+
         # save the regions into new region file
         filename = self.proj.getFilenamePrefix() + '_decomposed.regions'
 
@@ -136,7 +142,7 @@ class SpecCompiler(object):
                 robotPropList.extend([r.name for r in self.proj.rfi.regions])
 
         self.propList = sensorList + robotPropList
-        
+
         createSMVfile(self.proj.getFilenamePrefix(), sensorList, robotPropList)
 
     def _writeLTLFile(self):
@@ -147,7 +153,7 @@ class SpecCompiler(object):
         regionList = [r.name for r in self.proj.rfi.regions]
         sensorList = deepcopy(self.proj.enabled_sensors)
         robotPropList = self.proj.enabled_actuators + self.proj.all_customs
-        
+
         text = self.proj.specText
 
         response = None
@@ -156,14 +162,19 @@ class SpecCompiler(object):
         # TODO: rename decomposition object to something other than 'parser'
         if self.proj.compile_options["parser"] == "slurp":
             # default to no region tags if no simconfig is defined, so we can compile without
-            if self.proj.currentConfig is None:
+            if self.proj.current_config == "":
                 region_tags = {}
             else:
-                region_tags = self.proj.currentConfig.region_tags
- 
+                self.hsub = handlerSubsystem.HandlerSubsystem(None, self.proj.project_root)
+                config, success = self.hsub.loadConfigFile(self.proj.current_config)
+                if success: self.hsub.configs.append(config)
+                self.hsub.setExecutingConfig(self.proj.current_config)
+
+                region_tags = self.hsub.executing_config.region_tags
+
             # Hack: We need to make sure there's only one of these
             global _SLURP_SPEC_GENERATOR
-            
+
             # Make a new specgenerator and have it process the text
             if not _SLURP_SPEC_GENERATOR:
                 # Add SLURP to path for import
@@ -171,16 +182,16 @@ class SpecCompiler(object):
                 sys.path.append(os.path.join(p, "..", "etc", "SLURP"))
                 from ltlbroom.specgeneration import SpecGenerator
                 _SLURP_SPEC_GENERATOR = SpecGenerator()
-            
+
             # Filter out regions it shouldn't know about
-            filtered_regions = [region.name for region in self.proj.rfi.regions 
+            filtered_regions = [region.name for region in self.proj.rfi.regions
                                 if not (region.isObstacle or region.name.lower() == "boundary")]
             LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, results, responses, traceback = \
                 _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList, region_tags)
 
             oldspec_env = LTLspec_env
             oldspec_sys = LTLspec_sys
- 
+
             for ln, result in enumerate(results):
                 if not result:
                     logging.warning("Could not parse the sentence in line {0}".format(ln))
@@ -188,18 +199,18 @@ class SpecCompiler(object):
             # Abort compilation if there were any errors
             if not all(results):
                 return None, None, responses
-        
+
             # Add in the sensors so they go into the SMV and spec files
             for s in internal_sensors:
                 if s not in sensorList:
                     sensorList.append(s)
                     self.proj.all_sensors.append(s)
-                    self.proj.enabled_sensors.append(s)                    
+                    self.proj.enabled_sensors.append(s)
 
             # Conjoin all the spec chunks
             LTLspec_env = '\t\t' + ' & \n\t\t'.join(LTLspec_env)
             LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
-            
+
             if self.proj.compile_options["decompose"]:
                 # substitute decomposed region names
                 for r in self.proj.rfi.regions:
@@ -233,7 +244,7 @@ class SpecCompiler(object):
             LTLspec_sys = '\t\t' + ' & \n\t\t'.join(LTLspec_sys)
 
             if self.proj.compile_options["decompose"]:
-                # substitute decomposed region 
+                # substitute decomposed region
                 for r in self.proj.rfi.regions:
                     if not (r.isObstacle or r.name.lower() == "boundary"):
                         LTLspec_env = re.sub('\\b(?:s\.)?' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", LTLspec_env)
@@ -257,7 +268,7 @@ class SpecCompiler(object):
                 for m in re.finditer(r'between (?P<rA>\w+) and (?P<rB>\w+)', text):
                     text=re.sub(r'between ' + m.group('rA')+' and '+ m.group('rB'),"("+' or '.join(["s."+r for r in self.parser.proj.regionMapping['between$'+m.group('rA')+'$and$'+m.group('rB')+"$"]])+")", text)
 
-                # substitute decomposed region 
+                # substitute decomposed region
                 for r in self.proj.rfi.regions:
                     if not (r.isObstacle or r.name.lower() == "boundary"):
                         text = re.sub('\\b' + r.name + '\\b', "("+' | '.join(["s."+x for x in self.parser.proj.regionMapping[r.name]])+")", text)
@@ -346,7 +357,7 @@ class SpecCompiler(object):
             # switch to bit encodings for regions
             LTLspec_env = replaceRegionName(LTLspec_env, bitEncode, regionList)
             LTLspec_sys = replaceRegionName(LTLspec_sys, bitEncode, regionList)
-        
+
             if self.LTL2SpecLineNumber is not None:
                 for k in self.LTL2SpecLineNumber.keys():
                     new_k = replaceRegionName(k, bitEncode, regionList)
@@ -363,7 +374,7 @@ class SpecCompiler(object):
         self.spec = {}
         if self.proj.compile_options["decompose"]:
             self.spec['Topo'] = createTopologyFragment(adjData, self.parser.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
-        else: 
+        else:
             self.spec['Topo'] = createTopologyFragment(adjData, self.proj.rfi.regions, use_bits=self.proj.compile_options["use_region_bit_encoding"])
 
         # Substitute any macros that the parsers passed us
@@ -401,13 +412,13 @@ class SpecCompiler(object):
         LTLspec_sys += "\n&\n" + self.spec['Topo']
 
         createLTLfile(self.proj.getFilenamePrefix(), LTLspec_env, LTLspec_sys)
-        
+
         if self.proj.compile_options["parser"] == "slurp":
             self.reversemapping = {self.postprocessLTL(line,sensorList,robotPropList).strip():line.strip() for line in oldspec_env + oldspec_sys}
             self.reversemapping[self.spec['Topo'].replace("\n","").replace("\t","").lstrip().rstrip("\n\t &")] = "TOPOLOGY"
 
         #for k,v in self.reversemapping.iteritems():
-        #    print "{!r}:{!r}".format(k,v)        
+        #    print "{!r}:{!r}".format(k,v)
 
         return self.spec, traceback, response
 
@@ -429,7 +440,7 @@ class SpecCompiler(object):
                 for p in sensorBits:
                     if p not in self.proj.enabled_sensors:
                         self.proj.enabled_sensors.append(p)
-                    if p not in self.proj.all_sensors:   
+                    if p not in self.proj.all_sensors:
                         self.proj.all_sensors.append(p)
 
                 text = text.replace("FOLLOW_SENSOR_CONSTRAINTS", env_topology + "\n&\n" + initreg_formula)
@@ -448,7 +459,7 @@ class SpecCompiler(object):
 
         return text
 
-    
+
     def postprocessLTL(self, text, sensorList, robotPropList):
         # TODO: make everything use this
         if self.proj.compile_options["decompose"]:
@@ -484,7 +495,7 @@ class SpecCompiler(object):
         text = self.substituteMacros(text)
 
         return text
-    
+
     def splitSpecIntoComponents(self, env, sys):
         spec = {}
 
@@ -492,7 +503,7 @@ class SpecCompiler(object):
             for line in text.split("\n"):
                 if line.strip() == '': continue
 
-                if "[]<>" in line: 
+                if "[]<>" in line:
                     linetype = "goals"
                 elif "[]" in line:
                     linetype = "trans"
@@ -506,7 +517,7 @@ class SpecCompiler(object):
                 spec[key] += line + "\n"
 
         return spec
-        
+
     def _checkForEmptyGaits(self):
         from simulator.ode.ckbot import CKBotLib
 
@@ -532,20 +543,31 @@ class SpecCompiler(object):
                     logging.warning(err_message)
                     err = 1
 
-    def _getGROneCommand(self, module):
-        # Check that GROneMain, etc. is compiled
-        if not os.path.exists(os.path.join(self.proj.ltlmop_root,"etc","jtlv","GROne","GROneMain.class")):
-            logging.error("Please compile the synthesis Java code first.  For instructions, see etc/jtlv/JTLV_INSTRUCTIONS.")
+    def _getSlugsCommand(self):
+        slugs_path = os.path.join(self.proj.ltlmop_root, "etc", "slugs", "src", "slugs")
+
+        # Check that slugs is compiled
+        if not os.path.exists(slugs_path):
             # TODO: automatically compile for the user
-            return None
+            raise RuntimeError("Please compile the synthesis code first.  For instructions, see etc/slugs/README.md.")
+
+        cmd = [slugs_path, "--sysInitRoboticsSemantics", self.proj.getFilenamePrefix() + ".slugsin", self.proj.getFilenamePrefix() + ".aut"]
+
+        return cmd
+
+    def _getGROneCommand(self, module):
+        jtlv_path = os.path.join(self.proj.ltlmop_root, "etc", "jtlv")
+
+        # Check that GROneMain, etc. is compiled
+        if not os.path.exists(os.path.join(jtlv_path, "GROne", "GROneMain.class")):
+            # TODO: automatically compile for the user
+            raise RuntimeError("The Java synthesis code does not appear to be compiled yet.  Please run dist/setup.py before using LTLMoP.")
 
         # Windows uses a different delimiter for the java classpath
-        if os.name == "nt":
-            delim = ";"
-        else:
-            delim = ":"
+        delim = ";" if os.name == "nt" else ":"
 
-        classpath = delim.join([os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "jtlv-prompt1.4.0.jar"), os.path.join(self.proj.ltlmop_root, "etc", "jtlv", "GROne")])
+        classpath = delim.join([os.path.join(jtlv_path, "jtlv-prompt1.4.0.jar"),
+                                os.path.join(jtlv_path, "GROne")])
 
         cmd = ["java", "-ea", "-Xmx512m", "-cp", classpath, module, self.proj.getFilenamePrefix() + ".smv", self.proj.getFilenamePrefix() + ".ltl"]
 
@@ -562,43 +584,45 @@ class SpecCompiler(object):
         load the whole aut just to check this.
         """
 
-        proj_copy = deepcopy(self.proj)
-        proj_copy.rfi = self.parser.proj.rfi
-        proj_copy.sensor_handler = None
-        proj_copy.actuator_handler = None
-        proj_copy.h_instance = None
+        if self.proj.compile_options["decompose"]:
+            regions = self.parser.proj.rfi.regions
+        else:
+            regions = self.proj.rfi.regions
 
-        aut = fsa.Automaton(proj_copy)
+        region_domain = strategy.Domain("region", regions, strategy.Domain.B0_IS_MSB)
+        strat = strategy.createStrategyFromFile(self.proj.getStrategyFilename(),
+                                                self.proj.enabled_sensors,
+                                                self.proj.enabled_actuators + self.proj.all_customs + [region_domain])
 
-        aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_sensors, self.proj.enabled_actuators, self.proj.all_customs)        
-        
-        nonTrivial = any([len(s.transitions) > 0 for s in aut.states])
+        nonTrivial = any([len(strat.findTransitionableStates({}, s)) > 0 for s in strat.iterateOverStates()])
 
         return nonTrivial
 
     def _analyze(self):
+        if self.proj.compile_options["synthesizer"].lower() != "jtlv":
+            raise RuntimeError("Analysis is currently only supported when using JTLV.")
+
         cmd = self._getGROneCommand("GROneDebug")
         if cmd is None:
             return (False, False, [], "")
 
         subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
 
-        realizable = False    
+        realizable = False
         unsat = False
         nonTrivial = False
-        
+
 
         output = ""
         to_highlight = []
         for dline in subp.stdout:
             output += dline
-
-            if "Specification is realizable" in dline:   
+            if "Specification is synthesizable!" in dline:   
                 realizable = True            
                 nonTrivial = self._autIsNonTrivial()
                 if nonTrivial:
                     break
-            
+
             ### Highlight sentences corresponding to identified errors ###
 
             # System unsatisfiability
@@ -617,7 +641,7 @@ class SpecCompiler(object):
             elif "System initial condition inconsistent with transition relation" in dline:
                 to_highlight.append(("sys", "init"))
                 to_highlight.append(("sys", "trans"))
-           
+
             # Environment unsatisfiability
             elif "Environment initial condition is unsatisfiable." in dline:
                 to_highlight.append(("env", "init"))
@@ -634,8 +658,8 @@ class SpecCompiler(object):
             elif "Environment initial condition inconsistent with transition relation" in dline:
                 to_highlight.append(("env", "init"))
                 to_highlight.append(("env", "trans"))
-           
-        
+
+
             # System unrealizability
             elif "System is unrealizable because the environment can force a safety violation" in dline:
                 to_highlight.append(("sys", "trans"))
@@ -645,7 +669,7 @@ class SpecCompiler(object):
                 to_highlight.append(("sys", "init"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("sys", "goals", int(l)))
-            
+
             # Environment unrealizability
             elif "Environment is unrealizable because the system can force a safety violation" in dline:
                 to_highlight.append(("env", "trans"))
@@ -653,168 +677,168 @@ class SpecCompiler(object):
                 to_highlight.append(("env", "trans"))
                 for l in (dline.strip()).split()[-1:]:
                     to_highlight.append(("env", "goals", int(l)))
-                    
+
             if "unsatisfiable" in dline or "inconsistent" in dline :
                 unsat = True
 
         subp.stdout.close()
-        
-        
-        
+
+
+
         return (realizable, unsat, nonTrivial, to_highlight, output)
-    
-       
-    
+
+
+
     def _coreFinding(self, to_highlight, unsat, badInit):
         #returns list of formulas that cause unsatisfiability/unrealizability (based on unsat flag).
-        #takes as input sentences marked for highlighting, and formula describing bad initial states 
+        #takes as input sentences marked for highlighting, and formula describing bad initial states
         #from JTLV.
-        
+
         #find number of states in automaton/counter for unsat/unreal core max unrolling depth ("recurrence diameter")
         proj_copy = deepcopy(self.proj)
         proj_copy.rfi = self.parser.proj.rfi
         proj_copy.sensor_handler = None
         proj_copy.actuator_handler = None
         proj_copy.h_instance = None
-        
+
         num_bits = int(numpy.ceil(numpy.log2(len(self.parser.proj.rfi.regions))))  # Number of bits necessary to encode all regions
         region_props = ["bit" + str(n) for n in xrange(num_bits)]
-    
+
         aut = fsa.Automaton(proj_copy)
         aut.loadFile(self.proj.getFilenamePrefix()+".aut", self.proj.enabled_actuators + self.proj.all_customs + region_props, self.proj.enabled_sensors, [])
-       
-        
+
+
         #find deadlocked states in the automaton (states with no out-transitions)
         deadStates = [s for s in aut.states if not s.transitions]
         #find states that can be forced by the environment into the deadlocked set
         forceDeadStates = [(s, e) for s in aut.states for e in deadStates if e in s.transitions]
-        #LTL representation of these states and the deadlock-causing environment move in the next time step       
+        #LTL representation of these states and the deadlock-causing environment move in the next time step
         forceDeadlockLTL = map(lambda (s,e): " & ".join([stateToLTL(s), stateToLTL(e, 1, 1, True)]), forceDeadStates)
-        
-        
-        #find livelocked goal and corresponding one-step propositional formula (by stripping LTL operators)     
+
+
+        #find livelocked goal and corresponding one-step propositional formula (by stripping LTL operators)
         desiredGoal = [h_item[2] for h_item in to_highlight if h_item[1] == "goals"]
-        
-        
+
+
         if desiredGoal:
             desiredGoal = desiredGoal[0]
-            #Don't actually need LTL        
+            #Don't actually need LTL
             #desiredGoalLTL = stripLTLLine(self.ltlConjunctsFromBadLines([h_item for h_item in to_highlight if h_item[1] == "goals"], False)[0],True)
-        
-        
-            
+
+
+
         def preventsDesiredGoal(s):
                 rank_str = s.transitions[0].rank
                 m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
                 if m is None:
                     logging.error("Error parsing jx in automaton.  Are you sure the spec is unrealizable?")
                     return
-                jx = int(m.group(1))         
+                jx = int(m.group(1))
                 return (jx == desiredGoal)
-                    
-        
-        #find livelocked states in the automaton (states with desired sys rank)           
+
+
+        #find livelocked states in the automaton (states with desired sys rank)
         livelockedStates = filter(preventsDesiredGoal, [s for s in aut.states if s.transitions])
         #find states that can be forced by the environment into the livelocked set
         forceLivelockedStates = [(fro, to) for fro in aut.states for to in livelockedStates if to in s.transitions]
-        
-        #LTL representation of these states and the livelocked goal  
+
+        #LTL representation of these states and the livelocked goal
         #forceLivelockLTL = map(lambda s: " & ".join([stateToLTL(s), desiredGoalLTL]), livelockedStates) ###Don't actually need to add goal -- will be added in 'conjuncts'
         forceLivelockLTL = map(lambda (s1,s2): " & ".join([stateToLTL(s1, 1, 1), stateToLTL(s2, 1, 0, True)]), forceLivelockedStates)
         #forceLivelockLTL = map(stateToLTL, livelockedStates)
-        
+
         numStates = len(aut.states)
         numRegions = len(self.parser.proj.rfi.regions)
-        
+
         if forceDeadlockLTL:
             deadlockFlag = True
             badStatesLTL = forceDeadlockLTL
         else:
             #this means livelock
-            deadlockFlag = False            
+            deadlockFlag = False
             badStatesLTL = forceLivelockLTL
-            
+
         #################################
         #                               #
         # get conjuncts to be minimized #
         #                               #
         #################################
-        
+
         #topology
         topo =self.spec['Topo'].replace('\n','')
         topo = topo.replace('\t','')
-        
+
         #have to use all initial conditions if no single bad initial state given
         useInitFlag = badInit is None
-        
+
         #other highlighted LTL formulas
         conjuncts = self.ltlConjunctsFromBadLines(to_highlight, useInitFlag)
-        
+
         #filter out props that are actually used
         #self.propList = [p for p in self.propList if [c for c in conjuncts if p in c] or [c for c in badStatesLTL if p in c and not unsat] or p in topo]
-                    
-        cmd = self._getPicosatCommand() 
-            
+
+        cmd = self._getPicosatCommand()
+
         if unsat:
-            guilty = self.unsatCores(cmd, topo,badInit,conjuncts,15,15)#returns LTL  
+            guilty = self.unsatCores(cmd, topo,badInit,conjuncts,15,15)#returns LTL
         else:
-            guilty = self.unrealCores(cmd, topo, badStatesLTL, conjuncts, deadlockFlag)#returns LTL   
+            guilty = self.unrealCores(cmd, topo, badStatesLTL, conjuncts, deadlockFlag)#returns LTL
         return guilty
-        
-        
-        
-    
+
+
+
+
     def unsatCores(self, cmd, topo, badInit, conjuncts,maxDepth,numRegions):
         #returns list of guilty LTL formulas
         #takes LTL formulas for topo, badInit and conjuncts separately because they are used in various combinations later
         #numStates and numRegions are used to determine unroll depth later
-        
+
         if not conjuncts and badInit == "":
             #this means that the topology is unsatisfiable by itself (not common since we auto-generate)
             return topo
         else:
             #try the different cases of unsatisfiability (need to pass in command and proplist to coreUtils function)
             self.trans, guilty = unsatCoreCases(cmd, self.propList, topo, badInit, conjuncts,maxDepth,numRegions)
-                    
+
         return guilty
-                
-    
-        
+
+
+
     def unrealCores(self, cmd, topo, badStatesLTL, conjuncts, deadlockFlag):
         #returns list of guilty LTL formulas FOR THE UNREALIZABLE CASE
         #takes LTL formulas representing the topology and other highlighted conjuncts as in the unsat case.
-        #also takes a list of deadlocked/livelocked states (as LTL/propositional formulas)        
+        #also takes a list of deadlocked/livelocked states (as LTL/propositional formulas)
         #returns LTL formulas that appear in the guilty set for *any* deadlocked or livelocked state,
         #i.e. formulas that cause deadlock/livelock in these states
-        
+
         #try the different cases of unsatisfiability (need to pass in command and proplist to coreUtils function)
         if deadlockFlag:
             initDepth = 1
-            maxDepth = 1            
+            maxDepth = 1
         else:
             initDepth = 1
-            maxDepth = 1                             
-        
+            maxDepth = 1
+
 #        TODO: see if there is a way to call pool.map with processes that also use pools
 #
 #        sys.stdout = StringIO.StringIO()
-#        
+#
 #        pool = Pool()
-#        guiltyList = pool.map(unsatCoreCasesWrapper, itertools.izip(itertools.repeat(cmd), itertools.repeat(self.propList), itertools.repeat(topo), badStatesLTL, itertools.repeat(conjuncts), itertools.repeat(initDepth), itertools.repeat(maxDepth)))            
+#        guiltyList = pool.map(unsatCoreCasesWrapper, itertools.izip(itertools.repeat(cmd), itertools.repeat(self.propList), itertools.repeat(topo), badStatesLTL, itertools.repeat(conjuncts), itertools.repeat(initDepth), itertools.repeat(maxDepth)))
 #        pool.terminate()
-#        
+#
 #        sys.stdout = sys.__stdout__
 
         guiltyList = map(lambda d: unsatCoreCases(cmd, self.propList, topo, d, conjuncts, initDepth, maxDepth), badStatesLTL)
-        
+
         guilty = reduce(set.union,map(set,[g for t, g in guiltyList]))
-                 
+
         return guilty
-    
-    
-        
-    
-        
+
+
+
+
+
     def _getPicosatCommand(self):
         # look for picosat
 
@@ -832,18 +856,18 @@ class SpecCompiler(object):
             cmd = [os.path.join(paths[0],"picomus")]
 
         return cmd
-    
-   
-        
-                
-    
+
+
+
+
+
     def ltlConjunctsFromBadLines(self, to_highlight, useInitFlag):
-        #given the lines to be highlighted by the initial analysis, returns 
+        #given the lines to be highlighted by the initial analysis, returns
         #a list of LTL formulas that, when conjuncted, cause unsatisfiability
         #topology conjuncts are separated out
-               
+
         conjuncts = []
-                
+
         for h_item in to_highlight:
             tb_key = h_item[0].title() + h_item[1].title()
 
@@ -851,48 +875,128 @@ class SpecCompiler(object):
             if h_item[1] == "goals":
                 #special treatment for goals: (1) we already know which one to highlight, and (2) we need to check both tenses
                 #TODO: separate out the check for present and future tense -- what if you have to toggle but can still do so infinitely often?
-                #newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')                 
+                #newCs = ivd[self.traceback[tb_key][h_item[2]]].split('\n')
                 goals = self.spec[tb_key].split('\n')
                 newCs = [goals[h_item[2]]]
                 newCsOld = newCs
-                
+
             elif h_item[1] == "trans" or h_item[1] == "init" and useInitFlag:
                 newCs =  self.spec[tb_key].replace("\t", "\n").split("\n")
-                
+
             conjuncts.extend(newCs)
-        
+
         return conjuncts
-    
 
-    def _synthesize(self, with_safety_aut=False):
-        cmd = self._getGROneCommand("GROneMain")
-        if cmd is None:
-            return (False, False, "")
+    def _synthesize(self):
+        """ Call the synthesis tool, and block until it completes.
+            Returns success flags `realizable` and `realizableFS`, and the raw
+            synthesizer log output. """
 
-        if with_safety_aut:    # Generally used for Mopsy
-            cmd.append("--safety")
+        log_string = StringIO.StringIO()
 
-        if self.proj.compile_options["fastslow"]:
-            cmd.append("--fastslow")
+        self._synthesizeAsync(log_function=log_string.write)
 
-        subp = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=False)
-        
-        realizable = False
-        realizableFS = False
+        self.synthesis_complete.wait()  # Block here until synthesis is done
 
-        output = ""
-        for line in subp.stdout:
-            output += line
-            if "Specification is realizable" in line:
-                realizable = True
-            if "Specification is realizable with slow and fast actions" in line:
-                realizableFS = True
-               
-        subp.stdout.close()
+        return (self.realizable, self.realizableFS, log_string.getvalue())
 
-        return (realizable, realizableFS, output)
+    def prepareSlugsInput(self):
+        """ Convert from JTLV input format (.smv+.ltl) to Slugs input format (.slugsin)
+            using the script provided by Slugs.
 
-    def compile(self, with_safety_aut=False):
+            This is a stop-gap fix; eventually we should just produce the input
+            directly instead of using the conversion script. """
+
+        # Add the conversion script to our path
+        slugs_converter_path = os.path.join(self.proj.ltlmop_root, "etc", "slugs", "tools")
+        sys.path.insert(0, slugs_converter_path)
+        from translateFromLTLMopLTLFormatToSlugsFormat import performConversion
+
+        # Call the conversion script
+        with open(self.proj.getFilenamePrefix() + ".slugsin", "w") as f:
+            # TODO: update performConversion so we don't have to do stdout redirection
+            sys.stdout = f
+            performConversion(self.proj.getFilenamePrefix() + ".smv", self.proj.getFilenamePrefix() + ".ltl")
+            sys.stdout = sys.__stdout__
+
+    def _synthesizeAsync(self, log_function=None, completion_callback_function=None):
+        """ Asynchronously call the synthesis tool.  This function will return immediately after
+            spawning a subprocess.  `log_function` will be called with a string argument every time
+            the subprocess generates a line of text.  `completion_callback_function` will be called
+            when synthesis finishes, with two arguments: the success flags `realizable`
+            and `realizableFS`. """
+
+        if self.proj.compile_options["synthesizer"].lower() == "jtlv":
+            # Find the synthesis tool
+            cmd = self._getGROneCommand("GROneMain")
+
+            # Add any extra compiler options
+            if self.proj.compile_options["fastslow"]:
+                cmd.append("--fastslow")
+            if self.proj.compile_options["symbolic"]:
+                cmd.append("--symbolic")
+
+            REALIZABLE_MESSAGE = "Specification is synthesizable!"
+            REALIZABLE_FS_MESSAGE = "Specification is synthesizable under fast/slow!"
+
+        elif self.proj.compile_options["synthesizer"].lower() == "slugs":
+            # Find the synthesis tool
+            cmd = self._getSlugsCommand()
+
+            # Make sure flags are compatible
+            if any(self.proj.compile_options[k] for k in ("fastslow", "symbolic")):
+                raise RuntimeError("Slugs does not currently support fast/slow or symbolic compilation options.")
+
+            # Create proper input for Slugs
+            logging.info("Preparing Slugs input...")
+            self.prepareSlugsInput()
+
+            REALIZABLE_MESSAGE = "RESULT: Specification is realizable"
+            REALIZABLE_FS_MESSAGE = None
+        else:
+            raise RuntimeError("Invalid synthesizer: {!r}".format(self.proj.compile_options["synthesizer"]))
+
+        self.realizable = False
+        self.realizableFS = False
+
+        # Define some wrappers around the callback functions so we can parse the output
+        # of the synthesis tool and return it in a meaningful way.
+        def onLog(text):
+            """ Intercept log callbacks to check for realizability status. """
+
+            if REALIZABLE_MESSAGE in text:
+                self.realizable = True
+            if REALIZABLE_FS_MESSAGE is not None and REALIZABLE_FS_MESSAGE in text:
+                self.realizableFS = True
+
+            # You'll pass this on, won't you
+            if log_function is not None:
+                log_function(text)
+
+        # Create a flag for convenience
+        self.synthesis_complete = threading.Event()
+
+        def onSubprocessComplete():
+            if completion_callback_function is not None:
+                completion_callback_function(self.realizable, self.realizableFS)
+            self.synthesis_complete.set()
+            self.synthesis_subprocess = None
+
+        # Kick off the subprocess
+        logging.info("Synthesizing a strategy...")
+
+        self.synthesis_subprocess = AsynchronousProcessThread(cmd, onSubprocessComplete, onLog)
+
+    def abortSynthesis(self):
+        """ Kill any running synthesis process. """
+
+        if self.synthesis_subprocess is not None:
+            logging.warning("Aborting synthesis!")
+            self.synthesis_subprocess.kill()
+            self.synthesis_complete = None
+            self.synthesis_subprocess = None
+
+    def compile(self):
         if self.proj.compile_options["decompose"]:
             logging.info("Decomposing...")
             self._decompose()
@@ -903,10 +1007,9 @@ class SpecCompiler(object):
 
         if tb is None:
             logging.error("Compilation aborted")
-            return 
+            return
 
         #self._checkForEmptyGaits()
-        logging.info("Synthesizing a strategy...")
 
-        return self._synthesize(with_safety_aut)
+        return self._synthesize()
 

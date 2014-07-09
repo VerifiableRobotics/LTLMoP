@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Checks that all examples load and synthesize successfully.
 """
@@ -6,6 +7,7 @@ import unittest
 import glob
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","lib"))
+
 import specCompiler
 
 
@@ -57,15 +59,30 @@ def getTester(spec_filename):
     NewTester.__name__ = "TestExample_" + spec_filename.replace(".","_").replace("\\","_").replace("/","_")
     return NewTester(spec_filename)
     
-def suite():
+def suiteAll():
     suite = unittest.TestSuite()
+
     for fname in glob.iglob(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..","src","examples","*","*.spec")):
         # Skip any files untracked by git
         if os.system("git ls-files \"{}\" --error-unmatch".format(fname)) != 0:
             print ">>> Skipping untracked specification: {}".format(fname)
             continue
         suite.addTest(getTester(fname))
+
+    return suite
+
+def suiteFromList(paths):
+    suite = unittest.TestSuite()
+    for fname in paths:
+        suite.addTest(getTester(fname))
+
     return suite
 
 if __name__ == '__main__':
-    unittest.TextTestRunner().run(suite())
+    # If we are called with arguments, test only those projects.
+    # Otherwise, test every tracked project in the examples/ directory
+
+    if len(sys.argv) >= 2:
+        unittest.TextTestRunner().run(suiteFromList(sys.argv[1:]))
+    else:
+        unittest.TextTestRunner().run(suiteAll())

@@ -15,7 +15,9 @@
 """
 
 import wx, sys, os, socket
-import fileMethods, regions, project
+import fileMethods, regions, project, execute, handlerSubsystem
+import logging
+import globalConfig
 from numpy import *
 import mapRenderer
 from _transformations import affine_matrix_from_points
@@ -51,20 +53,20 @@ class CalibrateFrame(wx.Frame):
         else:
             self.configEditorPort = None
 
-        # Load configuration files
+        # Update with this new project
+        self.executor = execute.LTLMoPExecutor()
+        self.executor.loadSpecFile(sys.argv[1])
 
-        self.proj = project.Project()
-        self.proj.setSilent(True)
-        self.proj.loadProject(sys.argv[1])
-
-        if self.proj.currentConfig.name != "calibrate":
+        if self.executor.proj.current_config != "calibrate":
             print "(ERROR) Calibration can only be run on a specification file with a calibration configuration.\nPlease use ConfigEditor to calibrate a configuration."
             sys.exit(3)
 
-        # Initialize the init and pose handlers
+        logging.info("Setting current executing config...")
+        self.executor.hsub.setExecutingConfig(self.executor.proj.current_config)
 
-        print "Importing handler functions..."
-        self.proj.importHandlers(['init','pose'])
+        # Initialize handlers
+        logging.info("Instantiate all handlers...")
+        self.executor.hsub.instantiateAllHandlers()
 
         self.panel_map.SetBackgroundColour(wx.WHITE)
         self.panel_map.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
@@ -85,7 +87,7 @@ class CalibrateFrame(wx.Frame):
     def onResize(self, event):
         size = self.panel_map.GetSize()
         self.mapBitmap = wx.EmptyBitmap(size.x, size.y)
-        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=True, memory=True)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.executor.proj.rfi, scaleToFit=True, drawLabels=True, memory=True)
 
         self.Refresh()
         self.Update()
@@ -132,7 +134,7 @@ class CalibrateFrame(wx.Frame):
 
         pt_names = []
         file_pts = None
-        for [name, index, x, y] in self.proj.rfi.getCalibrationPoints():
+        for [name, index, x, y] in self.executor.proj.rfi.getCalibrationPoints():
             pt_names.append(name + "_P" + str(index))
             new_pt = mat([float(x), float(y)]).T
             if file_pts is None:
@@ -155,7 +157,7 @@ class CalibrateFrame(wx.Frame):
 
             self.markerPos = None # Disable blinking circle
 
-            pose = self.proj.h_instance['pose'].getPose()
+            pose = self.executor.hsub.getPose()
 
             new_pt = mat(pose[0:2]).T
             if real_pts is None:

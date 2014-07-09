@@ -172,7 +172,9 @@ class RegionFileInterface(object):
         for i, region in enumerate(self.regions):
             if region.name.lower() == name.lower():
                 return i
-        print 'WARNING: Region "' + name + '" not found.'
+        # only show error message if it is not boundary
+        if name != "boundary":
+            print 'WARNING: Region "' + name + '" not found.'
         return -1
 
     def getCalibrationPoints(self):
@@ -492,6 +494,10 @@ class Region(object):
         self.alignmentPoints   = [False] * len([x for x in self.getPoints()])
         self.isObstacle = False
         self.holeList = []
+
+
+    def __repr__(self):
+        return "<Region '{}' (@{})>".format(self.name, hex(id(self)))
 
     # =================================
     # == Region Manipulation Methods ==

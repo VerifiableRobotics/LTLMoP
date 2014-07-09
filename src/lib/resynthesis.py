@@ -22,7 +22,7 @@ class ExecutorResynthesisExtensions:
         else:
             # If we have no automaton yet, determine our state manually
             # TODO: support env
-            # TODO: look at self.proj.currentConfig.initial_truths and pose
+            # TODO: look at self.hsub.executing_config.initial_truths and pose
             return ""
 
 

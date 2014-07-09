@@ -9,6 +9,10 @@ Applications
     :members:
     :undoc-members:
 
+.. automodule:: configEditor
+    :members:
+    :undoc-members:
+
 .. automodule:: execute
     :members:
     :undoc-members:

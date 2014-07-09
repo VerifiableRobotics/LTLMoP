@@ -15,7 +15,20 @@ import math, time, sys, os, re
 import wxversion
 import wx, wx.richtext, wx.grid
 import threading
+
+# Climb the tree to find out where we are
+p = os.path.abspath(__file__)
+t = ""
+while t != "src":
+    (p, t) = os.path.split(p)
+    if p == "":
+        print "I have no idea where I am; this is ridiculous"
+        sys.exit(1)
+
+sys.path.append(os.path.join(p,"src","lib"))
+
 import project, mapRenderer, regions
+import handlerSubsystem
 import socket
 import copy
 import xmlrpclib
@@ -128,6 +141,10 @@ class SimGUI_Frame(wx.Frame):
 
     def loadSpecFile(self, filename):
         self.proj.loadProject(filename)
+        self.hsub = handlerSubsystem.HandlerSubsystem(None, self.proj.project_root)
+        config, success = self.hsub.loadConfigFile(self.proj.current_config)
+        if success: self.hsub.configs.append(config)
+        self.hsub.setExecutingConfig(self.proj.current_config)
 
         self.Bind(wx.EVT_SIZE, self.onResize, self)
 
@@ -166,25 +183,28 @@ class SimGUI_Frame(wx.Frame):
             wx.CallAfter(self.loadSpecFile, eventData)
         elif eventType == "REGIONS":
             wx.CallAfter(self.loadRegionFile, eventData)
-        elif eventData.startswith("Output proposition"):
-            if self.checkbox_statusLog_propChange.GetValue():
-                wx.CallAfter(self.appendLog, eventData + "\n", color="GREEN") 
-        elif eventData.startswith("Heading to"):
-            if self.checkbox_statusLog_targetRegion.GetValue():
-                wx.CallAfter(self.appendLog, eventData + "\n", color="BLUE") 
-        elif eventData.startswith("Crossed border"):
-            if self.checkbox_statusLog_border.GetValue():
-                wx.CallAfter(self.appendLog, eventData + "\n", color="CYAN") 
         else:
-            # Detect our current goal index
-            if eventData.startswith("Currently pursuing goal"):
-                m = re.search(r"#(\d+)", eventData)
-                if m is not None:
-                    self.currentGoal = int(m.group(1))
-
-            if self.checkbox_statusLog_other.GetValue():
+            if isinstance(eventData, basestring):
+                if eventData.startswith("Output proposition"):
+                    if self.checkbox_statusLog_propChange.GetValue():
+                        wx.CallAfter(self.appendLog, eventData + "\n", color="GREEN") 
+                elif eventData.startswith("Heading to"):
+                    if self.checkbox_statusLog_targetRegion.GetValue():
+                        wx.CallAfter(self.appendLog, eventData + "\n", color="BLUE") 
+                elif eventData.startswith("Crossed border"):
+                    if self.checkbox_statusLog_border.GetValue():
+                        wx.CallAfter(self.appendLog, eventData + "\n", color="CYAN") 
+                    # Detect our current goal index
+                elif eventData.startswith("Currently pursuing goal"):
+                    m = re.search(r"#(\d+)", eventData)
+                    if m is not None:
+                        self.currentGoal = int(m.group(1))
+                elif self.checkbox_statusLog_other.GetValue():
+                    if eventData != "":
+                        wx.CallAfter(self.appendLog, eventData + "\n", color="BLACK")
+            elif self.checkbox_statusLog_other.GetValue():
                 if eventData != "":
-                    wx.CallAfter(self.appendLog, eventData + "\n", color="BLACK") 
+                    wx.CallAfter(self.appendLog, str(eventData) + "\n", color="BLACK") 
 
     def __set_properties(self):
         # begin wxGlade: SimGUI_Frame.__set_properties
@@ -378,6 +398,8 @@ class SimGUI_Frame(wx.Frame):
         f.close()
 
     def onClose(self, event):
+        msg = wx.BusyInfo("Please wait, shutting down...")
+
         try:
             self.executorProxy.shutdown()
         except socket.error:
@@ -411,7 +433,7 @@ class SimGUI_Frame(wx.Frame):
 
         LTLspec_env, LTLspec_sys, self.proj.internal_props, internal_sensors, results, responses, traceback = \
             _SLURP_SPEC_GENERATOR.generate(text, sensorList, filtered_regions, robotPropList,
-                                           self.proj.currentConfig.region_tags)
+                                           self.hsub.executing_config.region_tags)
 
         from ltlbroom.dialog import DialogManager
         self.dialogueManager = DialogManager(traceback)

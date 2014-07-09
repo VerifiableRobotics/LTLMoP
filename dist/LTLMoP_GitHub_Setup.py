@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """
 A moderately labyrinthine script to help LTLMoP developers
 set their computer up for working with LTLMoP on GitHub.
@@ -11,7 +11,40 @@ import sys, math, os, time
 import urllib2, json
 import subprocess, socket
 import base64
-from catUtils import patrickSays
+
+import urllib
+import tempfile
+import os
+
+def downloadDependenciesAndAddToPath():
+    """ A script to download dependencies in case someone downloads just this script
+        to bootstrap a LTLMoP dev installation """
+
+    # FIXME: this will run twice on Windows due to ensureGitBash
+
+    # Make a temporary directory
+    temp_dir = tempfile.mkdtemp(prefix="ltlmop_installer")
+
+    # Download the main setup scripts
+    for filename in ("catUtils.py", "gitUtils.py"):
+        url = "https://github.com/LTLMoP/LTLMoP/raw/development/dist/" + filename
+        print "Fetching {}...".format(url)
+        out_file = os.path.join(temp_dir, filename)
+        urllib.urlretrieve(url, out_file)
+
+    # Add temp dir to path
+    sys.path.insert(0, temp_dir)
+
+try:
+    from catUtils import patrickSays
+    import gitUtils
+except ImportError:
+    # Make sure we have dependencies
+    downloadDependenciesAndAddToPath()
+
+    # Import again
+    from catUtils import patrickSays
+    import gitUtils
 
 def openInBrowser(url):
     if sys.platform in ['win32', 'cygwin']:
@@ -22,7 +55,7 @@ def openInBrowser(url):
         shell = False
     elif sys.platform == 'darwin':
         cmd = "open"
-        shell = True
+        shell = False
     else:
         print "Sorry, I don't know how to open the default browser on your computer."
         print "You'll need to visit %s on your own :(" % url
@@ -91,51 +124,7 @@ def githubAPICall(path, data=None, method=None):
     return response
 
 if __name__ == "__main__":
-    # If on Windows, use Git Bash for the shell
-    if sys.platform in ['win32', 'cygwin']:
-        # TODO: Is there a better way to determine whether we're in bash or not?
-        cmd = subprocess.Popen(["ls"],stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
-
-        # Wait for subprocess to finish
-        while cmd.returncode is None:
-            cmd.poll()
-            time.sleep(0.01)
-
-        if cmd.returncode != 0:
-            print "Trying to use Git Bash..."
-
-            bash_path = None
-            for ev in ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]:
-                if ev not in os.environ: continue
-
-                bp = os.path.join(os.environ[ev], 'Git', 'bin', 'bash.exe')
-
-                if os.path.exists(bp):
-                    bash_path = bp
-                    break
-
-            if bash_path is None:
-                print "Couldn't find Git Bash.  Please install Git for Windows."
-                print "(See http://code.google.com/p/msysgit/)"
-                print
-                print "Press [Enter] to quit..."
-                raw_input()
-                sys.exit(1)
-
-            print "Found Git Bash at %s" % bash_path
-
-            cmd = subprocess.Popen([bash_path, "--login", "-i", "-c", 'python "%s"' % (os.path.abspath(__file__))])
-
-            # Wait for subprocess to finish
-            try:
-                while cmd.returncode is None:
-                    cmd.poll()
-                    time.sleep(0.01)
-            except KeyboardInterrupt:
-                cmd.kill()
-
-            sys.exit(0)
-
+    gitUtils.ensureGitBash(__file__)
 
     patrickSays("Hi! I'm a harmless cat who's going to help you out with Git.")
 
@@ -235,6 +224,8 @@ if __name__ == "__main__":
         print "Next, we need to generate an SSH key to authenticate this computer to GitHub."
         print "Come up with a password that you can remember; you'll need to use it"
         print "when committing code to GitHub."
+        print
+        print "(Tip: If it asks you where to save the key, you can safely press [Enter] to accept the default location.)"
         print
 
         # Make the ~/.ssh directory if necessary

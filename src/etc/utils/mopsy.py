@@ -21,71 +21,17 @@ while t != "src":
 
 sys.path.append(os.path.join(p,"src","lib"))
 
-import fsa, project
+import strategy
+import project
 import mapRenderer
 from specCompiler import SpecCompiler
 
 # begin wxGlade: extracode
 # end wxGlade
 
-class EnvDummySensorHandler:
-    def __init__(self, parent):
-        self.parent = parent
-
-    def __getitem__(self, name):
-        if name == "initializing_handler":
-            return {}
-        else:
-            return compile("self.sensor_handler.getSensorValue('%s')" % name, "<string>", "eval")
-
-    def __contains__(self, name):
-        return True
-
-    def getSensorValue(self, name):
-        m = re.match('^bit(\d+)$', name)
-        if m is not None:
-            # Handle region encodings specially
-            # bit0 is MSB
-            bitnum = int(m.group(1))
-            # from http://www.daniweb.com/software-development/python/code/216539
-            bs = "{0:0>{1}}".format(bin(self.parent.current_region)[2:], self.parent.num_bits)
-            return bs[bitnum]
-        else:
-            return self.parent.actuatorStates[name]
-
-class EnvDummyActuatorHandler:
-    def __init__(self, parent):
-        self.parent = parent
-
-    def __getitem__(self, name):
-        if name == "initializing_handler":
-            return {}
-        else:
-            return compile("self.actuator_handler.setActuator('%s', new_val)" % name, "<string>", "eval")
-
-    def __contains__(self, name):
-        return True
-
-    def setActuator(self,name,val):
-        self.parent.sensorStates[name] = val
-        try:
-            for btn in self.parent.env_buttons:
-                if btn.GetLabelText() == name:
-                    if int(val) == 1:
-                        btn.SetBackgroundColour(wx.Colour(0, 255, 0))
-                        btn.SetValue(True)
-                    else:
-                        btn.SetBackgroundColour(wx.Colour(255, 0, 0))
-                        btn.SetValue(False)
-                    break
-        except AttributeError:
-            pass # The buttons haven't been created yet
-
-class DummyMotionHandler:
-    def __init__(self):
-        pass
-    def gotoRegion(self,a,b):
-        return True
+# TODO: don't use separate *_region variables, just use states
+# TODO: fix len(inputs)==0 thing
+# TODO: togling actuator too fast puts cores in weird state
 
 class MopsyFrame(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -113,6 +59,10 @@ class MopsyFrame(wx.Frame):
 
         self.Bind(wx.EVT_BUTTON, self.onButtonNext, self.button_next)
         # end wxGlade
+
+        self.env_buttons = [] # This will later hold our buttons
+        self.act_buttons = [] # This will later hold our buttons
+        self.cust_buttons = [] # This will later hold our buttons
 
         self.coreCalculationLock = threading.Lock()
         self.dest_region = None
@@ -152,79 +102,32 @@ class MopsyFrame(wx.Frame):
             self.tracebackChunks = chunks_from_gentree(self.tracebackTree)
 
         # Load in counter-strategy automaton
-        self.envDummySensorHandler = EnvDummySensorHandler(self)
-        self.envDummyActuatorHandler = EnvDummyActuatorHandler(self)
-        self.dummyMotionHandler = DummyMotionHandler()
-        self.proj.sensor_handler, self.proj.actuator_handler, self.proj.h_instance = [None]*3
+        self.loadCounterstrategy()
 
-        self.mopsy_frame_statusbar.SetStatusText("Loading environment counter-strategy...", 0)
-        self.num_bits = int(numpy.ceil(numpy.log2(len(self.proj.rfi.regions))))  # Number of bits necessary to encode all regions
-        region_props = ["bit" + str(n) for n in xrange(self.num_bits)]
-
-        self.env_aut = fsa.Automaton(self.proj)
-        self.env_aut.sensor_handler = self.envDummySensorHandler
-        self.env_aut.actuator_handler = self.envDummyActuatorHandler
-        self.env_aut.motion_handler = self.dummyMotionHandler
-        # We are being a little tricky here by just reversing the sensor and actuator propositions
-        # to create a sort of dual of the usual automaton
-        self.env_aut.loadFile(self.proj.getFilenamePrefix() + ".aut", self.proj.enabled_actuators + self.proj.all_customs + self.compiler.proj.internal_props + region_props, self.proj.enabled_sensors, [])
-
-        self.env_aut.current_region = None
-
-        # Find first state in counterstrategy that seeks to falsify the given liveness
+        # Choose initial state
         if len(sys.argv) > 2:
-            desired_jx = int(sys.argv[2])
-            
-            for s in self.env_aut.states:
-                if s.transitions:
-                    rank_str = s.transitions[0].rank
-                    m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
-                    if m is None:
-                        print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
-                        return
-                    jx = int(m.group(1))
-
-                    if jx == desired_jx:
-                        self.env_aut.current_state = s
-                        break
-
-            if self.env_aut.current_state is None:
-                print "ERROR: could not find state in counterstrategy to falsify sys goal #{}".format(desired_jx)
-                return
+            self.chooseInitialState(int(sys.argv[2]))
         else:
-            self.env_aut.current_state = self.env_aut.states[0]
-
-        # Internal aut housekeeping (ripped from chooseInitialState; hacky)
-        self.env_aut.last_next_states = []
-        self.env_aut.next_state = None
-        self.env_aut.next_region = None
-
-        #self.env_aut.dumpStates([self.env_aut.current_state])
-
-        # Set initial sensor values
-        self.env_aut.updateOutputs()
+            self.chooseInitialState()
 
         # Figure out what actuator/custom-prop settings the system should start with
-        for k,v in self.env_aut.current_state.inputs.iteritems():
-            # Skip any "bitX" region encodings
-            if re.match('^bit\d+$', k): continue
-            self.actuatorStates[k] = int(v)
-
-        # Figure out what region the system should start from
-        self.current_region = self.regionFromEnvState(self.env_aut.current_state)
-        self.dest_region = self.current_region
+        # FIXME: this won't work for domains other than region
+        for k, v in self.env_strat.current_state.getInputs().iteritems():
+            if k == "region":
+                # Figure out what region the system should start from
+                self.current_region = v
+                self.dest_region = self.current_region
+            else:
+                self.actuatorStates[k] = v
 
         # Create all the sensor/actuator buttons
-        self.env_buttons = [] # This will later hold our buttons
-        self.act_buttons = [] # This will later hold our buttons
-        self.cust_buttons = [] # This will later hold our buttons
+        self.populateToggleButtons(self.sizer_env, self.env_buttons, self.proj.enabled_sensors)
+        self.populateToggleButtons(self.sizer_act, self.act_buttons, self.proj.enabled_actuators)
+        self.populateToggleButtons(self.sizer_prop, self.cust_buttons, self.proj.all_customs + self.compiler.proj.internal_props)
 
-        actprops = dict((k,v) for k,v in self.actuatorStates.iteritems() if k in self.proj.enabled_actuators)
-        custprops = dict((k,v) for k,v in self.actuatorStates.iteritems() if k in self.proj.all_customs + self.compiler.proj.internal_props)
-
-        self.populateToggleButtons(self.sizer_env, self.env_buttons, self.sensorStates)
-        self.populateToggleButtons(self.sizer_act, self.act_buttons, actprops)
-        self.populateToggleButtons(self.sizer_prop, self.cust_buttons, custprops)
+        # Update the button states
+        self.updateButtonStates(self.env_buttons, self.env_strat.current_state.getOutputs(expand_domains=True))
+        self.updateButtonStates(self.act_buttons + self.cust_buttons, self.actuatorStates)
 
         # Make the env buttons not clickable (TODO: maybe replace with non-buttons)
         #for b in self.env_buttons:
@@ -234,11 +137,11 @@ class MopsyFrame(wx.Frame):
         self.history_grid.SetDefaultCellFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
         self.history_grid.SetLabelFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
 
-        colheaders = self.proj.enabled_sensors + ["Region"] + self.proj.enabled_actuators + self.proj.all_customs + self.compiler.proj.internal_props
-        self.history_grid.CreateGrid(0,len(colheaders))
-        for i,n in enumerate(colheaders):
+        col_headers = self.proj.enabled_sensors + ["Region"] + self.proj.enabled_actuators + self.proj.all_customs + self.compiler.proj.internal_props
+        self.history_grid.CreateGrid(0, len(col_headers))
+        for i,n in enumerate(col_headers):
             self.history_grid.SetColLabelValue(i, " " + n + " ")
-            self.history_grid.SetColSize(i,-1)  # Auto-size
+            self.history_grid.SetColSize(i, -1)  # Auto-size
         self.history_grid.EnableEditing(False)
 
         # Decide whether to enable core-finding
@@ -248,23 +151,72 @@ class MopsyFrame(wx.Frame):
         self.appendToHistory()
 
         # Start initial environment move
-        # All transitionable states have the same env move, so just use the first
-        if (len(self.env_aut.current_state.transitions) >=1 ):
-            self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
-
-        self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.current_region))
+        self.makeEnvironmentMove()
 
         self.showCurrentGoal()
         self.applySafetyConstraints()
 
-    def showCurrentGoal(self):
-        rank_str = self.env_aut.current_state.transitions[0].rank
+    def makeEnvironmentMove(self):
+        # All transitionable states have the same env move, so just use the first
+        transitionable_states = self.env_strat.findTransitionableStates({})
+        if len(transitionable_states) >= 1:
+            self.updateButtonStates(self.env_buttons, transitionable_states[0].getOutputs(expand_domains=True))
+
+        self.label_movingto.SetLabel("Stay in region {}".format(self.current_region.name))
+
+    def chooseInitialState(self, desired_jx=None):
+        # Find first state in counterstrategy that seeks to falsify the given liveness
+        if desired_jx is not None:
+            for s in self.env_strat.iterateOverStates():
+                jx = self.getNextGoalId(s)
+
+                if jx is None:
+                    continue
+
+                if jx == desired_jx:
+                    self.env_strat.current_state = s
+                    break
+
+            if self.env_strat.current_state is None:
+                raise RuntimeError("Could not find state in counterstrategy to falsify sys goal #{}".format(desired_jx))
+        else:
+            # TODO: do we need to be more specific when searching for an initial state?
+            self.env_strat.current_state = self.env_strat.searchForOneState({})
+
+    def loadCounterstrategy(self):
+        # FIXME: This will not currently work for BDDs
+        self.mopsy_frame_statusbar.SetStatusText("Loading environment counter-strategy...", 0)
+        region_domain = strategy.Domain("region", self.proj.rfi.regions, strategy.Domain.B0_IS_MSB)
+        self.env_strat = strategy.createStrategyFromFile(self.proj.getStrategyFilename(),
+                            self.proj.enabled_actuators + self.proj.all_customs + [region_domain] + self.compiler.proj.internal_props,
+                            # TODO: internal_props needs to be re-thought-out
+                            self.proj.enabled_sensors)
+
+    def updateButtonStates(self, button_set, prop_settings):
+        # TODO: Button background colour doesn't show up very well
+        for btn in button_set:
+            val = prop_settings[btn.GetLabelText()]
+            btn.SetBackgroundColour(wx.Colour(0, 255, 0) if val else
+                                    wx.Colour(255, 0, 0))
+            btn.SetValue(val)
+
+    def getNextGoalId(self, from_state=None):
+        transitionable_states = self.env_strat.findTransitionableStates({}, from_state=from_state)
+
+        if len(transitionable_states) == 0:
+            return None
+
+        rank_str = transitionable_states[0].goal_id
         m = re.search(r"\(\d+,(-?\d+)\)", rank_str)
         if m is None:
-            print "ERROR: Error parsing jx in automaton.  Are you sure the spec is unrealizable?"
-            return
+            raise RuntimeError("Error parsing jx in automaton.  Are you sure the spec is unrealizable?")
 
         jx = int(m.group(1))
+
+        return jx
+        
+    def showCurrentGoal(self):
+        jx = self.getNextGoalId()
 
         if jx < 0:
             print "WARNING: negative jx"
@@ -296,51 +248,27 @@ class MopsyFrame(wx.Frame):
         #print jx, goal_ltl, spec_line_num, goal_spec
         self.label_goal.SetLabel(goal_spec.strip())
 
-    def regionFromEnvState(self, state):
-        # adaptation of fsa.py's regionFromState, to work with env_aut
-        r_num = 0
-        for bit in range(self.num_bits):
-            if (int(state.inputs["bit" + str(bit)]) == 1):
-                # bit0 is MSB
-                r_num += int(2**(self.num_bits-bit-1))
-
-        return r_num
-    
-    def regionToBitEncoding(self, region_index):
-        bs = "{0:0>{1}}".format(bin(region_index)[2:], self.num_bits)
-        return {"bit{}".format(i):int(v) for i,v in enumerate(bs)}
-
     def applySafetyConstraints(self):
         # If there is no next state, this implies that the system has no possible move (including staying in place)
-        if len(self.env_aut.current_state.transitions[0].inputs) == 0:
+        if len(self.env_strat.findTransitionableStates({})) == 0:  # TODO: why was this ...[0].inputs?
             self.label_violation.SetLabel("Checkmate: no possible system moves.")
             for b in self.act_buttons + self.cust_buttons + [self.button_next]:
                 b.Enable(False)
-            self.regionsToHide = [r.name for r in self.proj.rfi.regions]
+            self.regionsToHide = self.proj.rfi.regions
 
             self.onResize() # Force map redraw
             return
 
         # Determine transitionable regions
 
-        goable = []
-        goable_states = []
-
         # Look for any transition states that agree with our current outputs (ignoring dest_region)
-        for s in self.env_aut.current_state.transitions:
-            okay = True
-            for k,v in s.inputs.iteritems():
-                # Skip any "bitX" region encodings
-                if re.match('^bit\d+$', k): continue
-                if int(v) != int(self.actuatorStates[k]):
-                    okay = False
-                    break
-            if okay:
-                goable.append(self.proj.rfi.regions[self.regionFromEnvState(s)].name)
-                goable_states.append(s)
+        goable_states = self.env_strat.findTransitionableStates(self.actuatorStates)
+        goable_regions = [s.getPropValue("region") for s in goable_states]
 
-        region_constrained_goable_states = [s for s in goable_states if (self.regionFromEnvState(s) == self.dest_region)]
-        if region_constrained_goable_states == []:
+        a_region_constrained_goable_state = self.env_strat.searchForOneState({"region": self.dest_region},
+                                                                             state_list=goable_states)
+
+        if a_region_constrained_goable_state is None:
             if self.coreFindingEnabled:
                 self.label_violation.SetLabel("Invalid move...")
                 self.showCore()
@@ -351,35 +279,31 @@ class MopsyFrame(wx.Frame):
             self.label_violation.SetLabel("")
             self.button_next.Enable(True)
 
-        self.regionsToHide = list(set([r.name for r in self.proj.rfi.regions])-set(goable))
+        self.regionsToHide = list(set(self.proj.rfi.regions)-set(goable_regions))
 
         self.onResize() # Force map redraw
 
     def appendToHistory(self):
         self.history_grid.AppendRows(1)
-        newvals = [self.sensorStates[s] for s in self.proj.enabled_sensors] + \
-                  [self.env_aut.getAnnotatedRegionName(self.current_region)] + \
+        newvals = [self.env_strat.current_state.getPropValue(s) for s in self.proj.enabled_sensors] + \
+                  [self.current_region.name] + \
                   [self.actuatorStates[s] for s in self.proj.enabled_actuators] + \
                   [self.actuatorStates[s] for s in self.proj.all_customs] + \
                   [self.actuatorStates[s] for s in self.compiler.proj.internal_props]
         lastrow = self.history_grid.GetNumberRows()-1
 
-        for i,v in enumerate(newvals):
-            if v == 0:
-                self.history_grid.SetCellValue(lastrow,i,"False")
-                self.history_grid.SetCellBackgroundColour(lastrow,i,wx.Colour(255, 0, 0))
-            elif v == 1:
-                self.history_grid.SetCellValue(lastrow,i,"True")
-                self.history_grid.SetCellBackgroundColour(lastrow,i,wx.Colour(0, 255, 0))
+        for i, v in enumerate(newvals):
+            if isinstance(v, bool):
+                self.history_grid.SetCellValue(lastrow, i, "True" if v else "False")
+                self.history_grid.SetCellBackgroundColour(lastrow, i, wx.Colour(0, 255, 0) if v else wx.Colour(255, 0, 0))
             else:
-                self.history_grid.SetCellValue(lastrow,i,v)
+                self.history_grid.SetCellValue(lastrow, i, v)
+
         self.history_grid.ClearSelection()
         self.history_grid.AutoSizeRow(lastrow)
         self.history_grid.MakeCellVisible(lastrow,0)
         self.history_grid.ForceRefresh()
         self.mopsy_frame_statusbar.SetStatusText("Currently in step #"+str(lastrow+2), 0)
-
-
 
     def showCore(self):
         """
@@ -388,6 +312,8 @@ class MopsyFrame(wx.Frame):
         """
 
         wx.lib.delayedresult.startWorker(self.displayCoreMessage, self.calculateCore, daemon=True)
+        # If you need to debug this call, use a non-async call:
+        #self.displayCoreMessage(self.calculateCore())
 
     def displayCoreMessage(self, result):
         result = result.get()
@@ -408,11 +334,11 @@ class MopsyFrame(wx.Frame):
         # TODO: actually cache trans CNF
         # TODO: support SLURP parser
 
-        ltl_current = fsa.stateToLTL(self.env_aut.current_state, swap_io=True).strip()
-        next_state = copy.deepcopy(self.env_aut.current_state.transitions[0])
-        next_state.inputs.update(self.actuatorStates)
-        next_state.inputs.update(self.regionToBitEncoding(self.dest_region))
-        ltl_next = fsa.stateToLTL(next_state, use_next=True, swap_io=True).strip()
+        ltl_current = self.env_strat.current_state.getLTLRepresentation(swap_players=True).strip()
+        next_state = copy.deepcopy(self.env_strat.findTransitionableStates({})[0])
+        next_state.setPropValues(self.actuatorStates)
+        next_state.setPropValue("region", self.dest_region)
+        ltl_next = next_state.getLTLRepresentation(swap_players=True, use_next=True).strip()
         ltl_topo = self.spec['Topo'].replace('\n','').replace('\t','').strip()
         ltl_trans = [s.strip() for s in self.spec['SysTrans'].split('\n')]
         # note: strip()s make canonical (i.e. terminate in &, no whitespace on either side)
@@ -455,12 +381,12 @@ class MopsyFrame(wx.Frame):
         y = event.GetY()/self.mapScale
         for i, region in enumerate(self.proj.rfi.regions):
             if region.objectContainsPoint(x, y):
-                self.dest_region = i
+                self.dest_region = region
 
-                if self.dest_region == self.current_region:
-                    self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.proj.rfi.regions.index(region)))
+                if self.dest_region is self.current_region:
+                    self.label_movingto.SetLabel("Stay in region " + region.name)
                 else:
-                    self.label_movingto.SetLabel("Move to region " + self.env_aut.getAnnotatedRegionName(self.proj.rfi.regions.index(region)))
+                    self.label_movingto.SetLabel("Move to region " + region.name)
 
                 self.applySafetyConstraints()
                 break
@@ -468,20 +394,12 @@ class MopsyFrame(wx.Frame):
         self.onResize() # Force map redraw
         event.Skip()
 
-    def populateToggleButtons(self, target_sizer, button_container, items):
-        for item_name, item_val in items.iteritems():
+    def populateToggleButtons(self, target_sizer, button_container, button_names):
+        for bn in button_names:
             # Create the new button and add it to the sizer
-            name = textwrap.fill(item_name, 100)
+            name = textwrap.fill(bn, 100)
             button_container.append(wx.lib.buttons.GenToggleButton(self.window_1_pane_2, -1, name))
             target_sizer.Add(button_container[-1], 1, wx.EXPAND, 0)
-
-            # Set the initial value as appropriate
-            if int(item_val) == 1:
-                button_container[-1].SetValue(True)
-                button_container[-1].SetBackgroundColour(wx.Colour(0, 255, 0))
-            else:
-                button_container[-1].SetValue(False)
-                button_container[-1].SetBackgroundColour(wx.Colour(255, 0, 0))
 
             button_container[-1].SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
 
@@ -489,23 +407,20 @@ class MopsyFrame(wx.Frame):
             self.Refresh()
 
             # Bind to event handler
-            #self.Bind(wx.EVT_TOGGLEBUTTON, self.sensorToggle, button_container[-1])
-            self.Bind(wx.EVT_BUTTON, self.sensorToggle, button_container[-1])
+            #self.Bind(wx.EVT_TOGGLEBUTTON, self.onSystemPropButtonClicked, button_container[-1])
+            self.Bind(wx.EVT_BUTTON, self.onSystemPropButtonClicked, button_container[-1])
 
-    def sensorToggle(self, event):
+    def onSystemPropButtonClicked(self, event):
         btn = event.GetEventObject()
         if btn in self.env_buttons:
             return
 
         #print btn.GetLabelText() + "=" + str(btn.GetValue())
 
-        self.actuatorStates[btn.GetLabelText().replace("\n","")] = int(btn.GetValue())
+        prop_name = btn.GetLabelText().replace("\n","")
+        self.actuatorStates[prop_name] = btn.GetValue()
 
-        # TODO: Button background colour doesn't show up very well
-        if btn.GetValue():
-            btn.SetBackgroundColour(wx.Colour(0, 255, 0))
-        else:
-            btn.SetBackgroundColour(wx.Colour(255, 0, 0))
+        self.updateButtonStates([btn], self.actuatorStates)
 
         self.Refresh()
         self.applySafetyConstraints()
@@ -516,11 +431,12 @@ class MopsyFrame(wx.Frame):
         size = self.panel_1.GetSize()
         self.mapBitmap = wx.EmptyBitmap(size.x, size.y)
         if self.dest_region is not None:
-            hl = [self.proj.rfi.regions[self.dest_region].name]
+            hl = [self.dest_region.name]
         else:
             hl = []
 
-        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=True, memory=True, highlightList=hl, deemphasizeList=self.regionsToHide)
+        self.mapScale = mapRenderer.drawMap(self.mapBitmap, self.proj.rfi, scaleToFit=True, drawLabels=True, memory=True,
+                                            highlightList=hl, deemphasizeList=[r.name for r in self.regionsToHide])
 
         self.Refresh()
         self.Update()
@@ -550,7 +466,7 @@ class MopsyFrame(wx.Frame):
 
         # Draw robot
         if self.current_region is not None:
-            [x,y] = map(lambda x: int(self.mapScale*x), self.proj.rfi.regions[self.current_region].getCenter())
+            [x,y] = map(lambda x: int(self.mapScale*x), self.current_region.getCenter())
             dc.DrawCircle(x, y, 5)
 
         dc.EndDrawing()
@@ -628,14 +544,17 @@ class MopsyFrame(wx.Frame):
     def onButtonNext(self, event): # wxGlade: MopsyFrame.<event_handler>
         # TODO: full safety check
         self.current_region = self.dest_region
+        
+        # Move to the next state
+        next_prop_assignments = copy.copy(self.actuatorStates)
+        next_prop_assignments["region"] = self.current_region
+        self.env_strat.current_state = self.env_strat.findTransitionableStates(next_prop_assignments)[0]
+
         self.appendToHistory()
-        self.env_aut.runIteration()
 
-        ### Make environment move
+        # Make environment move
+        self.makeEnvironmentMove()
 
-        # All transitionable states have the same env move, so just use the first
-        self.env_aut.updateOutputs(self.env_aut.current_state.transitions[0])
-        self.label_movingto.SetLabel("Stay in region " + self.env_aut.getAnnotatedRegionName(self.current_region))
         self.showCurrentGoal()
         self.applySafetyConstraints()
 

@@ -1,0 +1,31 @@
+======= GENERAL INSTRUCTIONS =========
+
+The pycudd package (https://bears.ece.ucsb.edu/pycudd.html) needs to be patched to support the loading of ADDs from files.  Inside the pycudd2.0.2 root directory, please apply:
+
+patch -p1 < pycudd_addarrayload.patch
+
+======== OS X SPECIFIC INSTRUCTIONS ========
+
+Furthermore, if you are on OS X (tested with 10.8.2), you will need to make some modifications to the Makefiles, etc.: 
+
+patch -p1 < pycudd_osx.patch    
+
+Then, in the cudd directory, for some reason you MUST RUN `make distclean` before building other things:
+
+make distclean
+make 
+make libso
+
+After building the Python libraries, be sure to copy them somewhere appropriate, like:
+
+sudo cp -r pycudd /Library/Python/2.7/site-packages/
+
+(Or, with Homebrew, cp pycudd /usr/local/lib/python2.7/site-packages/)
+
+You may need to create a `pycudd.pth` file in that `site-packages` directory with the contents
+of just `pycudd` so Python knows to look in the pycudd subdirectory.
+
+OS X 10.9.2 notes: 
+
+* You may have to change the Makefile for cudd-2.4.2 to use less aggressive optimization flags; i.e. -O3 instead of -O6
+* If you are using Homebrew, you will need to modify the pycudd Makefile to look for swig in /usr/local instead of /opt/local

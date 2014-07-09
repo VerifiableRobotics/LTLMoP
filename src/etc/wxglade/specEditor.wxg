@@ -130,6 +130,26 @@
                                 <handler>onMenuSetCompileOptions</handler>
                             </item>
                         </menu>
+                        <menu name="" itemid="MENU_SYNTHESIZER=wx.NewId()" label="Synthesizer">
+                            <item>
+                                <label>JTLV</label>
+                                <id>MENU_SYNTHESIZER_JTLV=wx.NewId()</id>
+                                <radio>1</radio>
+                                <handler>onMenuSetCompileOptions</handler>
+                            </item>
+                            <item>
+                                <label>Slugs</label>
+                                <id>MENU_SYNTHESIZER_SLUGS=wx.NewId()</id>
+                                <radio>1</radio>
+                                <handler>onMenuSetCompileOptions</handler>
+                            </item>
+                        </menu>
+                        <item>
+                            <label>Use symbolic strategy</label>
+                            <id>MENU_SYMBOLIC=wx.NewId()</id>
+                            <checkable>1</checkable>
+                            <handler>onMenuSetCompileOptions</handler>
+                        </item>
                     </menu>
                     <item>
                         <label>---</label>
@@ -142,7 +162,7 @@
                         <handler>onMenuSimulate</handler>
                     </item>
                     <item>
-                        <label>Confi&amp;gure Simulation...\tShift-F6</label>
+                        <label>Confi&amp;gure Simulation...\tF7</label>
                         <id>MENU_SIMCONFIG=wx.NewId()</id>
                         <handler>onMenuConfigSim</handler>
                     </item>
