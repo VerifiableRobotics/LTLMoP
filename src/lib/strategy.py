@@ -695,6 +695,57 @@ class Strategy(object):
 
             # Close the digraph
             f_out.write("} \n")
+        
+    def findAllCycles(self):
+
+        """
+        Returns a list of lists of states forming cycles, or an empty list if strategy is acyclic
+        """
+
+
+        visited = set()  # list of visited nodes
+        st = {}      # dictionary maintaining the minimum spanning tree rooted at each node
+        cycles = []
+        
+        
+        
+        def loop_back(st, state, ancestor):
+            """
+            Finds a path from the state to an ancestor.
+            """
+            path = []
+            while (state != ancestor):
+                if state is None:
+                    return []
+                path.append(state)
+                state = st[state]
+            path.append(state)
+            path.reverse()
+            return path
+
+        def dfs(state):
+                visited.add(state)
+                # recursively explore the connected component
+                for s in self.findTransitionableStates({}, state):
+                    if s not in visited:
+                        st[s] = state
+                        dfs(s) #recursion
+                    else:
+                        if (st[state] != s):
+                            cycle = loop_back(st, state, s)
+                            if cycle:
+                                cycles.append(cycle)
+                                
+
+        for s in self.iterateOverStates():
+            if s not in visited:
+                st[s] = None # spanning tree rooted at that state
+                # explore this state's connected component
+                dfs(s)
+        return cycles
+
+        
+
 
 def TestLoadAndDump(spec_filename):
     import project

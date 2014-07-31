@@ -36,12 +36,17 @@ public class GROneDebug {
 
         // Check that we have enough arguments
         // This class takes the same arguments as GROneMain.
-		if (args.length < 2) {
+	if (args.length < 2) {
             System.err.println("Usage: java GROneDebug [smv_file] [ltl_file]");
             System.exit(1);
         }
-		
-        Env.loadModule(args[0]);
+	
+	boolean refine = false;
+	if (args.length == 3) {
+            refine =  Boolean.parseBoolean(args[2]);
+        }
+	
+	Env.loadModule(args[0]);
         Spec[] spcs = Env.loadSpecFile(args[1]);
 
         // Figure out the name of our output file by stripping the spec filename extension and adding .aut
@@ -61,10 +66,15 @@ public class GROneDebug {
 		
 		
 		//Prints the results of analyzing the specification. 
-		System.out.println(analyze(env, sys));		
+		if (!refine) {
+			System.out.println(analyze(env, sys, args));
+		} else {
+			System.out.println(refine(env, sys, args));
+		}
 	}
 	
-	public static String analyze(SMVModule env, SMVModule sys) {
+	
+	public static String analyze(SMVModule env, SMVModule sys, String[] args) {
 
 		  
 		int explainSys=0, explainEnv = 0; //keep track of explanations to avoid redundancy
@@ -175,7 +185,14 @@ public class GROneDebug {
 		}catch (Exception e){//Catch exception if any
 			      System.err.println("Error: " + e.getMessage());
 		}
-	
+		
+		if (debugInfo.contains("System highlighted goal")) {
+			explainSys = 1;
+		}
+		if (debugInfo.contains("Environment highlighted goal")) {
+			explainEnv = 1;
+		}
+		
 		return debugInfo;
 	}
 	
@@ -288,6 +305,17 @@ public class GROneDebug {
 				 }
 			}
 		}
+		System.out.println(explainSys);
 		return debugInfo;
+	}
+	
+	public static String refine(SMVModule env, SMVModule sys, String[] args) {
+		String result = "";
+		try{
+			result += "Guilty safety conjuncts are " + SpecSubsets.iteratedCoreSafetyIndices(args);
+		}catch (Exception e){//Catch exception if any
+			System.err.println("Error: " + e.getMessage());
+		}
+		return result;
 	}
 }
