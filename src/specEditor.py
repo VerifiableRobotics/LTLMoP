@@ -1456,14 +1456,15 @@ class SpecEditorFrame(wx.Frame):
 
         self.highlightCores(guilty, self.compiler)
         
-        to_highlight = self.compiler._iterateCores()
+        if not self.unsat:
+            to_highlight = self.compiler._iterateCores()
         
-        #highlight guilty transitions
-        if self.proj.compile_options["parser"] == "structured":
-            for h_item in to_highlight:
-                tb_key = h_item[0].title() + h_item[1].title()
-                if h_item[2] < len(self.tracebackTree[tb_key]):
-                    self.text_ctrl_spec.MarkerAdd(self.tracebackTree[tb_key][h_item[2]]-1, MARKER_INIT)
+            #highlight guilty transitions
+            if self.proj.compile_options["parser"] == "structured":
+                for h_item in to_highlight:
+                    tb_key = h_item[0].title() + h_item[1].title()
+                    if h_item[2] < len(self.tracebackTree[tb_key]):
+                        self.text_ctrl_spec.MarkerAdd(self.tracebackTree[tb_key][h_item[2]]-1, MARKER_INIT)
 
         self.appendLog("Final analysis complete.\n", "BLUE")
 

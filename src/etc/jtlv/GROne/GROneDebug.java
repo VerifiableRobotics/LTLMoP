@@ -67,14 +67,14 @@ public class GROneDebug {
 		
 		//Prints the results of analyzing the specification. 
 		if (!refine) {
-			System.out.println(analyze(env, sys, args));
+			System.out.println(analyze(env, sys));
 		} else {
 			System.out.println(refine(env, sys, args));
 		}
 	}
+
 	
-	
-	public static String analyze(SMVModule env, SMVModule sys, String[] args) {
+	public static String analyze(SMVModule env, SMVModule sys) {
 
 		  
 		int explainSys=0, explainEnv = 0; //keep track of explanations to avoid redundancy
@@ -196,6 +196,8 @@ public class GROneDebug {
 		return debugInfo;
 	}
 	
+	
+	
 	public static class NOPPrintStream extends PrintStream
 	{
 	    public NOPPrintStream() { super((OutputStream)null); }
@@ -305,7 +307,6 @@ public class GROneDebug {
 				 }
 			}
 		}
-		System.out.println(explainSys);
 		return debugInfo;
 	}
 	

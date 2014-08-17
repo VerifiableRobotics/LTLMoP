@@ -54,6 +54,9 @@ Visit porch
 if you are sensing fire then do not living
 if you are sensing person then do not kitchen
 
+#always not living
+#always not kitchen
+
 always not radio
 if you were activating radio then do radio
 
