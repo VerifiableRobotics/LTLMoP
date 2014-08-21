@@ -161,8 +161,9 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
         #returns the ltl conjuncts returned as an unsat core when unrolling trans depth times from init and 
         #checking goal at final time step
         #note that init contains one-step unrolling of trans already
-        if timing: 
-            cmd = ["time"]+cmd
+        
+        #if timing: 
+        #    cmd = ["time"] +cmd
         
             
         mapping = deepcopy(mapping)
@@ -200,15 +201,18 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
             return (False, False, [], "")   
                 
         #start a reader thread        
+        start = time.time()
         subp = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)                                            
         readThread =  threading.Thread(target = subprocessReadThread, args=(subp.stdout,output))
         readThread.daemon = True
         readThread.start()
         
+        
         #send header
         input = ["p cnf "+str(p)+" "+str(n)+"\n"]
-        subp.stdin.write(input[0])                     
+        subp.stdin.write(input[0])
         subp.stdin.writelines(init)
+        
         input.extend(init)
         
         #Duplicating transition clauses for depth greater than 1         
@@ -276,6 +280,9 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
 #        logging.debug("wrote {}".format(satFileName))
 #        inputFile.close()
             
+        if timing:
+            print 'ELAPSED TIME:',time.time()-start
+        
         if any(["WARNING: core extraction disabled" in s for s in output]):
             # never again
             logging.error("************************************************")
@@ -286,6 +293,8 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
             logging.error("************************************************")
             return []
 
+        #if timing & any(["real" in s for s in output]):
+        #    logging.info([l for l in output if "real" in l])
         
         if any(["UNSATISFIABLE" in s for s in output]):
             logging.info("Unsatisfiable core found at depth {}".format(depth))
@@ -294,8 +303,6 @@ def findGuiltyLTLConjuncts(cmd, depth, numProps, init, trans, goals, mapping,  c
             if depth==maxDepth:
                 print output
             return []
-        elif timing & any(["real" in s for s in output]):
-            logging.info([l for l in output if "real" in l])
         else:
             logging.error("Picosat error: {!r}".format(output))
         

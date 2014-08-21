@@ -1270,8 +1270,8 @@ public class GROneGame {
 				
                 //when detecting system unsatisfiability, all env actions in primed_cur_succ (which is actualy Env.TRUE() in the nondet case) should be valid
 				//result = result & (input.equals(p_st.and(env.trans())));
-				System.out.println("Input= "+input);
-				System.out.println("Possibilities= "+p_st.and(primed_cur_succ));
+				//System.out.println("Input= "+input);
+				//System.out.println("Possibilities= "+p_st.and(primed_cur_succ));
 				result = result & (input.equals(p_st.and(env.trans())));
                 if (!result && !det) break;
 				//result is true if for every state, all environment actions take us into a lower iterate of Z
