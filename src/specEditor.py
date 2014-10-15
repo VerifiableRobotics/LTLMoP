@@ -1294,7 +1294,7 @@ class SpecEditorFrame(wx.Frame):
             # (no more is necessary because this is the only part of the spec file
             # that configEditor could modify)
             other_proj = project.Project()
-            other_proj.spec_data = other_proj.loadSpecFile(self.proj.getFilenamePrefix()+".spec")
+            other_proj.loadProject(self.proj.getFilenamePrefix()+".spec")
             self.proj.current_config= other_proj.current_config
             self.subprocess["Simulation Configuration"] = None
 
