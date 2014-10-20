@@ -1,3 +1,5 @@
-numpy==1.7.0
-scipy==0.13.0
+numpy==1.8.1
+scipy==0.14.0
 Polygon2
+# This is for it to run setup.py as well
+./
