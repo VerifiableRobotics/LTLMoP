@@ -27,7 +27,7 @@ def downloadDependenciesAndAddToPath():
 
     # Download the main setup scripts
     for filename in ("catUtils.py", "gitUtils.py"):
-        url = "https://github.com/LTLMoP/LTLMoP/raw/development/dist/" + filename
+        url = "https://github.com/VerifiableRobotics/LTLMoP/raw/development/dist/" + filename
         print "Fetching {}...".format(url)
         out_file = os.path.join(temp_dir, filename)
         urllib.urlretrieve(url, out_file)
@@ -287,7 +287,7 @@ if __name__ == "__main__":
         fresh_fork = False
     else:
         print "Creating a fork of LTLMoP on GitHub for you.  This may take a few minutes..."
-        response = githubAPICall("/repos/LTLMoP/LTLMoP/forks", method="POST")
+        response = githubAPICall("/repos/VerifiableRobotics/LTLMoP/forks", method="POST")
         print "Creation started at URL: " + response['html_url']
         patrickSays("Please wait!")
         print
@@ -330,7 +330,7 @@ if __name__ == "__main__":
             runGitCommand("git push origin :%s" % b['name'])
 
     print "Adding official repository as `upstream` remote..."
-    runGitCommand("git remote add upstream https://github.com/LTLMoP/LTLMoP.git")
+    runGitCommand("git remote add upstream https://github.com/VerifiableRobotics/LTLMoP.git")
     runGitCommand("git fetch upstream development")
 
     patrickSays("Hooray!  All done!  See you around.")
