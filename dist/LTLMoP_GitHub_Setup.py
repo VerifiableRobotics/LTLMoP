@@ -209,7 +209,7 @@ if __name__ == "__main__":
         # Update the GitHub profile
         githubAPICall("/user", {'name': github_fullname}, method="PATCH")
 
-    github_email = email_data[0]
+    github_email = email_data[0]["email"]
 
     patrickSays("Nice to meet you, %s! ... My name's Patrick, by the way." % github_fullname.split(" ")[0])
     print
@@ -232,7 +232,7 @@ if __name__ == "__main__":
         if not os.path.exists(os.path.dirname(pubkey_path)):
             os.mkdir(os.path.dirname(pubkey_path))
 
-        cmd = subprocess.Popen(["ssh-keygen", "-t", "rsa", "-C", github_email["email"], "-f", os.path.splitext(pubkey_path)[0]], shell=True)
+        cmd = subprocess.Popen(["ssh-keygen", "-t", "rsa", "-C", github_email, "-f", os.path.splitext(pubkey_path)[0]], shell=True)
 
         # Wait for subprocess to finish
         while cmd.returncode is None:
