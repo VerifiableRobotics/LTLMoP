@@ -1,0 +1,4 @@
+FROM agilgur5/ltlmop
+MAINTAINER agilgur5
+
+RUN apt-get install -y --no-install-recommends python-wxtools
