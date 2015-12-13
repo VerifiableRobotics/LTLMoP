@@ -391,28 +391,6 @@ class RegionFileInterface(object):
 
         return True
 
-    def extractJSONFromRegions(self, filename):
-        """
-        Turns a regions file into a straight JSON file
-        """
-        if not os.path.exists(filename):
-            raise IOError("path does not exist")
-
-        data = fileMethods.readFromFile(filename)
-
-        if data is None:
-            raise IOError("read from file failed")
-
-        rdata = data["Regions"]
-
-        try:
-            rdata = json.loads("\n".join(rdata))
-        except ValueError:
-            raise ValueError("json failed to load")
-
-        return rdata
-                
-
     def readFile(self, filename):
         """
         For file format information, refer to writeFile() above.
